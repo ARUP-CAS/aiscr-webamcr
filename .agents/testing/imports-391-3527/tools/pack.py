@@ -12,6 +12,38 @@ from import_pack.common import PACK, assert_owned, read_json, repo_root, save_js
 from import_pack.inventory import inventory  # noqa: E402
 
 
+def fedora_login(command):
+    """
+    Přidá k příkazu čtení Fedory volbu přihlášení: interaktivní výzvu, nebo uložený záznam Windows.
+
+    :param command: Parser podpříkazu ``fedora-read``, ``fedora-search`` nebo ``capture``.
+    """
+    login = command.add_mutually_exclusive_group()
+    login.add_argument("--user", help="Prompt once for this user's session-only password")
+    login.add_argument(
+        "--credential-target",
+        help="Read user and password from this Windows Credential Manager generic entry (never printed or saved)",
+    )
+
+
+def fedora_credentials(args):
+    """
+    Vrátí přihlašovací údaje pro Fedoru bez jejich zápisu do příkazu, souboru nebo výstupu.
+
+    :param args: Rozparsované argumenty s ``user`` a ``credential_target``.
+    :return: Dvojice (uživatel, heslo), nebo ``None`` pro anonymní čtení.
+    """
+    if args.credential_target:
+        from import_pack.sources import stored_credentials
+
+        return stored_credentials(args.credential_target)
+    if args.user:
+        import getpass
+
+        return args.user, getpass.getpass("Session-only Fedora password: ")
+    return None
+
+
 def main():
     """Zpracuje explicitně zvolený lokální příkaz bez importu aplikace."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -30,6 +62,7 @@ def main():
         "load-binaries", help="Prepare source files locally for an already built distribution load"
     )
     command.add_argument("--directory", type=Path, required=True)
+    command.add_argument("--loose", action="store_true", help="Also write the 40,000 files to binaries/ (slow)")
     command = commands.add_parser("start-run", help="Create local run state; performs no browser or service action")
     command.add_argument("--manifest", type=Path, required=True)
     command.add_argument("--run-id", required=True)
@@ -53,6 +86,38 @@ def main():
     command.add_argument("--output", type=Path, required=True)
     command = commands.add_parser("handoff", help="Read a retained run and identify its last checkpoint")
     command.add_argument("--directory", type=Path, required=True)
+    command = commands.add_parser(
+        "fedora-changes",
+        help="List every AMCR resource modified since a batch baseline and flag changes outside planned records",
+    )
+    command.add_argument("--directory", type=Path, required=True, help="Run directory")
+    command.add_argument("--batch", required=True)
+    command.add_argument("--since", help="UTC/zoned ISO time; default: captured_at of BATCH/db-before.json")
+    command.add_argument("--until", help="UTC/zoned ISO time; default: captured_at of BATCH/db-after.json if present")
+    fedora_login(command)
+    command = commands.add_parser(
+        "advance",
+        help="Live-run step: merge bindings, build next bind-NNNN, revise if pack code changed, render, hand off",
+    )
+    command.add_argument("--directory", type=Path, required=True, help="Run directory")
+    command.add_argument("--references", type=Path, required=True)
+    command.add_argument("--output-root", type=Path, help="Where bind-NNNN is created (default generated/<run-id>)")
+    command.add_argument("--reason")
+    command.add_argument("--reviewer")
+    command = commands.add_parser(
+        "correct-checkpoint", help="Void mis-recorded checkpoint events with an appended correction event"
+    )
+    command.add_argument("--directory", type=Path, required=True)
+    command.add_argument("--void", type=int, nargs="+", required=True, help="Event numbers (events/NNNN.json)")
+    command.add_argument("--reason", required=True)
+    command.add_argument("--reviewer", required=True)
+    command = commands.add_parser(
+        "revise-run", help="Move a run to a fixed pack revision; executed batches must keep identical inputs"
+    )
+    command.add_argument("--directory", type=Path, required=True)
+    command.add_argument("--manifest", type=Path, required=True)
+    command.add_argument("--reason", required=True)
+    command.add_argument("--reviewer", required=True)
     command = commands.add_parser("render", help="Create exact-path human cards in a selected local run directory")
     command.add_argument("--directory", type=Path, required=True)
     command.add_argument("--run-root", type=Path, required=True)
@@ -72,11 +137,11 @@ def main():
         "fedora-read", help="Direct read-only Fedora evidence; password is prompted, never saved"
     )
     command.add_argument("--url", required=True)
-    command.add_argument("--user")
+    fedora_login(command)
     command.add_argument("--output", type=Path, required=True)
     command = commands.add_parser("fedora-search", help="Paginated read-only discovery below one record")
     command.add_argument("--record", required=True)
-    command.add_argument("--user")
+    fedora_login(command)
     command.add_argument("--output", type=Path, required=True)
     command = commands.add_parser(
         "capture", help="Resumable bounded direct Fedora GETs from a frozen plan; no writes to services"
@@ -84,7 +149,7 @@ def main():
     command.add_argument("--plan", type=Path, required=True)
     command.add_argument("--directory", type=Path, required=True)
     command.add_argument("--limit", type=int, default=100)
-    command.add_argument("--user")
+    fedora_login(command)
     command.add_argument("--run-root", type=Path)
     command = commands.add_parser("discover", help="Bounded, read-only public seed selection")
     command.add_argument("--entity", required=True)
@@ -247,7 +312,9 @@ def main():
     elif args.command == "load-binaries":
         from import_pack.build import load_binaries
 
-        print(json.dumps(load_binaries(args.directory.resolve(), read_json(args.directory / "manifest.json"))))
+        print(
+            json.dumps(load_binaries(args.directory.resolve(), read_json(args.directory / "manifest.json"), args.loose))
+        )
     elif args.command == "start-run":
         from import_pack.session import start_run
 
@@ -288,6 +355,61 @@ def main():
                 }
             )
         )
+    elif args.command == "fedora-changes":
+        from import_pack.common import json_bytes, write_new
+        from import_pack.fedora_audit import classify, modified_since, utc
+        from import_pack.session import current_manifest
+        from import_pack.sources import Reader
+
+        root = args.directory.resolve()
+        batch_dir = root / args.batch
+        since = utc(args.since or read_json(batch_dir / "db-before.json")["_provenance"]["captured_at"])
+        plan = batch_dir / "fedora-plan.json"
+        planned = (
+            {u["url"].split("/record/")[1].split("/")[0] for u in read_json(plan)["resources"]}
+            if plan.is_file()
+            else set()
+        )
+        after = batch_dir / "db-after.json"
+        until = args.until or (read_json(after)["_provenance"]["captured_at"] if after.is_file() else None)
+        until = utc(until) if until else None
+        found = modified_since(Reader(fedora_credentials(args), limit=250), since, until=until)
+        result = {
+            "batch": args.batch,
+            "since": since,
+            "until": until,
+            "complete": found["complete"],
+            "items": found["items"],
+        }
+        result.update(classify(found["items"], current_manifest(root), planned))
+        body = json_bytes(result)
+        from import_pack.common import digest
+
+        write_new(batch_dir / f"fedora-changes-{digest(body)[:12]}.json", body)
+        print(
+            json.dumps(
+                {k: result[k] for k in ("since", "until", "complete", "planned", "unplanned_own", "outside")}
+                | {"planned": len(result["planned"])},
+                ensure_ascii=False,
+            )
+        )
+    elif args.command == "advance":
+        from import_pack.advance import advance
+
+        root = args.directory.resolve()
+        output_root = (args.output_root or PACK / "generated" / read_json(root / "run.json")["run_id"]).resolve()
+        result = advance(root, args.references, output_root, args.reason, args.reviewer)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    elif args.command == "correct-checkpoint":
+        from import_pack.session import record_correction
+
+        event = record_correction(args.directory.resolve(), args.void, args.reason, args.reviewer)
+        print(json.dumps({k: event[k] for k in ("batch_id", "voids", "reason")}, ensure_ascii=False))
+    elif args.command == "revise-run":
+        from import_pack.session import revise_pack
+
+        record = revise_pack(args.directory.resolve(), read_json(args.manifest), args.reason, args.reviewer)
+        print(json.dumps({k: record[k] for k in ("manifest", "changed_batches", "removed_batches", "added_batches")}))
     elif args.command == "handoff":
         from import_pack.session import handoff
 
@@ -365,16 +487,18 @@ def main():
         write_new(args.output, operator_sql(args.ident).encode())
         print(json.dumps({"read_only_sql": str(args.output.resolve())}))
     elif args.command == "verify-batch":
-        from import_pack.oracle import check_batch
+        from import_pack.oracle import captured_scopes, check_batch
 
         manifest = read_json(args.manifest)
         batch = next(b for b in manifest["batches"] if b["id"] == args.batch)
+        before, after = read_json(args.before), read_json(args.after)
         result = check_batch(
             read_json(PACK / "definitions/inventory.json"),
             batch,
-            read_json(args.before),
-            read_json(args.after),
+            before,
+            after,
             read_json(args.references),
+            captured_scopes(args.after.resolve().parents[1], before, after),
         )
         save_json(args.output, result)
         print(
@@ -468,12 +592,10 @@ def main():
             )
         )
     elif args.command == "capture":
-        import getpass
-
         from import_pack.capture import capture
         from import_pack.sources import Reader
 
-        credentials = (args.user, getpass.getpass("Session-only Fedora password: ")) if args.user else None
+        credentials = fedora_credentials(args)
         result = capture(
             Reader(credentials, limit=args.limit),
             args.directory.resolve(),
@@ -484,12 +606,10 @@ def main():
         )
         print(json.dumps(result))
     elif args.command in ("fedora-read", "fedora-search"):
-        import getpass
-
         from import_pack.common import write_new
         from import_pack.sources import Reader, fedora_search
 
-        credentials = (args.user, getpass.getpass("Session-only Fedora password: ")) if args.user else None
+        credentials = fedora_credentials(args)
         reader = Reader(credentials)
         if args.command == "fedora-read":
             result = reader.get(args.url, "text/turtle" if args.url.endswith("/fcr:versions") else "*/*")

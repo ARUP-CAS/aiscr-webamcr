@@ -16,6 +16,59 @@ HOSTS = {"api.aiscr.cz", "api-test.aiscr.cz", "digiarchiv.aiscr.cz", "digiarchiv
 OAI = "{http://www.openarchives.org/OAI/2.0/}"
 
 
+def stored_credentials(target):
+    """
+    Načte generické přihlašovací údaje z Windows Credential Manageru, aniž by heslo prošlo příkazem nebo souborem.
+
+    Operátor je uloží ve vlastním terminálu, např. ``cmdkey /generic:TARGET /user:USER /pass`` (heslo se zadá
+    na výzvu). Funkce je jen čte přes ``CredReadW``; nic neukládá ani nevypisuje.
+
+    :param target: Název generického záznamu v Credential Manageru.
+    :return: Dvojice (uživatel, heslo).
+    :raises OSError: Mimo Windows, pokud záznam neexistuje, nebo pokud nemá uživatele či heslo.
+    """
+    import ctypes
+    import sys
+    from ctypes import wintypes
+
+    if sys.platform != "win32":
+        raise OSError("Stored credentials are read from Windows Credential Manager only")
+
+    class Credential(ctypes.Structure):
+        _fields_ = [
+            ("Flags", wintypes.DWORD),
+            ("Type", wintypes.DWORD),
+            ("TargetName", wintypes.LPWSTR),
+            ("Comment", wintypes.LPWSTR),
+            ("LastWritten", wintypes.FILETIME),
+            ("CredentialBlobSize", wintypes.DWORD),
+            ("CredentialBlob", ctypes.POINTER(ctypes.c_ubyte)),
+            ("Persist", wintypes.DWORD),
+            ("AttributeCount", wintypes.DWORD),
+            ("Attributes", ctypes.c_void_p),
+            ("TargetAlias", wintypes.LPWSTR),
+            ("UserName", wintypes.LPWSTR),
+        ]
+
+    advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+    advapi.CredReadW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.POINTER(ctypes.c_void_p)]
+    advapi.CredReadW.restype = wintypes.BOOL
+    advapi.CredFree.argtypes = [ctypes.c_void_p]
+    pointer = ctypes.c_void_p()
+    if not advapi.CredReadW(str(target), 1, 0, ctypes.byref(pointer)):  # 1 = CRED_TYPE_GENERIC
+        raise OSError(f"No generic credential named {target!r} in Windows Credential Manager")
+    try:
+        credential = ctypes.cast(pointer, ctypes.POINTER(Credential)).contents
+        blob = ctypes.string_at(credential.CredentialBlob, credential.CredentialBlobSize)
+        user = credential.UserName
+    finally:
+        advapi.CredFree(pointer)
+    password = blob.decode("utf-16-le")
+    if not user or not password:
+        raise OSError(f"Credential {target!r} lacks a user name or password")
+    return user, password
+
+
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     """Odmítne přesměrování před odesláním jakékoli autorizace."""
 

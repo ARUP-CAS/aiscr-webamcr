@@ -3,7 +3,7 @@
 import re
 import zipfile
 
-from .common import digest
+from .common import PSEUDO_KEY_OFFSETS, digest
 
 
 def report_rows(path):
@@ -36,9 +36,38 @@ def bind_keys(manifest, snapshot, report):
         name = row.get("CSV")
         import_id = row.get("ID v CSV", row.get("ID in CSV"))
         database_id = row.get("ID v DB", row.get("ID in DB"))
-        if not name or not import_id or not database_id:
+        if not name or not import_id:
             continue
         name = str(name).removesuffix(".csv")
+        if name == "soubory" and not database_id:
+            # The live report gives no DB ID for a file: "nazev: X, vazba: SouborVazby object (N)".
+            described = re.fullmatch(r"nazev:\s*(.+?),\s*vazba:\s*\D*\((\d+)\)", str(import_id).strip())
+            if described:
+                file_name, link = described.group(1), int(described.group(2))
+                found = [
+                    s for s in snapshot.get("soubor", []) if s.get("nazev") == file_name and s.get("vazba") == link
+                ]
+                if len(found) != 1:
+                    raise ValueError(f"DB/report identity disagreement for file {file_name}")
+                import_id, database_id = None, found[0]["id"]
+                sources = [
+                    s
+                    for batch in manifest["batches"]
+                    if batch["operation"] == "insert"
+                    for s in batch["tables"].get("soubory", [])
+                    if s.get("nazev") == file_name
+                ]
+                if len(sources) != 1:
+                    raise ValueError(f"File {file_name} is not one planned insert")
+                import_id = sources[0]["id"]
+        if not import_id or not database_id:
+            continue
+        # The live report labels the key ("id: 950001", "ident_cely: X") and prints a prefixed pseudo key
+        # ("vedo-950001") by its numeric part only; composite keys ("a: x, b: y") carry no own ID.
+        labelled = re.fullmatch(r"(?:[a-z_]+:\s*)?([^,:]+)", str(import_id).strip())
+        if not labelled:
+            continue
+        import_id = labelled.group(1).strip()
         candidates = [
             batch for batch in manifest["batches"] if batch["operation"] == "insert" and name in batch["tables"]
         ]
@@ -46,15 +75,20 @@ def bind_keys(manifest, snapshot, report):
             continue
         originals = [source for batch in candidates for source in batch["tables"][name]]
         for ordinal, source in enumerate(originals, 1):
-            if str(source.get("id", source.get("ident_cely"))) != str(import_id):
+            source_key = str(source.get("id", source.get("ident_cely")))
+            if source_key != import_id and source_key.rsplit("-", 1)[-1] != import_id:
+                continue
+            if source_key != import_id and not re.fullmatch(r"[a-z]+-\d+", source_key):
                 continue
             match = re.fullmatch(r"(?:([a-z]+)-)?(\d+)", str(database_id))
             if not match:
                 continue
             pk = int(match.group(2))
-            logical = re.fullmatch(r"([a-z]+)-(\d+)", str(import_id))
+            logical = re.fullmatch(r"([a-z]+)-(\d+)", source_key)
             index = (
-                int(logical.group(2)) - int(manifest["namespace"]) if logical and manifest.get("namespace") else ordinal
+                int(logical.group(2)) - PSEUDO_KEY_OFFSETS.get(name, 0) - int(manifest["namespace"])
+                if logical and manifest.get("namespace")
+                else ordinal
             )
             if index < 1:
                 raise ValueError("Import identity is outside this namespace")
@@ -65,7 +99,7 @@ def bind_keys(manifest, snapshot, report):
                 raise ValueError(f"DB/report identity disagreement for {name}:{index}")
             if source.get("ident_cely") and matches[0].get("ident_cely") != source["ident_cely"]:
                 raise ValueError("DB natural key disagrees with report")
-            prefix = str(import_id).split("-", 1)[0]
+            prefix = source_key.split("-", 1)[0]
             if match.group(1) and match.group(1) != prefix:
                 raise ValueError("DB key prefix disagrees with CSV key")
             mapping[f"{name}:{index}.id"] = f"{prefix}-{pk}"

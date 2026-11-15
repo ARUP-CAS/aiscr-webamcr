@@ -27,6 +27,41 @@ def attrs(node):
     }
 
 
+SPATIAL_SOURCES = {
+    "webclient/core/constants.py": ("KLADYZM10", "KLADYZM50"),
+    "webclient/heslar/hesla_dynamicka.py": ("GEOMETRY_LINIE", "GEOMETRY_PLOCHA"),
+}
+
+
+def spatial_constants(repo: Path) -> dict:
+    """
+    Přečte kategorie mapových listů ZM a výchozí typy geometrie PIAN přímo ze zdroje aplikace.
+
+    Kategorie jsou celočíselné konstanty ``KLADYZM*`` z ``core/constants.py``. Typy geometrie jsou výchozí
+    ``ident_cely`` ze slovníku ``HESLAR_CONSTANTS`` v ``heslar/hesla_dynamicka.py``; aplikace je za běhu
+    může přepsat nastavením ``CustomAdminSettings`` (skupina ``constants``, položka ``heslar``).
+
+    :param repo: Kořen repozitáře aplikace.
+    :return: Mapa názvu konstanty na její hodnotu ve zdroji.
+    :raises KeyError: Pokud některá z očekávaných konstant ve zdroji chybí.
+    """
+    values = {}
+    for rel, names in SPATIAL_SOURCES.items():
+        for node in ast.parse((repo / rel).read_text(encoding="utf-8")).body:
+            if not isinstance(node, ast.Assign) or len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+                continue
+            name = node.targets[0].id
+            if name in names:
+                values[name] = ast.literal_eval(node.value)
+            elif name == "HESLAR_CONSTANTS":
+                mapping = ast.literal_eval(node.value)
+                values.update({key: mapping[key] for key in names if key in mapping})
+    missing = [name for names in SPATIAL_SOURCES.values() for name in names if name not in values]
+    if missing:
+        raise KeyError("Missing source constants: " + ", ".join(missing))
+    return values
+
+
 def inventory(repo: Path) -> dict:
     """Vrátí přehled všech registrovaných CSV tříd a zdrojové otisky."""
     mapper_path = repo / "webclient/core/import_data_mappers.py"
@@ -176,6 +211,8 @@ def inventory(repo: Path) -> dict:
         if isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) and n.target.id.startswith("HESLAR_")
     }
     hashes[constants_path.relative_to(repo).as_posix()] = source_digest(constants_path.read_bytes())
+    for rel in SPATIAL_SOURCES:
+        hashes[rel] = source_digest((repo / rel).read_bytes())
     import subprocess
 
     revision = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
@@ -201,5 +238,6 @@ def inventory(repo: Path) -> dict:
         "models": models,
         "identifier_patterns": patterns,
         "vocabulary_constants": constants,
+        "spatial_constants": spatial_constants(repo),
         "summary": {"classes": len(mappers), "update_allowed": sum(bool(x["allow_update"]) for x in mappers)},
     }

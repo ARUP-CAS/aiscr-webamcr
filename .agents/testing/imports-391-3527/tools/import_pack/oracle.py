@@ -10,6 +10,7 @@ from datetime import datetime, time
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+from .common import read_json
 from .verify import selected
 
 ALIASES = {"komponenty": {"vazba": "komponenta_vazby"}, "uzivatele_notifikace_projekty": {"uzivatel": "user"}}
@@ -43,14 +44,48 @@ NATURAL = {
 }
 
 
+_ROWS_CACHE = {}
+
+
 def rows(snapshot, refs, table):
-    """Combine scoped owned rows with sanitized, frozen reference identities."""
+    """
+    Spojí vlastní řádky snapshotu s anonymizovanými referenčními identitami tabulky.
+
+    Referenční řádek je podmnožinou sloupců a tentýž DB řádek může být i ve snapshotu; shoda se hledá podle
+    ``id`` (množina), jen řádky bez ``id`` se porovnávají po polích. Výsledek se pro dvojici snapshot/reference
+    ukládá do mezipaměti, protože se v rámci jedné kontroly nemění.
+
+    :param snapshot: Export DB.
+    :param refs: Export referencí s ``reference_rows``.
+    :param table: Název tabulky.
+    :return: Seznam řádků bez duplicit.
+    :raises ValueError: Pokud tabulka chybí v obou zdrojích.
+    """
+    # Lengths in the key invalidate the cache when either list grows in place.
+    key = (
+        id(snapshot),
+        id(refs),
+        table,
+        len(snapshot.get(table, [])),
+        len(refs.get("reference_rows", {}).get(table, [])),
+    )
+    cached = _ROWS_CACHE.get(key)
+    if cached is not None and cached[0] is snapshot and cached[1] is refs:
+        return cached[2]
     if table not in snapshot and table not in refs.get("reference_rows", {}):
         raise ValueError(f"Missing table evidence: {table}")
     result = list(snapshot.get(table, []))
+    owned_ids = {row.get("id") for row in result if row.get("id") is not None}
     for item in refs.get("reference_rows", {}).get(table, []):
-        if item not in result:
+        if item.get("id") is not None:
+            duplicate = item["id"] in owned_ids
+        else:
+            duplicate = any(all(row.get(k) == v for k, v in item.items()) for row in result)
+        if not duplicate:
             result.append(item)
+    if len(_ROWS_CACHE) > 256:
+        _ROWS_CACHE.clear()
+    _ROWS_CACHE[key] = (snapshot, refs, result)
     return result
 
 
@@ -128,6 +163,14 @@ def expected_field(source, mapper, field, value, snapshot, refs):
         column, tables, link = OWNER_FIELDS[name]
         return model["table"], column, find_owner(snapshot, value, tables, link), None
     info = model.get("fields", {}).get(field_name)
+    if info is None:
+        # Mappers writing a companion model (e.g. Dokument + DokumentExtraData) label some columns with
+        # the main model; take the field from the companion model that declares it.
+        for companion in sorted({c.get("model") for c in mapper["columns"].values()} - {model_name, None}):
+            candidate = source["models"].get(companion, {})
+            if field_name in candidate.get("fields", {}):
+                model, info = candidate, candidate["fields"][field_name]
+                break
     if info is None and field_name == "id":
         return model.get("table"), "id", int(str(value).rsplit("-", 1)[-1]), {"type": "IntegerField"}
     if info is None:
@@ -144,6 +187,9 @@ def expected_field(source, mapper, field, value, snapshot, refs):
     target = info["args"][0] if info.get("args") else info.get("to")
     target = target.get("expression") if isinstance(target, dict) else target
     target = target.split(".")[-1]
+    if target == "self":
+        # A self-reference (e.g. Organizace.soucast) points to the model that declares the field.
+        target = next(name for name, candidate in source["models"].items() if candidate is model)
     target_model = source["models"].get(target)
     if not target_model:
         target_model = {
@@ -180,13 +226,38 @@ def equal(actual, expected, info):
     return actual == expected
 
 
-def check_batch(source, batch, before, after, refs=None):
+def captured_scopes(root, before, after):
+    """
+    Najde rozsahy, kterými vznikly snapshoty před a po dávce, podle ``_provenance.scope_sha256``.
+
+    :param root: Adresář běhu s ``snapshot-scopes/``.
+    :param before: Snapshot před dávkou.
+    :param after: Snapshot po dávce.
+    :return: Slovník ``{"before"|"after": množina identifikátorů}``; snapshot bez otisku vynechá.
+    :raises ValueError: Snapshot nese otisk rozsahu, který běh nezná.
+    """
+    scopes = {}
+    for name, snapshot in (("before", before), ("after", after)):
+        digest = snapshot.get("_provenance", {}).get("scope_sha256")
+        if not digest:
+            continue
+        path = root / "snapshot-scopes" / (digest + ".json")
+        if not path.is_file():
+            raise ValueError(f"Unknown snapshot scope {digest} in the {name} snapshot")
+        scopes[name] = set(read_json(path)["identifiers"])
+    return scopes
+
+
+def check_batch(source, batch, before, after, refs=None, scopes=None):
     """Check complete persisted row values and preserve omitted UPDATE columns.
 
     Geometry and repository evidence are separate mandatory checks. A missing
-    special contract becomes blocked, never a successful row assertion.
+    special contract becomes blocked, never a successful row assertion. A row
+    whose ident lies outside the scope a snapshot was captured with is blocked
+    (stale query), not reported as absent.
     """
     refs = refs or {}
+    scopes = scopes or {}
     results = []
     if (
         batch["expected"].startswith("reject")
@@ -261,30 +332,42 @@ def check_batch(source, batch, before, after, refs=None):
                     selector[column] = value
                 if not selector:
                     selector = {k: v for k, (v, _) in values[primary].items()}
+                stale = [n for n, scope in sorted(scopes.items()) if selector.get("ident_cely", "") not in scope]
+                if "ident_cely" in selector and stale:
+                    raise ValueError("Evidence query predates this row: ident outside the scope of " + ", ".join(stale))
                 old = selected(before, primary, selector)
                 new = selected(after, primary, selector)
+                problems = []
                 if batch["operation"] == "delete":
                     passed = len(old) == 1 and len(new) == 0
                 else:
                     passed = len(new) == 1 and (len(old) == 0 if batch["operation"] == "insert" else len(old) == 1)
+                    if not passed:
+                        problems.append(f"row presence before/after: {len(old)}/{len(new)}")
                     for table, fields in values.items():
                         if table == primary:
                             targets = new
                         else:
-                            targets = (
-                                selected(
-                                    after,
-                                    table,
-                                    {"archeologicky_zaznam" if name.startswith("az_") else "dokument": new[0]["id"]},
-                                )
+                            link = (
+                                {"archeologicky_zaznam" if name.startswith("az_") else "dokument": new[0]["id"]}
                                 if len(new) == 1
-                                else []
+                                else None
                             )
-                        passed &= len(targets) == 1 and all(
-                            equal(targets[0].get(k), v, info) for k, (v, info) in fields.items()
+                            targets = selected(after, table, link) if link else []
+                        wrong = (
+                            [k for k, (v, info) in fields.items() if not equal(targets[0].get(k), v, info)]
+                            if len(targets) == 1
+                            else [f"{len(targets)} target rows"]
                         )
+                        if wrong:
+                            problems.append(f"{table} values: {', '.join(wrong)}")
+                        passed &= not wrong
                         if batch["operation"] == "update" and targets:
-                            previous = selected(before, table, {"id": targets[0]["id"]}) if "id" in targets[0] else old
+                            if "id" in targets[0]:
+                                previous = selected(before, table, {"id": targets[0]["id"]})
+                            else:
+                                # A companion row keyed by its owner (akce, lokalita, dokument_extra_data).
+                                previous = selected(before, table, link) if table != primary and link else old
                             derived = {column for owner_table, column, _ in geometry if owner_table == table}
                             if derived and "geom_sjtsk" in targets[0]:
                                 derived |= {"geom", "geom_sjtsk"}
@@ -292,10 +375,17 @@ def check_batch(source, batch, before, after, refs=None):
                                 derived |= {"mimetype", "size_mb", "sha_512", "rozsah"}
                                 if old and targets[0].get("vazba") != old[0].get("vazba"):
                                     derived.add("path")
+                            # *_snapshot columns are caches the application recomputes when the owner is saved.
+                            derived |= {column for column in targets[0] if column.endswith("_snapshot")}
                             omitted = set(targets[0]) - set(fields) - derived - {"_geometry", "_geometry_consistent"}
-                            passed &= len(previous) == 1 and all(
-                                previous[0].get(k) == targets[0].get(k) for k in omitted
+                            changed = (
+                                sorted(k for k in omitted if previous[0].get(k) != targets[0].get(k))
+                                if len(previous) == 1
+                                else [f"{len(previous)} previous rows"]
                             )
+                            if changed:
+                                problems.append(f"{table} omitted fields changed: {', '.join(changed)}")
+                            passed &= not changed
                     for table, column, expected in geometry:
                         # The SQL adds exact EWKT and independent SRID/pair consistency.
                         targets = (
@@ -305,10 +395,14 @@ def check_batch(source, batch, before, after, refs=None):
                         )
                         if not targets or "_geometry_consistent" not in targets[0]:
                             raise ValueError("Missing normalized geometry/SRID evidence")
+                        if targets[0]["_geometry_consistent"] is not True:
+                            problems.append(f"{table} geometry pair inconsistent")
                         passed &= targets[0]["_geometry_consistent"] is True
                         source_column = "geom_sjtsk" if str(data.get("geom_system")) == "5514" else "geom"
                         if column == source_column or not data.get(source_column):
                             actual = targets[0]["_geometry"][column]["wkt"]
+                            if not geometry_equal(actual, expected):
+                                problems.append(f"{table}.{column} geometry differs")
                             passed &= geometry_equal(actual, expected)
                     if name == "soubory" and len(new) == 1:
                         owners = [
@@ -324,6 +418,8 @@ def check_batch(source, batch, before, after, refs=None):
                             )
                             passed &= re.fullmatch(expected_path, str(new[0].get("path") or "").lstrip("/")) is not None
                 result.update(state="passed" if passed else "failed", selector=selector, geometry_columns=geometry)
+                if problems:
+                    result["problems"] = problems
             except (ValueError, KeyError, TypeError) as error:
                 result["reason"] = str(error)
             results.append(result)

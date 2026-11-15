@@ -66,6 +66,53 @@ def checkpoints(root):
     return result
 
 
+def effective_checkpoints(root):
+    """
+    Vrátí kontrolní body bez těch, které pozdější opravná událost výslovně zneplatnila.
+
+    Řetězec událostí se nikdy nepřepisuje; oprava je nová událost ``phase == "correction"`` s čísly
+    zneplatněných událostí a důvodem. Opravné události samy nejsou kontrolními body dávky.
+
+    :param root: Adresář běhu.
+    :return: Platné kontrolní body v pořadí záznamu.
+    """
+    events = checkpoints(root)
+    voided = {n for e in events if e.get("phase") == "correction" for n in e.get("voids", [])}
+    return [e for n, e in enumerate(events, 1) if n not in voided and e.get("phase") != "correction"]
+
+
+def record_correction(root, voids, reason, reviewer):
+    """
+    Zneplatní chybně zaznamenané kontrolní body novou událostí; původní události zůstávají v řetězci.
+
+    :param root: Adresář běhu.
+    :param voids: Pořadová čísla zneplatňovaných událostí (``events/NNNN.json``).
+    :param reason: Proč byl záznam chybný.
+    :param reviewer: Kdo opravu schválil.
+    :return: Zapsaná opravná událost.
+    :raises ValueError: Bez důvodu či recenzenta, nebo při neexistující či opravné cílové události.
+    """
+    if not str(reason or "").strip() or not str(reviewer or "").strip():
+        raise ValueError("A correction needs a reason and a reviewer")
+    events = checkpoints(root)
+    for number in voids:
+        if not 1 <= number <= len(events) or events[number - 1].get("phase") == "correction":
+            raise ValueError(f"Cannot void event {number}")
+    event = {
+        "phase": "correction",
+        "batch_id": events[voids[0] - 1]["batch_id"],
+        "voids": sorted(voids),
+        "voided_digests": [digest(json_bytes(events[n - 1])) for n in sorted(voids)],
+        "reason": reason,
+        "reviewer": reviewer,
+        "state": "checked",
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "previous_sha256": digest(json_bytes(events[-1])) if events else None,
+    }
+    save_json(inside(root, f"events/{len(events) + 1:04}.json"), event)
+    return event
+
+
 def retain(root, batch_id, files):
     """Zachová původní důkazy; odlišné existující soubory nepřepíše."""
     result = {}
@@ -84,12 +131,108 @@ def retain(root, batch_id, files):
     return result
 
 
+SOURCE_IDENTITY = ("suite", "namespace", "source_commit", "source_hash_mode", "source_hashes")
+UNCHANGED_PHASES = {("preflight", None), ("validation", "failed"), ("validation", "blocked")}
+
+
+def identity_manifest(root):
+    """
+    Vrátí manifest, který určuje identitu generátoru a pokrytí běhu.
+
+    Je to manifest poslední zaznamenané revize balíčku (``revise_pack``), jinak původní manifest z ``run.json``.
+
+    :param root: Adresář běhu.
+    :return: Manifest s platnými ``generator_hashes``, ``coverage`` a ``known_defects``.
+    """
+    revisions = sorted((root / "pack-revisions").glob("*.json"))
+    if revisions:
+        return read_json(inside(root, read_json(revisions[-1])["manifest"]))
+    return read_json(root / "run.json")["manifest"]
+
+
+def executed_batches(root):
+    """
+    Vrátí dávky, u nichž mohla proběhnout změna dat nebo existuje validovaná úloha.
+
+    Za neprovedené se považují jen dávky, jejichž jediné kontrolní body jsou preflight nebo neúspěšná či
+    blokovaná validace; ty v aplikaci nic nezměnily ani nezaložily schválitelnou úlohu.
+
+    :param root: Adresář běhu.
+    :return: Množina ID dávek.
+    """
+    result = set()
+    for event in effective_checkpoints(root):
+        phase = event.get("phase", "terminal")
+        if (phase, None) in UNCHANGED_PHASES or (phase, event["state"]) in UNCHANGED_PHASES:
+            continue
+        result.add(event["batch_id"])
+    return result
+
+
+def revise_pack(root, manifest, reason, reviewer):
+    """
+    Převede běh na opravenou revizi balíčku bez opakování již provedených dávek.
+
+    Zdrojová identita (sada, jmenný prostor, zdrojový commit a otisky) se nesmí změnit. Každá dávka, která
+    v běhu cokoli provedla, musí mít v nové revizi bajtově shodný vstup a stejný kontrakt operace, pokrytí
+    a závislostí. Měnit se smí jen dávky bez provedení, typicky dávka zamítnutá ve validaci kvůli vadě
+    balíčku. Revize se zaznamená s důvodem, recenzentem a seznamem změněných dávek.
+
+    :param root: Adresář běhu.
+    :param manifest: Manifest opravené revize sestavený ve stejném jmenném prostoru.
+    :param reason: Důvod revize (např. nález z validace).
+    :param reviewer: Kdo revizi schválil.
+    :return: Záznam revize.
+    :raises ValueError: Při změně zdrojové identity, chybějícím důvodu či recenzentovi nebo změně provedené dávky.
+    """
+    if not str(reason or "").strip() or not str(reviewer or "").strip():
+        raise ValueError("A pack revision needs a reason and a reviewer")
+    run = read_json(root / "run.json")
+    for key in SOURCE_IDENTITY:
+        if manifest.get(key) != run["manifest"].get(key):
+            raise ValueError("Pack revision changes the run/source identity: " + key)
+    old = {b["id"]: b for b in current_manifest(root)["batches"]}
+    new = {b["id"]: b for b in manifest["batches"]}
+    for batch_id in sorted(executed_batches(root)):
+        if batch_id not in new:
+            raise ValueError("Pack revision removes executed batch " + batch_id)
+        if any(
+            new[batch_id].get(key) != old[batch_id].get(key)
+            for key in ("input_sha256", "operation", "coverage_ids", "prerequisites")
+        ):
+            raise ValueError("Pack revision changes executed batch " + batch_id)
+    previous = identity_manifest(root)
+    files = sorted((root / "input-revisions").glob("*.json"))
+    revision = inside(root, f"input-revisions/{len(files) + 1:04}.json")
+    save_json(revision, manifest)
+    records = sorted((root / "pack-revisions").glob("*.json"))
+    record = {
+        "manifest": revision.relative_to(root).as_posix(),
+        "manifest_sha256": digest(json_bytes(manifest)),
+        "previous_generator_hashes": previous.get("generator_hashes"),
+        "generator_hashes": manifest.get("generator_hashes"),
+        "reason": reason,
+        "reviewer": reviewer,
+        "executed_batches_unchanged": sorted(executed_batches(root)),
+        "changed_batches": sorted(
+            i for i in set(old) & set(new) if old[i].get("input_sha256") != new[i].get("input_sha256")
+        ),
+        "removed_batches": sorted(set(old) - set(new)),
+        "added_batches": sorted(set(new) - set(old)),
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+    }
+    save_json(inside(root, f"pack-revisions/{len(records) + 1:04}.json"), record)
+    return record
+
+
 def register_inputs(root, manifest):
     """Retain a late-bound revision without changing run identity or old inputs."""
     run = read_json(root / "run.json")
-    for key in ("suite", "namespace", "source_commit", "source_hash_mode", "source_hashes", "generator_hashes"):
+    for key in SOURCE_IDENTITY:
         if manifest.get(key) != run["manifest"].get(key):
             raise ValueError("Bound inputs do not belong to this run/source")
+    if manifest.get("generator_hashes") != identity_manifest(root).get("generator_hashes"):
+        raise ValueError("Bound inputs do not belong to this run/source")
     old = {b["id"]: b for b in current_manifest(root)["batches"]}
     if not set(old).issubset({b["id"] for b in manifest["batches"]}):
         raise ValueError("Input revision changes the approved batch scope")
@@ -189,21 +332,27 @@ def record_checkpoint(root, batch_id, task_id, evidence, state, phase="terminal"
 def handoff(root):
     """Vrátí samostatně použitelnou zprávu pro nového agenta."""
     run = read_json(root / "run.json")
-    events = checkpoints(root)
+    events = effective_checkpoints(root)
     last = events[-1] if events else None
     manifest = current_manifest(root)
     completed = {e["batch_id"] for e in events if e["state"] == "checked" and e.get("phase", "terminal") == "terminal"}
+    # A terminal failure closes the batch too: it ran, its evidence is retained and it is never replayed.
+    failed = {
+        e["batch_id"] for e in events if e["state"] == "failed" and e.get("phase", "terminal") == "terminal"
+    } - completed
+    closed = completed | failed
     next_batch = next(
         (
             b
             for b in manifest["batches"]
-            if b["id"] not in completed
-            and not b.get("deferred")
-            and set(b.get("prerequisites", [])).issubset(completed)
+            if b["id"] not in closed and not b.get("deferred") and set(b.get("prerequisites", [])).issubset(closed)
         ),
         None,
     )
-    if last and last["state"] in ("awaiting-agent", "failed", "blocked"):
+    if last and (
+        last["state"] in ("awaiting-agent", "blocked")
+        or (last["state"] == "failed" and last.get("phase") != "terminal")
+    ):
         action = "Agent reviews/reconciles retained evidence first; no human mutation or replay."
     elif last and last["state"] == "checked" and last.get("phase") == "validation":
         action = "Agent checks expected outcome; human may start the same validated task only after a positive approval checkpoint. Do not re-upload."
@@ -219,6 +368,7 @@ def handoff(root):
         "evidence_root": str(root.resolve()),
         "last_checkpoint": last,
         "completed_batches": sorted(completed),
+        "failed_batches": sorted(failed),
         "next_candidate": next_batch["id"] if next_batch else None,
         "next_action": action,
         "deferred_batches": [b["id"] for b in manifest["batches"] if b.get("deferred")],

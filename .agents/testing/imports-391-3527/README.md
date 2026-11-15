@@ -5,11 +5,11 @@ ARUP-CAS/aiscr-webamcr#3527. Start with [START-HERE.md](START-HERE.md), then sel
 the behaviour or independent load runbook. The human operates the browser; the agent
 prepares, binds, reads, compares and reports.
 
-The prepared ledger contains **747 checks**: 138 class/operation cells across all
-46 CSV classes, 210 named branches, 368 field probes, 10 archive/parser cases and
-21 session cases. The main behaviour material has **84 CSV upload inputs and two
-controlled management procedures**. **80 inputs are executable now. Four are deferred**
-because a source-confirmed importer defect would abort them (see below). Sixteen CSV
+The prepared ledger contains **749 checks**: 138 class/operation cells across all
+46 CSV classes, 210 named branches, 370 field probes, 10 archive/parser cases and
+21 session cases. The main behaviour material has **83 CSV upload inputs and two
+controlled management procedures**. **79 inputs are executable now. Four are deferred**
+because a source-confirmed importer defect would abort them (see below). Fifteen CSV
 inputs and both procedures need controlled setup or an acceptance decision. Twenty
 further session scenarios are described separately; thumbnail backfill already has
 its procedure card. Isolated follow-up inputs are used only when an earlier error
@@ -66,7 +66,7 @@ evidence, `failed` is an observed contradiction, `blocked` needs a missing prere
 `unexecuted` has no execution yet, and `inapplicable` requires a recorded reason.
 Simulation and historical evidence cannot produce a live pass.
 
-The local delivery datasets are under `generated/delivery-2026-11-14-r4/`. The
+The local delivery datasets are under `generated/delivery-2026-11-14-r7/`. The
 superseded preparation iterations (r1–r3 and the earlier generated sets), the
 2026-11-09 export bundles and the simulated offline rehearsal run were deleted on
 2026-11-14 by operator decision. None of them was live session evidence.
@@ -98,4 +98,24 @@ prepared bundles were removed on 2026-11-14 (see above).
 Pre-session remediation (2026-11-14): line-ending-normalised source identity,
 deployment parity, known-defect deferral and the relational substitute. The pack now
 lives at its designed path `.agents/testing/imports-391-3527/`. Use the bundle
-`exports/imports-391-3527-2026-11-14-r4.zip` for a new session.
+`exports/imports-391-3527-2026-11-14-r7.zip` for a new session.
+
+Preflight fix (2026-11-14, r5): the reference SQL selects ZM map-sheet categories and
+spatial-unit geometry types by the application constants pinned in the inventory
+(`core/constants.py`, `heslar/hesla_dynamicka.py`), not by scale numbers or term text.
+Only `sql/references.sql` changed against r4.
+
+Fedora login (r6): `fedora-read`, `fedora-search` and `capture` also accept
+`--credential-target`, which reads a read-only login from Windows Credential Manager so
+an agent can collect evidence without the password entering a command, file or chat.
+Inputs are byte-identical to r5; only generator hashes changed.
+
+Recipe audit (r7): the live B02 validation exposed recipe defects (an empty required
+`Oznamovatel.telefon`, a document ident used for the review-type vocabulary in
+`dokumenty_posudky.posudek`). `import_pack.recipe_audit` now checks every generated
+apply-insert row against the inventory: required values present, synthetic references
+pointing at the looked-up model, and vocabulary references from the required family.
+Spatial units also supply `geom_sjtsk`, because the importer checks required fields
+before it derives S-JTSK from WGS84 on INSERT; single-system spatial-unit inserts
+(`az_pian.branch.geometry-4326`/`-5514`) stay as designed and record that observation.
+A live run continues on a fixed pack with `revise-run` (see `operator/agent-checks.md`).

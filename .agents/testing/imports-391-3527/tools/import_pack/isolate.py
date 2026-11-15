@@ -6,7 +6,7 @@ from .common import PACK, inside, read_json, save_json, write_new
 
 
 def isolate(manifest_path, output, kind):
-    from .branches import LIFECYCLES, RUNTIME
+    from .branches import LIFECYCLES, is_controlled
     from .build import add_batch
     from .planning import complete
 
@@ -29,7 +29,7 @@ def isolate(manifest_path, output, kind):
         else [
             c
             for c in manifest["branch_scenarios"]
-            if c["outcome"] == "reject" and c["variant"] not in RUNTIME | LIFECYCLES
+            if c["outcome"] == "reject" and not is_controlled(c) and c["variant"] not in LIFECYCLES
         ]
     )
     inventory = read_json(PACK / "definitions/inventory.json")

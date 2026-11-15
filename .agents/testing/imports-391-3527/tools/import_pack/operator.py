@@ -35,7 +35,13 @@ def render(directory, run_root):
             raise ValueError("Input changed after manifest creation")
         evidence_root = inside(run_root, batch["id"])
         input_root = inside(evidence_root, "input/" + batch["input_sha256"])
-        save_json(inside(input_root, "input-manifest.json"), batch)
+        # The same input bytes can carry updated metadata (e.g. a prerequisite re-pointed to a retry);
+        # keep the first copy and add the new one by content hash instead of overwriting.
+        first = inside(input_root, "input-manifest.json")
+        if not first.exists() or first.read_bytes() == json_bytes(batch):
+            save_json(first, batch)
+        else:
+            save_json(inside(input_root, f"input-manifest-{digest(json_bytes(batch))[:12]}.json"), batch)
         write_new(inside(input_root, input_path.name), input_path.read_bytes())
         input_path = inside(input_root, input_path.name)
         blocked = batch["unresolved"] or batch.get("execution_gate")

@@ -112,6 +112,24 @@ def inside(root: Path, relative: str) -> Path:
     return path
 
 
+# The importer rejects an INSERT whose CSV primary key already exists, although it then allocates a new key.
+# Classes whose live table IDs exceed the namespace range get their pseudo-keys moved far above them.
+PSEUDO_KEY_OFFSETS = {"historie": 900_000_000}
+
+
+def pseudo_key(name, prefix, ns, index):
+    """
+    Vrátí syntetický primární klíč řádku vložení; u tabulek s vysokými ID je posunutý mimo jejich rozsah.
+
+    :param name: Název CSV třídy.
+    :param prefix: Prefix primárního klíče mapperu (např. ``hist``).
+    :param ns: Jmenný prostor běhu.
+    :param index: Pořadí logického záznamu v jmenném prostoru.
+    :return: Klíč ve tvaru ``prefix-číslo``.
+    """
+    return f"{prefix}-{PSEUDO_KEY_OFFSETS.get(name, 0) + int(ns) + index}"
+
+
 def namespace(value: str) -> str:
     """Povolí pouze číselný rozsah pro syntetické identifikátory."""
     if not re.fullmatch(r"9[0-9]{5}", value):

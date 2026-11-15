@@ -53,11 +53,26 @@ def git_listing(repo, commit, names):
     if subprocess.run(["git", "-C", str(repo), "cat-file", "-e", commit + "^{commit}"], capture_output=True).returncode:
         raise ValueError("Deployed revision is not present in this repository")
     hashes, catalogs = {}, {}
+    names = list(names)
+    # One batch process instead of a `git show` per file: process start-up dominates on Windows.
+    request = "".join(f"{commit}:{name}\n" for name in names).encode("utf-8")
+    output = subprocess.run(
+        ["git", "-C", str(repo), "cat-file", "--batch"], input=request, capture_output=True, check=True
+    ).stdout
+    position = 0
     for name in names:
-        shown = subprocess.run(["git", "-C", str(repo), "show", f"{commit}:{name}"], capture_output=True)
-        hashes[name] = source_digest(shown.stdout) if shown.returncode == 0 else None
-        if shown.returncode == 0 and name in CATALOGS:
-            catalogs[name] = shown.stdout.decode("utf-8")
+        end = output.index(b"\n", position)
+        header = output[position:end].split()
+        position = end + 1
+        if header[-1] == b"missing":
+            hashes[name] = None
+            continue
+        size = int(header[2])
+        content = output[position : position + size]
+        position += size + 1
+        hashes[name] = source_digest(content)
+        if name in CATALOGS:
+            catalogs[name] = content.decode("utf-8")
     return hashes, catalogs
 
 

@@ -47,7 +47,7 @@ the human records actual observations and times, rather than inferred screenshot
 ## SQL fallback when the agent has no authorized DB connection
 
 1. Confirm the connection is to the test DB. The agent provides the exact generated
-   read-only script; it starts `BEGIN TRANSACTION READ ONLY` and performs SELECTs.
+   read-only script: SELECT statements only, without a transaction wrapper.
 2. Run `sql/schema.sql` once for preflight and `sql/references.sql` for the reference
    selection. Save each query's single JSON value as UTF-8 `schema.json` and
    `references.json` in the exact preflight directory named by the agent.
@@ -69,7 +69,8 @@ If unrelated concurrent allocations appear, correlate them with the task before
 attributing a defect. Keep the original controlled-setup baseline to retain detached
 file/link rows even when their ordinary parent scope no longer reaches them.
 
-The scripts use PostgreSQL [read-only transactions](https://www.postgresql.org/docs/current/sql-set-transaction.html).
+The scripts are SELECT-only by construction (checked by the pack tests) and carry no
+transaction wrapper, which hid the result in pgAdmin.
 Their geographic reference selection uses a small [PostGIS envelope](https://postgis.net/docs/ST_MakeEnvelope.html)
 containing the generated coordinate variants. Verify the deployed schema/functions via
 the initial exports; source/model agreement alone is not a deployed SQL execution result.

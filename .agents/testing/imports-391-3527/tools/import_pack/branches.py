@@ -57,6 +57,18 @@ RUNTIME = {
 }
 RUNTIME |= {"missing-file-uuid", "missing-file-owner"}
 LIFECYCLES = {"tombstone-reinsert", "recreate", "relation-add-remove"}
+
+
+def is_controlled(case):
+    """
+    Určí, zda případ vyžaduje řízenou přípravu (samostatná dávka s bránou), místo běžné skupiny větví.
+
+    :param case: Případ větve.
+    :return: ``True`` pro varianty z ``RUNTIME`` a případy, jejichž předpoklad v referencích chybí.
+    """
+    return case["variant"] in RUNTIME or bool(case.get("controlled"))
+
+
 FILE_LIFECYCLES = {"soubory.branch." + value for value in ("document-owner", "project-owner", "individual-find-owner")}
 
 
@@ -85,6 +97,14 @@ def variant_row(mapper, variant, index, ns, refs):
         outcome = "acceptance-unresolved"
         notes.append(
             "No acceptance rule for this combination was established by the issue; record current behaviour and integrity, then resolve the rule before a pass."
+        )
+    controlled = False
+    if variant == "cadastral-existing-pian" and not refs.get("cadastral_existing_katastr"):
+        # Never fall back to a cadastre without a PIAN: the importer would create one and hit F31.
+        controlled = True
+        notes.append(
+            "The reference export found no cadastre with an existing spatial unit; prepare one (approved recipe) "
+            "and bind cadastral_existing_katastr before this input."
         )
     if variant in RUNTIME:
         notes.append(
@@ -116,12 +136,16 @@ def variant_row(mapper, variant, index, ns, refs):
         row["geom"] = "NOT A GEOMETRY"
     elif variant == "line":
         row.update(geom="LINESTRING(14.5 50,14.50001 50.00001)", geom_system="4326", typ="$ref:pian_line_type")
+        if "geom_sjtsk" in row:
+            row["geom_sjtsk"] = "$ref:line_5514"
     elif variant == "polygon":
         row.update(
             geom="POLYGON((14.5 50,14.50001 50,14.50001 50.00001,14.5 50))",
             geom_system="4326",
             typ="$ref:pian_polygon_type",
         )
+        if "geom_sjtsk" in row:
+            row["geom_sjtsk"] = "$ref:polygon_5514"
     elif variant in ("partial-update", "partial-range-update"):
         key = list(mapper["key"]) if isinstance(mapper["key"], (list, tuple)) else [mapper["key"]]
         field = next(
@@ -287,11 +311,7 @@ def variant_row(mapper, variant, index, ns, refs):
         field = (
             "soucast"
             if name == "organizace"
-            else (
-                "heslo_nadrazene"
-                if name == "heslar_hierarchie"
-                else "posudek" if name == "dokumenty_posudky" else "spolupracovnik"
-            )
+            else ("heslo_nadrazene" if name == "heslar_hierarchie" else "spolupracovnik")
         )
         row[field] = (
             row.get("ident_cely", row.get("dokument", row.get("vedouci", "$ref:self_target")))
@@ -484,6 +504,7 @@ def variant_row(mapper, variant, index, ns, refs):
         "notes": notes,
         "setup": "isolated-context",
         "index": index,
+        "controlled": controlled,
     }
 
 
@@ -545,6 +566,13 @@ def branch_contexts(source, ns, refs):
                     )
                 if name == "heslar_datace":
                     row["obdobi"] = ident("heslar", ns, index, refs)
+                if name == "heslar_dokument_typ_material":
+                    # (dokument_typ, dokument_material) is unique: each context gets its own synthetic type.
+                    row["dokument_typ"] = ident("heslar", ns, index, refs)
+                if name == "heslar_hierarchie":
+                    # (heslo_podrazene, heslo_nadrazene, typ) is unique: use this context's own two terms.
+                    row["heslo_nadrazene"] = ident("heslar", ns, index, refs)
+                    row["heslo_podrazene"] = ident("heslar", ns, index + 1, refs)
                 if name == "soubory" and variant in (
                     "document-owner",
                     "project-owner",
@@ -569,11 +597,12 @@ def branch_contexts(source, ns, refs):
                 parent = row_for(by_name["dokumenty_neident_akce"], ns, index, refs)
                 parent["dokument_cast"] = ident("dokumenty_casti", ns, index, refs)
                 setup["dokumenty_neident_akce"].append(parent)
-            if name in ("heslar_datace", "heslar_hierarchie"):
+            if name in ("heslar_datace", "heslar_hierarchie", "heslar_dokument_typ_material"):
+                family = "HESLAR_DOKUMENT_TYP" if name == "heslar_dokument_typ_material" else "HESLAR_OBDOBI"
                 for number in (index, index + 1) if name == "heslar_hierarchie" else (index,):
                     term = row_for(by_name["heslar"], ns, number, refs)
                     term["nazev_heslare"] = (
-                        refs.get("vocabulary_names", {}).get("HESLAR_OBDOBI") or "$ref:vocabulary_names.HESLAR_OBDOBI"
+                        refs.get("vocabulary_names", {}).get(family) or "$ref:vocabulary_names." + family
                     )
                     setup["heslar"].append(term)
             if name in ("distribution", "paradata") or (name == "historie" and variant == "file-owner"):
@@ -591,7 +620,7 @@ def branch_contexts(source, ns, refs):
     groups = []
     for case in cases:
         if (
-            case["variant"] in RUNTIME
+            is_controlled(case)
             or case["variant"] in LIFECYCLES
             or case["id"] in FILE_LIFECYCLES
             or case["outcome"] == "acceptance-unresolved"

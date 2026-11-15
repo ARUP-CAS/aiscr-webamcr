@@ -8533,6 +8533,7 @@
     "webclient/api/models.py": "8e0a87f16d142c4f2a5e7c2460152356b98c9a52462865696cabd12a5bb14e92",
     "webclient/arch_z/models.py": "237bcbb3924df4b0f54cb4afda2d20eb3de471cec6676e82e33cc6bd38d96c93",
     "webclient/core/admin_sites.py": "bc97544f437f925cee4995d2d30e07b0db1d164fee4fce1d2f0a52e3e59cdaee",
+    "webclient/core/constants.py": "dc0c242ae8acce5930f9698d53e7aacba37e1f7825f2b3fd30d421440f29d61b",
     "webclient/core/distribution_names.py": "a0ff189aafc8e6b7aa80794731a7e3cb6e5967aded5b43db558c1b7a2b9c7674",
     "webclient/core/ident_cely.py": "5f3702d6a39037d86dcfe5556dbf235027227108488f599c0245bc3cd02f0844",
     "webclient/core/import_data_mappers.py": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
@@ -8546,6 +8547,7 @@
     "webclient/ez/models.py": "546df32e85ded69731d9526dff124f04ed2d35f54438114425c1bb34fae029bc",
     "webclient/fedora_management/models.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "webclient/heslar/hesla.py": "016eb4184c393c23a624ca3c6df2489f9a126df81d81b2de4a9904e04ace29bb",
+    "webclient/heslar/hesla_dynamicka.py": "a14f9aaf03567e7c15f2e9b5d2fdade3a8933ed593d0bfe9facb205ee436972f",
     "webclient/heslar/models.py": "f292bb554e2cc7f25433d44acce8545e901ced34936617d32d1bfbd2c4819da4",
     "webclient/historie/models.py": "5f60fe5ac098fafc0ab8934aea4355c8adcb91a5807e8ef11b2b3349d6cffd9c",
     "webclient/komponenta/models.py": "31a97a5f2f05306e073e63e2150eae4ac9705c38bcb2c2058cb4c4dffef9e059",
@@ -8560,6 +8562,12 @@
     "webclient/projekt/models.py": "23739f6f0e6ca96c41a2f4a8fc62b936e913ebc14a27372cb12e5e0ca75276d5",
     "webclient/uzivatel/models.py": "ac3208b41d57c5323a349c2212f6df556facff3bae7e688b045254f4e91c1369",
     "webclient/xml_generator/models.py": "0d7b6228a5aa9c9f0df2f797522bebad5f7c0fd591da564968c8c02c1001ab25"
+  },
+  "spatial_constants": {
+    "GEOMETRY_LINIE": "HES-001134",
+    "GEOMETRY_PLOCHA": "HES-001135",
+    "KLADYZM10": 1,
+    "KLADYZM50": 3
   },
   "summary": {
     "classes": 46,

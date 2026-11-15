@@ -8,6 +8,47 @@ import re
 from .common import PACK, read_json
 
 DEFINITION = "definitions/known-defects.json"
+# Defects decided by the row's own values; a branch case triggering one is moved to a deferred companion.
+ROW_LEVEL_KINDS = ("prefixed-key", "lookup-format", "empty-cell", "single-system-geometry", "case")
+SPLIT_KINDS = ("lookup-format", "empty-cell", "single-system-geometry", "case")
+# Kinds that only reject the row itself: harmless (an intended diagnostic) in a batch expected to reject.
+REJECTING_KINDS = ("single-system-geometry",)
+
+
+def case_triggers(coverage_ids, defects):
+    """
+    Najde pokrytí, které podle definice vady druhu ``case`` vadu spouští.
+
+    Vada druhu ``case`` závisí na stavu databáze (např. změna rodiče, který je zároveň primárním klíčem), takže
+    ji nelze poznat z hodnot řádku; definice proto jmenuje pokrytí, které ji vyvolává.
+
+    :param coverage_ids: Pokrytí dávky nebo případu.
+    :param defects: Aktivní definice vad.
+    :return: Seznam ``{"defect", "class", "row", "value", "condition"}``.
+    """
+    return [
+        {"defect": d["id"], "class": c.split(".", 1)[0], "row": None, "value": c, "condition": "case"}
+        for d in defects or ()
+        if d.get("kind") == "case"
+        for c in coverage_ids
+        if c in d["coverage"]
+    ]
+
+
+def defects_for(expected, defects):
+    """
+    Vybere vady, které dávce s daným očekávaným výsledkem skutečně brání.
+
+    Vada, která jen zamítne vlastní řádek (``REJECTING_KINDS``), je v zamítací dávce zamýšlenou diagnostikou;
+    brání jen dávce, která se má provést.
+
+    :param expected: Očekávaný výsledek dávky (``apply``, ``reject…``).
+    :param defects: Aktivní definice vad.
+    :return: Seznam vad relevantních pro dávku.
+    """
+    if str(expected).startswith("reject"):
+        return [d for d in defects or () if d.get("kind") not in REJECTING_KINDS]
+    return list(defects or ())
 
 
 def resolver_table(repo):
@@ -179,8 +220,101 @@ def triggering_rows(tables, operation, prerequisites, batches, source, defects):
     :param defects: Aktivní definice vad.
     :return: Seznam ``{"defect", "class", "row", "value", "condition"}`` s pořadím řádku od 1.
     """
+    found = []
+    if operation in ("update", "delete"):
+        for defect in defects:
+            if defect.get("kind") != "prefixed-key":
+                continue
+            for name, rows in tables.items():
+                if name in defect["classes"]:
+                    found += [
+                        {
+                            "defect": defect["id"],
+                            "class": name,
+                            "row": index,
+                            "value": row.get("id"),
+                            "condition": "prefixed-key-update-delete",
+                        }
+                        for index, row in enumerate(rows, 1)
+                    ]
+    for defect in defects or ():
+        if defect.get("kind") != "lookup-format":
+            continue
+        for name, rows in tables.items():
+            if name not in defect["classes"]:
+                continue
+            mapper = next((m for m in source.get("mappers", []) if m["csv"].removesuffix(".csv") == name), None)
+            models = source.get("models", {})
+            # A field is either declared explicitly or derived by the importer from the model field type
+            # (e.g. every Point/GeometryField becomes GeomImportField).
+            columns = [
+                c
+                for c, info in (mapper or {}).get("columns", {}).items()
+                if (info.get("definition") or "").startswith(defect["field_type"] + "(")
+                or (
+                    info.get("kind") == "model"
+                    and models.get(info.get("model"), {}).get("fields", {}).get(info.get("model_field"), {}).get("type")
+                    in defect.get("model_field_types", ())
+                )
+            ]
+            for index, row in enumerate(rows, 1):
+                for column in columns:
+                    value = row.get(column)
+                    if (
+                        isinstance(value, str)
+                        and value.strip()
+                        and not value.startswith("$")
+                        and not re.match(defect["accepted_pattern"], value)
+                    ):
+                        found.append(
+                            {
+                                "defect": defect["id"],
+                                "class": name,
+                                "row": index,
+                                "value": value,
+                                "condition": "lookup-format",
+                            }
+                        )
+    for defect in defects or ():
+        if defect.get("kind") != "empty-cell":
+            continue
+        # The importer reads CSV with pandas, so an empty cell arrives as NaN and crashes a ``(value or "").strip()``.
+        for name, rows in tables.items():
+            for index, row in enumerate(rows, 1):
+                for column in defect["columns"].get(name, ()):
+                    if column in row and (row[column] is None or str(row[column]).strip() == ""):
+                        found.append(
+                            {
+                                "defect": defect["id"],
+                                "class": name,
+                                "row": index,
+                                "value": "",
+                                "condition": "empty-cell",
+                            }
+                        )
+    for defect in defects or ():
+        if defect.get("kind") != "single-system-geometry" or operation == "delete":
+            continue
+        # Both columns are required before the importer derives one from the other (F1).
+        for name, rows in tables.items():
+            columns = defect["columns"].get(name, ())
+            for index, row in enumerate(rows, 1):
+                if not all(c in row for c in columns):
+                    continue
+                empty = [c for c in columns if row[c] is None or str(row[c]).strip() == ""]
+                if len(empty) == 1:
+                    found.append(
+                        {
+                            "defect": defect["id"],
+                            "class": name,
+                            "row": index,
+                            "value": empty[0],
+                            "condition": "single-system-geometry",
+                        }
+                    )
+    defects = [d for d in defects or () if d.get("kind") not in ROW_LEVEL_KINDS]
     if not defects or operation == "delete":
-        return []
+        return found
     fields = owner_fields(source)
     existing, owned = persisted_state(prerequisites, batches)
     same_batch = (
@@ -188,7 +322,6 @@ def triggering_rows(tables, operation, prerequisites, batches, source, defects):
         if operation == "insert"
         else set()
     )
-    found = []
     for defect in defects:
         for name, rows in tables.items():
             if name not in fields or name not in defect["classes"]:
@@ -236,12 +369,18 @@ def summary(defects, batches):
     result = []
     for defect in defects:
         deferred = [b for b in batches if defect["id"] in b.get("deferred", {}).get("defects", [])]
+        coverage = set()
+        for batch in deferred:
+            rows = batch["deferred"].get("rows") or []
+            classes = {r["class"] for r in rows if r["defect"] == defect["id"]}
+            # A batch deferred only through a deferred prerequisite carries the defect for all its coverage.
+            coverage |= {c for c in batch["coverage_ids"] if not rows or c.split(".", 1)[0] in classes}
         section = {key: defect[key] for key in fields}
         section.update(
             {
                 "deferred_batches": [b["id"] for b in deferred],
-                "deferred_coverage": sorted({c for b in deferred for c in b["coverage_ids"]}),
-                "evidence_kind": "source-confirmed",
+                "deferred_coverage": sorted(coverage),
+                "evidence_kind": defect.get("evidence", {}).get("kind", "source-confirmed"),
                 "live_outcome": "unexecuted",
             }
         )

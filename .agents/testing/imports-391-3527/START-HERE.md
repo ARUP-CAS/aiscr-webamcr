@@ -35,6 +35,8 @@ Agents also read `operator/agent-checks.md`. In a combined export select
    `operator/known-source-risks.md`) are never presented to the human.
 3. Obtain only session-scoped read access needed for Fedora/API/DB checks. Do not put
    credentials in commands, saved files, links, reports or the conversation handoff.
+   For Fedora, the human stores a read-only login in Windows Credential Manager (see
+   `operator/agent-checks.md`) and the agent uses `--credential-target`.
    Human browser login is performed by the human. Use operator-exported SQL evidence
    if direct read access is unavailable; do not ask for a secret configuration file.
 4. Run the generated `sql/schema.sql` and `sql/references.sql` on the **test database**

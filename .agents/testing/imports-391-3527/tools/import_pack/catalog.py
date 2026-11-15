@@ -82,7 +82,7 @@ RECIPES = {
         "oznamovatel": "TEST {tag}",
         "odpovedna_osoba": "Synthetic",
         "adresa": "TEST",
-        "telefon": "",
+        "telefon": "+420 000 000 000",
         "email": "notifier-{tag}@example.invalid",
         "poznamka": "TEST {tag}",
     },
@@ -142,6 +142,8 @@ RECIPES = {
         "stav": 1,
         "geom_system": "4326",
         "geom": "POINT(14.5 50.0)",
+        # Pian.geom_sjtsk is non-nullable and is checked before INSERT derives it from geom; supply both.
+        "geom_sjtsk": "$ref:point_5514",
         "typ": "$ref:HESLAR_PIAN_TYP",
         "presnost": "$ref:HESLAR_PIAN_PRESNOST",
         "zm10": "$ref:zm10",
@@ -227,7 +229,7 @@ RECIPES = {
     "dokumenty_autori": {"dokument": "$row:dokumenty", "autor": "$row:osoby", "poradi": 1},
     "dokumenty_jazyky": {"dokument": "$row:dokumenty", "jazyk": "$ref:HESLAR_JAZYK"},
     "dokumenty_osoby": {"dokument": "$row:dokumenty", "osoba": "$row:osoby:2"},
-    "dokumenty_posudky": {"dokument": "$row:dokumenty", "posudek": "$row:dokumenty:2"},
+    "dokumenty_posudky": {"dokument": "$row:dokumenty", "posudek": "$ref:HESLAR_POSUDEK_TYP"},
     "dokumenty_tvary": {"dokument": "$row:dokumenty", "tvar": "$ref:HESLAR_LETFOTO_TVAR", "poznamka": "TEST {tag}"},
     "dokumenty_casti": {"dokument": "$row:dokumenty", "archeologicky_zaznam": "$row:az_akce", "poznamka": "TEST {tag}"},
     "dokumenty_neident_akce": {
@@ -358,10 +360,22 @@ EFFECTS = {
         ["neident_akce.dokument_cast.dokument"],
         ["neident_akce.dokument_cast.dokument"],
     ),
-    "komponenty": (["owner_record"], ["owner_record"]),
-    "komponenty_aktivity": (["komponenta.owner_record"], ["komponenta.owner_record"]),
-    "komponenty_nalezy_objekty": (["komponenta.owner_record"], ["komponenta.owner_record"]),
-    "komponenty_nalezy_predmety": (["komponenta.owner_record"], ["komponenta.owner_record"]),
+    # A component's owner_record is its DJ's archaeological record or its document part's document, and the
+    # owner receives the history. A document part linked to an archaeological record also updates that
+    # record's metadata (observed in V00b); the application writing the history there instead is F24.
+    "komponenty": (["owner_record", "dokument_cast.archeologicky_zaznam"], ["owner_record"]),
+    "komponenty_aktivity": (
+        ["komponenta.owner_record", "komponenta.dokument_cast.archeologicky_zaznam"],
+        ["komponenta.owner_record"],
+    ),
+    "komponenty_nalezy_objekty": (
+        ["komponenta.owner_record", "komponenta.dokument_cast.archeologicky_zaznam"],
+        ["komponenta.owner_record"],
+    ),
+    "komponenty_nalezy_predmety": (
+        ["komponenta.owner_record", "komponenta.dokument_cast.archeologicky_zaznam"],
+        ["komponenta.owner_record"],
+    ),
     "externi_zdroje": (["self"], ["self"]),
     "externi_zdroje_autori": (["externi_zdroj"], ["externi_zdroj"]),
     "externi_zdroje_editori": (["externi_zdroj"], ["externi_zdroj"]),
@@ -447,7 +461,7 @@ VARIANTS = {
     "dokumenty_autori": ["author-order", "composite-duplicate", "child-delete-history"],
     "dokumenty_jazyky": ["wrong-vocabulary", "composite-duplicate"],
     "dokumenty_osoby": ["second-person", "composite-duplicate"],
-    "dokumenty_posudky": ["second-document", "self-reference", "composite-duplicate"],
+    "dokumenty_posudky": ["second-document", "wrong-vocabulary", "composite-duplicate"],
     "dokumenty_tvary": ["wrong-vocabulary", "reparent-old-new"],
     "dokumenty_casti": ["fieldwork-link", "project-link", "unidentified-link", "mutual-exclusion", "reparent-old-new"],
     "dokumenty_neident_akce": ["fk-as-key", "optional-pian-text", "date-boundaries"],

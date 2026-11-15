@@ -1,6 +1,8 @@
 """Úplné read-only SQL exporty reference, schématu a vlastněného grafu."""
 
 import ast
+import hashlib
+import json
 import re
 
 
@@ -13,7 +15,11 @@ def reference_sql(repo):
     """Sestaví jeden JSON výsledek s referencemi známého testovacího schématu."""
     if isinstance(repo, dict):
         constants = repo["vocabulary_constants"]
+        spatial = repo["spatial_constants"]
     else:
+        from .inventory import spatial_constants
+
+        spatial = spatial_constants(repo)
         tree = ast.parse((repo / "webclient/heslar/hesla.py").read_text(encoding="utf-8"))
         constants = {
             n.target.id: ast.literal_eval(n.value)
@@ -26,6 +32,16 @@ def reference_sql(repo):
 
     def covers(column):
         return f"ST_Covers({column},ST_Transform({extent},ST_SRID({column})))"
+
+    def geometry_type(key):
+        # Mirrors heslar.hesla_dynamicka.get_id_from_database: a configured ident that exists wins,
+        # otherwise the source default; the result must belong to the PIAN type family.
+        configured = (
+            f"(SELECT (s.value::jsonb)->>{quote(key)} FROM core_customadminsettings s "
+            "WHERE s.item_group='constants' AND s.item_id='heslar' ORDER BY s.id DESC LIMIT 1)"
+        )
+        chosen = f"COALESCE((SELECT c.ident_cely FROM heslar c WHERE c.ident_cely={configured}),{quote(spatial[key])})"
+        return f"(SELECT ident_cely FROM heslar WHERE nazev_heslare={constants['HESLAR_PIAN_TYP']} AND ident_cely={chosen})"
 
     for key, family in sorted(constants.items()):
         # Stable, domain-sensitive preferences; each selected reference is returned with its family.
@@ -60,9 +76,11 @@ def reference_sql(repo):
         quote("region"),
         "(SELECT 'ruian-'||kod FROM ruian_kraj ORDER BY kod LIMIT 1)",
         quote("zm10"),
-        f"(SELECT cislo FROM kladyzm WHERE kategorie=10 AND {covers('the_geom')} ORDER BY cislo LIMIT 1)",
+        f"(SELECT cislo FROM kladyzm WHERE kategorie={int(spatial['KLADYZM10'])} AND {covers('the_geom')} "
+        "ORDER BY cislo LIMIT 1)",
         quote("zm50"),
-        f"(SELECT cislo FROM kladyzm WHERE kategorie=50 AND {covers('the_geom')} ORDER BY cislo LIMIT 1)",
+        f"(SELECT cislo FROM kladyzm WHERE kategorie={int(spatial['KLADYZM50'])} AND {covers('the_geom')} "
+        "ORDER BY cislo LIMIT 1)",
         quote("sm5"),
         f"(SELECT mapno FROM kladysm5 WHERE {covers('geom')} ORDER BY mapno LIMIT 1)",
         quote("group_name"),
@@ -72,9 +90,9 @@ def reference_sql(repo):
     ]
     fields += [
         quote("pian_line_type"),
-        "(SELECT ident_cely FROM heslar WHERE nazev_heslare=40 AND lower(heslo) LIKE 'lini%' ORDER BY ident_cely LIMIT 1)",
+        geometry_type("GEOMETRY_LINIE"),
         quote("pian_polygon_type"),
-        "(SELECT ident_cely FROM heslar WHERE nazev_heslare=40 AND lower(heslo) LIKE 'ploch%' ORDER BY ident_cely LIMIT 1)",
+        geometry_type("GEOMETRY_PLOCHA"),
         quote("cadastral_dj_type"),
         "(SELECT ident_cely FROM heslar WHERE nazev_heslare=34 AND lower(heslo) LIKE '%katastr%' ORDER BY ident_cely LIMIT 1)",
         quote("cadastre_content_type"),
@@ -91,6 +109,14 @@ def reference_sql(repo):
         "(SELECT 'soub-'||candidate FROM generate_series(2000000000,2000000010) candidate WHERE NOT EXISTS (SELECT 1 FROM soubor WHERE id=candidate) LIMIT 1)",
     ]
     projected = f"ST_Transform({point},5514)"
+    companions = {
+        "point_5514": "POINT(14.5 50.0)",
+        "line_5514": "LINESTRING(14.5 50,14.50001 50.00001)",
+        "polygon_5514": "POLYGON((14.5 50,14.50001 50,14.50001 50.00001,14.5 50))",
+    }
+    for key, wkt in companions.items():
+        # S-JTSK companions of the WGS84 recipe geometries; the import re-derives the stored value on INSERT.
+        fields += [quote(key), f"ST_AsText(ST_Transform(ST_GeomFromText({quote(wkt)},4326),5514))"]
     fields += [
         quote("point_5514_offset"),
         "ST_AsText(ST_Transform(ST_SetSRID(ST_Point(14.50001,50.00001),4326),5514))",
@@ -123,16 +149,13 @@ def reference_sql(repo):
     # PostgreSQL functions accept at most 100 arguments; keep each object below that.
     objects = ["jsonb_build_object(\n" + ",\n".join(fields[i : i + 80]) + ")" for i in range(0, len(fields), 80)]
     return (
-        "-- Export the single JSON value unchanged as references.json (UTF-8).\nBEGIN TRANSACTION READ ONLY;\nSELECT "
-        + " || ".join(objects)
-        + ";\nCOMMIT;\n"
+        "-- Export the single JSON value unchanged as references.json (UTF-8).\nSELECT " + " || ".join(objects) + ";\n"
     )
 
 
 def schema_sql():
     """Vrátí read-only dotaz na tabulky, sloupce a DB omezení."""
-    return """BEGIN TRANSACTION READ ONLY;
-SELECT jsonb_build_object(
+    return """SELECT jsonb_build_object(
  'database', current_database(), 'server_version', current_setting('server_version'),
  'columns', (SELECT jsonb_agg(to_jsonb(c)) FROM
    (SELECT table_name,column_name,data_type,is_nullable FROM information_schema.columns
@@ -141,7 +164,6 @@ SELECT jsonb_build_object(
    'name',conname,'definition',pg_get_constraintdef(oid))) FROM pg_constraint
    WHERE connamespace='public'::regnamespace)
 );
-COMMIT;
 """
 
 
@@ -150,10 +172,10 @@ def operator_sql(identity):
     if not re.fullmatch(r"U-\d{6}", identity):
         raise ValueError("Expected the actual U-xxxxxx operator identity")
     return (
-        "BEGIN TRANSACTION READ ONLY;\nSELECT jsonb_build_object('captured_at',clock_timestamp(),'operator',"
+        "SELECT jsonb_build_object('captured_at',clock_timestamp(),'operator',"
         + "(SELECT to_jsonb(u) FROM (SELECT id,ident_cely,is_active,is_staff,is_superuser FROM auth_user WHERE ident_cely="
         + quote(identity)
-        + ") u));\nCOMMIT;\n"
+        + ") u));\n"
     )
 
 
@@ -225,8 +247,82 @@ SCOPES = {
 }
 
 
-def snapshot_sql(source, identifiers, baseline=None):
-    """Omezí export výhradně na explicitní identifikátory a jejich potomky."""
+def planned_pseudo_keys(manifest):
+    """
+    Vrátí numerické syntetické primární klíče plánovaných vložení podle cílové tabulky.
+
+    Importér odmítne vložení, jehož klíč v tabulce už existuje; snapshot proto hlásí jejich kolize předem.
+
+    :param manifest: Manifest sady s ``class_tables``.
+    :return: Mapa tabulka -> seřazená čísla klíčů.
+    """
+    import re as _re
+
+    result = {}
+    # A bound value names a row this run created (e.g. a distribution added to an imported file), not a new key.
+    bound = {str(value) for value in manifest.get("bindings", {}).values()}
+    for batch in manifest.get("batches", []):
+        if batch.get("operation") != "insert":
+            continue
+        for name, rows in batch["tables"].items():
+            table = manifest.get("class_tables", {}).get(name)
+            for row in rows:
+                match = _re.fullmatch(r"[a-z]+-(\d+)", str(row.get("id", "")))
+                if table and match and str(row.get("id")) not in bound:
+                    result.setdefault(table, set()).add(int(match.group(1)))
+    return {table: sorted(keys) for table, keys in sorted(result.items())}
+
+
+def scope_digest(identifiers):
+    """
+    Vrátí otisk rozsahu snapshotu, aby šlo u exportu poznat, kterou verzí dotazu vznikl.
+
+    :param identifiers: Identifikátory ``ident_cely``, na něž je dotaz omezen.
+    :return: SHA-256 seřazeného seznamu jedinečných identifikátorů.
+    """
+    return hashlib.sha256("\n".join(sorted({str(x) for x in identifiers})).encode()).hexdigest()
+
+
+def write_snapshot(directory, source, manifest):
+    """
+    Zapíše ``sql/snapshot.sql`` pro identifikátory manifestu a vedle něj ``sql/snapshot-scope.json``.
+
+    Rozsah se ukládá, aby ověření poznalo export ze zastaralého dotazu (řádek mimo rozsah není chybějící řádek).
+
+    :param directory: Adresář sestavení.
+    :param source: Inventář zdroje.
+    :param manifest: Manifest s dávkami.
+    :return: Otisk rozsahu (viz :func:`scope_digest`).
+    """
+    from .common import inside, write_new
+
+    identifiers = sorted(
+        {
+            str(r["ident_cely"])
+            for b in manifest["batches"]
+            for rows in b["tables"].values()
+            for r in rows
+            if r.get("ident_cely")
+        }
+    )
+    write_new(
+        inside(directory, "sql/snapshot.sql"),
+        snapshot_sql(source, identifiers, pseudo_keys=planned_pseudo_keys(manifest)).encode(),
+    )
+    digest = scope_digest(identifiers)
+    write_new(
+        inside(directory, "sql/snapshot-scope.json"),
+        json.dumps({"scope_sha256": digest, "identifiers": identifiers}, ensure_ascii=False, indent=1).encode(),
+    )
+    return digest
+
+
+def snapshot_sql(source, identifiers, baseline=None, pseudo_keys=None):
+    """
+    Omezí export výhradně na explicitní identifikátory a jejich potomky.
+
+    Do ``_provenance`` vkládá ``scope_sha256`` rozsahu, takže export z dříve otevřené verze dotazu je rozpoznatelný.
+    """
     values = ",".join("(" + quote(x) + ")" for x in sorted(set(identifiers)))
     requested = (
         "WITH requested(ident_cely) AS (" + ("VALUES " + values if values else "SELECT NULL::text WHERE false") + ")\n"
@@ -355,7 +451,12 @@ def snapshot_sql(source, identifiers, baseline=None):
                 for name, f in geometry.items()
             )
             if "geom" in geometry and "geom_sjtsk" in geometry:
-                condition += " AND ((geom IS NULL AND geom_sjtsk IS NULL) OR (geom IS NOT NULL AND geom_sjtsk IS NOT NULL AND ST_HausdorffDistance(geom,ST_Transform(geom_sjtsk,4326))<0.00001))"
+                # Same place within 2 m in S-JTSK: the importer derives the pair with its own S-JTSK/05
+                # formulas (rounded to cm), which differ from PostGIS EPSG:5514 by about a metre.
+                condition += (
+                    " AND ((geom IS NULL AND geom_sjtsk IS NULL) OR (geom IS NOT NULL AND geom_sjtsk IS NOT NULL"
+                    " AND ST_HausdorffDistance(ST_Transform(geom,5514),geom_sjtsk)<2.0))"
+                )
             projection += (
                 " || jsonb_build_object('_geometry',jsonb_build_object("
                 + geo
@@ -368,8 +469,22 @@ def snapshot_sql(source, identifiers, baseline=None):
             f"FROM {table} t WHERE " + scope.format(ids=ids) + ")"
         )
     fields += [
-        "'_provenance',jsonb_build_object('captured_at',clock_timestamp(),'database',current_database(),'snapshot',txid_current_snapshot()::text)"
+        "'_provenance',jsonb_build_object('captured_at',clock_timestamp(),'database',current_database(),"
+        "'snapshot',txid_current_snapshot()::text,'scope_sha256'," + quote(scope_digest(identifiers)) + ")"
     ]
+    if pseudo_keys:
+        fields += [
+            "'_pseudo_key_collisions',jsonb_build_object("
+            + ",".join(
+                quote(table)
+                + f",(SELECT COALESCE(jsonb_agg(id ORDER BY id),'[]'::jsonb) FROM {table}"
+                + " WHERE id IN ("
+                + ",".join(str(int(key)) for key in keys)
+                + "))"
+                for table, keys in pseudo_keys.items()
+            )
+            + ")"
+        ]
     fields += [
         "'_link_watermarks',jsonb_build_object("
         + ",".join(quote(table) + f",(SELECT COALESCE(max(id),0) FROM {table})" for table in LINK_OWNERS)
@@ -377,9 +492,9 @@ def snapshot_sql(source, identifiers, baseline=None):
     ]
     objects = ["jsonb_build_object(\n" + ",\n".join(fields[i : i + 40]) + ")" for i in range(0, len(fields), 40)]
     return (
-        "-- Export the single JSON value as db-before.json or db-after.json.\nBEGIN TRANSACTION READ ONLY;\n"
+        "-- Export the single JSON value as db-before.json or db-after.json.\n"
         + requested
         + "SELECT "
         + " || ".join(objects)
-        + ";\nCOMMIT;\n"
+        + ";\n"
     )

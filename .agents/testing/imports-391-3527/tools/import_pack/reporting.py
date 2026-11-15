@@ -4,7 +4,7 @@ from datetime import datetime
 
 from .common import digest, inside, json_bytes, read_json
 from .coverage import verdict
-from .session import checkpoints, current_manifest
+from .session import checkpoints, current_manifest, identity_manifest
 
 
 def fresh(value, run):
@@ -19,11 +19,30 @@ def fresh(value, run):
         return False
 
 
+def run_findings(root):
+    """
+    Načte zjištění běhu z ``findings.json`` a rozdělí je podle druhu pro závěrečný report.
+
+    Zjištění jsou záznam operátora a agenta vedle mechanických výsledků pokrytí; verdikt pokrytí nemění.
+
+    :param root: Adresář běhu.
+    :return: Slovník ``druh -> seznam zjištění``; bez souboru prázdný slovník.
+    """
+    path = root / "findings.json"
+    if not path.is_file():
+        return {}
+    grouped = {}
+    for finding in read_json(path)["findings"]:
+        grouped.setdefault(finding.get("kind", "unclassified"), []).append(finding)
+    return grouped
+
+
 def report(root, results):
     run = read_json(root / "run.json")
     events = checkpoints(root)
     known = {b["id"]: b for b in current_manifest(root)["batches"]}
-    coverage = {c["id"]: c for c in run["manifest"].get("coverage", [])}
+    ledger = identity_manifest(root)
+    coverage = {c["id"]: c for c in ledger.get("coverage", [])}
     reviewed = {}
     for coverage_id, assessment in results.items():
         item = dict(assessment)
@@ -141,7 +160,7 @@ def report(root, results):
             item["reported_state"] = item["state"]
         item["state"] = "blocked"
         item.setdefault("reasons", []).append(reason)
-    result = verdict(run["manifest"].get("coverage", []), reviewed, identity_verified)
+    result = verdict(ledger.get("coverage", []), reviewed, identity_verified)
     return {
         "run_id": run["run_id"],
         "suite": run["suite"],
@@ -150,7 +169,8 @@ def report(root, results):
         "deployment_identity": identity_reason,
         "withheld_coverage": sorted(withheld),
         **result,
-        "known_defects": run["manifest"].get("known_defects", []),
+        "known_defects": ledger.get("known_defects", []),
+        "findings": run_findings(root),
         "assessments": reviewed,
         "note": "Preparation and simulations are not live outcomes. Supplied screenshots prove only visible observations.",
     }
@@ -339,7 +359,8 @@ def load_provenance(root, manifest, evidence):
             "source_hashes",
             "generator_hashes",
         ):
-            if manifest.get(key) != run["manifest"].get(key):
+            reference = identity_manifest(root) if key == "generator_hashes" else run["manifest"]
+            if manifest.get(key) != reference.get(key):
                 reasons.append("Input revision changes run/source identity: " + key)
         from .deployment import identity
 

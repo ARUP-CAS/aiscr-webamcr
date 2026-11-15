@@ -1,8 +1,8 @@
 {
   "behaviour": {
-    "controlled": 18,
-    "coverage_items": 747,
-    "covered_by_inputs": 727,
+    "controlled": 17,
+    "coverage_items": 749,
+    "covered_by_inputs": 729,
     "deferred_batches": [
       "N07x-deferred-known-defects",
       "V17-branches-update",
@@ -18,14 +18,18 @@
       "soubory.field.vazba.missing-lookup"
     ],
     "procedures": 2,
-    "uploads": 80
+    "uploads": 79
   },
   "binary_sources": {
     "bytes": 25346682,
     "files": 40000,
     "sha256": "48be57b8dfd5aef902f0e0fbd7a20d4e9f9738f59fd30214755df46accda0829"
   },
-  "delivery": "generated/delivery-2026-11-14-r4",
+  "credential_target_2026_11_14": {
+    "change": "fedora-read/fedora-search/capture accept --credential-target (Windows Credential Manager generic entry)",
+    "inputs_vs_r5": "byte-identical; manifests differ only in generator_hashes"
+  },
+  "delivery": "generated/delivery-2026-11-14-r7",
   "deployed_revision": {
     "last_recorded_test_deployment": {
       "commit": "3d4a4dd15e83c769eaa78235c985b326ae838a24",
@@ -122,10 +126,50 @@
   },
   "mode": "offline-preparation",
   "portable_export": {
-    "bundle": "exports/imports-391-3527-2026-11-14-r4.zip",
-    "checksum_file": "exports/imports-391-3527-2026-11-14-r4.zip.sha256"
+    "bundle": "exports/imports-391-3527-2026-11-14-r7.zip",
+    "checksum_file": "exports/imports-391-3527-2026-11-14-r7.zip.sha256"
   },
-  "previous_bundle_sha256": "cfe9e2fa5e207e44ad59927c252169c7352fa21bc2823e8e9691ebc2701f6c6c",
+  "preflight_fix_2026_11_14": {
+    "binary_sources_sha256_unchanged": true,
+    "changed_inputs_vs_r4": {
+      "behaviour": [
+        "sql/references.sql"
+      ],
+      "load-distributions": [
+        "sql/references.sql"
+      ],
+      "load-relational": [
+        "sql/references.sql"
+      ]
+    },
+    "defects": [
+      "references.sql filtered kladyzm.kategorie=10/50; the application uses KLADYZM10=1 and KLADYZM50=3 (core/constants.py), so zm10/zm50 were null and spatial-unit inputs stayed unresolved",
+      "references.sql matched PIAN geometry types by heslo LIKE 'ploch%'/'lini%'; the application resolves GEOMETRY_PLOCHA/GEOMETRY_LINIE from CustomAdminSettings with source defaults, and no TEST term matched 'ploch%'"
+    ],
+    "environment_fact": "TEST has no ruian_katastr with pian_id set; az_dokumentacni_jednotky.branch.cadastral-existing-pian needs controlled setup and is not satisfied by fallback",
+    "fix": "reference SQL reads the application constants pinned in the inventory (spatial_constants; core/constants.py and heslar/hesla_dynamicka.py added to source_hashes)",
+    "found_by": "live behaviour preflight against TEST reference export (run behaviour-2026-11-14-live)",
+    "tests": 77
+  },
+  "previous_bundle_sha256": "a2f26740b1fe78e2e51d564b66ca5fe62acd87b6aec1c28a748c993bbd1e7dab",
+  "recipe_audit_2026_11_14": {
+    "application_observations": [
+      "Pian INSERT with one coordinate system rejected (missing geom_sjtsk): check_required_fields runs before transform_geometries derives the other system",
+      "Czech msgstr empty for core_admin.ImportDataMissingReferencedValueError.message.model_field and core_admin.ImportDataMissingHeslarValueError.message"
+    ],
+    "behaviour_namespace": "950000; the live run continues on r7 via revise-run (B01 input unchanged, B02 changed after its failed validation)",
+    "found_by": "live B02-domain-graph validation (run behaviour-2026-11-14-live): 14 of 59 rows rejected",
+    "pack_changes": [
+      "recipe_audit.audit_rows over all apply-insert rows (0 findings in r7)",
+      "az_pian supplies geom_sjtsk via DB-computed S-JTSK companions point/line/polygon_5514",
+      "new probes az_pian.field.geom_sjtsk.missing-required and projekty_oznamovatele.field.telefon.missing-required"
+    ],
+    "pack_defects": [
+      "projekty_oznamovatele.telefon empty although Oznamovatel.telefon is non-nullable",
+      "dokumenty_posudky.posudek used a document ident; DokumentPosudek.posudek is FK Heslar (HESLAR_POSUDEK_TYP); branch self-reference replaced by wrong-vocabulary"
+    ],
+    "tests": 86
+  },
   "remediation_2026_11_14": {
     "changed_inputs_vs_r3": {
       "behaviour": [

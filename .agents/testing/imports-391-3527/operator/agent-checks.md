@@ -122,6 +122,27 @@ explicit policy questions; unexplained current behaviour is not a pass.
 
 ## Retain, report and recover
 
+Between checkpoints use one step instead of separate build/bind/revise/render calls:
+`advance --directory RUN --references REFERENCES_JSON [--reason TEXT --reviewer NAME]`. It merges
+every `bindings-*.json` (a conflict stops it), builds the next `bind-NNNN`, applies `revise-run`
+only when pack code changed (then reason and reviewer are required), renders the cards and prints
+the next card, input path and checksum (about 2 s). A full delivery rebuild and `export-all` are
+release steps, not part of a live checkpoint; `load-binaries` builds its archive in memory
+(`--loose` also writes the 40,000 files).
+It keeps one run-level `snapshot.sql` (the query is shared by every batch of the run and
+changes only with the generator; the output says when) and removes superseded input copies
+and card folders that no checkpoint references. After each import run `fedora-changes
+--directory RUN --batch BATCH`: it lists every AMCR resource modified since the batch's
+`db-before` capture and flags unplanned own records and anything outside the namespace.
+
+When a live validation exposes a pack defect, fix the pack, rebuild in the **same
+namespace** and run `revise-run --directory RUN --manifest NEW_BOUND_MANIFEST --reason
+TEXT --reviewer NAME`. It accepts the revision only when every batch that executed
+anything (beyond preflight and a failed/blocked validation) keeps a byte-identical input
+and the same operation/coverage/dependency contract, and records the reason, reviewer and
+changed batches under `pack-revisions/`. The run then renders and reports on the new
+revision; earlier events and evidence stay unchanged. Never re-upload an executed batch.
+
 `checkpoint` accepts a JSON object mapping evidence kinds to original local paths;
 select its actual `--phase` explicitly. A checked validation checkpoint does not
 mean the import ran: the next action is approval/start of the same task, never a new
@@ -156,7 +177,13 @@ Build a frozen JSON plan with a `resources` array of explicit `url` objects. Use
 `capture --plan PLAN --directory RUN/BATCH/fedora-before --run-root RUN --limit 100`
 and a separate `fedora-after` directory. Raise the explicit GET budget within the
 authorized verification window when collecting a full load dataset. One session-only
-password prompt covers a call; it is never saved. Collection resumes unchanged prior
+password prompt (`--user`) covers a call; it is never saved. An agent shell cannot answer
+that prompt, so the human may instead store the read-only login once in their own
+terminal with `cmdkey /generic:aiscr-import-pack-fedora-test /user:USER /pass` (it
+prompts for the password); the agent then passes `--credential-target
+aiscr-import-pack-fedora-test`, which reads it from Windows Credential Manager without
+printing or saving it. Never put the password in a command, file or chat; delete the
+entry with `cmdkey /delete:aiscr-import-pack-fedora-test` after the session. Collection resumes unchanged prior
 responses, detects altered bytes and reports remaining resources. Preserve every
 returned `index-*.json`. Resource body paths are relative to the run root, so the
 whole retained folder can move to another opened workspace.

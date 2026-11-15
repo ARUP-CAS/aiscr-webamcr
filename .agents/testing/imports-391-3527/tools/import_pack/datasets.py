@@ -8,7 +8,7 @@ import re
 import zipfile
 
 from .catalog import RECIPES
-from .common import namespace
+from .common import namespace, pseudo_key
 
 
 def ident(name, ns, index, refs=None):
@@ -80,7 +80,7 @@ def row_for(mapper, ns, index, refs, bindings=None):
     if "ident_cely" in row:
         row["ident_cely"] = ident(name, ns, index, refs)
     if mapper["key"] == "id" and name not in ("distribution",):
-        row["id"] = f"{mapper['prefix']}-{int(ns) + index}"
+        row["id"] = pseudo_key(name, mapper["prefix"], ns, index)
     if set(row) - set(mapper["columns"]):
         raise ValueError(f"Recipe/source column drift: {name}: {set(row) - set(mapper['columns'])}")
     return row

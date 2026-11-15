@@ -7,24 +7,15 @@ import zipfile
 from .catalog import EFFECTS, VARIANTS
 from .common import digest, inside, save_json, write_new
 from .scenarios import scenarios
-from .sql import reference_sql, schema_sql, snapshot_sql
+from .sql import reference_sql, schema_sql, write_snapshot
 from .verify import fedora_urls, record_urls
 
 
 def complete(directory, manifest, source):
     """Emit complete machine-readable checkpoint/check contracts for each input."""
-    identifiers = sorted(
-        {
-            r["ident_cely"]
-            for b in manifest["batches"]
-            for inputs in b["tables"].values()
-            for r in inputs
-            if r.get("ident_cely")
-        }
-    )
     write_new(inside(directory, "sql/references.sql"), reference_sql(source).encode())
     write_new(inside(directory, "sql/schema.sql"), schema_sql().encode())
-    write_new(inside(directory, "sql/snapshot.sql"), snapshot_sql(source, identifiers).encode())
+    write_snapshot(directory, source, manifest)
     binary_index = {}
     for path in sorted((directory / "binaries").glob("*")):
         content = path.read_bytes()
@@ -70,15 +61,22 @@ def complete(directory, manifest, source):
                 for name in batch["tables"]
             },
             "history": {
-                "actor": "verified session operator DB identity",
+                "actor": "verified session operator DB identity for IMP entries",
+                "distribution_actor": (
+                    "ADMIN_USER system account (heslar/hesla_dynamicka.py USER_CONSTANTS) for distribution and"
+                    " thumbnail DIST entries, by design of #3527 (core/models.py, cron/tasks.py)"
+                ),
                 "normal_type": "IMP",
-                "normal_note": "sorted CSV basenames joined by comma per deduplicated target",
+                "normal_note": "sorted CSV basenames joined by comma and space (operator expectation 2026-11-14) per deduplicated target",
                 "distribution_type": {"insert": "DIST01", "update": "DIST11", "delete": "DIST10"}.get(
                     batch["operation"]
                 ),
                 "distribution_note": "exact normalized distribution name",
                 "paradata_only": "no history or DB/XML changes",
-                "file_note": "PO imported-file text plus actual source directory/parent ID/filename; DELETE uses CSV basename",
+                "file_note": (
+                    "PO imported-file text plus the file name only, no volume path (operator expectation"
+                    " 2026-11-14); DELETE uses CSV basename"
+                ),
             },
             "mandatory": [
                 "DB row/value/relationship checks",
@@ -135,7 +133,7 @@ def complete(directory, manifest, source):
         save_json(inside(directory, "negative-diagnostics.template.json"), diagnostics)
     save_json(inside(directory, "scenarios.json"), scenarios() if manifest["suite"] == "behaviour" else [])
     if manifest["suite"] == "behaviour":
-        from .branches import RUNTIME
+        from .branches import is_controlled
         from .controlled import recipe
 
         save_json(
@@ -143,7 +141,7 @@ def complete(directory, manifest, source):
             [
                 recipe(case, manifest["namespace"], {}, manifest.get("bindings"))
                 for case in manifest["branch_scenarios"]
-                if case["variant"] in RUNTIME or case["outcome"] == "acceptance-unresolved"
+                if is_controlled(case) or case["outcome"] == "acceptance-unresolved"
             ],
         )
     save_json(inside(directory, "sizes.json"), sizes)

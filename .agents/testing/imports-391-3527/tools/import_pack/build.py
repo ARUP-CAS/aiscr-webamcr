@@ -9,7 +9,7 @@ from .catalog import RECIPES
 from .common import digest, generator_hashes, inside, json_bytes, save_json, write_new
 from .coverage import coverage
 from .datasets import csv_bytes, graph, ident, missing_tokens, resolve, row_for, zip_bytes
-from .sql import reference_sql, schema_sql, snapshot_sql
+from .sql import reference_sql, schema_sql, write_snapshot
 
 
 def binary_files(tag):
@@ -72,6 +72,94 @@ def key_rows(mapper, rows, operation):
 
 
 def add_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequisites=(), expected="apply", data=None):
+    """
+    Zapíše vstup a kartu; řádky tříd zasažených vadou ``prefixed-key`` oddělí do odložené dávky.
+
+    U UPDATE/DELETE se řádky tříd z definice vady přesunou do ``<zkratka>x-deferred-prefixed-keys`` (s jejich
+    pokrytím) a zbytek zůstane spustitelný. Dávka, kterou běh už provedl v nerozdělené podobě (``manifest["_retained"]``: ID -> otisk
+    provedeného vstupu), zůstane beze změny jako důkaz a její nezasažené řádky dostane nová dávka ``<zkratka>a-retry-unaffected``.
+
+    :param out: Výstupní adresář sady.
+    :param manifest: Rozpracovaný manifest.
+    :param batch_id: ID dávky.
+    :param operation: ``insert``, ``update`` nebo ``delete``.
+    :param tables: Tabulky ``csv -> řádky``.
+    :param coverage_ids: Pokrytí dávky; přiřazuje se podle třídy (prefix ID pokrytí).
+    :param prerequisites: Předchozí dávky.
+    :param expected: Očekávaný výsledek.
+    :param data: Hotový obsah ZIP (jen pro dávky bez rozdělení).
+    """
+    aliases = manifest.setdefault("_aliases", {})
+    prerequisites = [aliases.get(p, p) for p in prerequisites]
+    failed = manifest.get("_failed_executions", {}).get(batch_id)
+    if failed and data is None and failed["batch"]["input_sha256"] != bound_digest(manifest, tables):
+        prefixed_unsplit = manifest.get("_retained", {}).get(batch_id) == bound_digest(manifest, tables)
+        if not prefixed_unsplit:
+            # Executed with a different input and failed: keep that entry byte for byte as evidence and
+            # add the corrected batch as a retry; later batches depend on the retry instead.
+            old = failed["batch"]
+            write_batch(
+                out,
+                manifest,
+                batch_id,
+                old["operation"],
+                old["tables"],
+                old["coverage_ids"],
+                old["prerequisites"],
+                old.get("expected", expected),
+                failed["data"],
+                defer=False,
+            )
+            retry = batch_id.split("-", 1)[0] + "r-retry"
+            add_batch(out, manifest, retry, operation, tables, coverage_ids, [*prerequisites, batch_id], expected)
+            aliases[batch_id] = retry
+            return
+    context = manifest.get("_defect_context") or {}
+    classes = {name for d in context.get("defects", []) if d.get("kind") == "prefixed-key" for name in d["classes"]}
+    affected = {n: r for n, r in tables.items() if n in classes}
+    if operation in ("update", "delete") and affected and data is None and len(affected) < len(tables):
+        rest = {n: r for n, r in tables.items() if n not in classes}
+        moved = [c for c in coverage_ids if c.split(".", 1)[0] in classes]
+        kept = [c for c in coverage_ids if c not in moved]
+        short = batch_id.split("-", 1)[0]
+        companion = f"{short}x-deferred-prefixed-keys"
+        if manifest.get("_retained", {}).get(batch_id) == bound_digest(manifest, tables):
+            # The run executed this batch in its unsplit form: keep it as evidence and retry the rest.
+            write_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequisites, expected, defer=False)
+            retry = f"{short}a-retry-unaffected"
+            write_batch(out, manifest, retry, operation, rest, kept, [*prerequisites, batch_id], expected)
+        else:
+            write_batch(out, manifest, batch_id, operation, rest, kept, prerequisites, expected)
+        write_batch(out, manifest, companion, operation, affected, moved, prerequisites, expected)
+        return
+    write_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequisites, expected, data)
+
+
+def bound_digest(manifest, tables):
+    """
+    Vrátí SHA-256 vstupu, který by z tabulek po dosazení vazeb vznikl (bez zápisu).
+
+    :param manifest: Manifest s ``bindings``.
+    :param tables: Tabulky ``csv -> řádky``.
+    :return: Otisk ZIP vstupu.
+    """
+    bindings = manifest.get("bindings", {})
+    resolved = {
+        name: [
+            {
+                key: bindings.get(value[6:], value) if isinstance(value, str) and value.startswith("$bind:") else value
+                for key, value in row.items()
+            }
+            for row in rows
+        ]
+        for name, rows in tables.items()
+    }
+    return digest(zip_bytes({name + ".csv": csv_bytes(rows) for name, rows in resolved.items()}))
+
+
+def write_batch(
+    out, manifest, batch_id, operation, tables, coverage_ids, prerequisites=(), expected="apply", data=None, defer=True
+):
     """Zapíše vstup a kartu; nevyřešené vstupy jsou jednoznačně šablony."""
     from .datasets import late_bind
 
@@ -132,7 +220,8 @@ def add_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequi
         "expected": expected,
         "state": "prepared",
     }
-    defer_if_known_defect(manifest, batch)
+    if defer:
+        defer_if_known_defect(manifest, batch)
     manifest["batches"].append(batch)
 
 
@@ -150,24 +239,26 @@ def defer_if_known_defect(manifest, batch):
     context = manifest.get("_defect_context")
     triggers = []
     if context:
-        from .known_defects import triggering_rows
+        from .known_defects import case_triggers, defects_for, triggering_rows
 
+        relevant = defects_for(batch.get("expected", "apply"), context["defects"])
         triggers = triggering_rows(
             batch["tables"],
             batch["operation"],
             batch["prerequisites"],
             manifest["batches"],
             context["source"],
-            context["defects"],
-        )
+            relevant,
+        ) + case_triggers(batch["coverage_ids"], relevant)
     # A dependent of a deferred batch cannot run either, with or without a classification context.
     deferred_parents = [b for b in manifest["batches"] if b["id"] in batch["prerequisites"] and b.get("deferred")]
     if not triggers and not deferred_parents:
         return
+    # A batch with its own triggering rows is deferred by those defects; otherwise it inherits its parents'.
     defect_ids = sorted(
-        {t["defect"] for t in triggers} | {d for b in deferred_parents for d in b["deferred"]["defects"]}
+        {t["defect"] for t in triggers} or {d for b in deferred_parents for d in b["deferred"]["defects"]}
     )
-    inherited = [p for b in deferred_parents for p in b["deferred"]["prerequisite"]]
+    inherited = [] if triggers else [p for b in deferred_parents for p in b["deferred"]["prerequisite"]]
     known = [d["prerequisite"] for d in (context or {}).get("defects", []) if d["id"] in defect_ids]
     batch["deferred"] = {
         "defects": defect_ids,
@@ -188,13 +279,18 @@ def finish_known_defects(manifest):
     from .known_defects import summary
 
     context = manifest.pop("_defect_context", None) or {"defects": []}
+    manifest.pop("_retained", None)
+    manifest.pop("_failed_executions", None)
+    manifest.pop("_aliases", None)
     deferred = {}
     for batch in manifest["batches"]:
         if batch.get("deferred"):
+            rows = batch["deferred"].get("rows") or []
             for coverage_id in batch["coverage_ids"]:
+                own = {r["defect"] for r in rows if r["class"] == coverage_id.split(".", 1)[0]}
                 deferred.setdefault(coverage_id, {"batches": [], "defects": set()})
                 deferred[coverage_id]["batches"].append(batch["id"])
-                deferred[coverage_id]["defects"].update(batch["deferred"]["defects"])
+                deferred[coverage_id]["defects"].update(own or batch["deferred"]["defects"])
     for item in manifest.get("coverage", []):
         if item["id"] in deferred:
             item["state"] = "blocked"
@@ -233,7 +329,7 @@ def add_procedure(out, manifest, batch_id, case, recipe, prerequisites):
     )
 
 
-def build_behaviour(out, source, ns, refs, repo, bindings=None):
+def build_behaviour(out, source, ns, refs, repo, bindings=None, retained=None, failed_executions=None):
     """Vytvoří kompletní operační základ, negativní vstupy a SQL kontrolní body."""
     source = json.loads(json_bytes(source))
     tables = graph(source, ns, refs, bindings)
@@ -255,6 +351,8 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None):
     from .known_defects import load_definitions
 
     manifest["_defect_context"] = {"source": source, "defects": load_definitions(source)}
+    manifest["_retained"] = dict(retained or {})
+    manifest["_failed_executions"] = dict(failed_executions or {})
     stages = {
         "B01-foundations": ["heslar", "organizace", "osoby"],
         "B02-domain-graph": [
@@ -439,7 +537,7 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None):
     negative_cases = probes(source, ns, refs)
     ordering_probes = []
     row_probes = []
-    from .known_defects import triggering_rows
+    from .known_defects import defects_for, triggering_rows
 
     deferred_probes = []
     for case in negative_cases:
@@ -453,7 +551,7 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None):
             ["B05-explicit-history"],
             manifest["batches"],
             source,
-            manifest["_defect_context"]["defects"],
+            defects_for("reject", manifest["_defect_context"]["defects"]),
         ):
             # A known defect would abort the whole N07 job; keep these probes for a rerun after the fix.
             deferred_probes.append(case)
@@ -583,41 +681,73 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None):
         [],
         ["V02-existing-distributions"],
     )
-    for index, group in enumerate(groups, 1):
-        tables_group = group["tables"]
-        if group["operation"] == "delete":
-            by_name = {m["csv"]: m for m in source["mappers"]}
-            tables_group = {
-                name: [
-                    {
-                        key: row[key]
-                        for key in (
-                            (
-                                [*by_name[name]["key"]]
-                                if isinstance(by_name[name]["key"], (list, tuple))
-                                else [by_name[name]["key"]]
-                            )
-                            + (["distribution"] if name in ("distribution", "paradata") else [])
+    by_name = {m["csv"]: m for m in source["mappers"]}
+    case_rows = {case["id"]: {case["class"]: case["rows"], **case["extra_tables"]} for case in cases if "rows" in case}
+
+    def group_tables(case_ids, operation):
+        tables_group = {}
+        for case_id in case_ids:
+            for name, items in case_rows[case_id].items():
+                tables_group.setdefault(name, []).extend(items)
+        if operation != "delete":
+            return tables_group
+        return {
+            name: [
+                {
+                    key: row[key]
+                    for key in (
+                        (
+                            [*by_name[name]["key"]]
+                            if isinstance(by_name[name]["key"], (list, tuple))
+                            else [by_name[name]["key"]]
                         )
-                    }
-                    for row in rows
-                ]
-                for name, rows in tables_group.items()
-            }
-        prerequisites = (
-            ["V03-existing-paradata"] if set(tables_group) & {"distribution", "paradata"} else ["V00d-isolated-history"]
-        )
-        add_batch(
-            out,
-            manifest,
-            f"V{index + 3:02}-branches-{group['operation']}",
-            group["operation"],
-            tables_group,
-            group["cases"],
-            prerequisites,
-            group["outcome"],
-        )
-    from .branches import FILE_LIFECYCLES, LIFECYCLES, RUNTIME
+                        + (["distribution"] if name in ("distribution", "paradata") else [])
+                    )
+                }
+                for row in rows
+            ]
+            for name, rows in tables_group.items()
+        }
+
+    # Branch cases whose own rows trigger a row-level known defect (an aborting lookup-format/empty-cell value,
+    # e.g. F26/F27, or a value validation always rejects, e.g. F1) are moved to a deferred companion, so the
+    # remaining cases still run and get their diagnostics.
+    from .known_defects import SPLIT_KINDS, case_triggers, defects_for
+
+    abort_defects = [d for d in manifest["_defect_context"]["defects"] if d.get("kind") in SPLIT_KINDS]
+    for index, group in enumerate(groups, 1):
+        batch_id = f"V{index + 3:02}-branches-{group['operation']}"
+        aborting = []
+        if abort_defects:
+            aborting = [
+                case_id
+                for case_id in group["cases"]
+                if triggering_rows(
+                    case_rows[case_id],
+                    group["operation"],
+                    [],
+                    manifest["batches"],
+                    source,
+                    defects_for(group["outcome"], abort_defects),
+                )
+                or case_triggers([case_id], defects_for(group["outcome"], abort_defects))
+            ]
+        if len(aborting) == len(group["cases"]):
+            aborting = []
+        parts = [(batch_id, [c for c in group["cases"] if c not in aborting])]
+        if aborting:
+            parts.append((batch_id.split("-", 1)[0] + "x-deferred-known-defects", aborting))
+        for part_id, part_cases in parts:
+            tables_group = group_tables(part_cases, group["operation"])
+            prerequisites = (
+                ["V03-existing-paradata"]
+                if set(tables_group) & {"distribution", "paradata"}
+                else ["V00d-isolated-history"]
+            )
+            add_batch(
+                out, manifest, part_id, group["operation"], tables_group, part_cases, prerequisites, group["outcome"]
+            )
+    from .branches import FILE_LIFECYCLES, LIFECYCLES, is_controlled
 
     file_cases = [case for case in cases if case["id"] in FILE_LIFECYCLES]
     for batch in manifest["batches"]:
@@ -664,7 +794,7 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None):
             add_batch(out, manifest, batch_id, operation, {case["class"]: rows}, [case["id"]], [previous_step])
             previous_step = batch_id
     for index, case in enumerate(
-        (case for case in cases if case["variant"] in RUNTIME or case["outcome"] == "acceptance-unresolved"), 1
+        (case for case in cases if is_controlled(case) or case["outcome"] == "acceptance-unresolved"), 1
     ):
         if case["variant"] in ("thumb-backfill", "backfill-idempotence"):
             from .controlled import recipe
@@ -738,16 +868,9 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None):
         )
         previous = [batch_id]
         remaining.difference_update(names)
-    identifiers = [
-        row["ident_cely"]
-        for batch in manifest["batches"]
-        for rows in batch["tables"].values()
-        for row in rows
-        if row.get("ident_cely")
-    ]
     write_new(inside(out, "sql/references.sql"), reference_sql(repo or source).encode())
     write_new(inside(out, "sql/schema.sql"), schema_sql().encode())
-    write_new(inside(out, "sql/snapshot.sql"), snapshot_sql(source, identifiers).encode())
+    write_snapshot(out, source, manifest)
     for name, content in binary_files(ns + "-1").items():
         write_new(inside(out, "binaries/" + name), content)
     import re
@@ -792,7 +915,7 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None):
     return manifest
 
 
-def build_load(out, source, ns, refs, workload, bindings=None):
+def build_load(out, source, ns, refs, workload, bindings=None, retained=None, failed_executions=None):
     """Vygeneruje plnou velikost zátěže bez odeslání do služby."""
     source = json.loads(json_bytes(source))
     by_name = {m["csv"]: m for m in source["mappers"]}
@@ -815,6 +938,8 @@ def build_load(out, source, ns, refs, workload, bindings=None):
     from .known_defects import load_definitions
 
     manifest["_defect_context"] = {"source": source, "defects": load_definitions(source)}
+    manifest["_retained"] = dict(retained or {})
+    manifest["_failed_executions"] = dict(failed_executions or {})
     if workload == "relational":
         names = ["projekty", "az_akce", "az_dokumentacni_jednotky", "komponenty", "komponenty_nalezy_predmety"]
         rows = {name: [row_for(by_name[name], ns, i, refs, bindings) for i in range(1, 10001)] for name in names}
@@ -976,15 +1101,26 @@ def build_load(out, source, ns, refs, workload, bindings=None):
     return manifest
 
 
-def load_binaries(out, manifest):
-    """Připraví zdrojový adresář souborů pro samostatný distribuční load run."""
+def load_binaries(out, manifest, loose=False):
+    """
+    Připraví zdrojový archiv souborů pro samostatný distribuční load run.
+
+    Archiv ``binary-sources.zip`` se skládá přímo z dat v paměti; 40 000 samostatných souborů se na disk
+    zapisuje jen na vyžádání (``loose``), protože přenosným artefaktem je archiv.
+
+    :param out: Adresář sestavené distribuční sady.
+    :param manifest: Manifest této sady.
+    :param loose: Zda zapsat i jednotlivé soubory do ``binaries/``.
+    :return: Očekávané počty a otisky zdrojů.
+    :raises ValueError: Pokud manifest nepatří distribuční zátěži.
+    """
     import hashlib
 
     if manifest.get("workload") != "distributions":
         raise ValueError("Binary source preparation belongs to the distributions workload")
     ns = manifest["namespace"]
     pdf = binary_files(ns + "-load")[f"test-{ns}-load.pdf"]
-    results = []
+    results, payloads = [], {}
     for i in range(1, 10001):
         tag = ns + "-" + str(i)
         contents = {
@@ -1001,7 +1137,9 @@ def load_binaries(out, manifest):
             ),
         }
         for filename, data in contents.items():
-            write_new(inside(out, "binaries/" + filename), data)
+            if loose:
+                write_new(inside(out, "binaries/" + filename), data)
+            payloads[filename] = data
             results.append(
                 {
                     "filename": filename,
@@ -1019,7 +1157,7 @@ def load_binaries(out, manifest):
             info = zipfile.ZipInfo(row["filename"], (2020, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
-            archive.writestr(info, inside(out, "binaries/" + row["filename"]).read_bytes())
+            archive.writestr(info, payloads[row["filename"]])
     write_new(inside(out, "binary-sources.zip"), stream.getvalue())
     by_name = {row["filename"]: row for row in results}
     measured = manifest["batches"][-1]

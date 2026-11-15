@@ -1,201 +1,535 @@
 {
-  "defects": [
+ "defects": [
+  {
+   "classes": [
+    "komponenty",
+    "soubory",
+    "historie"
+   ],
+   "conditions": {
+    "document-part-missing": "A document-part owner whose document exists but whose part does not: DokumentCast.objects.get raises an uncaught DoesNotExist in the same method.",
+    "no-identifier-pattern": "get_record_from_ident has no pattern for the value (cooperation and file owners referenced by numeric ID, or a nonexistent reference); the intended ImportDataMissingReferencedValueError is never raised.",
+    "owner-lacks-read-attribute": "The resolved owner model has no attribute named read_field_name (User exposes history_vazba, not historie).",
+    "owner-not-persisted": "The owner is created in the same import or by a batch that is not guaranteed to run earlier."
+   },
+   "defects": [
+    "The fallback for an owner not returned by get_record_from_ident iterates self.records; the field exposes only the class method get_records(), so AttributeError is raised (line 1417).",
+    "Even after that is corrected, the fallback assigns filtered_records[0].historie regardless of read_field_name, so component (komponenty) and file (soubory) owners would receive the wrong object (line 1421)."
+   ],
+   "effect": "run_data_import catches only ImportData* errors per row (webclient/cron/tasks.py:1470); the exception reaches the outer except Exception (webclient/cron/tasks.py:1519) and the whole validation job fails with core.admin.import_data.error.unexpected_error, concealing every other check in the ZIP.",
+   "evidence": {
+    "isolated_probe": "definitions/source-probes.json",
+    "kind": "source-confirmed",
+    "source_review": "2026-11-14 pre-session review (design decision 10)"
+   },
+   "id": "vazba-lookup-fallback",
+   "lines": {
+    "function": 1381,
+    "hardcoded_historie": 1421,
+    "records_attribute": 1417
+   },
+   "prerequisite": "Developer fix of VazbaLookupImportField._process_value deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "resolved_in": null,
+   "resolver": [
     {
-      "classes": [
-        "komponenty",
-        "soubory",
-        "historie"
-      ],
-      "conditions": {
-        "document-part-missing": "A document-part owner whose document exists but whose part does not: DokumentCast.objects.get raises an uncaught DoesNotExist in the same method.",
-        "no-identifier-pattern": "get_record_from_ident has no pattern for the value (cooperation and file owners referenced by numeric ID, or a nonexistent reference); the intended ImportDataMissingReferencedValueError is never raised.",
-        "owner-lacks-read-attribute": "The resolved owner model has no attribute named read_field_name (User exposes history_vazba, not historie).",
-        "owner-not-persisted": "The owner is created in the same import or by a batch that is not guaranteed to run earlier."
-      },
-      "defects": [
-        "The fallback for an owner not returned by get_record_from_ident iterates self.records; the field exposes only the class method get_records(), so AttributeError is raised (line 1417).",
-        "Even after that is corrected, the fallback assigns filtered_records[0].historie regardless of read_field_name, so component (komponenty) and file (soubory) owners would receive the wrong object (line 1421)."
-      ],
-      "effect": "run_data_import catches only ImportData* errors per row (webclient/cron/tasks.py:1470); the exception reaches the outer except Exception (webclient/cron/tasks.py:1519) and the whole validation job fails with core.admin.import_data.error.unexpected_error, concealing every other check in the ZIP.",
-      "evidence": {
-        "isolated_probe": "definitions/source-probes.json",
-        "kind": "source-confirmed",
-        "source_review": "2026-11-14 pre-session review (design decision 10)"
-      },
-      "id": "vazba-lookup-fallback",
-      "lines": {
-        "function": 1381,
-        "hardcoded_historie": 1421,
-        "records_attribute": 1417
-      },
-      "prerequisite": "Developer fix of VazbaLookupImportField._process_value deployed to the test instance; record resolved_in here and rebuild the pack.",
-      "resolved_in": null,
-      "resolver": [
-        {
-          "model": "Projekt",
-          "patterns": [
-            "(C|M|X-C|X-M)-\\d{9}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "ArcheologickyZaznam",
-          "patterns": [
-            "(C|M|X-C|X-M)-\\d{9}\\D{1}\\d{0,2}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "ArcheologickyZaznam",
-          "patterns": [
-            "(C|M|X-C|X-M)-9\\d{6,9}\\D{1}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "ArcheologickyZaznam",
-          "patterns": [
-            "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "ExterniZdroj",
-          "patterns": [
-            "(BIB|X-BIB)-\\d{7,9}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "DokumentacniJednotka",
-          "patterns": [
-            "(C|M|X-C|X-M)-\\w{7,10}\\D{1}\\d{0,2}-D\\d{2}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "DokumentacniJednotka",
-          "patterns": [
-            "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}-D\\d{2}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Komponenta",
-          "patterns": [
-            "(C|M|X-C|X-M)-\\w{7,10}\\D{1}\\d{0,2}-K\\d{3}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Komponenta",
-          "patterns": [
-            "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}-K\\d{3}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Adb",
-          "patterns": [
-            "ADB-\\D{4}\\d{2}-\\d{6}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "VyskovyBod",
-          "patterns": [
-            "(X-ADB|ADB)-\\D{4}\\d{2}-\\d{4,6}-V\\d{4}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Pian",
-          "patterns": [
-            "(P|N)-\\d{4}-\\d{6,9}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Dokument",
-          "patterns": [
-            "(C|M|X-C|X-M)-(3D)-\\d{9}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Dokument",
-          "patterns": [
-            "(C|M|X-C|X-M)-(3D)-\\d{9}-(D|K)\\d{3}",
-            "3D-(C|M|X-C|X-M)-\\w{8,10}-\\d{1,9}-(D|K)\\d{3}"
-          ],
-          "strip_suffix": 5
-        },
-        {
-          "model": "Dokument",
-          "patterns": [
-            "(C|M|X-C|X-M)-\\D{2}-\\d{9}",
-            "(C|M|X-C|X-M)-\\w{8,10}-\\D{2}-\\d{1,9}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Dokument",
-          "patterns": [
-            "(C|M|X-C|X-M)-\\D{2}-\\d{9}-(D|K)\\d{3}",
-            "(C|M|X-C|X-M)-\\w{8,10}-\\D{2}-\\d{1,9}-(D|K)\\d{3}"
-          ],
-          "strip_suffix": 5
-        },
-        {
-          "model": "SamostatnyNalez",
-          "patterns": [
-            "(C|M|X-C|X-M)-\\d{9}-N\\d{5}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "User",
-          "patterns": [
-            "(U)-\\d{6}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Let",
-          "patterns": [
-            "(?:C-)?(LET)-\\d{5,7}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Heslar",
-          "patterns": [
-            "(HES)-\\d{6}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Organizace",
-          "patterns": [
-            "(ORG)-\\d{6}"
-          ],
-          "strip_suffix": 0
-        },
-        {
-          "model": "Osoba",
-          "patterns": [
-            "(OS)-\\d{6}"
-          ],
-          "strip_suffix": 0
-        }
-      ],
-      "source": "webclient/core/import_data_mappers.py",
-      "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
-      "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
-      "symbol": "VazbaLookupImportField._process_value",
-      "title": "VazbaLookupImportField fallback raises AttributeError and ignores read_field_name"
+     "model": "Projekt",
+     "patterns": [
+      "(C|M|X-C|X-M)-\\d{9}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "ArcheologickyZaznam",
+     "patterns": [
+      "(C|M|X-C|X-M)-\\d{9}\\D{1}\\d{0,2}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "ArcheologickyZaznam",
+     "patterns": [
+      "(C|M|X-C|X-M)-9\\d{6,9}\\D{1}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "ArcheologickyZaznam",
+     "patterns": [
+      "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "ExterniZdroj",
+     "patterns": [
+      "(BIB|X-BIB)-\\d{7,9}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "DokumentacniJednotka",
+     "patterns": [
+      "(C|M|X-C|X-M)-\\w{7,10}\\D{1}\\d{0,2}-D\\d{2}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "DokumentacniJednotka",
+     "patterns": [
+      "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}-D\\d{2}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Komponenta",
+     "patterns": [
+      "(C|M|X-C|X-M)-\\w{7,10}\\D{1}\\d{0,2}-K\\d{3}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Komponenta",
+     "patterns": [
+      "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}-K\\d{3}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Adb",
+     "patterns": [
+      "ADB-\\D{4}\\d{2}-\\d{6}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "VyskovyBod",
+     "patterns": [
+      "(X-ADB|ADB)-\\D{4}\\d{2}-\\d{4,6}-V\\d{4}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Pian",
+     "patterns": [
+      "(P|N)-\\d{4}-\\d{6,9}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Dokument",
+     "patterns": [
+      "(C|M|X-C|X-M)-(3D)-\\d{9}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Dokument",
+     "patterns": [
+      "(C|M|X-C|X-M)-(3D)-\\d{9}-(D|K)\\d{3}",
+      "3D-(C|M|X-C|X-M)-\\w{8,10}-\\d{1,9}-(D|K)\\d{3}"
+     ],
+     "strip_suffix": 5
+    },
+    {
+     "model": "Dokument",
+     "patterns": [
+      "(C|M|X-C|X-M)-\\D{2}-\\d{9}",
+      "(C|M|X-C|X-M)-\\w{8,10}-\\D{2}-\\d{1,9}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Dokument",
+     "patterns": [
+      "(C|M|X-C|X-M)-\\D{2}-\\d{9}-(D|K)\\d{3}",
+      "(C|M|X-C|X-M)-\\w{8,10}-\\D{2}-\\d{1,9}-(D|K)\\d{3}"
+     ],
+     "strip_suffix": 5
+    },
+    {
+     "model": "SamostatnyNalez",
+     "patterns": [
+      "(C|M|X-C|X-M)-\\d{9}-N\\d{5}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "User",
+     "patterns": [
+      "(U)-\\d{6}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Let",
+     "patterns": [
+      "(?:C-)?(LET)-\\d{5,7}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Heslar",
+     "patterns": [
+      "(HES)-\\d{6}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Organizace",
+     "patterns": [
+      "(ORG)-\\d{6}"
+     ],
+     "strip_suffix": 0
+    },
+    {
+     "model": "Osoba",
+     "patterns": [
+      "(OS)-\\d{6}"
+     ],
+     "strip_suffix": 0
     }
-  ],
-  "note": "Source-confirmed importer defects. Reported for the developer, not fixed by this pack. A defect whose source file changes must be re-reviewed: record resolved_in {commit, source_sha256} when fixed, or refresh source_sha256 when still present.",
-  "schema_version": 1
+   ],
+   "source": "webclient/core/import_data_mappers.py",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "symbol": "VazbaLookupImportField._process_value",
+   "title": "VazbaLookupImportField fallback raises AttributeError and ignores read_field_name"
+  },
+  {
+   "classes": [
+    "heslar_dokument_typ_material",
+    "heslar_hierarchie",
+    "heslar_odkazy",
+    "az_akce_vedouci",
+    "dokumenty_tvary",
+    "externi_odkazy",
+    "komponenty_nalezy_objekty",
+    "komponenty_nalezy_predmety",
+    "uzivatele_spoluprace",
+    "soubory",
+    "historie"
+   ],
+   "conditions": {
+    "prefixed-key-update-delete": "An UPDATE or DELETE row of a class whose id column maps to IntegerImportField and carries a primary_key_prefix."
+   },
+   "defects": [
+    "Validation resolves the key with _parse_primary_key (prefix-(.*) -> 769), but the row stored for the data phase is serialized through IntegerImportField, whose pattern -?\\d+ captures the prefix dash (hdtm-769 -> -769).",
+    "create_records then calls model.objects.get(id=-769); DoesNotExist propagates and the whole import is revoked."
+   ],
+   "effect": "Validation passes, the data phase fails and the whole import is revoked (rollback complete in B06); the report shows a raw traceback.",
+   "evidence": {
+    "batch": "B06-full-update",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-14 live session (finding F9)"
+   },
+   "id": "prefixed-key-integer-parse",
+   "kind": "prefixed-key",
+   "lines": {
+    "create_records_get": 1828,
+    "integer_pattern": 819,
+    "primary_key_parse": 1708
+   },
+   "prerequisite": "Developer fix of the prefixed key serialization deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "resolved_in": null,
+   "source": "webclient/core/import_data_mappers.py",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "symbol": "IntegerImportField._process_value / ImportModelMapper._parse_primary_key",
+   "title": "UPDATE/DELETE of a prefixed numeric key is serialized as a negative ID and fails after validation"
+  },
+  {
+   "accepted_pattern": "ruian-(\\d+)",
+   "classes": [
+    "projekty",
+    "projekty_katastry",
+    "samostatne_nalezy",
+    "az_akce",
+    "az_lokality",
+    "az_katastry",
+    "dokumenty_neident_akce"
+   ],
+   "conditions": {
+    "lookup-format": "A non-empty RuianLookupImportField value that does not start with ruian-<digits>."
+   },
+   "defects": [
+    "The setter calls re.match(r'ruian-(\\d+)', value).group(1) without checking the match; any other text raises AttributeError."
+   ],
+   "effect": "AttributeError is not an ImportData* error; validation ends with 'Neočekávaná výjimka.' and conceals every later row (N07: after 79 of 364 rows).",
+   "evidence": {
+    "batch": "N07-field-boundaries",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-14 live session (finding F17)"
+   },
+   "field_type": "RuianLookupImportField",
+   "id": "ruian-lookup-format",
+   "kind": "lookup-format",
+   "lines": {
+    "unchecked_match": 1362
+   },
+   "prerequisite": "Developer fix of RuianLookupImportField deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "resolved_in": null,
+   "source": "webclient/core/import_data_mappers.py",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "symbol": "RuianLookupImportField.value",
+   "title": "A RUIAN reference not shaped like ruian-<digits> aborts the whole validation job"
+  },
+  {
+   "accepted_pattern": "(?:\\w+-)?(\\d+)",
+   "classes": [
+    "uzivatele_notifikace_projekty"
+   ],
+   "conditions": {
+    "lookup-format": "A non-empty GenericForeignKeyImportField value that does not match (?:\\w+-)?(\\d+)."
+   },
+   "defects": [
+    "A value not matching (?:\\w+-)?(\\d+) is passed unconverted to objects.get(kod=value); Django raises ValueError (\"Field 'kod' expected a number\"), which is neither DoesNotExist nor an ImportData* error."
+   ],
+   "effect": "Validation ends with the raw Django message and conceals every later row (N07 second upload: at 57%).",
+   "evidence": {
+    "batch": "N07-field-boundaries",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-14 live session (finding F18)"
+   },
+   "field_type": "GenericForeignKeyImportField",
+   "id": "generic-fk-lookup-format",
+   "kind": "lookup-format",
+   "lines": {
+    "get_without_value_error": 1518,
+    "unconverted_value": 1513
+   },
+   "prerequisite": "Developer fix of GenericForeignKeyImportField deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "resolved_in": null,
+   "source": "webclient/core/import_data_mappers.py",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "symbol": "GenericForeignKeyImportField._process_value",
+   "title": "A non-numeric RUIAN notification value aborts the whole validation job"
+  },
+  {
+   "accepted_pattern": "(?i)\\s*(SRID=\\d+;\\s*)?(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)(\\s*Z)?\\s*\\(",
+   "classes": [
+    "projekty",
+    "samostatne_nalezy",
+    "az_pian",
+    "az_adb_vyskove_body",
+    "dokumenty"
+   ],
+   "conditions": {
+    "lookup-format": "A non-empty geometry value (model Point/GeometryField) that is not WKT/EWKT text."
+   },
+   "defects": [
+    "GeomImportField._process_value calls GEOSGeometry(value, srid=...) without catching its ValueError; the docstring promises ImportDataError."
+   ],
+   "effect": "ValueError 'String input unrecognized as WKT EWKT, and HEXEWKB.' is not an ImportData* error; validation stops and shows the raw GEOS message, concealing every later row (V04: after 9 of 30 rows).",
+   "evidence": {
+    "batch": "V04-branches-update",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-14 live session (finding F26)"
+   },
+   "field_type": "GeomImportField",
+   "model_field_types": [
+    "PointField",
+    "GeometryField",
+    "LineStringField",
+    "PolygonField",
+    "MultiPolygonField"
+   ],
+   "id": "geometry-wkt-format",
+   "kind": "lookup-format",
+   "lines": {
+    "unchecked_parse": 1461
+   },
+   "prerequisite": "Developer fix of GeomImportField deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "resolved_in": null,
+   "source": "webclient/core/import_data_mappers.py",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "symbol": "GeomImportField._process_value",
+   "title": "A geometry value that is not WKT aborts the whole validation job"
+  },
+  {
+   "kind": "empty-cell",
+   "resolved_in": null,
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "prerequisite": "Developer fix (empty CSV cells read as NaN must not reach str methods) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "id": "distribution-empty-name",
+   "title": "An empty distribution name aborts the whole validation job",
+   "source": "webclient/core/distribution_names.py",
+   "source_sha256": "a0ff189aafc8e6b7aa80794731a7e3cb6e5967aded5b43db558c1b7a2b9c7674",
+   "symbol": "normalize_distribution_name",
+   "lines": {
+    "nan_strip": 38
+   },
+   "classes": [
+    "distribution",
+    "paradata"
+   ],
+   "columns": {
+    "distribution": [
+     "distribution"
+    ],
+    "paradata": [
+     "distribution"
+    ]
+   },
+   "conditions": {
+    "empty-cell": "An empty distribution cell (read by pandas as NaN)."
+   },
+   "defects": [
+    "pd.read_csv(dtype=str) turns an empty cell into NaN (cron/tasks.py:1401); (name or '').strip() keeps the truthy NaN and calls .strip() on a float."
+   ],
+   "effect": "AttributeError is not an ImportData* error; validation ends with 'Neočekávaná výjimka.' at 17% and conceals every later row (V04: after 21 of 28 rows).",
+   "evidence": {
+    "batch": "V04-branches-update",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-14 live session (finding F27)"
+   }
+  },
+  {
+   "kind": "empty-cell",
+   "resolved_in": null,
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "prerequisite": "Developer fix (empty CSV cells read as NaN must not reach str methods) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "id": "paradata-empty-path",
+   "title": "An empty paradata path aborts the whole validation job",
+   "source": "webclient/core/import_data_mappers.py",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "symbol": "ParadataMapper (path validation)",
+   "lines": {
+    "nan_strip": 5473
+   },
+   "classes": [
+    "paradata"
+   ],
+   "columns": {
+    "paradata": [
+     "path"
+    ]
+   },
+   "conditions": {
+    "empty-cell": "An empty paradata path cell (read by pandas as NaN)."
+   },
+   "defects": [
+    "(self.value_dict.get('path') or '').strip() calls .strip() on the NaN of an empty cell."
+   ],
+   "effect": "AttributeError instead of 'Chybí povinné pole: path'; aborts validation like F27 (source-confirmed, not yet reached live).",
+   "evidence": {
+    "batch": "V04-branches-update",
+    "kind": "source-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-14 live session (finding F27)"
+   }
+  },
+  {
+   "id": "single-system-geometry-required",
+   "kind": "single-system-geometry",
+   "title": "A spatial unit with only one coordinate system is rejected although the other is derived",
+   "source": "webclient/core/import_data_mappers.py",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "symbol": "ImportModelMapper.check_required_fields",
+   "lines": {
+    "required_check": 1967,
+    "derivation": 2103
+   },
+   "classes": [
+    "az_pian"
+   ],
+   "columns": {
+    "az_pian": [
+     "geom",
+     "geom_sjtsk"
+    ]
+   },
+   "conditions": {
+    "single-system-geometry": "An az_pian row with exactly one of geom/geom_sjtsk filled (geom_system names the filled one)."
+   },
+   "defects": [
+    "check_required_fields requires the non-nullable Pian.geom and Pian.geom_sjtsk on the raw row before transform_geometries derives the missing one, so the derivation is unreachable."
+   ],
+   "effect": "The row is rejected ('Chybí povinné pole: geom_sjtsk' / 'geom'); in an apply batch this blocks the whole import (B02 insert, V05 update).",
+   "prerequisite": "Developer fix of the required-field check (derive before checking) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "evidence": {
+    "batch": "V05-branches-update",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-14 live session (finding F1)"
+   },
+   "resolved_in": null
+  },
+  {
+   "id": "adb-reparent-primary-key",
+   "kind": "case",
+   "title": "Moving an ADB to another documentation unit fails in the data phase",
+   "source": "webclient/adb/models.py",
+   "source_sha256": "54875b55eacc62314a213914f08ea102b4aad7134128dba178edb0fbb9860fd5",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "symbol": "Adb.dokumentacni_jednotka (OneToOneField, primary_key=True)",
+   "lines": {
+    "primary_key": 46
+   },
+   "classes": [
+    "az_adb"
+   ],
+   "coverage": [
+    "az_adb.branch.reparent-old-new"
+   ],
+   "conditions": {
+    "case": "An az_adb UPDATE that changes dokumentacni_jednotka (the primary key)."
+   },
+   "defects": [
+    "Adb's primary key is its documentation unit; changing it makes save() INSERT a second row with the same ident_cely instead of moving the record."
+   ],
+   "effect": "psycopg2 UniqueViolation adb_ident_cely_key in the data phase; the whole import is revoked (V05r-retry row 25). Validation accepts the row.",
+   "prerequisite": "Developer fix (move the ADB or reject the change at validation) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "evidence": {
+    "batch": "V05r-retry",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-15 live session (finding F32)"
+   },
+   "resolved_in": null
+  },
+  {
+   "id": "document-cascade-no-transaction",
+   "kind": "case",
+   "title": "Deleting a document whose part is linked to an archaeological record fails in the data phase",
+   "source": "webclient/xml_generator/models.py",
+   "source_sha256": "0d7b6228a5aa9c9f0df2f797522bebad5f7c0fd591da564968c8c02c1001ab25",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "symbol": "ModelWithMetadata._get_fedora_transaction (called from dokument.signals.dokument_cast_save_metadata_delete)",
+   "lines": {
+    "no_transaction": 296
+   },
+   "classes": [
+    "dokumenty"
+   ],
+   "coverage": [
+    "dokumenty.branch.cascade"
+   ],
+   "conditions": {
+    "case": "A dokumenty DELETE of a document with a document part linked to an archaeological record."
+   },
+   "defects": [
+    "The cascade-deleted DokumentCast has no active_transaction; its post_delete signal (dokument/signals.py:280) calls initial_archeologicky_zaznam.save_metadata(None), which raises 'No Fedora transaction'."
+   ],
+   "effect": "ValueError in the data phase; the whole import is revoked (V12 row 4).",
+   "prerequisite": "Developer fix (pass the import transaction to cascaded children or delete parts explicitly) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "evidence": {
+    "batch": "V12-branches-delete",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-15 live session (finding F36)"
+   },
+   "resolved_in": null
+  }
+ ],
+ "note": "Source-confirmed importer defects. Reported for the developer, not fixed by this pack. A defect whose source file changes must be re-reviewed: record resolved_in {commit, source_sha256} when fixed, or refresh source_sha256 when still present.",
+ "schema_version": 1
 }
