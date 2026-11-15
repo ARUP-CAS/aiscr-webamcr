@@ -54,6 +54,23 @@ def start_run(root, manifest, run_id, deployment, mode="live", window=None, pari
     return record
 
 
+# Události řetězce, které nejsou kontrolními body dávky (opravy a rozhodnutí o bránách).
+NON_BATCH_PHASES = ("correction", "gate-resolution")
+# ``not-executed`` uzavírá dávku bez provedení (operátor rozhodl scénář nespouštět); důvod nese událost.
+# ``known-defect`` povolí vědomé provedení odložené dávky (reprodukce známé vady, např. k odblokování úklidu).
+# ``removed-by-setup`` uzavře odloženou část, jejíž řádky odstranila schválená příprava (už nic neblokuje);
+# ``retry`` vyžádá novou dávku se stejným vstupem po neúspěšném běhu, který nic nezměnil (revokovaný import).
+GATE_ACCEPTANCE = (
+    "accepted",
+    "rejected",
+    "record-behaviour",
+    "not-executed",
+    "known-defect",
+    "removed-by-setup",
+    "retry",
+)
+
+
 def checkpoints(root):
     """Načte původní události a ověří jejich návaznost."""
     previous, result = None, []
@@ -78,7 +95,159 @@ def effective_checkpoints(root):
     """
     events = checkpoints(root)
     voided = {n for e in events if e.get("phase") == "correction" for n in e.get("voids", [])}
-    return [e for n, e in enumerate(events, 1) if n not in voided and e.get("phase") != "correction"]
+    return [e for n, e in enumerate(events, 1) if n not in voided and e.get("phase") not in NON_BATCH_PHASES]
+
+
+def gate_resolution(root, batch_id, input_sha256):
+    """
+    Vrátí platné rozhodnutí o kontrolované bráně dávky pro daný vstup, nebo ``None``.
+
+    :param root: Adresář běhu.
+    :param batch_id: ID dávky s ``execution_gate``.
+    :param input_sha256: Hash vstupu, k němuž se rozhodnutí váže; jiný vstup potřebuje nové rozhodnutí.
+    :return: Poslední nezneplatněná událost ``phase == "gate-resolution"`` nebo ``None``.
+    """
+    events = checkpoints(root)
+    voided = {n for e in events if e.get("phase") == "correction" for n in e.get("voids", [])}
+    matches = [
+        e
+        for n, e in enumerate(events, 1)
+        if n not in voided
+        and e.get("phase") == "gate-resolution"
+        and e["batch_id"] == batch_id
+        and e.get("input_sha256") == input_sha256
+    ]
+    return matches[-1] if matches else None
+
+
+def executed_inputs(root):
+    """
+    Vrátí pro každou provedenou dávku hash vstupu, se kterým skutečně běžela (z jejích kontrolních bodů).
+
+    Revize vstupů se porovnává s tímto hashem, ne s poslední zaregistrovanou revizí: chybně zaregistrovanou
+    revizi tak lze opravit a provedená dávka nemůže tiše dostat jiný vstup.
+
+    :param root: Adresář běhu.
+    :return: Slovník ``ID dávky -> input_sha256``.
+    """
+    executed = executed_batches(root)
+    result = {}
+    for event in effective_checkpoints(root):
+        if event["batch_id"] in executed and event.get("input_sha256"):
+            result[event["batch_id"]] = event["input_sha256"]
+    return result
+
+
+def refuse_executed_changes(root, old, new):
+    """
+    Odmítne revizi, která odebere provedenou dávku nebo jí změní vstup, operaci, pokrytí či závislosti.
+
+    :param root: Adresář běhu.
+    :param old: Dávky poslední registrované revize (``ID -> dávka``).
+    :param new: Dávky nové revize (``ID -> dávka``).
+    :raises ValueError: Při odebrání nebo změně provedené dávky.
+    """
+    ran = executed_inputs(root)
+    for batch_id in sorted(executed_batches(root)):
+        if batch_id not in new:
+            raise ValueError("Pack revision removes executed batch " + batch_id)
+        if new[batch_id].get("input_sha256") != ran.get(batch_id, old.get(batch_id, {}).get("input_sha256")) or any(
+            new[batch_id].get(key) != old.get(batch_id, {}).get(key)
+            for key in ("operation", "coverage_ids", "prerequisites")
+        ):
+            raise ValueError("Pack revision changes executed batch " + batch_id)
+
+
+def decided_batches(root, acceptance, manifest=None):
+    """
+    Vrátí dávky s platným rozhodnutím daného druhu pro jejich aktuální vstup.
+
+    :param root: Adresář běhu.
+    :param acceptance: Druh rozhodnutí (``GATE_ACCEPTANCE``).
+    :param manifest: Aktuální manifest; ``None`` načte poslední revizi vstupů.
+    :return: Slovník ``ID dávky -> hash vstupu``.
+    """
+    manifest = manifest or current_manifest(root)
+    return {
+        b["id"]: b.get("input_sha256")
+        for b in manifest["batches"]
+        if (gate_resolution(root, b["id"], b.get("input_sha256")) or {}).get("acceptance") == acceptance
+    }
+
+
+def not_executed_batches(root, manifest=None):
+    """
+    Vrátí dávky, o nichž operátor rozhodl, že se na cíli neprovedou (platné rozhodnutí ``not-executed``).
+
+    :param root: Adresář běhu.
+    :param manifest: Aktuální manifest; ``None`` načte poslední revizi vstupů.
+    :return: Množina ID dávek uzavřených bez provedení pro jejich aktuální vstup.
+    """
+    manifest = manifest or current_manifest(root)
+    return {
+        b["id"]
+        for b in manifest["batches"]
+        if b.get("execution_gate")
+        and (gate_resolution(root, b["id"], b.get("input_sha256")) or {}).get("acceptance") == "not-executed"
+    }
+
+
+def record_gate_resolution(root, batch_id, authorized_by, acceptance, reason):
+    """
+    Zapíše rozhodnutí operátora o kontrolované bráně dávky jako událost řetězce (nikdy se nepřepisuje).
+
+    Brána ``execution_gate`` žádá vyřešení akceptace či přípravy a autorizaci pro konkrétní cíl. Událost
+    nese, kdo provedení autorizoval, jak se rozhodne o akceptaci a proč; váže se k aktuálnímu hashi vstupu.
+    Teprve s ní lze kontrolní bod dávky zapsat jako ``checked``. Zneplatnit ji lze ``record_correction``.
+
+    :param root: Adresář běhu.
+    :param batch_id: ID dávky s ``execution_gate``.
+    :param authorized_by: Kdo provedení na cíli autorizoval.
+    :param acceptance: Rozhodnutí o akceptaci (``accepted``, ``rejected``, ``record-behaviour``) nebo ``not-executed``,
+        které dávku uzavře bez provedení.
+    :param reason: Odůvodnění a rozsah autorizace.
+    :return: Zapsaná událost.
+    :raises ValueError: Bez autorizace či důvodu, s neznámou akceptací, pro dávku bez brány nebo odloženou dávku.
+    """
+    if not str(authorized_by or "").strip() or not str(reason or "").strip():
+        raise ValueError("A gate resolution needs who authorized it and a reason")
+    if acceptance not in GATE_ACCEPTANCE:
+        raise ValueError("Unknown acceptance decision")
+    manifest = current_manifest(root)
+    batch = next((b for b in manifest["batches"] if b["id"] == batch_id), None)
+    if batch is None:
+        raise ValueError("Batch does not belong to this suite/run")
+    if acceptance in ("known-defect", "removed-by-setup"):
+        if not batch.get("deferred"):
+            raise ValueError("Only a batch deferred by a known defect can be executed as a known-defect reproduction")
+    elif acceptance == "retry":
+        terminal = {
+            e["state"]
+            for e in effective_checkpoints(root)
+            if e["batch_id"] == batch_id and e.get("phase") == "terminal"
+        }
+        if terminal != {"failed"}:
+            raise ValueError("A retry needs a batch whose only terminal checkpoint failed")
+    elif batch.get("deferred"):
+        raise ValueError("Batch is deferred by a known importer defect; rebuild after the fix instead of executing it")
+    elif not batch.get("execution_gate"):
+        raise ValueError("Batch has no execution gate to resolve")
+    events = checkpoints(root)
+    event = {
+        "phase": "gate-resolution",
+        "batch_id": batch_id,
+        "input_sha256": batch.get("input_sha256"),
+        "execution_gate": batch.get("execution_gate"),
+        "deferred_defects": (batch.get("deferred") or {}).get("defects"),
+        "authorized_by": authorized_by,
+        "acceptance": acceptance,
+        "reason": reason,
+        "state": "checked",
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "previous_sha256": digest(json_bytes(events[-1])) if events else None,
+    }
+    save_json(inside(root, f"events/{len(events) + 1:04}.json"), event)
+    return event
 
 
 def record_correction(root, voids, reason, reviewer):
@@ -193,14 +362,7 @@ def revise_pack(root, manifest, reason, reviewer):
             raise ValueError("Pack revision changes the run/source identity: " + key)
     old = {b["id"]: b for b in current_manifest(root)["batches"]}
     new = {b["id"]: b for b in manifest["batches"]}
-    for batch_id in sorted(executed_batches(root)):
-        if batch_id not in new:
-            raise ValueError("Pack revision removes executed batch " + batch_id)
-        if any(
-            new[batch_id].get(key) != old[batch_id].get(key)
-            for key in ("input_sha256", "operation", "coverage_ids", "prerequisites")
-        ):
-            raise ValueError("Pack revision changes executed batch " + batch_id)
+    refuse_executed_changes(root, old, new)
     previous = identity_manifest(root)
     files = sorted((root / "input-revisions").glob("*.json"))
     revision = inside(root, f"input-revisions/{len(files) + 1:04}.json")
@@ -236,6 +398,9 @@ def register_inputs(root, manifest):
     old = {b["id"]: b for b in current_manifest(root)["batches"]}
     if not set(old).issubset({b["id"] for b in manifest["batches"]}):
         raise ValueError("Input revision changes the approved batch scope")
+    # A plain re-registration must not give an executed batch another input either (live: R12 rebuilt from the
+    # stale references-r7 export was registered silently in input-revisions/0045).
+    refuse_executed_changes(root, old, {b["id"]: b for b in manifest["batches"]})
     for batch in manifest["batches"]:
         if batch["id"] not in old:
             parent = old.get(batch.get("derived_from"))
@@ -301,10 +466,15 @@ def record_checkpoint(root, batch_id, task_id, evidence, state, phase="terminal"
     ):
         raise ValueError("Unknown checkpoint phase")
     batch = next(b for b in manifest["batches"] if b["id"] == batch_id)
-    if batch.get("deferred"):
+    gated = batch.get("execution_gate") or batch.get("deferred")
+    resolution = gate_resolution(root, batch_id, batch.get("input_sha256")) if gated else None
+    if batch.get("deferred") and (resolution or {}).get("acceptance") != "known-defect":
         raise ValueError("Batch is deferred by a known importer defect; rebuild after the fix instead of executing it")
+    if resolution and resolution.get("acceptance") in ("not-executed", "removed-by-setup"):
+        raise ValueError("Batch was resolved as not executed; void that resolution before recording a checkpoint")
     if state == "checked" and (
-        batch.get("ready") is False or (batch.get("execution_gate") and not batch.get("gate_resolution"))
+        batch.get("ready") is False
+        or (batch.get("execution_gate") and not batch.get("gate_resolution") and not resolution)
     ):
         raise ValueError("Cannot check unresolved inputs or controlled setup as executed")
     for item in evidence.values():
@@ -340,12 +510,21 @@ def handoff(root):
     failed = {
         e["batch_id"] for e in events if e["state"] == "failed" and e.get("phase", "terminal") == "terminal"
     } - completed
-    closed = completed | failed
+    not_executed = not_executed_batches(root, manifest) - completed - failed
+    removed_by_setup = set(decided_batches(root, "removed-by-setup", manifest)) - completed - failed
+    known_defect_runs = {
+        b
+        for b in decided_batches(root, "known-defect", manifest)
+        if any(x["id"] == b and x.get("deferred") for x in manifest["batches"])
+    }
+    closed = completed | failed | not_executed | removed_by_setup
     next_batch = next(
         (
             b
             for b in manifest["batches"]
-            if b["id"] not in closed and not b.get("deferred") and set(b.get("prerequisites", [])).issubset(closed)
+            if b["id"] not in closed
+            and (not b.get("deferred") or b["id"] in known_defect_runs)
+            and set(b.get("prerequisites", [])).issubset(closed)
         ),
         None,
     )
@@ -369,6 +548,8 @@ def handoff(root):
         "last_checkpoint": last,
         "completed_batches": sorted(completed),
         "failed_batches": sorted(failed),
+        "not_executed_batches": sorted(not_executed),
+        "removed_by_setup_batches": sorted(removed_by_setup),
         "next_candidate": next_batch["id"] if next_batch else None,
         "next_action": action,
         "deferred_batches": [b["id"] for b in manifest["batches"] if b.get("deferred")],

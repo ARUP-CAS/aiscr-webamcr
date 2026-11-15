@@ -321,3 +321,23 @@ MUST prevent an overall completeness claim.
 - **WHEN** the behaviour or load report is generated
 - **THEN** a known-defects section names each defect's source location, trigger conditions, deferred coverage items and deferred batches, labelled source-confirmed rather than observed live
 - **AND** the deferred items count as blocked, prevent an overall completeness claim, and become executable again only in a run against a deployment that contains the fix
+
+### Requirement: Behaviour evidence for Fedora and UX
+
+For behaviour coverage the mandatory Fedora evidence SHALL be the retained bounded
+change audit of the batch window, with direct resource reads where an assertion needs
+persistence, content or deletion proof. The mandatory UX evidence SHALL be an
+observation authored by the human, per task or once per run.
+
+#### Scenario: Change audit without direct proof
+- **GIVEN** a batch whose change audit lists only planned and own resources
+- **WHEN** an assertion needs proof that a resource was persisted or deleted
+- **THEN** the assertion stays blocked until a direct read of that resource supports it
+- **AND** load coverage keeps its direct before/after captures
+
+#### Scenario: Run-level operator statement
+- **GIVEN** executed batches whose oracle assertions passed and a retained change audit
+- **WHEN** the operator records one run-level observation as the human author, bound by its hash
+- **THEN** each executed coverage item may cite that statement as its UX evidence
+- **AND** an agent's transcription of a screenshot, a changed statement file or a missing
+  observation time keeps the items from passing

@@ -6,6 +6,17 @@ from pathlib import Path
 from .common import PACK, digest, inside, json_bytes, read_json, save_json, write_new
 
 
+def known_defect_note(batch, known_defect_runs):
+    """Vrátí upozornění karty, že jde o schválenou reprodukci známé vady (jinak prázdný řetězec)."""
+    if batch["id"] not in known_defect_runs:
+        return ""
+    defects = ", ".join(batch["deferred"]["defects"])
+    return (
+        "\n\n**Known-defect run** (operator-approved): expected to reproduce "
+        f"{defects}; record the outcome, do not retry."
+    )
+
+
 def render(directory, run_root):
     """Vygeneruje jednu kartu na dávku s již vyřešenými lokálními cestami."""
     manifest = read_json(directory / "manifest.json")
@@ -18,8 +29,13 @@ def render(directory, run_root):
     labels = read_json(PACK / "operator/terminology.json")["labels"]
     index = []
     deferred = []
+    known_defect_runs = set()
+    if (run_root / "run.json").is_file():
+        from .session import decided_batches
+
+        known_defect_runs = set(decided_batches(run_root, "known-defect", manifest))
     for batch in manifest["batches"]:
-        if batch.get("deferred"):
+        if batch.get("deferred") and batch["id"] not in known_defect_runs:
             # No card: a known defect would abort it. The input stays in the prepared pack for a rerun after the fix.
             deferred.append(
                 {
@@ -55,7 +71,7 @@ SHA-256: `{batch['input_sha256']}`
 
 Selected **{labels['operation']['cs']}**: **{labels[batch['operation']]['cs']}**.
 
-Expected outcome: **{batch['expected']}**. Rows: {batch['rows']}.
+Expected outcome: **{batch['expected']}**. Rows: {batch['rows']}.{known_defect_note(batch, known_defect_runs)}
 
 Prerequisites: {', '.join(batch['prerequisites']) or 'verified preflight and authorized session'}.
 

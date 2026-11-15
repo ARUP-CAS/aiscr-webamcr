@@ -152,13 +152,19 @@ It copies immutable originals to `<batch>/originals/<kind>/<sha256><suffix>` and
 appends an event with the selected manifest and input hashes. Repeat collection of
 identical bytes reuses the same original; different stages/tasks retain separate
 originals. Existing legacy checkpoint references remain readable. Required kinds are
-listed per coverage item. Put actual human feedback in `human-ux` JSON with author,
-observation time, task ID, observed facts and unobserved facts. An agent may transcribe
-the human's feedback with its provenance. Supplied screenshots establish only what
-is visible; they do not establish unrecorded timing, interactions or responsiveness.
+listed per coverage item. For the behaviour suite, Fedora evidence is the bounded
+change audit (`fedora-changes`, every modified resource in the db-before → db-after
+window, classified as planned/own/outside) plus direct reads where an oracle assertion
+needs them; assertions without that direct evidence stay `blocked`. Put actual human
+feedback in `human-ux` JSON with `author: human`, observation time, observed facts and
+unobserved facts, either per task (`task_id`) or once for the run in
+`operator-observations.json` (`task_id: null`, bound by its hash). An agent's
+transcription of a screenshot is not human evidence. Supplied screenshots establish only
+what is visible; they do not establish unrecorded timing, interactions or responsiveness.
 
 Assessments passed to `report` name run ID, deployment, batch/task, retained evidence
-objects and all machine assertion states. The report checks hashes/checkpoints and
+objects and all machine assertion states; `assess` derives them from the run's
+checkpoints and oracle results. The report checks hashes/checkpoints and
 mandatory evidence. Missing UX, stale identity, incomplete lifecycles or simulated
 results cannot yield completeness. A fresh agent runs `handoff`, reads the last
 checkpoint and **never repeats a mutation merely because the chat was lost**.

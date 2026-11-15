@@ -36,8 +36,7 @@ def coverage(source):
                         "input",
                         "db-before",
                         "db-after",
-                        "fedora-before",
-                        "fedora-after",
+                        "fedora-changes",
                         "report",
                         "human-ux",
                     ],
@@ -57,8 +56,7 @@ def coverage(source):
                         "input",
                         "db-before",
                         "db-after",
-                        "fedora-before",
-                        "fedora-after",
+                        "fedora-changes",
                         "report",
                         "human-ux",
                     ],
@@ -73,7 +71,7 @@ def coverage(source):
             "state": "prepared",
             "outcome": "scenario-specific",
             "expected": {"phase_boundary": case},
-            "required_evidence": ["report", "human-ux", "db-before", "db-after", "fedora-before", "fedora-after"],
+            "required_evidence": ["report", "human-ux", "db-before", "db-after", "fedora-changes"],
         }
         for case in SESSION_CASES
     )

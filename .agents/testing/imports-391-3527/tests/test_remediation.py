@@ -1154,6 +1154,109 @@ class RuianFormatDeferralTests(unittest.TestCase):
         holders = [b for b in manifest["batches"] if "az_adb.branch.reparent-old-new" in b["coverage_ids"]]
         self.assertEqual([b["id"] for b in holders], ["V05x-deferred-known-defects"])
         self.assertIn("adb-reparent-primary-key", holders[0]["deferred"]["defects"])
+        batches = {b["id"]: b for b in manifest["batches"]}
+        # Gated scenarios carry their case-bound defects (F40 document extra data, F41 orphaned PIAN).
+        self.assertEqual(batches["R09-controlled-scenario"]["deferred"]["defects"], ["document-extra-data-required"])
+        self.assertEqual(batches["R07-controlled-scenario"]["deferred"]["defects"], ["dj-orphan-pian-dry-run"])
+
+        # F42: a cleanup layer's akce/lokality/document deletes move to a deferred companion; the next layer needs
+        # both parts, so it waits until the run has executed the companion (a deliberate known-defect run).
+        def layers(retained=None):
+            with tempfile.TemporaryDirectory(dir=base) as location:
+                built = build_behaviour(Path(location) / "b", source, "950000", {}, None, retained=retained)
+            return {b["id"]: b for b in built["batches"] if b["id"].startswith("D") and "-" in b["id"]}
+
+        def deferred(found):
+            # Prefixed-key companions are deferred by a different defect and are not part of this chain.
+            return [k for k, b in sorted(found.items()) if b.get("deferred") and not k.endswith("prefixed-keys")]
+
+        fresh = {k: b for k, b in batches.items() if k.startswith("D") and "-" in k}
+        # Every D04 class is hit by a post-commit delete defect (F42 akce/dokumenty, F44 az_pian): no split, deferred.
+        self.assertEqual(sorted(fresh["D04-dependency-layer"]["tables"]), ["az_akce", "az_pian", "dokumenty"])
+        self.assertEqual(
+            sorted(fresh["D04-dependency-layer"]["deferred"]["defects"]),
+            ["delete-history-target-deleted", "delete-own-metadata-target"],
+        )
+        self.assertNotIn("D04x-deferred-known-defects", fresh)
+        # A deferred companion keeps its rows, so every later layer whose model they reference through a
+        # RESTRICT/PROTECT key waits for it (live D02: externi_odkazy kept BIB-000950001 -> RestrictedError).
+        self.assertIn("D01x-deferred-prefixed-keys", fresh["D02-dependency-layer"]["prerequisites"])
+        self.assertIn("D01x-deferred-prefixed-keys", fresh["D06-dependency-layer"]["prerequisites"])
+        self.assertEqual(sorted(fresh["D01x-deferred-known-defects"]["tables"]), ["az_lokality"])
+        # A layer the run already executed is never re-split (live D01 ran whole and failed after commit).
+        ran = layers({"D01-dependency-layer": "sha-of-the-executed-input"})
+        self.assertNotIn("D01x-deferred-known-defects", ran)
+        self.assertIn("az_lokality", ran["D01-dependency-layer"]["tables"])
+        # A failed layer whose executed input was its prefixed-key-split part gets no retry: the input is unchanged.
+        executed = ran["D01-dependency-layer"]
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            after_failure = build_behaviour(
+                Path(location) / "b",
+                source,
+                "950000",
+                {},
+                None,
+                retained={executed["id"]: executed["input_sha256"]},
+                failed_executions={executed["id"]: {"batch": executed, "data": b""}},
+            )
+        ids = [b["id"] for b in after_failure["batches"]]
+        self.assertNotIn("D01r-retry", ids)
+        # A layer executed in split form keeps that form when its own classes later join the defect (live D04 ran
+        # with az_pian only; az_pian was added to delete-own-metadata-target afterwards).
+        from import_pack.build import bound_digest
+
+        whole = fresh["D04-dependency-layer"]
+        ran = {**whole, "tables": {"az_pian": whole["tables"]["az_pian"]}}
+        ran["input_sha256"] = bound_digest({}, ran["tables"])
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            kept = build_behaviour(
+                Path(location) / "b",
+                source,
+                "950000",
+                {},
+                None,
+                retained={ran["id"]: ran["input_sha256"]},
+                failed_executions={ran["id"]: {"batch": ran, "data": b""}},
+            )
+        kept_ids = {b["id"]: b for b in kept["batches"]}
+        self.assertNotIn("D04r-retry", kept_ids)
+        self.assertEqual(kept_ids["D04-dependency-layer"]["input_sha256"], ran["input_sha256"])
+        self.assertEqual(sorted(kept_ids["D04x-deferred-known-defects"]["tables"]), ["az_akce", "dokumenty"])
+        # An operator-requested retry of a revoked layer rebuilds it with the same rows; the next layer follows it.
+        d02 = next(b for b in after_failure["batches"] if b["id"] == "D02-dependency-layer")
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            retried = build_behaviour(
+                Path(location) / "b",
+                source,
+                "950000",
+                {},
+                None,
+                retained={d02["id"]: d02["input_sha256"]},
+                failed_executions={d02["id"]: {"batch": d02, "data": b"", "retry": True}},
+            )
+        by_id = {b["id"]: b for b in retried["batches"]}
+        self.assertEqual(by_id["D02r-retry"]["tables"], d02["tables"])
+        self.assertEqual(by_id["D02-dependency-layer"]["prerequisites"], d02["prerequisites"])
+        # D03 follows the retry and the F44 companion (fresh D02's external sources and users are deferred).
+        self.assertEqual(by_id["D03-dependency-layer"]["prerequisites"], ["D02r-retry", "D02x-deferred-known-defects"])
+        self.assertEqual(
+            next(b for b in after_failure["batches"] if b["id"] == executed["id"])["input_sha256"],
+            executed["input_sha256"],
+        )
+        from import_pack.known_defects import triggering_rows
+
+        delete_target = [d for d in load_definitions(source) if d["id"] == "delete-history-target-deleted"]
+        rows = {"az_lokality": [{"ident_cely": "C-N1"}], "komponenty": [{"ident_cely": "C-K1"}]}
+        found = triggering_rows(rows, "delete", [], [], source, delete_target)
+        self.assertEqual([(f["class"], f["value"]) for f in found], [("az_lokality", "C-N1")])
+        self.assertFalse(triggering_rows(rows, "update", [], [], source, delete_target))
+        # A controlled procedure inherits the deferral of the batch that prepares its fixture.
+        for procedure, preparation in (("R15-controlled-procedure", "Q15"), ("R16-controlled-procedure", "Q16")):
+            self.assertTrue(batches[f"{preparation}-prepare-thumbnail-versions"].get("deferred"))
+            self.assertEqual(
+                batches[procedure]["deferred"]["deferred_prerequisites"],
+                [f"{preparation}-prepare-thumbnail-versions"],
+            )
 
     def test_single_system_geometry_matters_only_for_apply(self):
         from import_pack.known_defects import defects_for, load_definitions, triggering_rows
@@ -1250,6 +1353,310 @@ class CheckpointCorrectionTests(unittest.TestCase):
             self.assertEqual(handoff(root)["completed_batches"], [])
             with self.assertRaisesRegex(ValueError, "Cannot void"):
                 record_correction(root, [3], "a correction is not a checkpoint", "operator")
+
+    def test_gated_batch_checks_only_with_a_live_resolution_for_its_input(self):
+        from import_pack.session import (
+            effective_checkpoints,
+            executed_batches,
+            record_checkpoint,
+            record_correction,
+            record_gate_resolution,
+            register_inputs,
+            start_run,
+        )
+
+        base = PACK / "generated/tests"
+        base.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            root = Path(location) / "run"
+            gated = {
+                "id": "R1",
+                "input_sha256": "x",
+                "operation": "insert",
+                "coverage_ids": [],
+                "prerequisites": [],
+                "execution_gate": "resolve acceptance/setup and obtain target-specific authorization",
+            }
+            manifest = {
+                "suite": "behaviour",
+                "namespace": "950000",
+                "source_commit": "a" * 40,
+                "source_hash_mode": SOURCE_HASH_MODE,
+                "source_hashes": {},
+                "generator_hashes": {},
+                "coverage": [],
+                "batches": [gated, {**gated, "id": "N1", "execution_gate": None}],
+            }
+            start_run(root, manifest, "gate-test", "a" * 40)
+            with self.assertRaisesRegex(ValueError, "controlled setup"):
+                record_checkpoint(root, "R1", "t", {}, "checked", "validation")
+            with self.assertRaisesRegex(ValueError, "authorized it and a reason"):
+                record_gate_resolution(root, "R1", "", "record-behaviour", "why")
+            with self.assertRaisesRegex(ValueError, "Unknown acceptance"):
+                record_gate_resolution(root, "R1", "operator", "maybe", "why")
+            with self.assertRaisesRegex(ValueError, "no execution gate"):
+                record_gate_resolution(root, "N1", "operator", "accepted", "why")
+            # A resolution binds to the input it was given for; a changed input (before execution) needs a new one.
+            record_gate_resolution(root, "R1", "operator", "record-behaviour", "authorized for input x")
+            register_inputs(root, {**manifest, "batches": [{**gated, "input_sha256": "y"}, manifest["batches"][1]]})
+            with self.assertRaisesRegex(ValueError, "controlled setup"):
+                record_checkpoint(root, "R1", "t", {}, "checked", "validation")
+            record_gate_resolution(root, "R1", "operator", "record-behaviour", "authorized in session")
+            # The resolution is not a batch checkpoint and does not mark the batch executed.
+            self.assertEqual(effective_checkpoints(root), [])
+            self.assertNotIn("R1", executed_batches(root))
+            record_checkpoint(root, "R1", "t", {}, "checked", "validation")
+            # Voiding the resolution re-closes the gate.
+            record_correction(root, [2], "authorization withdrawn", "operator")
+            with self.assertRaisesRegex(ValueError, "controlled setup"):
+                record_checkpoint(root, "R1", "t", {}, "checked", "terminal")
+
+    def test_not_executed_decision_closes_the_gated_batch_without_a_checkpoint(self):
+        from import_pack.session import (
+            executed_batches,
+            handoff,
+            record_checkpoint,
+            record_correction,
+            record_gate_resolution,
+            start_run,
+        )
+
+        base = PACK / "generated/tests"
+        base.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            root = Path(location) / "run"
+            gated = {
+                "id": "R1",
+                "input_sha256": "x",
+                "operation": "update",
+                "coverage_ids": [],
+                "prerequisites": [],
+                "execution_gate": "resolve acceptance/setup and obtain target-specific authorization",
+            }
+            manifest = {
+                "suite": "behaviour",
+                "namespace": "950000",
+                "source_commit": "a" * 40,
+                "source_hash_mode": SOURCE_HASH_MODE,
+                "source_hashes": {},
+                "generator_hashes": {},
+                "coverage": [],
+                "batches": [gated, {**gated, "id": "R2"}],
+            }
+            start_run(root, manifest, "not-executed-test", "a" * 40)
+            self.assertEqual(handoff(root)["next_candidate"], "R1")
+            record_gate_resolution(root, "R1", "operator", "not-executed", "needs a cadastre that TEST lacks")
+            state = handoff(root)
+            self.assertEqual((state["not_executed_batches"], state["next_candidate"]), (["R1"], "R2"))
+            self.assertNotIn("R1", state["completed_batches"])
+            self.assertNotIn("R1", executed_batches(root))
+            with self.assertRaisesRegex(ValueError, "resolved as not executed"):
+                record_checkpoint(root, "R1", "t", {}, "failed", "terminal")
+            record_correction(root, [1], "operator decided to run it after all", "operator")
+            self.assertEqual(handoff(root)["next_candidate"], "R1")
+
+    def test_known_defect_decision_lets_a_deferred_batch_run_deliberately(self):
+        from import_pack.session import handoff, record_checkpoint, record_gate_resolution, start_run
+
+        base = PACK / "generated/tests"
+        base.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            root = Path(location) / "run"
+            deferred = {
+                "id": "D1x",
+                "input_sha256": "x",
+                "operation": "delete",
+                "coverage_ids": [],
+                "prerequisites": [],
+                "deferred": {"defects": ["delete-history-target-deleted"], "rows": [], "prerequisite": ["fix"]},
+            }
+            manifest = {
+                "suite": "behaviour",
+                "namespace": "950000",
+                "source_commit": "a" * 40,
+                "source_hash_mode": SOURCE_HASH_MODE,
+                "source_hashes": {},
+                "generator_hashes": {},
+                "coverage": [],
+                "batches": [deferred, {**deferred, "id": "N1", "deferred": None}],
+            }
+            start_run(root, manifest, "known-defect-test", "a" * 40)
+            self.assertEqual(handoff(root)["next_candidate"], "N1")
+            with self.assertRaisesRegex(ValueError, "deferred by a known importer defect"):
+                record_checkpoint(root, "D1x", "t", {}, "failed", "terminal")
+            with self.assertRaisesRegex(ValueError, "Only a batch deferred"):
+                record_gate_resolution(root, "N1", "operator", "known-defect", "why")
+            with self.assertRaisesRegex(ValueError, "deferred by a known importer defect"):
+                record_gate_resolution(root, "D1x", "operator", "accepted", "why")
+            record_gate_resolution(root, "D1x", "operator", "known-defect", "unblock cleanup; TEST is restored later")
+            self.assertEqual(handoff(root)["next_candidate"], "D1x")
+            record_checkpoint(root, "D1x", "t", {}, "failed", "terminal")
+            self.assertIn("D1x", handoff(root)["failed_batches"])
+
+    def test_removed_by_setup_closes_a_part_and_retry_needs_a_failed_run(self):
+        from import_pack.session import handoff, record_checkpoint, record_gate_resolution, start_run
+
+        base = PACK / "generated/tests"
+        base.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            root = Path(location) / "run"
+            part = {
+                "id": "D1x",
+                "input_sha256": "x",
+                "operation": "delete",
+                "coverage_ids": [],
+                "prerequisites": [],
+                "deferred": {"defects": ["prefixed-key-integer-parse"], "rows": [], "prerequisite": ["fix"]},
+            }
+            layer = {**part, "id": "D2", "deferred": None, "prerequisites": ["D1x"]}
+            manifest = {
+                "suite": "behaviour",
+                "namespace": "950000",
+                "source_commit": "a" * 40,
+                "source_hash_mode": SOURCE_HASH_MODE,
+                "source_hashes": {},
+                "generator_hashes": {},
+                "coverage": [],
+                "batches": [part, layer],
+            }
+            start_run(root, manifest, "setup-test", "a" * 40)
+            self.assertIsNone(handoff(root)["next_candidate"])
+            record_gate_resolution(root, "D1x", "operator", "removed-by-setup", "rows removed by D1x-setup.sql")
+            state = handoff(root)
+            self.assertEqual((state["removed_by_setup_batches"], state["next_candidate"]), (["D1x"], "D2"))
+            with self.assertRaisesRegex(ValueError, "deferred by a known importer defect"):
+                record_checkpoint(root, "D1x", "t", {}, "checked", "terminal")
+            with self.assertRaisesRegex(ValueError, "only terminal checkpoint failed"):
+                record_gate_resolution(root, "D2", "operator", "retry", "revoked")
+            record_checkpoint(root, "D2", "t", {}, "failed", "terminal")
+            record_gate_resolution(root, "D2", "operator", "retry", "revoked; blocker removed")
+
+    def test_executed_batch_keeps_the_input_it_ran_with(self):
+        from import_pack.session import record_checkpoint, register_inputs, revise_pack, start_run
+
+        base = PACK / "generated/tests"
+        base.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            root = Path(location) / "run"
+            ran = {"id": "R1", "input_sha256": "bound", "operation": "delete", "coverage_ids": [], "prerequisites": []}
+            manifest = {
+                "suite": "behaviour",
+                "namespace": "950000",
+                "source_commit": "a" * 40,
+                "source_hash_mode": SOURCE_HASH_MODE,
+                "source_hashes": {},
+                "generator_hashes": {},
+                "coverage": [],
+                "batches": [ran],
+            }
+            start_run(root, manifest, "executed-input-test", "a" * 40)
+            record_checkpoint(root, "R1", "t", {}, "checked", "terminal")
+            stale = {**manifest, "batches": [{**ran, "input_sha256": "template"}]}
+            with self.assertRaisesRegex(ValueError, "changes executed batch R1"):
+                register_inputs(root, stale)
+            with self.assertRaisesRegex(ValueError, "changes executed batch R1"):
+                revise_pack(root, stale, "rebuilt from an old export", "operator")
+            # A revision that keeps (or restores) the input the batch ran with is accepted.
+            revise_pack(root, manifest, "same input", "operator")
+
+
+class RecordBatchTests(unittest.TestCase):
+    """record-batch writes nothing without its evidence and never offers transcriptions as human observations."""
+
+    def run_with_batch(self, location):
+        from import_pack.session import start_run
+
+        root = Path(location) / "run"
+        batch = {
+            "id": "D1",
+            "input_sha256": "x",
+            "operation": "delete",
+            "coverage_ids": ["c.delete"],
+            "prerequisites": [],
+        }
+        manifest = {
+            "suite": "behaviour",
+            "namespace": "950000",
+            "source_commit": "a" * 40,
+            "source_hash_mode": SOURCE_HASH_MODE,
+            "source_hashes": {},
+            "generator_hashes": {},
+            "coverage": [{"id": "c.delete", "required_evidence": ["input", "report"]}],
+            "batches": [batch],
+        }
+        start_run(root, manifest, "record-test", "a" * 40)
+        (root / "D1" / "input" / "x").mkdir(parents=True)
+        (root / "D1" / "input" / "x" / "D1.zip").write_bytes(b"zip")
+        return root
+
+    def fakes(self, root):
+        from unittest.mock import patch
+
+        def verify(run_root, batch_id, references):
+            path = run_root / batch_id / "verify-batch.json"
+            path.write_text(json.dumps([{"id": "D1.c.1", "state": "passed"}]), encoding="utf-8")
+            return path, [{"id": "D1.c.1", "state": "passed"}]
+
+        def fedora_changes(run_root, batch_id, reader, since=None, until=None):
+            path = run_root / batch_id / "fedora-changes-0.json"
+            path.write_text("{}", encoding="utf-8")
+            return path, {"complete": True, "planned": [], "unplanned_own": ["OS-1"], "outside": []}
+
+        return (
+            patch("import_pack.recording.verify", side_effect=verify),
+            patch("import_pack.recording.fedora_changes", side_effect=fedora_changes),
+        )
+
+    def test_missing_evidence_records_nothing(self):
+        from import_pack.recording import record_batch
+        from import_pack.session import checkpoints
+
+        base = PACK / "generated/tests"
+        base.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            root = self.run_with_batch(location)
+            (root / "D1" / "db-before.json").write_text("{}", encoding="utf-8")
+            shot = root / "shot.png"
+            shot.write_bytes(b"png")
+            with self.assertRaisesRegex(ValueError, "validation-report.xlsx, db-after.json"):
+                record_batch(root, "D1", "report-1", shot, "checked", {}, None)
+            self.assertEqual(checkpoints(root), [])
+
+    def test_recorded_batch_feeds_assess_with_the_operator_statement(self):
+        from import_pack.recording import assess, record_batch
+        from import_pack.session import effective_checkpoints
+
+        base = PACK / "generated/tests"
+        base.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=base) as location:
+            root = self.run_with_batch(location)
+            for name in ("db-before.json", "db-after.json"):
+                (root / "D1" / name).write_text(
+                    json.dumps({"_provenance": {"captured_at": "2026-11-15T10:00:00+00:00"}})
+                )
+            (root / "D1" / "validation-report.xlsx").write_bytes(b"xlsx")
+            shot = root / "shot.png"
+            shot.write_bytes(b"png")
+            first, second = self.fakes(root)
+            with first, second:
+                result = record_batch(root, "D1", "report-1", shot, "checked", {}, None, "rejected cleanly")
+            self.assertEqual([c["phase"] for c in result["checkpoints"]], ["validation", "terminal"])
+            terminal = effective_checkpoints(root)[-1]
+            self.assertIn("fedora-changes", terminal["evidence"])
+            self.assertIn("verify-batch", terminal["evidence"])
+            self.assertNotIn("human-ux", terminal["evidence"])
+            self.assertTrue((root / "D1" / "ui-validation.png").is_file())
+            self.assertNotIn("human-ux", assess(root)["c.delete"]["evidence"])
+            statement = {"author": "agent", "observed_at": "2026-11-15T11:00:00+00:00", "observations": ["ok"]}
+            (root / "operator-observations.json").write_text(json.dumps(statement), encoding="utf-8")
+            self.assertNotIn("human-ux", assess(root)["c.delete"]["evidence"])
+            (root / "operator-observations.json").write_text(
+                json.dumps({**statement, "author": "human"}), encoding="utf-8"
+            )
+            item = assess(root)["c.delete"]
+            self.assertEqual(
+                (item["state"], item["evidence"]["human-ux"]["path"]), ("passed", "operator-observations.json")
+            )
 
 
 class UniquenessAuditTests(unittest.TestCase):

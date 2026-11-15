@@ -52,6 +52,43 @@ Agents also read `operator/agent-checks.md`. In a combined export select
    baseline before asking the human to act. After each human checkpoint, inspect
    reports/screenshots and execute the mechanical checks, not a long manual checklist.
 
+## Fresh run on a new deployment
+
+A run never continues across deployments: findings of an earlier run are retained,
+its passing outcomes are not inherited, and a new run starts in its own folder.
+
+1. Restore or confirm the fresh test database (production-derived) and record the
+   deployed commit. Rebuild `definitions/inventory.json` with `inventory` against that
+   commit; the pack's source identity follows the inventory.
+2. Review `definitions/known-defects.json`. `build` refuses a defect whose pinned source
+   changed until the defect records `resolved_in` (fixed: its cases run again) or a
+   refreshed `source_sha256` (still present: its cases stay deferred). Re-confirm each
+   defect against the new source; do not refresh a pin without reading the code.
+3. Export fresh references (`sql/references.sql`) and, for a gated scenario, bind its
+   operator-supplied values (for example `current_operator_ident`) in a new references
+   file; never edit an executed batch's input.
+4. Build, `start-run --parity` with a new run id, and continue with the loop below.
+
+## Per-batch loop
+
+- `advance` builds the next revision, checks that executed batches keep the input and
+  prerequisites they ran with, renders cards and names the next batch. A pack-code
+  change needs `--reason` and `--reviewer`.
+- Gated batches (`execution_gate`) and deliberate runs of deferred batches need an
+  operator decision first: `resolve-gate --acceptance` `accepted`, `record-behaviour`,
+  `known-defect` (run a deferred batch knowingly), `not-executed`, `removed-by-setup`
+  (rows removed by an approved setup) or `retry` (rebuild a revoked batch with the same
+  rows). Decisions are events bound to the batch input; `correct-checkpoint` voids one.
+- After the human checkpoint, `record-batch` runs the oracle, the Fedora change audit,
+  optional direct Fedora reads (`--fedora-read`) and snapshot diffs, then records the
+  validation and terminal checkpoints. It refuses to record anything while
+  `validation-report.xlsx`, `db-before.json` or `db-after.json` is missing, and it
+  never overwrites evidence. Controlled setups keep `db-before-setup.json`,
+  `*-setup.sql`, `*-restore.sql` and `db-after-restore.json` in the batch folder.
+- At the end, the operator's own statement goes to `operator-observations.json`
+  (`author: human`, `observed_at`, `observations`); `assess` derives the assessments and
+  `report` produces the verdict. Transcriptions of screenshots are not human evidence.
+
 ## Tools
 
 From the repository root, use its `.venv/Scripts/python.exe`. In a portable export,

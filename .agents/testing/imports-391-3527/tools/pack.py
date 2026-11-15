@@ -96,6 +96,22 @@ def main():
     command.add_argument("--until", help="UTC/zoned ISO time; default: captured_at of BATCH/db-after.json if present")
     fedora_login(command)
     command = commands.add_parser(
+        "record-batch",
+        help="Record an executed batch: oracle, Fedora audit, snapshot diffs and validation/terminal checkpoints",
+    )
+    command.add_argument("--directory", type=Path, required=True, help="Run directory")
+    command.add_argument("--batch", required=True)
+    command.add_argument("--task", required=True, help="Task ID from the import report (report-...)")
+    command.add_argument("--screenshot", type=Path, required=True, help="Final (or validation) screen image")
+    command.add_argument("--state", choices=["checked", "failed"], required=True, help="Terminal outcome")
+    command.add_argument("--references", type=Path, required=True)
+    command.add_argument("--summary", default="", help="One-line outcome for effects-check.json")
+    command.add_argument("--fedora-read", nargs="*", default=[], help="Records to read directly (e.g. deleted ones)")
+    fedora_login(command)
+    command = commands.add_parser("assess", help="Derive per-coverage assessments from the run's checkpoints")
+    command.add_argument("--directory", type=Path, required=True)
+    command.add_argument("--output", type=Path, required=True)
+    command = commands.add_parser(
         "advance",
         help="Live-run step: merge bindings, build next bind-NNNN, revise if pack code changed, render, hand off",
     )
@@ -111,6 +127,26 @@ def main():
     command.add_argument("--void", type=int, nargs="+", required=True, help="Event numbers (events/NNNN.json)")
     command.add_argument("--reason", required=True)
     command.add_argument("--reviewer", required=True)
+    command = commands.add_parser(
+        "resolve-gate", help="Record the operator's authorization/acceptance decision for a gated batch"
+    )
+    command.add_argument("--directory", type=Path, required=True)
+    command.add_argument("--batch", required=True)
+    command.add_argument("--authorized-by", required=True)
+    command.add_argument(
+        "--acceptance",
+        choices=[
+            "accepted",
+            "rejected",
+            "record-behaviour",
+            "not-executed",
+            "known-defect",
+            "removed-by-setup",
+            "retry",
+        ],
+        required=True,
+    )
+    command.add_argument("--reason", required=True)
     command = commands.add_parser(
         "revise-run", help="Move a run to a fixed pack revision; executed batches must keep identical inputs"
     )
@@ -356,36 +392,12 @@ def main():
             )
         )
     elif args.command == "fedora-changes":
-        from import_pack.common import json_bytes, write_new
-        from import_pack.fedora_audit import classify, modified_since, utc
-        from import_pack.session import current_manifest
+        from import_pack.recording import fedora_changes
         from import_pack.sources import Reader
 
-        root = args.directory.resolve()
-        batch_dir = root / args.batch
-        since = utc(args.since or read_json(batch_dir / "db-before.json")["_provenance"]["captured_at"])
-        plan = batch_dir / "fedora-plan.json"
-        planned = (
-            {u["url"].split("/record/")[1].split("/")[0] for u in read_json(plan)["resources"]}
-            if plan.is_file()
-            else set()
+        _, result = fedora_changes(
+            args.directory.resolve(), args.batch, Reader(fedora_credentials(args), limit=250), args.since, args.until
         )
-        after = batch_dir / "db-after.json"
-        until = args.until or (read_json(after)["_provenance"]["captured_at"] if after.is_file() else None)
-        until = utc(until) if until else None
-        found = modified_since(Reader(fedora_credentials(args), limit=250), since, until=until)
-        result = {
-            "batch": args.batch,
-            "since": since,
-            "until": until,
-            "complete": found["complete"],
-            "items": found["items"],
-        }
-        result.update(classify(found["items"], current_manifest(root), planned))
-        body = json_bytes(result)
-        from import_pack.common import digest
-
-        write_new(batch_dir / f"fedora-changes-{digest(body)[:12]}.json", body)
         print(
             json.dumps(
                 {k: result[k] for k in ("since", "until", "complete", "planned", "unplanned_own", "outside")}
@@ -393,6 +405,31 @@ def main():
                 ensure_ascii=False,
             )
         )
+    elif args.command == "record-batch":
+        from import_pack.recording import record_batch
+        from import_pack.sources import Reader
+
+        result = record_batch(
+            args.directory.resolve(),
+            args.batch,
+            args.task,
+            args.screenshot,
+            args.state,
+            read_json(args.references),
+            Reader(fedora_credentials(args), limit=250),
+            args.summary,
+            args.fedora_read,
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=1))
+    elif args.command == "assess":
+        from import_pack.recording import assess
+
+        results = assess(args.directory.resolve())
+        save_json(args.output, results)
+        states = {}
+        for item in results.values():
+            states[item["state"]] = states.get(item["state"], 0) + 1
+        print(json.dumps({"assessed": len(results), "states": states}))
     elif args.command == "advance":
         from import_pack.advance import advance
 
@@ -405,6 +442,13 @@ def main():
 
         event = record_correction(args.directory.resolve(), args.void, args.reason, args.reviewer)
         print(json.dumps({k: event[k] for k in ("batch_id", "voids", "reason")}, ensure_ascii=False))
+    elif args.command == "resolve-gate":
+        from import_pack.session import record_gate_resolution
+
+        event = record_gate_resolution(
+            args.directory.resolve(), args.batch, args.authorized_by, args.acceptance, args.reason
+        )
+        print(json.dumps({k: event[k] for k in ("batch_id", "input_sha256", "acceptance")}, ensure_ascii=False))
     elif args.command == "revise-run":
         from import_pack.session import revise_pack
 

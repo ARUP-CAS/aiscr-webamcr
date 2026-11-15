@@ -9,7 +9,15 @@ from .common import PACK, read_json
 
 DEFINITION = "definitions/known-defects.json"
 # Defects decided by the row's own values; a branch case triggering one is moved to a deferred companion.
-ROW_LEVEL_KINDS = ("prefixed-key", "lookup-format", "empty-cell", "single-system-geometry", "case")
+# ``delete-history-target`` defers the whole batch (no split): its dependants delete what the deferred rows still reference.
+ROW_LEVEL_KINDS = (
+    "prefixed-key",
+    "lookup-format",
+    "empty-cell",
+    "single-system-geometry",
+    "case",
+    "delete-history-target",
+)
 SPLIT_KINDS = ("lookup-format", "empty-cell", "single-system-geometry", "case")
 # Kinds that only reject the row itself: harmless (an intended diagnostic) in a batch expected to reject.
 REJECTING_KINDS = ("single-system-geometry",)
@@ -312,6 +320,22 @@ def triggering_rows(tables, operation, prerequisites, batches, source, defects):
                             "condition": "single-system-geometry",
                         }
                     )
+    for defect in defects or ():
+        if defect.get("kind") != "delete-history-target" or operation != "delete":
+            continue
+        # The row deletes the record its own history target belongs to (F42).
+        for name, rows in tables.items():
+            if name in defect["classes"]:
+                found += [
+                    {
+                        "defect": defect["id"],
+                        "class": name,
+                        "row": index,
+                        "value": row.get("ident_cely"),
+                        "condition": "delete-history-target",
+                    }
+                    for index, row in enumerate(rows, 1)
+                ]
     defects = [d for d in defects or () if d.get("kind") not in ROW_LEVEL_KINDS]
     if not defects or operation == "delete":
         return found

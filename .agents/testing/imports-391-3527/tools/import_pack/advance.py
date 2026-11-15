@@ -110,12 +110,22 @@ def advance(root, references, output_root, reason=None, reviewer=None):
     for event in effective_checkpoints(root):
         if event.get("phase") == "terminal":
             terminal.setdefault(event["batch_id"], set()).add(event["state"])
+    from .session import decided_batches
+
+    current = current_manifest(root)
+    # A deferred part whose rows an approved setup removed counts as done for its dependants.
+    retained.update(decided_batches(root, "removed-by-setup", current))
+    retries = decided_batches(root, "retry", current)
     failed_executions = {}
-    for batch in current_manifest(root)["batches"]:
+    for batch in current["batches"]:
         if terminal.get(batch["id"]) == {"failed"}:
             copy = root / batch["id"] / "input" / batch["input_sha256"] / Path(batch["input"]).name
             if copy.is_file():
-                failed_executions[batch["id"]] = {"batch": batch, "data": copy.read_bytes()}
+                failed_executions[batch["id"]] = {
+                    "batch": batch,
+                    "data": copy.read_bytes(),
+                    "retry": retries.get(batch["id"]) == batch["input_sha256"],
+                }
     output_root.mkdir(parents=True, exist_ok=True)
     numbers = [int(p.name[5:]) for p in output_root.glob("bind-[0-9][0-9][0-9][0-9]")]
     out = output_root / f"bind-{max(numbers, default=0) + 1:04}"
@@ -126,7 +136,10 @@ def advance(root, references, output_root, reason=None, reviewer=None):
             repo = repo_root()
         except ValueError:
             repo = None
-        manifest = build_behaviour(out, source, run["namespace"], refs, repo, bindings, retained, failed_executions)
+        executed_prerequisites = {b["id"]: b["prerequisites"] for b in current["batches"] if b["id"] in executed}
+        manifest = build_behaviour(
+            out, source, run["namespace"], refs, repo, bindings, retained, failed_executions, executed_prerequisites
+        )
     else:
         manifest = build_load(
             out, source, run["namespace"], refs, run["manifest"].get("workload"), bindings, retained, failed_executions

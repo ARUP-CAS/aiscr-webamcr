@@ -90,11 +90,19 @@ def add_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequi
     :param data: Hotový obsah ZIP (jen pro dávky bez rozdělení).
     """
     aliases = manifest.setdefault("_aliases", {})
-    prerequisites = [aliases.get(p, p) for p in prerequisites]
+    prerequisites = list(dict.fromkeys(aliases.get(p, p) for p in prerequisites))
     failed = manifest.get("_failed_executions", {}).get(batch_id)
-    if failed and data is None and failed["batch"]["input_sha256"] != bound_digest(manifest, tables):
+    context = manifest.get("_defect_context") or {}
+    classes = {name for d in context.get("defects", []) if d.get("kind") == "prefixed-key" for name in d["classes"]}
+    # The input this batch gets now: whole, or its runnable part after the prefixed-key split below.
+    current = {bound_digest(manifest, tables)}
+    if operation in ("update", "delete") and data is None and 0 < len(set(tables) & classes) < len(tables):
+        current.add(bound_digest(manifest, {n: r for n, r in tables.items() if n not in classes}))
+    # An operator-requested retry (revoked run, nothing changed) rebuilds the batch even with an unchanged input.
+    retry_requested = bool(failed and failed.get("retry"))
+    if failed and data is None and (failed["batch"]["input_sha256"] not in current or retry_requested):
         prefixed_unsplit = manifest.get("_retained", {}).get(batch_id) == bound_digest(manifest, tables)
-        if not prefixed_unsplit:
+        if not prefixed_unsplit or retry_requested:
             # Executed with a different input and failed: keep that entry byte for byte as evidence and
             # add the corrected batch as a retry; later batches depend on the retry instead.
             old = failed["batch"]
@@ -114,8 +122,6 @@ def add_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequi
             add_batch(out, manifest, retry, operation, tables, coverage_ids, [*prerequisites, batch_id], expected)
             aliases[batch_id] = retry
             return
-    context = manifest.get("_defect_context") or {}
-    classes = {name for d in context.get("defects", []) if d.get("kind") == "prefixed-key" for name in d["classes"]}
     affected = {n: r for n, r in tables.items() if n in classes}
     if operation in ("update", "delete") and affected and data is None and len(affected) < len(tables):
         rest = {n: r for n, r in tables.items() if n not in classes}
@@ -133,6 +139,29 @@ def add_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequi
         write_batch(out, manifest, companion, operation, affected, moved, prerequisites, expected)
         return
     write_batch(out, manifest, batch_id, operation, tables, coverage_ids, prerequisites, expected, data)
+
+
+def restricting_targets(source):
+    """
+    Vrátí pro každou CSV třídu modely, jejichž smazání její řádky blokují (FK ``RESTRICT``/``PROTECT``).
+
+    :param source: Inventář s ``mappers`` (``csv`` -> ``model``) a ``models`` (pole s ``on_delete``).
+    :return: Slovník ``csv -> set(název modelu)``.
+    """
+    result = {}
+    for mapper in source["mappers"]:
+        fields = source["models"].get(mapper.get("model") or "", {}).get("fields", {})
+        targets = set()
+        for field in fields.values():
+            if field.get("type") not in ("ForeignKey", "OneToOneField"):
+                continue
+            expressions = [a if isinstance(a, str) else a.get("expression", "") for a in field.get("args", [])]
+            expressions.append((field.get("on_delete") or {}).get("expression", ""))
+            if any(e in ("models.RESTRICT", "models.PROTECT") for e in expressions) and expressions[0]:
+                target = expressions[0].strip("'\"").split(".")[-1]
+                targets.add(mapper["model"] if target == "self" else target)
+        result[mapper["csv"]] = targets
+    return result
 
 
 def bound_digest(manifest, tables):
@@ -250,8 +279,14 @@ def defer_if_known_defect(manifest, batch):
             context["source"],
             relevant,
         ) + case_triggers(batch["coverage_ids"], relevant)
-    # A dependent of a deferred batch cannot run either, with or without a classification context.
-    deferred_parents = [b for b in manifest["batches"] if b["id"] in batch["prerequisites"] and b.get("deferred")]
+    # A dependent of a deferred batch cannot run either, with or without a classification context - unless the run
+    # already executed that prerequisite with this input: its effects exist, so the dependent can go ahead (F42 D01).
+    retained = manifest.get("_retained", {})
+    deferred_parents = [
+        b
+        for b in manifest["batches"]
+        if b["id"] in batch["prerequisites"] and b.get("deferred") and retained.get(b["id"]) != b["input_sha256"]
+    ]
     if not triggers and not deferred_parents:
         return
     # A batch with its own triggering rows is deferred by those defects; otherwise it inherits its parents'.
@@ -281,6 +316,7 @@ def finish_known_defects(manifest):
     context = manifest.pop("_defect_context", None) or {"defects": []}
     manifest.pop("_retained", None)
     manifest.pop("_failed_executions", None)
+    manifest.pop("_executed_prerequisites", None)
     manifest.pop("_aliases", None)
     deferred = {}
     for batch in manifest["batches"]:
@@ -303,33 +339,36 @@ def finish_known_defects(manifest):
 
 
 def add_procedure(out, manifest, batch_id, case, recipe, prerequisites):
-    """Keep a management procedure distinct from a browser CSV import."""
+    """Keep a management procedure distinct from a browser CSV import; it inherits a deferred prerequisite."""
     content = json_bytes(recipe)
     path = inside(out, "inputs/" + batch_id + ".procedure.json")
     write_new(path, content)
-    manifest["batches"].append(
-        {
-            "id": batch_id,
-            "suite": manifest["suite"],
-            "operation": "update",
-            "execution_kind": "controlled-procedure",
-            "input": path.relative_to(out).as_posix(),
-            "input_sha256": digest(content),
-            "rows": 0,
-            "tables": {},
-            "coverage_ids": [case["id"]],
-            "prerequisites": prerequisites,
-            "unresolved": [],
-            "ready": True,
-            "expected": "apply",
-            "state": "prepared",
-            "execution_gate": "Isolated fixture/approved scan scope, exact setup and restoration required",
-            "controlled_setup": case["notes"],
-        }
-    )
+    batch = {
+        "id": batch_id,
+        "suite": manifest["suite"],
+        "operation": "update",
+        "execution_kind": "controlled-procedure",
+        "input": path.relative_to(out).as_posix(),
+        "input_sha256": digest(content),
+        "rows": 0,
+        "tables": {},
+        "coverage_ids": [case["id"]],
+        "prerequisites": prerequisites,
+        "unresolved": [],
+        "ready": True,
+        "expected": "apply",
+        "state": "prepared",
+        "execution_gate": "Isolated fixture/approved scan scope, exact setup and restoration required",
+        "controlled_setup": case["notes"],
+    }
+    # A procedure whose preparing batch is deferred cannot run either; mark it so the report lists it as blocked.
+    defer_if_known_defect(manifest, batch)
+    manifest["batches"].append(batch)
 
 
-def build_behaviour(out, source, ns, refs, repo, bindings=None, retained=None, failed_executions=None):
+def build_behaviour(
+    out, source, ns, refs, repo, bindings=None, retained=None, failed_executions=None, executed_prerequisites=None
+):
     """Vytvoří kompletní operační základ, negativní vstupy a SQL kontrolní body."""
     source = json.loads(json_bytes(source))
     tables = graph(source, ns, refs, bindings)
@@ -353,6 +392,8 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None, retained=None, f
     manifest["_defect_context"] = {"source": source, "defects": load_definitions(source)}
     manifest["_retained"] = dict(retained or {})
     manifest["_failed_executions"] = dict(failed_executions or {})
+    # Executed batches keep the prerequisites they ran with (a retry gets freshly computed ones).
+    manifest["_executed_prerequisites"] = dict(executed_prerequisites or {})
     stages = {
         "B01-foundations": ["heslar", "organizace", "osoby"],
         "B02-domain-graph": [
@@ -846,6 +887,46 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None, retained=None, f
     dependencies["dokumenty_neident_akce_vedouci"].add("dokumenty_neident_akce")
     # Root deletion may cascade. Children are in strictly earlier delete batches.
     remaining = set(dependencies)
+    delete_history_classes = {
+        name
+        for defect in (manifest.get("_defect_context") or {}).get("defects", [])
+        if defect.get("kind") == "delete-history-target"
+        for name in defect["classes"]
+    }
+    # Deferred parts of earlier layers keep their rows; a later layer whose model they reference through a
+    # RESTRICT/PROTECT key cannot be deleted before them (D02: externi_odkazy kept BIB-000950001).
+    restricting = restricting_targets(source)
+    model_of = {m["csv"]: m.get("model") for m in source["mappers"]}
+    deferred_parts = []
+
+    def blockers(batch_id, classes):
+        models = {model_of.get(n) for n in classes}
+        return [part for part, kept in deferred_parts if any(restricting.get(c, set()) & models for c in kept)]
+
+    def layer_prerequisites(batch_id, prerequisites, part_tables):
+        recorded = manifest.get("_executed_prerequisites", {}).get(batch_id)
+        if recorded is not None and not manifest.get("_failed_executions", {}).get(batch_id, {}).get("retry"):
+            return list(recorded)
+        return list(dict.fromkeys(prerequisites + blockers(batch_id, part_tables)))
+
+    def add_layer_part(batch_id, part_tables, prerequisites):
+        start = len(manifest["batches"])
+        add_batch(
+            out,
+            manifest,
+            batch_id,
+            "delete",
+            part_tables,
+            [n + ".delete" for n in sorted(part_tables)],
+            layer_prerequisites(batch_id, prerequisites, part_tables),
+        )
+        added = manifest["batches"][start:]
+        # Only deferred companions keep rows behind; a deferred main layer is tracked through its prerequisites.
+        deferred_parts.extend(
+            (b["id"], set(b["tables"])) for b in added if b.get("deferred") and "x-deferred-" in b["id"]
+        )
+        return [b["id"] for b in added]
+
     index = 0
     while remaining:
         names = sorted(name for name in remaining if not any(name in dependencies[other] for other in remaining))
@@ -854,19 +935,31 @@ def build_behaviour(out, source, ns, refs, repo, bindings=None, retained=None, f
         index += 1
         batch_id = f"D{index:02}-dependency-layer"
         by_name = {m["csv"]: m for m in source["mappers"]}
-        add_batch(
-            out,
-            manifest,
-            batch_id,
-            "delete",
-            {
-                name: key_rows(by_name[name], tables[name][:1] if name == "heslar" else tables[name], "delete")
-                for name in names
-            },
-            [name + ".delete" for name in names],
-            previous,
-        )
-        previous = [batch_id]
+        layer = {
+            name: key_rows(by_name[name], tables[name][:1] if name == "heslar" else tables[name], "delete")
+            for name in names
+        }
+        # F42: rows whose delete fails after commit go to a deferred companion; the rest of the layer stays
+        # runnable. A layer the run already executed (in any form) is never re-split: its rows ran, so a split
+        # would only produce retries of deleted rows. The next layer needs both parts, because the deferred
+        # rows still reference what it deletes.
+        affected = {n: r for n, r in layer.items() if n in delete_history_classes}
+        executed = batch_id in manifest.get("_retained", {}) or batch_id in manifest.get("_failed_executions", {})
+        failed_run = manifest.get("_failed_executions", {}).get(batch_id)
+        ran = set(failed_run["batch"]["tables"]) if failed_run else set()
+        if executed and ran and set(layer) - ran and set(layer) - ran <= delete_history_classes:
+            # Executed split earlier: keep the shape it ran with even if the defect list has grown since (D04).
+            affected = {n: r for n, r in layer.items() if n not in ran}
+            executed = False
+        if affected and len(affected) < len(layer) and not executed:
+            rest = {n: r for n, r in layer.items() if n not in affected}
+            companion = f"D{index:02}x-deferred-known-defects"
+            parts = add_layer_part(batch_id, rest, previous)
+            parts += add_layer_part(companion, affected, previous)
+        else:
+            parts = add_layer_part(batch_id, layer, previous)
+        # The next layer follows the runnable parts; deferred parts block it only through blockers().
+        previous = [p for p in parts if not p.endswith("-deferred-prefixed-keys")] or parts
         remaining.difference_update(names)
     write_new(inside(out, "sql/references.sql"), reference_sql(repo or source).encode())
     write_new(inside(out, "sql/schema.sql"), schema_sql().encode())

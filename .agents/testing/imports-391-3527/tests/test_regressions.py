@@ -305,7 +305,7 @@ class LoadProvenanceTests(unittest.TestCase):
         path.write_bytes(original)
         from unittest.mock import patch
 
-        with patch("import_pack.reporting.checkpoints", return_value=[]):
+        with patch("import_pack.reporting.effective_checkpoints", return_value=[]):
             self.assertFalse(self.result()["provenance_verified"])
         path.write_bytes(b"{}")
         self.assertFalse(self.result()["provenance_verified"])

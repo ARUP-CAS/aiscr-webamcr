@@ -4,7 +4,7 @@ from datetime import datetime
 
 from .common import digest, inside, json_bytes, read_json
 from .coverage import verdict
-from .session import checkpoints, current_manifest, identity_manifest
+from .session import current_manifest, effective_checkpoints, identity_manifest
 
 
 def fresh(value, run):
@@ -39,7 +39,8 @@ def run_findings(root):
 
 def report(root, results):
     run = read_json(root / "run.json")
-    events = checkpoints(root)
+    # Batch checkpoints only: voided events, corrections and gate decisions carry no task evidence.
+    events = effective_checkpoints(root)
     known = {b["id"]: b for b in current_manifest(root)["batches"]}
     ledger = identity_manifest(root)
     coverage = {c["id"]: c for c in ledger.get("coverage", [])}
@@ -96,6 +97,16 @@ def report(root, results):
             reasons.append("Input evidence differs from the executed checkpoint")
         retained = {k: v for event in task_events for k, v in event["evidence"].items()}
         for kind, reference in evidence.items():
+            if (
+                kind == "human-ux"
+                and isinstance(reference, dict)
+                and reference.get("path") == "operator-observations.json"
+            ):
+                # The operator's run-level statement is one file for the whole run, bound by its own hash.
+                path = inside(root, reference["path"])
+                if not path.is_file() or digest(path.read_bytes()) != reference.get("sha256"):
+                    reasons.append("Changed/missing evidence: " + kind)
+                continue
             if not isinstance(reference, dict) or reference != retained.get(kind):
                 reasons.append("Unretained evidence: " + kind)
                 continue
@@ -125,7 +136,7 @@ def report(root, results):
             observed = read_json(inside(root, observation["path"]))
             if (
                 observed.get("author") != "human"
-                or observed.get("task_id") != item.get("task_id")
+                or observed.get("task_id") not in (None, item.get("task_id"))
                 or not observed.get("observed_at")
                 or not observed.get("observations")
             ):
@@ -383,7 +394,7 @@ def load_provenance(root, manifest, evidence):
             reasons.append("Measured batch is deferred by a known importer defect")
         if evidence.get("batch_id") != batch["id"] or evidence.get("input_sha256") != batch.get("input_sha256"):
             reasons.append("Evidence is not bound to the measured batch/input")
-        events = [event for event in checkpoints(root) if event["batch_id"] == batch["id"]]
+        events = [event for event in effective_checkpoints(root) if event["batch_id"] == batch["id"]]
         event = events[-1] if events else {}
         if (
             not evidence.get("task_id")

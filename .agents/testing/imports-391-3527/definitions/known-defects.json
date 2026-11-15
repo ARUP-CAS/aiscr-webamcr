@@ -487,7 +487,7 @@
     "Adb's primary key is its documentation unit; changing it makes save() INSERT a second row with the same ident_cely instead of moving the record."
    ],
    "effect": "psycopg2 UniqueViolation adb_ident_cely_key in the data phase; the whole import is revoked (V05r-retry row 25). Validation accepts the row.",
-   "prerequisite": "Developer fix (move the ADB or reject the change at validation) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "prerequisite": "Developer fix deployed to the test instance that allows the move (operator decision 2026-11-16: explicit primary-key change including VyskovyBod.adb, metadata of both records regenerated); record resolved_in here and rebuild the pack.",
    "evidence": {
     "batch": "V05r-retry",
     "kind": "live-confirmed",
@@ -526,6 +526,142 @@
     "kind": "live-confirmed",
     "run": "behaviour-2026-11-14-live",
     "source_review": "2026-11-15 live session (finding F36)"
+   },
+   "resolved_in": null
+  },
+  {
+   "id": "document-extra-data-required",
+   "kind": "case",
+   "title": "Updating a document without its optional extra-data row is rejected at validation",
+   "source": "webclient/core/import_data_mappers.py",
+   "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "symbol": "MultipleClassImportModelMapper.import_validation (inherited by DokumentMapper)",
+   "lines": {
+    "class_1_required": 2261,
+    "create_missing_extra_data": 3753,
+    "delete_without_extra_data": 3728
+   },
+   "classes": [
+    "dokumenty"
+   ],
+   "coverage": [
+    "dokumenty.branch.missing-extra-data"
+   ],
+   "conditions": {
+    "case": "A dokumenty UPDATE (or DELETE) of a document that has no dokument_extra_data row."
+   },
+   "defects": [
+    "The shared multi-class validation requires the second class to exist on UPDATE/DELETE. That is right for the archaeological-record specialisations (akce, lokalita), but DokumentExtraData is optional and DokumentMapper.create_records creates it on update and deletes the document without it; both branches are unreachable."
+   ],
+   "effect": "Row rejected with the raw key core_admin.ImportDataIntegrityError model=DokumentExtraData action=update (R09-controlled-scenario); nothing changes.",
+   "prerequisite": "Developer fix (DokumentMapper skips the companion-existence check for DokumentExtraData) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "evidence": {
+    "batch": "R09-controlled-scenario",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-15 live session (finding F40)"
+   },
+   "resolved_in": null
+  },
+  {
+   "id": "dj-orphan-pian-dry-run",
+   "kind": "case",
+   "title": "A documentation-unit update that orphans an unconfirmed PIAN fails in the data phase",
+   "source": "webclient/core/repository_connector.py",
+   "source_sha256": "b4d719dc090da0712f3059ebd18bb464c942a7127bafacd34b25ab204c2ab9b2",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "symbol": "FedoraRepositoryConnector.__init__ (transaction.main_record) reached from dj/signals.py save_dokumentacni_jednotka -> initial_pian.delete()",
+   "lines": {
+    "main_record_access": 404
+   },
+   "classes": [
+    "az_dokumentacni_jednotky"
+   ],
+   "coverage": [
+    "az_dokumentacni_jednotky.branch.cadastral-existing-pian"
+   ],
+   "conditions": {
+    "case": "An az_dokumentacni_jednotky UPDATE that moves a unit off an unconfirmed PIAN no other unit uses."
+   },
+   "defects": [
+    "The DJ post_save signal deletes the orphaned unconfirmed PIAN with the import's DryRunFedoraTransaction; Pian pre_delete -> record_deletion -> FedoraRepositoryConnector reads transaction.main_record, which DryRunFedoraTransaction does not define."
+   ],
+   "effect": "AttributeError \"'DryRunFedoraTransaction' object has no attribute 'main_record'\" in the data phase; the whole import is revoked (R07-controlled-scenario). Validation accepts the row.",
+   "prerequisite": "Developer fix (dry-run transaction supported by the delete path, or orphan deletion deferred to the Fedora phase) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "evidence": {
+    "batch": "R07-controlled-scenario",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-15 live session (finding F41)"
+   },
+   "resolved_in": null
+  },
+  {
+   "id": "delete-history-target-deleted",
+   "kind": "delete-history-target",
+   "title": "Deleting an archaeological record or a document fails in the history phase after the data is committed",
+   "source": "webclient/cron/tasks.py",
+   "source_sha256": "a24092973a30f2cbb6598bc2027d921c49feb98e1bf03d323ecd6d829de141b4",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "symbol": "run_data_import: DELETE registers get_record_history(record) as history target (2377); history phase loads it (2665)",
+   "lines": {
+    "register_delete_history_target": 2377,
+    "history_target_lookup": 2665,
+    "stop_after_history_error": 2689
+   },
+   "classes": [
+    "az_akce",
+    "az_lokality",
+    "dokumenty"
+   ],
+   "conditions": {
+    "delete-history-target": "DELETE of a two-model record whose first instance (Akce, Lokalita, DokumentExtraData) has the parent as history target; MultipleClassImportModelMapper.create_records deletes [instance_class_1, instance_class_0] (core/import_data_mappers.py:2314), so the parent is gone before the history phase."
+   },
+   "defects": [
+    "A DELETE registers the deleted parent (ArcheologickyZaznam / Dokument) as the history target; the history phase then cannot load it, marks the import failed and stops."
+   ],
+   "effect": "Data phase committed (records deleted, moved to model/deleted in Fedora), then 'Import selhal při vytváření záznamů historie': remaining history entries, parent metadata regeneration and paradata/distribution changes are skipped; DB and Fedora diverge (D01-dependency-layer).",
+   "prerequisite": "Developer fix (skip history targets deleted by the same import, or resolve them before deletion) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "evidence": {
+    "batch": "D01-dependency-layer",
+    "kind": "live-confirmed (az_lokality); az_akce and dokumenty from source",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-15 live session (finding F42)"
+   },
+   "resolved_in": null
+  },
+  {
+   "id": "delete-own-metadata-target",
+   "kind": "delete-history-target",
+   "title": "Deleting a record whose delete signal regenerates its own metadata fails in the Fedora phase after the data is committed",
+   "source": "webclient/cron/tasks.py",
+   "source_sha256": "a24092973a30f2cbb6598bc2027d921c49feb98e1bf03d323ecd6d829de141b4",
+   "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+   "symbol": "run_data_import: add_item_fedora_update_target(fedora_transaction.updated_ident_cely) (2403) -> Fedora phase get_record_from_ident (2783)",
+   "lines": {
+    "queue_updated_ident_cely": 2403,
+    "fedora_target_lookup": 2783
+   },
+   "classes": [
+    "az_pian",
+    "externi_zdroje",
+    "projekty",
+    "uzivatele"
+   ],
+   "conditions": {
+    "delete-history-target": "DELETE of a record whose delete signal calls record_deletion inline: save_record_deletion_record -> save_metadata under FedoraDeletionOnlyTransaction adds the deleted record's own ident_cely (xml_generator/models.py:199). Live-confirmed for ExterniZdroj and User (D02r-retry) Pian (D04) and Projekt (D05); Let is not affected (on_commit); from the code also Osoba, Organizace, ArcheologickyZaznam, Dokument, SamostatnyNalez (not listed until confirmed)."
+   },
+   "defects": [
+    "The deleted record's own ident_cely is queued as a Fedora update target; after the commit the Fedora phase cannot load it (Http404), marks the import failed and stops."
+   ],
+   "effect": "Data and history committed, deleted records moved to model/deleted, then 'Import selhal při ukládání metadat do Fedory': remaining Fedora targets unprocessed and the binary phase (distribution/paradata changes) skipped (D02r-retry).",
+   "prerequisite": "Developer fix (do not queue records deleted by the same import as Fedora targets, or skip DoesNotExist/Http404 targets) deployed to the test instance; record resolved_in here and rebuild the pack.",
+   "evidence": {
+    "batch": "D02r-retry, D04-dependency-layer, D05-dependency-layer",
+    "kind": "live-confirmed",
+    "run": "behaviour-2026-11-14-live",
+    "source_review": "2026-11-15 live session (finding F44)"
    },
    "resolved_in": null
   }

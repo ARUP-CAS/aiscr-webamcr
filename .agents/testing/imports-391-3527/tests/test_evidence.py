@@ -281,7 +281,8 @@ class EvidenceTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.assertGreater(json.loads(output)["batches"], 20)
-        self.assertLess(json.loads(output)["batches"], 100)
+        # Sanity bound only; deferred cleanup companions (F42/F44 splits) took the build to exactly 100 batches.
+        self.assertLess(json.loads(output)["batches"], 130)
 
 
 if __name__ == "__main__":
