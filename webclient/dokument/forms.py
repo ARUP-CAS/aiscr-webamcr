@@ -6,7 +6,7 @@ from core.ident_cely import get_dokument_rada_from_ident, get_dokument_region_fr
 from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout
+from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.db import utils
 from django.db.models import IntegerField, Value
@@ -626,7 +626,16 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
             # Hodnotu plní dialog pro výběr regionální působnosti, pole samotné zůstává skryté.
             self.helper.layout[0].append(Div("region", style="display: none"))
         if allow_vlastni_ident:
-            self.helper.layout[0].append(Div("pouzit_vlastni_ident", css_class="col-sm-6 col-lg-2"))
+            # Zaškrtávátko nemá nad sebou řádek s nadpisem jako sousední pole, takže by se vykreslilo
+            # o ten řádek výš. Prázdná vycpávka se stejným stylem jako nadpis jej srovná se vstupním
+            # polem vedle a drží zarovnání i při změně velikosti písma nadpisů.
+            self.helper.layout[0].append(
+                Div(
+                    HTML('<span class="form-label d-block" aria-hidden="true">&nbsp;</span>'),
+                    "pouzit_vlastni_ident",
+                    css_class="col-sm-6 col-lg-2",
+                )
+            )
             self.helper.layout[0].append(Div("vlastni_ident_cely", css_class="col-sm-6 col-lg-2"))
         if self.optimistic_lock_field_name in self.fields:
             self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))

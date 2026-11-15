@@ -261,11 +261,11 @@ packaging==26.3
     #   build
     #   virtualenv
     #   wheel
-pandas==3.1.0
+pandas==3.1.1
     # via -r requirements-test.txt
 pdf2image==1.17.0
     # via -r requirements-test.txt
-phonenumbers==9.0.42
+phonenumbers==9.0.43
     # via -r requirements-test.txt
 piexif==1.1.3
     # via -r requirements-test.txt
