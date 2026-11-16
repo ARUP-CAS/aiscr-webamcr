@@ -2063,6 +2063,94 @@ class TestSekceGeometrie(TestCase):
         self.assertEqual(dotaz.call_count, 1)
         self.assertIn(self.d.pian.pk, posunute)
 
+    def _drzi_zamek_ruian(self):
+        """
+        Zjistí, zda aktuální spojení drží zámek synchronizace RÚIAN.
+
+        :return: ``True``, pokud tato session drží advisory lock RÚIAN.
+        """
+        from django.db import connection
+        from heslar.ruian_sync.zamek import RUIAN_SYNC_LOCK_KEY
+
+        with connection.cursor() as kurzor:
+            kurzor.execute(
+                "SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND granted "
+                "AND pid = pg_backend_pid() AND classid = 0 AND objid = %s AND objsubid = 1",
+                [RUIAN_SYNC_LOCK_KEY],
+            )
+            return kurzor.fetchone()[0] > 0
+
+    def test_predbezna_kontrola_i_sekce_bezi_pod_zamkem_ruian(self):
+        """
+        Zámek RÚIAN se drží od předběžné kontroly přes všechny sekce a na konci se uvolní.
+
+        Kontrola si ukládá chráněné PIANy pro sekci geometrie; sync RÚIAN mezi
+        kontrolou a zápisem by je mohl zneplatnit.
+        """
+        from unittest import mock
+
+        from django.test import override_settings
+
+        prikaz = _OmezenyPrikaz.vytvor({})
+        stav = {}
+
+        def kontrola(_volby):
+            stav["kontrola"] = self._drzi_zamek_ruian()
+
+        def geometrie(_volby):
+            stav["geometrie"] = self._drzi_zamek_ruian()
+
+        with (
+            override_settings(TEST_ENV=True),
+            mock.patch.object(prikaz, "_predbezna_kontrola", side_effect=kontrola),
+            mock.patch.object(prikaz, "_sekce_geometrie", side_effect=geometrie),
+            mock.patch("cacheops.invalidate_all"),
+        ):
+            prikaz.handle(**_volby_prikazu(dry_run=True))
+
+        self.assertEqual(stav, {"kontrola": True, "geometrie": True})
+        self.assertFalse(self._drzi_zamek_ruian())
+
+    def test_bezici_sync_ruian_zastavi_beh_pred_kontrolou(self):
+        """Když zámek RÚIAN drží jiný proces, běh skončí chybou a kontrola ani sekce neproběhnou."""
+        import contextlib
+        from unittest import mock
+
+        from django.core.management import CommandError
+        from django.test import override_settings
+
+        prikaz = _OmezenyPrikaz.vytvor({})
+
+        @contextlib.contextmanager
+        def obsazeny_zamek():
+            yield False
+
+        with (
+            override_settings(TEST_ENV=True),
+            mock.patch("heslar.ruian_sync.zamek.ruian_sync_lock", obsazeny_zamek),
+            mock.patch.object(prikaz, "_predbezna_kontrola") as kontrola,
+            mock.patch.object(prikaz, "_sekce_uzivatele") as uzivatele,
+            self.assertRaisesRegex(CommandError, "synchronizace RÚIAN"),
+        ):
+            prikaz.handle(**_volby_prikazu(dry_run=True))
+        kontrola.assert_not_called()
+        uzivatele.assert_not_called()
+
+    def test_heslo_pristupnosti_bez_razeni_zastavi_beh(self):
+        """Heslo přístupnosti bez řazení zastaví běh, protože chráněnost záznamů s ním nejde posoudit."""
+        from django.core.management import CommandError
+        from heslar.hesla import HESLAR_PRISTUPNOST
+        from heslar.models import Heslar
+
+        Heslar.objects.create(
+            ident_cely="HES-PRIST-X", heslo="X", heslo_en="X", nazev_heslare_id=HESLAR_PRISTUPNOST, razeni=None
+        )
+        prikaz = self._prikaz_geometrie()
+
+        with self.assertRaises(CommandError):
+            prikaz._predbezna_kontrola(_volby_prikazu())
+        self.assertIn("HES-PRIST-X", prikaz.stdout.getvalue())
+
     def _pian_do_okresu_bez_hranice(self):
         """
         Přesune testovací PIAN do nově založeného okresu bez hranice.

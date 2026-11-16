@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import random
 
@@ -59,6 +60,7 @@ MAX_VYPSANYCH_IDENTU = 50
 #: Popisy důvodů, které se sbírají během sekce ``geometrie`` a v předběžné kontrole.
 POPISY_DUVODU = {
     "okres_bez_hranice": "okres nemá vyplněnou hranici, není kam polohu PIANu přesunout",
+    "pristupnost_bez_razeni": ("heslo přístupnosti nemá vyplněné řazení, chráněnost záznamů s ním nejde posoudit"),
     "bez_nove_polohy": "nepodařilo se najít novou polohu ve stejném okresu",
     "bez_nahradniho_katastru": "nenašel se náhradní katastr ve stejném okresu",
     "mimo_list_zm50": "PIAN přesunut mimo původní list ZM50, číslo listu v identifikátoru neodpovídá sloupci zm50",
@@ -83,6 +85,7 @@ POPISY_DUVODU = {
 DUVODY_NENAHRAZENE = frozenset(
     {
         "okres_bez_hranice",
+        "pristupnost_bez_razeni",
         "bez_nove_polohy",
         "bez_nahradniho_katastru",
         "neplatna_geometrie",
@@ -90,6 +93,9 @@ DUVODY_NENAHRAZENE = frozenset(
         "bez_nahodneho_katastru",
     }
 )
+
+#: Hláška, když zámek synchronizace RÚIAN drží jiný proces.
+ZPRAVA_BEZI_SYNC_RUIAN = "Běží synchronizace RÚIAN, která mění tytéž katastry. Spusť anonymizaci až po jejím dokončení."
 
 #: Nápověda k okresům bez hranice. Hranice okresů plní jen plný sync katastrů;
 #: dokud ho produkce neprošla, kopie produkční databáze je nemá.
@@ -304,10 +310,19 @@ class Command(BaseCommand):
         """
         Provede vybrané sekce anonymizace nad cílovou databází.
 
+        Když je vybraná sekce ``geometrie``, drží příkaz zámek synchronizace RÚIAN
+        od předběžné kontroly až do konce běhu. Kontrola si ukládá chráněné PIANy
+        a predikáty okresů, které pak sekce geometrie použije; sync RÚIAN mezi
+        kontrolou a zápisem by je mohl zneplatnit. Zámek je session-level advisory
+        lock, takže ho sekce geometrie ve stejném spojení získá znovu.
+
         :param args: Poziční argumenty příkazu (nepoužívá se).
         :param options: Pojmenované argumenty z příkazového řádku.
-        :raises CommandError: Pokud neprojdou pojistky nebo je zadána neznámá sekce.
+        :raises CommandError: Pokud neprojdou pojistky, je zadána neznámá sekce
+            nebo právě běží synchronizace RÚIAN.
         """
+        from heslar.ruian_sync.zamek import ruian_sync_lock
+
         self._overr_pojistky(options)
         sekce = self._vyber_sekce(options)
 
@@ -319,14 +334,18 @@ class Command(BaseCommand):
             extra={"value": ",".join(sekce), "option": options["dry_run"]},
         )
         self._vypis_banner(sekce, options)
-        if "geometrie" in sekce:
-            self._predbezna_kontrola(options)
 
-        for nazev in sekce:
-            self.statistika[nazev] = {"zpracovano": 0, "zmeneno": 0, "preskoceno": 0, "chyb": 0}
-            self.stdout.write("")
-            self.stdout.write(f"--- {nazev} ---")
-            getattr(self, f"_sekce_{nazev}")(options)
+        with contextlib.ExitStack() as zamky:
+            if "geometrie" in sekce:
+                if not zamky.enter_context(ruian_sync_lock()):
+                    raise CommandError(ZPRAVA_BEZI_SYNC_RUIAN)
+                self._predbezna_kontrola(options)
+
+            for nazev in sekce:
+                self.statistika[nazev] = {"zpracovano": 0, "zmeneno": 0, "preskoceno": 0, "chyb": 0}
+                self.stdout.write("")
+                self.stdout.write(f"--- {nazev} ---")
+                getattr(self, f"_sekce_{nazev}")(options)
 
         self._invaliduj_cache(options)
         self._vypis_shrnuti(options)
@@ -922,9 +941,7 @@ class Command(BaseCommand):
 
         with ruian_sync_lock() as ziskan:
             if not ziskan:
-                raise CommandError(
-                    "Běží synchronizace RÚIAN, která mění tytéž katastry. Spusť anonymizaci až po jejím dokončení."
-                )
+                raise CommandError(ZPRAVA_BEZI_SYNC_RUIAN)
             posunute_piany = self._posun_piany(options)
             self._posun_vyskove_body(posunute_piany, options)
             self._prepocti_katastry_az(posunute_piany, options)
@@ -1040,8 +1057,10 @@ class Command(BaseCommand):
         Hledají se jen strukturální stavy, které náhoda nezmění: PIAN v okrese
         bez hranice, katastrální PIAN v okrese bez jiného použitelného katastru,
         PIAN s vadnou zdrojovou geometrií, když nejde vypnout trigger validace,
-        a chráněný archeologický záznam nebo projekt v okrese s jediným
-        katastrem. Kontrola používá tytéž predikáty jako sekce ``geometrie``.
+        chráněný archeologický záznam nebo projekt v okrese s jediným
+        katastrem a heslo přístupnosti bez vyplněného řazení (podle řazení se
+        posuzuje chráněnost ve všech sekcích). Kontrola používá tytéž predikáty
+        jako sekce ``geometrie``.
         Vzácná náhodná selhání zachytí až vyhodnocení výsledku běhu.
 
         V dry-runu se nález jen vypíše, v ostrém běhu příkaz skončí dřív, než
@@ -1052,6 +1071,8 @@ class Command(BaseCommand):
             pokud neodpovídají souřadnicové systémy či žádný okres nemá hranici.
         """
         from arch_z.models import ArcheologickyZaznam
+        from heslar.hesla import HESLAR_PRISTUPNOST
+        from heslar.models import Heslar
         from pian.models import Pian
         from projekt.models import Projekt
 
@@ -1062,9 +1083,9 @@ class Command(BaseCommand):
         self.lze_vypnout_trigger = self._lze_vypnout_trigger()
         self._predikaty["lze_vypnout_trigger"] = self.lze_vypnout_trigger
 
+        problemy = {}
         bez_hranice = self._okresy_bez_hranice()
         bez_katastru_s_polohou = self._okresy_bez_jineho_katastru(s_polohou=True)
-        problemy = {}
         zkontrolovat_zdroj = []
         # Řádky si sekce geometrie převezme, aby se drahý prostorový dotaz neopakoval
         # a zpracovaly se přesně ty PIANy, které kontrola prověřila.
@@ -1086,6 +1107,17 @@ class Command(BaseCommand):
         id_pianu = [pian_id for seznam in problemy.values() for pian_id in seznam]
         identy_pianu = dict(Pian.objects.filter(pk__in=id_pianu).values_list("pk", "ident_cely"))
         problemy = {duvod: [identy_pianu[pk] for pk in seznam] for duvod, seznam in problemy.items()}
+
+        # Chráněnost se všude posuzuje podle ``razeni > PRISTUPNOST_MIN_RAZENI``, které
+        # SQL pro ``NULL`` vyhodnotí jako nepravdu. Záznam s takovým heslem by se tiše
+        # bral jako veřejný, proto se běh raději zastaví.
+        bez_razeni = list(
+            Heslar.objects.filter(nazev_heslare_id=HESLAR_PRISTUPNOST, razeni__isnull=True).values_list(
+                "ident_cely", flat=True
+            )
+        )
+        if bez_razeni:
+            problemy["pristupnost_bez_razeni"] = bez_razeni
 
         bez_katastru = self._okresy_bez_jineho_katastru()
         if bez_katastru:
