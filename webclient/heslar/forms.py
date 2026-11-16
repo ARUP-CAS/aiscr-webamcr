@@ -1,9 +1,12 @@
 import logging
 
+from core.translation import format_message
 from core.widgets import AutocompleteListSelect2, AutocompleteModelSelect2
 from dal import forward
 from django import forms
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
 from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
 from pid.forms import FormWithOrcid, FormWithWikidata
@@ -189,3 +192,19 @@ class OrganizaceAdminForm(forms.ModelForm):
             instance=self.instance,
             required=False,
         )
+
+    def clean_soucast(self):
+        """Odmítne přiřadit organizaci samu sobě nebo některému z jejích potomků."""
+        selected_parent = self.cleaned_data.get("soucast")
+        if selected_parent:
+            parent_graph = dict(Organizace.objects.values_list("pk", "soucast_id"))
+            # A new object has no incoming edges yet; checking its parent's path also
+            # prevents attaching it to a pre-existing corrupt hierarchy.
+            root = self.instance.pk if self.instance.pk is not None else selected_parent.pk
+            if self.instance.pk is not None:
+                parent_graph[self.instance.pk] = selected_parent.pk
+            if Organizace.find_cycles(parent_graph, [root]):
+                raise ValidationError(
+                    format_message(gettext_noop("heslar.forms.OrganizaceAdminForm.clean_soucast.invalid"))
+                )
+        return selected_parent

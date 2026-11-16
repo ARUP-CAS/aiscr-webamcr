@@ -72,6 +72,10 @@ else:
         "heslar.tests.test_selenium",
         "core.tests.test_fedora_integration_child_walk",
         "core.tests.test_fedora_integration_paradata",
+        "core.tests.test_organization_ownership",
+        "core.tests.test_mappers.test_organizace_mapper",
+        "cron.tests.test_run_data_import_organizace",
+        "heslar.tests.test_organization_import_guard",
     ]
 
 

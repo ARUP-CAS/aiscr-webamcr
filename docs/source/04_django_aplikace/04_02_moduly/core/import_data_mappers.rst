@@ -399,6 +399,20 @@ Třídy
       :param field_name: Název pole, přes které je reference definována.
 
 
+.. py:class:: ImportDataOrganizationCycleError
+
+   Výjimka vyvolaná při vytvoření cyklu v hierarchii organizací.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje výjimku s identifikátory organizací tvořících cyklus.
+
+      :param cycle: Identifikátory organizací v pořadí průchodu po vazbě
+          ``soucast``; první uzel je zopakován na konci.
+
+
 .. py:class:: BaseImportField
 
    Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -1286,6 +1300,14 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _normalize_organization_identifier()
+
+      Vrátí prázdné identifikátory organizací jako ``None`` bez úpravy platného textu.
+
+   .. py:method:: __init__()
+
+      Normalizuje explicitní prázdnou vazbu ``soucast`` před zpracováním lookup pole.
+
    .. py:method:: get_mapping()
 
       Vrací mapping. v aplikaci.
@@ -1296,13 +1318,17 @@ Třídy
 
    .. py:method:: validate_batch_ordering()
 
-      Ověří, že záznamy neobsahují dopřednou referenci v poli ``soucast`` (self-join FK na Organizace).
+      Ověří dopředné reference a cykly na cestách dotčených změnami v dávce.
 
-      Pokud záznam odkazuje přes ``soucast`` na jinou organizaci, která se v CSV vyskytuje
-      až za ním a zároveň v databázi dosud neexistuje, vyvolá výjimku.
+      Pro kontrolu cyklů se sestaví výsledný graf z databáze a importovaných řádků, ale
+      procházejí se pouze změněné vztahy a jejich dosažitelní předci. Nesouvisející
+      historický cyklus proto import neblokuje. Prázdná hodnota ``soucast`` při
+      aktualizaci vztah výslovně odstraní.
 
       :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+      :param performed_action: Akce importu; při ``DELETE`` se hierarchie nemění.
       :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
+      :raises ImportDataOrganizationCycleError: Vyvolá se, pokud výsledný graf obsahuje cyklus.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
