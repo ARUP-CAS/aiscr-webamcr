@@ -8,7 +8,7 @@ Přehled modulu
 
 Zámky zabraňující souběhu dlouhých plánovaných úloh.
 
-Vzor je stejný jako u :func:`heslar.ruian_sync.zamek.ruian_sync_lock`: Postgres advisory lock
+Vzor je stejný jako u ``heslar.ruian_sync.zamek.ruian_sync_lock``: Postgres advisory lock
 na úrovni session. Nemá TTL, takže nemůže vypršet uprostřed několikahodinového běhu, a uvolní se
 i při tvrdém pádu procesu, protože ho Postgres pustí se zánikem spojení.
 

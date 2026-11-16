@@ -133,8 +133,17 @@ Funkce
    chyba Fedory tak vrátí zpět i DB a projekt zůstane nezměněný a vybere se při dalším běhu.
    Fedora transakce se uzavře až po commitu DB. Při chybě konektor Fedora transakci vrací zpět sám.
 
+   Projekt se načítá s ``select_for_update()`` až uvnitř atomic bloku a stav ověřuje ``is_pending``
+   pod zámkem řádku. Souběžná změna projektu (např. vrácení zrušeného projektu) tak buď proběhne
+   před ověřením, nebo počká na commit; mezi ověřením a zápisem se nemůže vklínit.
+   Zámek řádku se drží po dobu požadavků do Fedory. Je to záměrná cena za atomicitu: dávka
+   zpracovává projekty jeden po druhém a zámek se týká jen aktuálního projektu.
+
+   Snapshot projektu v Redis se po commitu obnoví znovu, protože úloha zařazená signálem při
+   ``item.save()`` mohla číst ještě nepotvrzený stav.
+
    Při HTTP 409 (záznam mění jiná transakce) se projekt načte znovu a zkusí se až
-   :data:`FEDORA_CONFLICT_MAX_ATTEMPTS` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
+   ``FEDORA_CONFLICT_MAX_ATTEMPTS`` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
    takže se nepřeruší zpracování dalších projektů.
 
    :param projekt_pk: Primární klíč zpracovávaného projektu.
@@ -143,6 +152,16 @@ Funkce
    :param apply_changes: Funkce ``apply_changes(projekt)``, která provede změny dat projektu a jeho souborů.
    :param log_prefix: Prefix logovacích zpráv úlohy.
    :return: ``True``, pokud byl projekt zpracován; ``False``, pokud byl přeskočen nebo zpracování selhalo.
+
+.. py:function:: _refresh_projekt_redis_snapshot(projekt_pk, log_prefix)
+
+   Zařadí obnovu Redis snapshotu projektu po commitu DB transakce.
+
+   Úloha zařazená signálem při ``item.save()`` uvnitř atomic bloku mohla přečíst ještě nepotvrzený stav
+   a zapsat do Redis starou hodnotu. Chyba při zařazení se jen zaloguje, protože DB změna je už potvrzená.
+
+   :param projekt_pk: Primární klíč projektu, jehož snapshot se má obnovit.
+   :param log_prefix: Prefix logovacích zpráv úlohy.
 
 .. py:function:: _rollback_fedora_transaction_quietly(fedora_transaction)
 
@@ -159,7 +178,7 @@ Funkce
 
    kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
 
-   Úloha trvá hodiny, proto běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+   Úloha trvá hodiny, proto běží pod zámkem ``cron.zamek.cron_task_lock``; druhá instance se přeskočí.
    Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
 
 .. py:function:: delete_reporter_data_ten_years()
@@ -168,7 +187,7 @@ Funkce
 
    a vytvořit log (jako při archivaci projektu).
 
-   Úloha běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+   Úloha běží pod zámkem ``cron.zamek.cron_task_lock``; druhá instance se přeskočí.
    Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
 
 .. py:function:: change_document_accessibility()
@@ -182,7 +201,7 @@ Funkce
 
    Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
 
-   Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
+   Běží pod zámkem ``cron.zamek.cron_task_lock``; souběžná druhá instance se přeskočí.
 
 .. py:function:: cancel_old_projects()
 
@@ -191,7 +210,7 @@ Funkce
    v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
    nelze očekávat zahájení.”
 
-   Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
+   Běží pod zámkem ``cron.zamek.cron_task_lock``; souběžná druhá instance se přeskočí.
 
 .. py:function:: update_snapshot_fields()
 

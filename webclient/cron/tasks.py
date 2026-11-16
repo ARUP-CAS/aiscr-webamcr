@@ -451,8 +451,17 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
     chyba Fedory tak vrátí zpět i DB a projekt zůstane nezměněný a vybere se při dalším běhu.
     Fedora transakce se uzavře až po commitu DB. Při chybě konektor Fedora transakci vrací zpět sám.
 
+    Projekt se načítá s ``select_for_update()`` až uvnitř atomic bloku a stav ověřuje ``is_pending``
+    pod zámkem řádku. Souběžná změna projektu (např. vrácení zrušeného projektu) tak buď proběhne
+    před ověřením, nebo počká na commit; mezi ověřením a zápisem se nemůže vklínit.
+    Zámek řádku se drží po dobu požadavků do Fedory. Je to záměrná cena za atomicitu: dávka
+    zpracovává projekty jeden po druhém a zámek se týká jen aktuálního projektu.
+
+    Snapshot projektu v Redis se po commitu obnoví znovu, protože úloha zařazená signálem při
+    ``item.save()`` mohla číst ještě nepotvrzený stav.
+
     Při HTTP 409 (záznam mění jiná transakce) se projekt načte znovu a zkusí se až
-    :data:`FEDORA_CONFLICT_MAX_ATTEMPTS` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
+    ``FEDORA_CONFLICT_MAX_ATTEMPTS`` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
     takže se nepřeruší zpracování dalších projektů.
 
     :param projekt_pk: Primární klíč zpracovávaného projektu.
@@ -466,17 +475,17 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
         fedora_transaction = None
         db_committed = False
         try:
-            item: Projekt = Projekt.objects.get(pk=projekt_pk)
-            if not is_pending(item):
-                logger.debug(f"{log_prefix}.do.project.skipped", extra={"projekt": item.ident_cely})
-                return False
-            fedora_transaction = FedoraTransaction()
-            item.active_transaction = fedora_transaction
-            logger.debug(
-                f"{log_prefix}.do.project",
-                extra={"projekt": item.ident_cely, "transaction": fedora_transaction.uid, "attempt": attempt},
-            )
             with transaction.atomic():
+                item: Projekt = Projekt.objects.select_for_update().get(pk=projekt_pk)
+                if not is_pending(item):
+                    logger.debug(f"{log_prefix}.do.project.skipped", extra={"projekt": item.ident_cely})
+                    return False
+                fedora_transaction = FedoraTransaction()
+                item.active_transaction = fedora_transaction
+                logger.debug(
+                    f"{log_prefix}.do.project",
+                    extra={"projekt": item.ident_cely, "transaction": fedora_transaction.uid, "attempt": attempt},
+                )
                 apply_changes(item)
                 # Metadata ukládáme sami uvnitř atomic bloku, viz docstring; signál je proto potlačen.
                 item.suppress_signal = True
@@ -485,6 +494,7 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
                     item.katastry.remove(item.hlavni_katastr)
                 item.save_metadata(fedora_transaction)
             db_committed = True
+            _refresh_projekt_redis_snapshot(projekt_pk, log_prefix)
             fedora_transaction.mark_transaction_as_closed()
             return True
         except FedoraUpdatedByAnotherTransactionError as err:
@@ -516,6 +526,24 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
     return False
 
 
+def _refresh_projekt_redis_snapshot(projekt_pk, log_prefix):
+    """
+    Zařadí obnovu Redis snapshotu projektu po commitu DB transakce.
+
+    Úloha zařazená signálem při ``item.save()`` uvnitř atomic bloku mohla přečíst ještě nepotvrzený stav
+    a zapsat do Redis starou hodnotu. Chyba při zařazení se jen zaloguje, protože DB změna je už potvrzená.
+
+    :param projekt_pk: Primární klíč projektu, jehož snapshot se má obnovit.
+    :param log_prefix: Prefix logovacích zpráv úlohy.
+    """
+    try:
+        update_single_redis_snapshot.delay("Projekt", projekt_pk)
+    except Exception as err:
+        logger.warning(
+            f"{log_prefix}.do.project.snapshot_refresh_failed", extra={"projekt_pk": projekt_pk, "error": str(err)}
+        )
+
+
 def _rollback_fedora_transaction_quietly(fedora_transaction):
     """
     Vrátí zpět Fedora transakci, pokud ještě běží, a případnou chybu jen zaloguje.
@@ -540,7 +568,7 @@ def delete_personal_data_canceled_projects():
 
     kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
 
-    Úloha trvá hodiny, proto běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+    Úloha trvá hodiny, proto běží pod zámkem ``cron.zamek.cron_task_lock``; druhá instance se přeskočí.
     Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
     """
     log_prefix = "core.cron.delete_personal_data_canceled_projects"
@@ -566,8 +594,12 @@ def delete_personal_data_canceled_projects():
             )
 
             def is_pending(item: Projekt) -> bool:
-                """Ověří, že projekt má oznamovatele, jehož údaje ještě nebyly odstraněny."""
-                return item.has_oznamovatel() and deleted_string not in (item.oznamovatel.email or "")
+                """Ověří, že projekt je stále zrušený a má oznamovatele, jehož údaje ještě nebyly odstraněny."""
+                return (
+                    item.stav == PROJEKT_STAV_ZRUSENY
+                    and item.has_oznamovatel()
+                    and deleted_string not in (item.oznamovatel.email or "")
+                )
 
             def apply_changes(item: Projekt):
                 """Přepíše údaje oznamovatele a odstraní projektovou dokumentaci."""
@@ -593,7 +625,7 @@ def delete_reporter_data_ten_years():
 
     a vytvořit log (jako při archivaci projektu).
 
-    Úloha běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+    Úloha běží pod zámkem ``cron.zamek.cron_task_lock``; druhá instance se přeskočí.
     Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
     """
     log_prefix = "core.cron.delete_reporter_data_canceled_projects"
@@ -694,7 +726,7 @@ def delete_unsubmited_projects():
     """
     Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
 
-    Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
+    Běží pod zámkem ``cron.zamek.cron_task_lock``; souběžná druhá instance se přeskočí.
     """
     with cron_task_lock(LOCK_DELETE_UNSUBMITED_PROJECTS) as lock_acquired:
         if not lock_acquired:
@@ -744,7 +776,7 @@ def cancel_old_projects():
     v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
     nelze očekávat zahájení.”
 
-    Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
+    Běží pod zámkem ``cron.zamek.cron_task_lock``; souběžná druhá instance se přeskočí.
     """
     try:
         with cron_task_lock(LOCK_CANCEL_OLD_PROJECTS) as lock_acquired:

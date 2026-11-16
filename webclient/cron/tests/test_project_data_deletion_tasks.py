@@ -32,6 +32,7 @@ class ProcessProjectInFedoraTransactionTest(SimpleTestCase):
             "fedora_transaction": patch.object(tasks, "FedoraTransaction"),
             "transaction": patch.object(tasks, "transaction"),
             "sleep": patch.object(tasks.time, "sleep"),
+            "snapshot": patch.object(tasks, "update_single_redis_snapshot"),
         }
         self.mocks = {name: patcher.start() for name, patcher in patchers.items()}
         for patcher in patchers.values():
@@ -49,6 +50,8 @@ class ProcessProjectInFedoraTransactionTest(SimpleTestCase):
             return item
 
         self.mocks["projekt"].objects.get.side_effect = _get
+        # ``select_for_update()`` vrací stejný manažer, takže ``get`` zůstává jediným místem načtení projektu.
+        self.mocks["projekt"].objects.select_for_update.return_value = self.mocks["projekt"].objects
         self.transactions = []
 
         def _new_transaction():
@@ -96,15 +99,56 @@ class ProcessProjectInFedoraTransactionTest(SimpleTestCase):
             return tx
 
         self.mocks["fedora_transaction"].side_effect = _new_tx
+        self.mocks["snapshot"].delay.side_effect = lambda *a: order.append("snapshot")
 
         self.assertTrue(self._run(apply_changes=apply_changes))
 
-        self.assertEqual(order, ["atomic_enter", "apply", "save_metadata", "atomic_exit", "fedora_close"])
+        self.assertEqual(order, ["atomic_enter", "apply", "save_metadata", "atomic_exit", "snapshot", "fedora_close"])
         item = self.items[0]
         self.assertIs(item.suppress_signal, True)
         item.save.assert_called_once_with()
         item.save_metadata.assert_called_once_with(self.transactions[0])
         self.assertIs(item.active_transaction, self.transactions[0])
+
+    def test_project_is_loaded_with_row_lock_inside_atomic_block(self):
+        """Projekt se načítá s ``select_for_update()`` uvnitř atomic bloku, aby ověření stavu proběhlo pod zámkem."""
+        order = []
+        atomic = MagicMock()
+        atomic.__enter__.side_effect = lambda *a: order.append("atomic_enter")
+        atomic.__exit__.side_effect = lambda *a: order.append("atomic_exit") or False
+        self.mocks["transaction"].atomic.side_effect = None
+        self.mocks["transaction"].atomic.return_value = atomic
+        self.mocks["projekt"].objects.select_for_update.side_effect = (
+            lambda: order.append("lock") or self.mocks["projekt"].objects
+        )
+
+        self.assertTrue(self._run(is_pending=lambda item: order.append("is_pending") or True))
+
+        self.assertEqual(order[:3], ["atomic_enter", "lock", "is_pending"])
+
+    def test_snapshot_is_refreshed_once_after_commit(self):
+        """Po úspěšném commitu se jednou zařadí obnova Redis snapshotu projektu."""
+        self.assertTrue(self._run())
+
+        self.mocks["snapshot"].delay.assert_called_once_with("Projekt", 1)
+
+    def test_snapshot_is_not_refreshed_when_project_is_skipped_or_fails(self):
+        """Při přeskočení projektu ani při chybě před commitem se snapshot neobnovuje."""
+        self._run(is_pending=lambda item: False)
+        with self.assertLogs(tasks.logger, level="ERROR"):
+            self._run(apply_changes=MagicMock(side_effect=RuntimeError("boom")))
+
+        self.mocks["snapshot"].delay.assert_not_called()
+
+    def test_snapshot_enqueue_failure_does_not_fail_committed_project(self):
+        """Chyba při zařazení snapshotu se jen zaloguje, potvrzený projekt zůstane zpracovaný."""
+        self.mocks["snapshot"].delay.side_effect = RuntimeError("broker down")
+
+        with self.assertLogs(tasks.logger, level="WARNING") as logs:
+            self.assertTrue(self._run())
+
+        self.assertTrue(any("snapshot_refresh_failed" in line for line in logs.output))
+        self.transactions[0].mark_transaction_as_closed.assert_called_once_with()
 
     def test_main_cadastre_is_removed_from_additional_cadastres(self):
         """Hlavní katastr se před uložením metadat odebere z m2m pole, jak to dělal signál."""
@@ -312,21 +356,29 @@ class DeleteProjectDataTasksTest(SimpleTestCase):
         self.assertEqual([c.args[0] for c in self.process.call_args_list], [1, 2, 3])
 
     def test_personal_data_task_recognises_already_anonymised_project(self):
-        """Projekt s už odstraněnými údaji (zpracovaný jiným během) úloha nepovažuje za čekající."""
+        """Projekt s odstraněnými údaji nebo vrácený ze zrušení úloha nepovažuje za čekající."""
         with patch.object(tasks, "cron_task_lock", self._lock(True)):
             tasks.delete_personal_data_canceled_projects()
         is_pending = self.process.call_args_list[0].args[1]
 
         pending = MagicMock()
+        pending.stav = tasks.PROJEKT_STAV_ZRUSENY
         pending.has_oznamovatel.return_value = True
         pending.oznamovatel.email = "a@example.org"
+        restored = MagicMock()
+        restored.stav = tasks.PROJEKT_STAV_ZAPSANY
+        restored.has_oznamovatel.return_value = True
+        restored.oznamovatel.email = "a@example.org"
         done = MagicMock()
+        done.stav = tasks.PROJEKT_STAV_ZRUSENY
         done.has_oznamovatel.return_value = True
         done.oznamovatel.email = f"2026-11-07: {tasks.UDAJ_ODSTRANEN}"
         without_reporter = MagicMock()
+        without_reporter.stav = tasks.PROJEKT_STAV_ZRUSENY
         without_reporter.has_oznamovatel.return_value = False
 
         self.assertTrue(is_pending(pending))
+        self.assertFalse(is_pending(restored))
         self.assertFalse(is_pending(done))
         self.assertFalse(is_pending(without_reporter))
 
