@@ -2373,10 +2373,12 @@ def smazat(request, ident_cely):
                     raise ValueError("dokument.views.smazat.deleted")
         except (DoiWriteError, FedoraError, ValueError) as err:
             logger.info("dokument.views.smazat.post_error", extra={"ident_cely": ident_cely, "error": err})
-            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
                 dokument.doi_update(False, True)
+            # Rollback DB se nastavuje až po kompenzaci DOI, protože ta čte z DB (``refresh_from_db``)
+            # a Django po ``set_rollback(True)`` v téže transakci další dotaz odmítne.
+            transaction.set_rollback(True)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
@@ -2780,12 +2782,14 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
                 return JsonResponse({"redirect": zaznam.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("dokument.views.odpojit.post_error", extra={"error": err, "ident_cely": zaznam.ident_cely})
-            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if lokalita_update:
                 lokalita_update.igsn_update(False, True)
             if dokument_update:
                 dokument_update.doi_update(False, True)
+            # Rollback DB se nastavuje až po kompenzaci IGSN/DOI, protože ta čte z DB (``refresh_from_db``)
+            # a Django po ``set_rollback(True)`` v téže transakci další dotaz odmítne.
+            transaction.set_rollback(True)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
     else:
         warnings = []
