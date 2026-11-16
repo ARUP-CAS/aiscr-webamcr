@@ -75,7 +75,9 @@ class RuianKatastrDTO:
     :param definicni_bod_wkt: Definiční bod katastru ve WKT (Point, EPSG:4326).
     :param hranice_wkt: Hranice katastru ve WKT (MultiPolygon, EPSG:4326).
     :param hranice_odmitnuta: ``True``, když prvek hranici **nese**, ale parser
-        ji odmítl (nepodporovaný GML prvek, žádný čitelný polygon). Odlišuje
+        ji odmítl (nepodporovaný GML prvek, žádný čitelný polygon). Nastaví ho
+        i :func:`heslar.ruian_sync.syncer._upsert_katastr`, když WKT od parseru
+        odmítne až GEOS. Odlišuje
         to odmítnutou hranici od hranice, která v souboru opravdu chybí – jen
         ta druhá smí vést ke zrušení katastru (viz
         :func:`heslar.ruian_sync.syncer._vyhodnot_katastry_bez_hranice`).

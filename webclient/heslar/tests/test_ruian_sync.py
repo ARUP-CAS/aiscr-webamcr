@@ -2409,6 +2409,39 @@ class KatastrBezHraniceTests(TestCase):
         self.assertEqual(smazane, [])
         self.assertIn("hranice ponechána", self.varovani[0])
 
+    def test_soused_s_hranici_odmitnutou_geos_pokryti_nepodlozi(self):
+        """
+        Soused, jehož WKT parser přijal, ale GEOS odmítl, se do pokrytí nezapočítá.
+
+        Běží skutečný ``_upsert_katastr``: GEOS nečitelné WKT odmítne, sousedovi
+        zůstane stará hranice a upsert ho označí jako odmítnutý. Katastr bez
+        hranice se proto nesmaže.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        stara_hranice = RuianKatastr.objects.get(kod=self.NASTUPCE).hranice
+        smazane = []
+
+        def smaz(katastr, run):
+            smazane.append(katastr.kod)
+            return True
+
+        with mock.patch.object(
+            syncer, "_append_run_warning", lambda run, text: self.varovani.append(text)
+        ), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology"
+        ), mock.patch.object(
+            syncer, "_soucet_plochy_katastru", return_value=None
+        ), mock.patch.object(
+            self.run, "save"
+        ):
+            syncer._apply_changes(
+                [self._udalost(self.RUSENY), self._udalost(self.NASTUPCE, "MULTIPOLYGON (((nečitelné)))")], self.run
+            )
+
+        self.assertEqual(smazane, [])
+        self.assertIn("hranice ponechána", self.varovani[0])
+        self.assertTrue(RuianKatastr.objects.get(kod=self.NASTUPCE).hranice.equals(stara_hranice))
+
     def test_mazany_soused_pokryti_nepodlozi(self):
         """
         Katastr, který tentýž soubor maže, se do pokrytí nezapočítá.

@@ -208,6 +208,15 @@ Když pokrytí nestačí, hranice se ponechá a ve ``warnings`` je řádek „�
 ponechána, zkontrolujte“ – může jít o vadný export a je třeba ho prověřit.
 Katastr bez hranice, který v databázi není, se nezakládá (hranice je povinná).
 
+**Návrat na starší verzi.** Mazání neprobíhá v jedné transakci: když den
+selže až po smazání takového katastru (typicky jiný katastr nejde smazat kvůli
+navázaným záznamům, ``RuianNesmazatelnyKatastrError``), smazání zůstane
+zapsané a cron den zopakuje. Verze bez této logiky (před PR #4508) by
+při opakování smazaný katastr bez hranice zakládala znovu, selhala na povinné
+hranici a další dny by neprošly. Po takovém selhání proto den **dokončete
+touto verzí**, než se vrátíte ke starší nebo pustíte souběžně staré workery;
+jinak je nutná ruční oprava dat.
+
 Když plný sync selže
 --------------------
 

@@ -609,8 +609,8 @@ def _vyhodnot_katastry_bez_hranice(
     :param mazane_kody: Katastry, které tentýž soubor maže (``ZaniklePrvky``).
         Do pokrytí se nezapočítávají – po fázi mazání už jejich území nikdo
         nepokrývá, takže by zrušení nepodložily.
-    :param odmitnute_kody: Katastry, jejichž hranici v tomtéž souboru parser
-        odmítl. V DB jim zůstala stará hranice, která o aktuálním stavu nic
+    :param odmitnute_kody: Katastry, jejichž hranici v tomtéž souboru odmítl
+        parser nebo až GEOS při upsertu. V DB jim zůstala stará hranice, která o aktuálním stavu nic
         neříká – zrušení smí podložit jen hranice opravdu načtená ze souboru
         nebo nezměněná.
     :param vynutit_metadata: Předá se do :func:`_upsert_katastr` u ponechaných.
@@ -1321,6 +1321,11 @@ def _upsert_katastr(
 
     new_db = _geos_or_none(dto.definicni_bod_wkt)
     new_hr = _geos_or_none(dto.hranice_wkt)
+    if dto.hranice_wkt and new_hr is None:
+        # Parser hranici přijal, ale GEOS ji odmítl – stará hranice v DB zůstává.
+        # Označíme to stejně jako hranici odmítnutou parserem, aby stará hranice
+        # nepodložila zrušení sousedního katastru (viz _vyhodnot_katastry_bez_hranice).
+        dto.hranice_odmitnuta = True
     geometry_changed = False
     if new_db is not None and existing.definicni_bod != new_db:
         existing.definicni_bod = new_db
