@@ -27,6 +27,8 @@ from api.views import (
 )
 from core.constants import (
     AKTUALIZACE_SN,
+    API_REQUEST_LOG_IGSN_STATUS_FAILED,
+    API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING,
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_SUCCESS,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
@@ -64,7 +66,7 @@ from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from historie.models import Historie
 from lxml import etree
 from pas.models import SamostatnyNalez
-from pid.exceptions import DoiWriteError
+from pid.exceptions import DoiConnectionError, DoiWriteError
 from projekt.models import Projekt
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -2707,32 +2709,114 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
             response = self._patch(IDENT_CELY, evidencni_cislo="EC-ARCHIV-001")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        mock_igsn.assert_called_once_with(False, True)
+        mock_igsn.assert_called_once_with(True, True)
         self.nalez.refresh_from_db()
         self.assertEqual(self.nalez.evidencni_cislo, "EC-ARCHIV-001")
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 1)
-        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertNotIn("X-IGSN-Status", response.headers)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertIsNone(log.igsn_status)
 
-    def test_doi_write_error_on_archived_record_returns_500(self):
-        """Selhání IGSN aktualizace při PATCH na archivovaném záznamu vrátí HTTP 500 a vše vrátí rollbackem."""
+    def _patch_archived_with_igsn_error(self, igsn_error, fedora_transaction=None):
+        """
+        Pošle PATCH na archivovaný záznam, jehož aktualizace IGSN vyhodí zadanou chybu.
 
+        :param igsn_error: Výjimka vyhozená z ``igsn_update``.
+        :param fedora_transaction: Mock Fedora transakce; ``None`` vytvoří nový.
+
+        :return: Dvojice ``(odpověď, mock plánování opakování)``.
+        """
         self.nalez.stav = SN_ARCHIVOVANY
         self.nalez.evidencni_cislo = "EC-DOI-OLD-001"
         self.nalez.save(update_fields=["stav", "evidencni_cislo"])
+        fedora_transaction = fedora_transaction or Mock(status=FedoraTransactionStatus.ACTIVE)
 
-        with patch("pas.models.SamostatnyNalez.igsn_update", side_effect=DoiWriteError("doi write failed")):
+        with (
+            patch("pas.models.SamostatnyNalez.igsn_update", side_effect=igsn_error),
+            patch("api.views.FedoraTransaction", return_value=fedora_transaction),
+            patch("api.views.schedule_samostatny_nalez_igsn_retry", return_value=True) as schedule,
+        ):
             response = self._patch(IDENT_CELY, evidencni_cislo="EC-DOI-NEW-001")
+        return response, schedule
+
+    def _assert_change_kept(self):
+        """Ověří, že nové evidenční číslo a jeho historie zůstaly uložené a zámek se uvolnil."""
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-DOI-NEW-001")
+        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN).count(), 1)
+        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 1)
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
+
+    def test_retryable_igsn_failure_keeps_change_and_schedules_retry(self):
+        """
+        Nedostupné DataCite u archivovaného záznamu změnu nevrátí: PATCH vrátí 200 s ``X-IGSN-Status:
+        retry-pending``, Fedora transakce se potvrdí, naplánuje se opakování a log má ``retry_pending`` (#4523).
+        """
+        fedora_transaction = Mock(status=FedoraTransactionStatus.ACTIVE)
+        response, schedule = self._patch_archived_with_igsn_error(
+            DoiConnectionError(None, "timeout", "https://datacite.example/"), fedora_transaction
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["X-IGSN-Status"], "retry-pending")
+        self.assertEqual(response["X-Record-ID"], IDENT_CELY)
+        self._assert_change_kept()
+        fedora_transaction.mark_transaction_as_closed.assert_called_once_with()
+        fedora_transaction.rollback_transaction.assert_not_called()
+        schedule.assert_called_once()
+        self.assertEqual(schedule.call_args.args[0].pk, self.nalez.pk)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertEqual(log.igsn_status, API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING)
+
+    def test_non_retryable_igsn_failure_keeps_change_and_reports_failed(self):
+        """DataCite odmítne data (422): PATCH vrátí 200 s ``X-IGSN-Status: failed``, nic se neplánuje (#4523)."""
+        response, schedule = self._patch_archived_with_igsn_error(
+            DoiWriteError(422, "invalid", "https://datacite.example/")
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["X-IGSN-Status"], "failed")
+        self._assert_change_kept()
+        schedule.assert_not_called()
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertEqual(log.igsn_status, API_REQUEST_LOG_IGSN_STATUS_FAILED)
+
+    def test_igsn_update_runs_after_fedora_commit(self):
+        """Aktualizace IGSN se odešle až po commitu Fedora transakce."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.save(update_fields=["stav"])
+        fedora_transaction = Mock(status=FedoraTransactionStatus.ACTIVE)
+        committed_before_igsn = []
+
+        def igsn_update(*_args):
+            committed_before_igsn.append(fedora_transaction.mark_transaction_as_closed.called)
+
+        with (
+            patch("pas.models.SamostatnyNalez.igsn_update", side_effect=igsn_update),
+            patch("api.views.FedoraTransaction", return_value=fedora_transaction),
+        ):
+            response = self._patch(IDENT_CELY, evidencni_cislo="EC-ORDER-001")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(committed_before_igsn, [True])
+
+    def test_fedora_commit_failure_sends_no_igsn_update(self):
+        """Selhání commitu Fedora transakce vrátí 500 a aktualizace IGSN se vůbec neodešle."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.save(update_fields=["stav"])
+        fedora_transaction = Mock(status=FedoraTransactionStatus.ACTIVE)
+        fedora_transaction.mark_transaction_as_closed.side_effect = FedoraTransactionCommitFailedError("COMMIT: 409")
+
+        with (
+            patch("pas.models.SamostatnyNalez.igsn_update") as mock_igsn,
+            patch("api.views.FedoraTransaction", return_value=fedora_transaction),
+        ):
+            response = self._patch(IDENT_CELY, evidencni_cislo="EC-COMMIT-FAIL-001")
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertIn("detail", response.data)
-        self.nalez.refresh_from_db()
-        self.assertEqual(self.nalez.evidencni_cislo, "EC-DOI-OLD-001")
-        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN).count(), 0)
-        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 0)
-        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
-        self.assertIn("doi_update_error", str(log.errors))
-        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
+        mock_igsn.assert_not_called()
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
 
     def test_target_organization_archeolog_can_patch_via_predano_organizace(self):
         """Archeolog cílového muzea je autorizován přes ``predano_organizace``."""
@@ -3554,29 +3638,68 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        mock_igsn.assert_called_once_with(False, True)
+        mock_igsn.assert_called_once_with(True, True)
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 1)
-        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertNotIn("X-IGSN-Status", response.headers)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertIsNone(log.igsn_status)
         self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
 
-    def test_doi_write_error_on_archived_record_returns_500(self):
-        """Selhání IGSN aktualizace při uploadu na archivovaný záznam vrátí HTTP 500 a soubor se neuloží."""
+    def _post_archived_with_igsn_error(self, igsn_error):
+        """
+        Nahraje fotografii k archivovanému záznamu, jehož aktualizace IGSN vyhodí zadanou chybu.
 
+        :param igsn_error: Výjimka vyhozená z ``igsn_update``.
+
+        :return: Dvojice ``(odpověď, mock plánování opakování)``.
+        """
         self.nalez.stav = SN_ARCHIVOVANY
         self.nalez.save(update_fields=["stav"])
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.models.SamostatnyNalez.igsn_update", side_effect=DoiWriteError("doi write failed")):
+        with (
+            patch("pas.models.SamostatnyNalez.igsn_update", side_effect=igsn_error),
+            patch("api.views.schedule_samostatny_nalez_igsn_retry", return_value=True) as schedule,
+        ):
             response = self._post_file(IDENT_CELY, photo)
+        return response, schedule
 
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertIn("detail", response.data)
-        self._assert_attached_files(self.nalez, 0)
-        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 0)
-        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
-        self.assertIn("internal_error", str(log.errors))
+    def _assert_upload_kept(self):
+        """Ověří, že soubor, historie nahrání i ``SN34`` zůstaly uložené a zámek se uvolnil."""
+        self._assert_attached_files(self.nalez, 1)
+        self._assert_file_upload_history(1, expected_note="photo.png")
+        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 1)
         self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
+
+    def test_retryable_igsn_failure_keeps_upload_and_schedules_retry(self):
+        """
+        Nedostupné DataCite u archivovaného záznamu nahrání nevrátí: upload vrátí 201 s ``X-IGSN-Status:
+        retry-pending``, soubor zůstane uložený, naplánuje se opakování a log má ``retry_pending`` (#4523).
+        """
+        response, schedule = self._post_archived_with_igsn_error(
+            DoiConnectionError(None, "timeout", "https://datacite.example/")
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response["X-IGSN-Status"], "retry-pending")
+        self._assert_upload_kept()
+        schedule.assert_called_once()
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertEqual(log.igsn_status, API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING)
+
+    def test_non_retryable_igsn_failure_keeps_upload_and_reports_failed(self):
+        """DataCite odmítne data (422): upload vrátí 201 s ``X-IGSN-Status: failed`` a nic se neplánuje (#4523)."""
+        response, schedule = self._post_archived_with_igsn_error(
+            DoiWriteError(422, "invalid", "https://datacite.example/")
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response["X-IGSN-Status"], "failed")
+        self._assert_upload_kept()
+        schedule.assert_not_called()
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertEqual(log.igsn_status, API_REQUEST_LOG_IGSN_STATUS_FAILED)
 
     def test_igsn_update_not_called_when_stav_is_not_sn_archivovany(self):
         """Úspěšný upload nezarchivovaného záznamu nevolá ``igsn_update`` ani nevytváří ``SN34``."""

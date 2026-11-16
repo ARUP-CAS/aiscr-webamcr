@@ -193,9 +193,11 @@ Aktualizace evidenčního čísla
    archeolog nebo vyšší; badatel oprávnění nemá. Jinak ``403``.
 #. Hodnota shodná s aktuálním evidenčním číslem vrací ``422``.
 #. Získání :ref:`zámku záznamu <pas-api-zamek>`; při neúspěchu ``429``.
-#. Uložení hodnoty, záznam ``SN-UPD`` do historie; u archivovaného záznamu navíc ``SN34``
-   a aktualizace metadat IGSN.
-#. ``200`` s XML metadaty a hlavičkami ``X-Record-ID`` a ``Location``.
+#. Uložení hodnoty, záznam ``SN-UPD`` do historie; u archivovaného záznamu navíc ``SN34``.
+   Potvrzení změny v databázi i ve Fedoře.
+#. U archivovaného záznamu :ref:`aktualizace metadat IGSN <pas-api-igsn>` až po potvrzení změny.
+#. ``200`` s XML metadaty a hlavičkami ``X-Record-ID`` a ``Location``; při selhání IGSN navíc
+   ``X-IGSN-Status``.
 
 
 Nahrání fotografie
@@ -219,8 +221,9 @@ Nahrání fotografie
    (``get_mime_safe_soubor_name``): neodpovídá-li obsahu, nahradí se příponou z MIME typu, a vždy se
    uloží malými písmeny. MIME typ bez známé přípony nebo vyčerpané pořadové číslo vrací ``422``.
    U formátů JPEG, PNG a TIFF se **odstraní GPS metadata**.
-#. Uložení do Fedory; u archivovaného záznamu ``SN34`` a aktualizace IGSN.
-#. ``201`` s aktualizovanými XML metadaty záznamu.
+#. Uložení do Fedory; u archivovaného záznamu ``SN34``. Potvrzení změny v databázi i ve Fedoře.
+#. U archivovaného záznamu :ref:`aktualizace metadat IGSN <pas-api-igsn>` až po potvrzení změny.
+#. ``201`` s aktualizovanými XML metadaty záznamu; při selhání IGSN navíc ``X-IGSN-Status``.
 
 Limit proxy pro fotografie
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -239,6 +242,78 @@ odpověď nebo implementovat stejné odmítnutí pro daný endpoint.
 
 Spuštění a scénář HTTP testu velikosti popisuje
 :doc:`/09_testovani/integracni_testy`.
+
+
+.. _pas-api-igsn:
+
+Aktualizace IGSN po uložení změny
+---------------------------------
+
+Aktualizace evidenčního čísla i nahrání fotografie k archivovanému záznamu (SN4) mění data, která
+DataCite drží v metadatech IGSN (``alternateIdentifier`` a odkazy na soubory). Zápis do DataCite
+nejde vrátit, proto se odesílá **až po potvrzení změny v databázi i ve Fedoře**: DataCite tak nikdy
+nedostane data, která AMČR nemá, a výpadek DataCite neblokuje úpravy archivovaných záznamů (#4523).
+Selže-li commit Fedory, endpoint vrátí ``500`` a IGSN se neodesílá.
+
+Aktualizace se odesílá s kontrolou stavových kódů DataCite a její selhání **změnu nevrací** —
+endpoint vrátí běžnou úspěšnou odpověď s hlavičkou ``X-IGSN-Status``:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Výsledek aktualizace IGSN
+     - ``X-IGSN-Status``
+     - ``ApiRequestLog.igsn_status``
+     - Další postup
+   * - Úspěch, nebo záznam není ve stavu SN4
+     - (bez hlavičky)
+     - prázdné
+     - —
+   * - DataCite nedostupné, ověření existence vrátí 5xx, zápis vrátí 429 nebo 5xx
+     - ``retry-pending``
+     - ``retry_pending``
+     - Úloha ``retry_samostatny_nalez_igsn_update`` aktualizaci opakuje na pozadí.
+   * - Ostatní odpovědi zápisu 4xx (včetně ``401`` a ``403``), neočekávaná chyba, úlohu nelze
+       naplánovat
+     - ``failed``
+     - ``failed``
+     - Opakování by nepomohlo; po odstranění příčiny příkaz ``retry_failed_igsn_updates``.
+
+Klient, který hlavičku nečte, dostane běžnou úspěšnou odpověď; data jsou v AMČR i ve Fedoře uložena.
+Záznam, který v AMČR má IGSN, ale v DataCite neexistuje (``404`` při ověření existence), se bere jako
+„aktualizace není potřeba“ a hlavičku nemá.
+
+Opakování na pozadí
+~~~~~~~~~~~~~~~~~~~
+
+Úloha Celery ``cron.tasks.retry_samostatny_nalez_igsn_update`` před každým pokusem znovu načte záznam a
+nic neodešle, pokud už neexistuje, není ve stavu SN4 nebo nemá IGSN. Prodleva před *n*-tým pokusem je
+``min(IGSN_RETRY_BASE_DELAY × 2^(n−1), IGSN_RETRY_MAX_DELAY)`` a pokusů je nejvýše
+``1 + IGSN_RETRY_MAX_RETRIES``. Konstanty jsou v ``webclient/core/constants.py``:
+
+- ``IGSN_RETRY_BASE_DELAY`` = 60 s, ``IGSN_RETRY_MAX_DELAY`` = 6 h, ``IGSN_RETRY_MAX_RETRIES`` = 20;
+- výsledný rozvrh: 1 min, 2 min, 4 min, … 4 h 16 min (9. pokus), dále po 6 h; 21 pokusů během zhruba
+  80,5 h (≈ 3,4 dne).
+
+Opakuje se jen po opakovatelné chybě. Po úspěchu úloha nastaví všem záznamům ``ApiRequestLog`` daného
+nálezu ve stavu ``retry_pending`` hodnotu ``updated``; skončí-li jinak (neopakovatelná chyba, vyčerpané
+pokusy, záznam aktualizaci nepotřebuje), zapíše chybu do logu s ``ident_cely`` a nastaví ``failed``.
+Pro jeden nález čeká nejvýše jedna úloha (kontrola fronty ``check_if_task_queued``); případný duplicitní
+běh nevadí, protože aktualizace vždy odesílá úplný aktuální stav záznamu.
+
+Ruční opakování
+~~~~~~~~~~~~~~~
+
+Po odstranění příčiny trvalého selhání (např. oprava přihlašovacích údajů k DataCite) příkaz
+
+::
+
+   python manage.py retry_failed_igsn_updates [--ident <ident_cely> ...] [--dry-run]
+
+najde nálezy se záznamem ``ApiRequestLog`` ve stavu ``failed``, přepne tyto záznamy na
+``retry_pending`` a pro každý nález bez prodlevy naplánuje úlohu opakování. ``--ident`` (lze zadat
+vícekrát) běh omezí na vybrané nálezy, ``--dry-run`` je jen vypíše. Jednotlivý záznam lze aktualizovat
+i ručně akcí ``update`` při zpracování PID v administraci (``pid.views.ContinuePidProcessing``).
 
 
 .. _pas-api-zamek:
@@ -396,7 +471,10 @@ Každý požadavek, který dojde do obslužné metody endpointu, zanechá zázna
   nebo ``samostatny_nalez_fotografie_upload``;
 - ``status`` — ``received``, ``processing``, ``success``, ``failure``;
 - ``user``, ``client_ip``, ``received_at``, ``finished_at``, ``filename``, ``file_size``;
-- ``ident_cely`` a vazba ``samostatny_nalez`` u úspěšných operací; ``errors`` s tělem chybové odpovědi.
+- ``ident_cely`` a vazba ``samostatny_nalez`` u úspěšných operací; ``errors`` s tělem chybové odpovědi;
+- ``igsn_status`` — výsledek :ref:`aktualizace IGSN <pas-api-igsn>` po uložení změny: prázdné (proběhla
+  nebo nebyla potřeba), ``retry_pending``, ``updated`` (opakování uspělo) nebo ``failed``. Stav požadavku
+  zůstává ``success``, protože změna je uložena; v administraci lze podle pole filtrovat.
 
 Záznamy slouží k dohledání jednotlivých operací a zároveň jako ukazatel využívání integrace na
 straně zápisu: počty operací podle cíle a výsledku. Neobsahují požadavky odmítnuté před

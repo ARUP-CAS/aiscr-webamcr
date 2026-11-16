@@ -540,3 +540,66 @@ Funkce
    Slouží jako safeguard pro background warm-up. Pokud by funkce selhala,
    je chyba zachycena a zalogována, ale nikdy se nešíří do entrypointu.
    :param func: Funkce, kterou je třeba chránit výjimkami.
+
+.. py:function:: update_samostatny_nalez_igsn(samostatny_nalez)
+
+   Odešle aktualizaci IGSN samostatného nálezu do DataCite s kontrolou stavových kódů a výsledek roztřídí.
+
+   Volá ``igsn_update(check_status=True, reload_record=True)``, takže záznam se před sestavením dat znovu načte
+   z databáze a chybové odpovědi DataCite se projeví výjimkou. Nález bez IGSN se neodesílá a vrací úspěch.
+   Opakovatelné jsou výpadky spojení (``requests.RequestException`` při zápisu, ``DoiConnectionError`` při
+   ověření existence včetně odpovědi 5xx) a odpovědi zápisu 429 a 5xx. Ostatní odpovědi zápisu (4xx včetně
+   401 a 403) opakovatelné nejsou, protože by DataCite odpověděl stejně.
+
+   :param samostatny_nalez: Archivovaný samostatný nález, jehož IGSN se má aktualizovat.
+
+   :return: Dvojice ``(výsledek, výjimka)``, kde výsledek je ``IGSN_UPDATE_SUCCESS``, ``IGSN_UPDATE_RETRYABLE``
+       nebo ``IGSN_UPDATE_NON_RETRYABLE`` a výjimka je ``None`` při úspěchu.
+
+.. py:function:: igsn_retry_delay(attempt)
+
+   Vrátí prodlevu před ``attempt``-tým pokusem o aktualizaci IGSN na pozadí.
+
+   Prodleva roste exponenciálně od ``IGSN_RETRY_BASE_DELAY`` (zdvojnásobuje se s každým pokusem) a je shora
+   omezena hodnotou ``IGSN_RETRY_MAX_DELAY``.
+
+   :param attempt: Pořadí pokusu na pozadí, počínaje 1.
+
+   :return: Prodleva v sekundách ``min(IGSN_RETRY_BASE_DELAY * 2 ** (attempt - 1), IGSN_RETRY_MAX_DELAY)``.
+
+.. py:function:: _resolve_pending_igsn_log_entries(samostatny_nalez_pk, igsn_status)
+
+   Nastaví výsledek aktualizace IGSN všem záznamům ``ApiRequestLog`` nálezu, které na opakování čekají.
+
+   :param samostatny_nalez_pk: Primární klíč samostatného nálezu.
+   :param igsn_status: Nový stav ``API_REQUEST_LOG_IGSN_STATUS_UPDATED`` nebo ``API_REQUEST_LOG_IGSN_STATUS_FAILED``.
+
+   :return: Počet aktualizovaných záznamů logu.
+
+.. py:function:: retry_samostatny_nalez_igsn_update(self, class_name, samostatny_nalez_pk)
+
+   Opakuje na pozadí aktualizaci IGSN samostatného nálezu, která v PAS API selhala opakovatelnou chybou.
+
+   Před každým pokusem záznam znovu načte. Pokud už neexistuje, není ve stavu SN4 nebo nemá IGSN, nic neodešle.
+   Po opakovatelné chybě (viz :func:`update_samostatny_nalez_igsn`) naplánuje další pokus s prodlevou
+   :func:`igsn_retry_delay`, nejvýše ``IGSN_RETRY_MAX_RETRIES``-krát. Po úspěchu nastaví čekajícím záznamům
+   ``ApiRequestLog`` nálezu stav ``updated``; skončí-li jinak (neopakovatelná chyba, vyčerpané pokusy nebo
+   záznam, který aktualizaci nepotřebuje), zapíše chybu do logu s ``ident_cely`` a nastaví jim stav ``failed``.
+
+   Argumenty ``(class_name, pk)`` odpovídají konvenci, podle které ``check_if_task_queued`` rozpozná naplánovanou
+   úlohu téhož záznamu.
+
+   :param class_name: Název třídy záznamu; vždy ``"SamostatnyNalez"``.
+   :param samostatny_nalez_pk: Primární klíč samostatného nálezu.
+
+.. py:function:: schedule_samostatny_nalez_igsn_retry(samostatny_nalez, countdown)
+
+   Naplánuje úlohu :func:`retry_samostatny_nalez_igsn_update`, pokud pro nález už nějaká nečeká ve frontě.
+
+   Kontrola fronty je jen orientační (``check_if_task_queued``); případný duplicitní běh nevadí, protože
+   aktualizace IGSN vždy odesílá úplný aktuální stav záznamu.
+
+   :param samostatny_nalez: Samostatný nález, jehož IGSN se má aktualizovat.
+   :param countdown: Prodleva před prvním pokusem v sekundách; ``None`` znamená :func:`igsn_retry_delay` (1).
+
+   :return: ``True``, pokud byla úloha naplánována, ``False``, pokud už ve frontě čeká.
