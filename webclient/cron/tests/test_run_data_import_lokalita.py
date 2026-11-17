@@ -135,6 +135,7 @@ class RunDataImportLokalitaTest(TestCase):
         fake_redis: FakeRedis,
         save_metadata_side_effect=None,
         refresh_lock_side_effect=None,
+        record_deletion_side_effect=None,
     ):
         save_metadata_calls: list = []
 
@@ -160,6 +161,7 @@ class RunDataImportLokalitaTest(TestCase):
             "xml_generator.models.ModelWithMetadata.record_deletion",
             autospec=True,
             return_value=None,
+            side_effect=record_deletion_side_effect,
         ), patch(
             "cron.tasks.FedoraTransaction"
         ) as fedora_transaction_mock, patch(
@@ -410,3 +412,28 @@ class RunDataImportLokalitaTest(TestCase):
         self.assertEqual(int(progress_raw.decode("utf-8")), cron_tasks.IMPORT_PROGRESS_PHASE_FINISHED, status)
         history_results = json.loads(fake_redis.get(f"import_data_history_record_result_tr_{JOB_ID}"))
         self.assertEqual(history_results["0"], "cron.tasks.run_data_import.history_record_skipped")
+
+    def test_delete_does_not_fail_in_fedora_phase(self):
+        """DELETE pro ``LokalitaMapper`` nezařadí ``ident_cely`` smazaného záznamu mezi cíle Fedory.
+
+        Signál mazání volá ``save_metadata`` mazaného záznamu, které pod ``FedoraDeletionOnlyTransaction``
+        jen přidá jeho ``ident_cely`` do ``updated_ident_cely``. Fáze Fedory po commitu ho nesmí načítat,
+        jinak skončí ``Http404`` a import selže (issue #391, F44).
+        """
+        self._create_existing_lokalita()
+        delete_payload = {"__file_name": FILE_KEY, "ident_cely": LOK_IDENT}
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE, payload=delete_payload)
+
+        def queue_own_ident(record, *args, **kwargs):
+            # Stejně jako skutečné record_deletion → save_record_deletion_record → save_metadata.
+            record.active_transaction.updated_ident_cely.add(record.ident_cely)
+
+        self._run_import(fake_redis, record_deletion_side_effect=queue_own_ident)
+
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
+        status = status_raw.decode("utf-8") if isinstance(status_raw, bytes) else status_raw
+        progress_raw = fake_redis.get(f"import_data_progress_{JOB_ID}")
+        self.assertIsNotNone(progress_raw)
+        self.assertEqual(int(progress_raw.decode("utf-8")), cron_tasks.IMPORT_PROGRESS_PHASE_FINISHED, status)
+        fedora_targets = json.loads(fake_redis.get(f"import_fedora_target_results_tr_{JOB_ID}") or "[]")
+        self.assertNotIn(LOK_IDENT, [target["ident_cely"] for target in fedora_targets])
