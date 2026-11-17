@@ -106,6 +106,9 @@ Třídy
 
       Provádí operaci record ident change.
 
+      Pod ``DryRunFedoraTransaction`` (datová fáze importu) u záznamu bez původního identifikátoru jen zařadí nový
+      ``ident_cely`` do ``updated_ident_cely`` transakce; zápis do Fedory proběhne ve fázi Fedory.
+
       :param old_ident_cely: Identifikátor ``old_ident_cely`` používaný pro dohledání cílového záznamu.
       :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``debug()``, ``isinstance()``, pracuje se s atributy ``uid``, ``post_commit_tasks``, ovlivňuje větvení podmínek.
       :param new_ident_cely: Identifikátor ``new_ident_cely`` používaný pro dohledání cílového záznamu.
