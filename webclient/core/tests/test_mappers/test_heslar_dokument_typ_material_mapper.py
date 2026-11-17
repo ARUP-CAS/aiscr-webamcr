@@ -2,6 +2,7 @@ from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
     HeslarDokumentTypMaterialMapper,
     ImportDataError,
+    ImportDataIncorrectPrimaryKeyFormatError,
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
@@ -242,3 +243,49 @@ class HeslarDokumentTypMaterialMapperCheckRequiredFieldsTest(TestCase):
         mapper = HeslarDokumentTypMaterialMapper(row)
         with self.assertRaises(ImportDataError):
             mapper.check_required_fields(INSERT)
+
+
+class HeslarDokumentTypMaterialMapperPrefixedPrimaryKeyTest(TestCase):
+    """Testy prefixovaného primárního klíče ``hdtm-<číslo>`` v řádku uloženém pro datovou fázi (issue #391, F9).
+
+    Validace staví mapper z řádku CSV, datová fáze z řádku serializovaného přes ``map(serialize=True,
+    include_primary_key=True)``. Klíč musí po serializaci zůstat stejný jako při validaci.
+    """
+
+    def setUp(self):
+        """Vytvoří existující vazbu typu a materiálu dokumentu pro UPDATE a DELETE."""
+        self.heslar_typ, self.heslar_material = _create_fixtures()
+        self.vazba = HeslarDokumentTypMaterial.objects.create(
+            dokument_typ=self.heslar_typ,
+            dokument_material=self.heslar_material,
+        )
+
+    def _staged_mapper(self, row, performed_action):
+        """Vrátí mapper sestavený z řádku tak, jak ho validace uloží pro datovou fázi."""
+        serialized = HeslarDokumentTypMaterialMapper(row).map(
+            performed_action, serialize=True, include_primary_key=True
+        )
+        return HeslarDokumentTypMaterialMapper(serialized), serialized
+
+    def test_serialized_primary_key_keeps_positive_number(self):
+        """Serializace ``hdtm-769`` uloží klíč 769, ne -769."""
+        _, serialized = self._staged_mapper({"id": "hdtm-769"}, DELETE)
+        self.assertEqual(serialized["id"], 769)
+
+    def test_update_from_staged_row_finds_existing_record(self):
+        """UPDATE z uloženého řádku načte existující záznam."""
+        row = {"id": f"hdtm-{self.vazba.pk}", **VALID_ROW}
+        mapper, _ = self._staged_mapper(row, UPDATE)
+        records = mapper.create_records(UPDATE)
+        self.assertEqual(records[0].pk, self.vazba.pk)
+
+    def test_delete_from_staged_row_finds_existing_record(self):
+        """DELETE z uloženého řádku načte existující záznam."""
+        mapper, _ = self._staged_mapper({"id": f"hdtm-{self.vazba.pk}"}, DELETE)
+        records = mapper.create_records(DELETE)
+        self.assertEqual(records[0].pk, self.vazba.pk)
+
+    def test_wrong_prefix_raises_format_error(self):
+        """Klíč s cizím prefixem vyvolá ImportDataIncorrectPrimaryKeyFormatError."""
+        with self.assertRaises(ImportDataIncorrectPrimaryKeyFormatError):
+            HeslarDokumentTypMaterialMapper({"id": "hier-769"}).map(DELETE, serialize=True, include_primary_key=True)

@@ -522,6 +522,30 @@ Třídy
       :raises ImportDataError: Vyvolá se při splnění podmínky ``value is not None and value < 0``.
 
 
+.. py:class:: PrefixedPrimaryKeyImportField
+
+   Importní pole pro číselný primární klíč ve tvaru ``<prefix>-<číslo>`` (např. ``hdtm-769``).
+
+   Text parsuje stejně jako ``ImportModelMapper._parse_primary_key`` při validaci, takže řádek uložený pro datovou
+   fázi nese tentýž klíč. Obecný ``IntegerImportField`` by z ``hdtm-769`` udělal ``-769``.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje pole pro daný prefix klíče.
+
+      :param prefix: Prefix primárního klíče mapperu, např. ``hdtm``.
+
+   .. py:method:: _process_value()
+
+      Převede klíč ``<prefix>-<číslo>`` na číslo; číselnou hodnotu (už převedený klíč) zpracuje jako celé číslo.
+
+      :param value: Hodnota primárního klíče z importního souboru nebo z uloženého řádku.
+      :return: Číselná hodnota primárního klíče, nebo ``None`` pro prázdnou hodnotu.
+      :raises ImportDataIncorrectPrimaryKeyFormatError: Pokud text neodpovídá tvaru ``<prefix>-<číslo>``.
+
+
 .. py:class:: DecimalImportField
 
    Importní pole pro desetinná čísla (float).

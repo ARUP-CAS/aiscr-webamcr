@@ -892,6 +892,41 @@ class PositiveIntegerImportField(IntegerImportField):
         return value
 
 
+class PrefixedPrimaryKeyImportField(IntegerImportField):
+    """
+    Importní pole pro číselný primární klíč ve tvaru ``<prefix>-<číslo>`` (např. ``hdtm-769``).
+
+    Text parsuje stejně jako ``ImportModelMapper._parse_primary_key`` při validaci, takže řádek uložený pro datovou
+    fázi nese tentýž klíč. Obecný ``IntegerImportField`` by z ``hdtm-769`` udělal ``-769``.
+    """
+
+    def __init__(self, prefix):
+        """
+        Inicializuje pole pro daný prefix klíče.
+
+        :param prefix: Prefix primárního klíče mapperu, např. ``hdtm``.
+        """
+        super().__init__()
+        self.prefix = prefix
+
+    def _process_value(self, value) -> int | None:
+        """
+        Převede klíč ``<prefix>-<číslo>`` na číslo; číselnou hodnotu (už převedený klíč) zpracuje jako celé číslo.
+
+        :param value: Hodnota primárního klíče z importního souboru nebo z uloženého řádku.
+        :return: Číselná hodnota primárního klíče, nebo ``None`` pro prázdnou hodnotu.
+        :raises ImportDataIncorrectPrimaryKeyFormatError: Pokud text neodpovídá tvaru ``<prefix>-<číslo>``.
+        """
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        if isinstance(value, str) and value.strip() and value.strip().lower() != "nan":
+            match = re.fullmatch(rf"{re.escape(self.prefix)}-(\d+)", value.strip())
+            if not match:
+                raise ImportDataIncorrectPrimaryKeyFormatError(value)
+            return int(match.group(1))
+        return super()._process_value(value)
+
+
 class DecimalImportField(BaseImportField):
     """Importní pole pro desetinná čísla (float)."""
 
@@ -1647,7 +1682,10 @@ class ImportModelMapper(ABC):
             field_mapping[item] = cls.map_field(item)
         if include_primary_key:
             if isinstance(cls.primary_key, str) and cls.primary_key not in field_mapping:
-                field_mapping[cls.primary_key] = cls.map_field(cls.primary_key)
+                if isinstance(cls.primary_key_prefix, str):
+                    field_mapping[cls.primary_key] = PrefixedPrimaryKeyImportField(cls.primary_key_prefix)
+                else:
+                    field_mapping[cls.primary_key] = cls.map_field(cls.primary_key)
             elif isinstance(cls.primary_key, tuple):
                 for primary_key in cls.primary_key:
                     if primary_key not in field_mapping:
