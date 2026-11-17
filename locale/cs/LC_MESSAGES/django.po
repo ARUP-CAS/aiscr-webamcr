@@ -2961,6 +2961,14 @@ msgstr ""
 " databázi neexistuje a v importním souboru je uveden až později. Uveďte "
 "záznam {parent} v souboru před záznamem {child}."
 
+#: core/import_data_mappers.py
+msgid "core_admin.ImportDataOrganizationCycleError.message"
+msgstr "V hierarchii organizací je cyklus přes pole součást: {organizations}."
+
+#: heslar/forms.py
+msgid "heslar.forms.OrganizaceAdminForm.clean_soucast.invalid"
+msgstr "Organizace nemůže být součástí sama sebe ani některé ze svých podřízených organizací."
+
 #: core/import_data_mappers.py:835 core/import_data_mappers.py:847
 msgid "core_admin.ImportDataError.message.invalid_integer_value"
 msgstr "Neplatná celočíselná hodnota"
@@ -17653,3 +17661,7 @@ msgid "vypis.templates.vypis_list.error.500"
 msgstr ""
 "Záznam se nepodařilo vypsat z důvodu chyby serveru. V případě opakujících se"
 " problémů kontaktujte správce systému."
+
+#: heslar/admin.py
+msgid "heslar.admin.OrganizaceAdmin.import_blocks_changes"
+msgstr "Během importu nelze přidávat, měnit ani mazat organizace. Pokud nelze ověřit stav importu, zkuste to později."
