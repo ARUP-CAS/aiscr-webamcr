@@ -388,3 +388,25 @@ class RunDataImportLokalitaTest(TestCase):
             ArcheologickyZaznam.objects.filter(pk=az.pk).exists(),
             "DELETE musí smazat záznam ArcheologickyZaznam.",
         )
+
+    def test_delete_does_not_fail_in_history_phase(self):
+        """DELETE pro ``LokalitaMapper`` nezaregistruje smazaný ArcheologickyZaznam jako cíl historie.
+
+        Lokalita vrací jako cíl historie nadřazený ArcheologickyZaznam, který týž řádek smaže.
+        Fáze historie po commitu ho proto nesmí načítat, jinak import skončí chybou
+        a fáze Fedory se neprovede (issue #391, F42).
+        """
+        self._create_existing_lokalita()
+        delete_payload = {"__file_name": FILE_KEY, "ident_cely": LOK_IDENT}
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE, payload=delete_payload)
+
+        self._run_import(fake_redis)
+
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
+        status = status_raw.decode("utf-8") if isinstance(status_raw, bytes) else status_raw
+        self.assertNotIn("failed_during_history", status or "")
+        progress_raw = fake_redis.get(f"import_data_progress_{JOB_ID}")
+        self.assertIsNotNone(progress_raw)
+        self.assertEqual(int(progress_raw.decode("utf-8")), cron_tasks.IMPORT_PROGRESS_PHASE_FINISHED, status)
+        history_results = json.loads(fake_redis.get(f"import_data_history_record_result_tr_{JOB_ID}"))
+        self.assertEqual(history_results["0"], "cron.tasks.run_data_import.history_record_skipped")

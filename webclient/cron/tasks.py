@@ -1863,6 +1863,8 @@ def run_data_import(job_id, user_id, lock_token):
         fedora_update_targets_dict: dict = {}
         fedora_update_targets_record_ids_dict = defaultdict(set)
         updated_history_dict = defaultdict(lambda: {"files": set(), "record_ids": set()})
+        # (class, pk) of records deleted by this import; they must not be history targets.
+        deleted_record_keys: set = set()
         import_fedora_result = defaultdict(list)
         # One entry per planned deduplicated Fedora target (not per import record) — including
         # targets that remain unattempted after a failure or stop.
@@ -2456,6 +2458,7 @@ def run_data_import(job_id, user_id, lock_token):
                                     history_target = mapper_class.get_record_history(record)
                                     if history_target is not None and history_target is not record:
                                         add_updated_history(mapper_class, history_target, record_id)
+                                    deleted_record_keys.add((record.__class__, record.pk))
                                     record.active_transaction = fedora_transaction
                                     record.delete()
                         # Defer the real commit until the database transaction has committed
@@ -2526,6 +2529,7 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                         fedora_update_targets_dict = {}
                         updated_history_dict = defaultdict(lambda: {"files": set(), "record_ids": set()})
+                        deleted_record_keys.clear()
                         pending_fedora_update.clear()
                         pending_history_update.clear()
                         failed = True
@@ -2665,6 +2669,7 @@ def run_data_import(job_id, user_id, lock_token):
             failed = True
             fedora_update_targets_dict = {}
             updated_history_dict = defaultdict(lambda: {"files": set(), "record_ids": set()})
+            deleted_record_keys.clear()
             fedora_target_items = []
             fedora_target_results = []
             redis_connector.set(job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results))
@@ -2702,6 +2707,10 @@ def run_data_import(job_id, user_id, lock_token):
                     redis_connector.lset(job_key("import_data_progress_details_tr"), index, rollback_marker)
 
         HISTORY_REDIS_UPDATE_INTERVAL = 10
+        # A record deleted by this import (in the same row or a later one) no longer exists, so an
+        # import history entry cannot be attached to it; its deletion is recorded by the delete signal.
+        for deleted_record_key in deleted_record_keys:
+            updated_history_dict.pop(deleted_record_key, None)
         history_total = len(updated_history_dict)
         redis_connector.set(job_key("import_data_history_total"), history_total, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(job_key("import_data_history_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
