@@ -394,7 +394,7 @@ sortedcontainers==2.4.0
     # via
     #   -r requirements-test.txt
     #   trio
-soupsieve==4.1.1
+soupsieve==4.1.2
     # via
     #   -r requirements-test.txt
     #   beautifulsoup4
@@ -451,7 +451,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.15.8
+virtualenv==21.15.9
     # via pre-commit
 wcwidth==0.9.4
     # via

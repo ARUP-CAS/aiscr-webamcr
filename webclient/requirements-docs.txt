@@ -329,7 +329,7 @@ simplejson==4.3.0
     # via -r requirements.txt
 snowballstemmer==3.1.1
     # via sphinx
-soupsieve==4.1.1
+soupsieve==4.1.2
     # via
     #   -r requirements.txt
     #   beautifulsoup4

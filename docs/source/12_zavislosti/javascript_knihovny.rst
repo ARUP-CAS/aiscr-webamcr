@@ -15,7 +15,7 @@ Knihovny instalované pomocí Node.js
      - Licence
      - Odkaz
    * - bootstrap
-     - 5.3.8
+     - 5.3.9
      - MIT
      - https://getbootstrap.com/
    * - bootstrap-datepicker
