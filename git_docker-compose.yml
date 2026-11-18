@@ -175,7 +175,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.5.5
+    image: docker.elastic.co/logstash/logstash:9.5.6
     # Image Logstashe neumí *_FILE proměnné; heslo pro logstash.conf (${ES_PASSWORD}) se načte ze secretu.
     entrypoint:
       - bash
@@ -193,7 +193,7 @@ services:
       - logstash_elastic_pass
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.6
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
@@ -216,7 +216,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.5.5
+    image: docker.elastic.co/kibana/kibana:9.5.6
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
