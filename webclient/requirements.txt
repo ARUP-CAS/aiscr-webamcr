@@ -237,7 +237,7 @@ requests==2.34.2
     #   django-rosetta
 rjsmin==1.3.0
     # via django-compressor
-simplejson==4.2.0
+simplejson==4.3.0
     # via -r requirements.in
 soupsieve==4.1.1
     # via beautifulsoup4
