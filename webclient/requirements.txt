@@ -116,7 +116,7 @@ django-recaptcha==4.1.0
     # via -r requirements.in
 django-registration==5.2.1
     # via -r requirements.in
-django-rosetta==0.10.3
+django-rosetta==0.10.4
     # via -r requirements.in
 django-tables2==3.0.1
     # via
