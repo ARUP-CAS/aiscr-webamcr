@@ -215,7 +215,7 @@ python-logstash==0.4.8
     # via -r requirements.in
 python-magic==0.4.27
     # via -r requirements.in
-pytz==2026.5
+pytz==2026.6
     # via -r requirements.in
 pyyaml==6.0.3
     # via tablib

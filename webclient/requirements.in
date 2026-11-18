@@ -48,7 +48,7 @@ uWSGI==2.0.31
 requests==2.34.2
 httpx==0.28.1
 polib==1.2.0
-pytz==2026.5
+pytz==2026.6
 python-dateutil==3.0.0
 rdflib==7.6.0
 bleach==6.4.0
