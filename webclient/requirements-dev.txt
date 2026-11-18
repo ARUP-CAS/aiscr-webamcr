@@ -188,7 +188,7 @@ et-xmlfile==2.0.0
     # via
     #   -r requirements-test.txt
     #   openpyxl
-filelock==4.2.10
+filelock==4.2.12
     # via
     #   python-discovery
     #   virtualenv
@@ -242,7 +242,7 @@ multivolumefile==0.2.3
     #   py7zr
 nodeenv==1.12.0
     # via pre-commit
-numpy==2.5.4
+numpy==2.5.5
     # via
     #   -r requirements-test.txt
     #   pandas
@@ -276,7 +276,7 @@ pillow==13.0.0
     #   reportlab
 pip-tools==7.6.2
     # via -r requirements-dev.in
-platformdirs==4.14.5
+platformdirs==4.14.7
     # via virtualenv
 polib==1.2.0
     # via
@@ -345,7 +345,7 @@ python-dateutil==4.0.0
     #   celery
     #   freezegun
     #   pandas
-python-discovery==1.9.5
+python-discovery==1.9.6
     # via virtualenv
 python-logstash==0.4.8
     # via -r requirements-test.txt
@@ -394,7 +394,7 @@ sortedcontainers==2.4.0
     # via
     #   -r requirements-test.txt
     #   trio
-soupsieve==4.0.1
+soupsieve==4.1.1
     # via
     #   -r requirements-test.txt
     #   beautifulsoup4
@@ -407,11 +407,11 @@ tablib==3.10.0
     # via -r requirements-test.txt
 tabulate==0.10.0
     # via -r requirements-test.txt
-texttable==1.7.2
+texttable==1.7.3
     # via
     #   -r requirements-test.txt
     #   py7zr
-tornado==6.6
+tornado==6.6.1
     # via django-livereload-server
 trio==0.35.0
     # via
@@ -451,7 +451,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.15.6
+virtualenv==21.15.8
     # via pre-commit
 wcwidth==0.9.4
     # via
