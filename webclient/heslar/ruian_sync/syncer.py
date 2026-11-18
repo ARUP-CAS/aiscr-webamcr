@@ -35,7 +35,7 @@ from __future__ import annotations
 import logging
 import traceback
 from datetime import date
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from arch_z.models import ArcheologickyZaznam
 from core.repository_connector import FedoraError, FedoraTransactionCommitFailedError
@@ -545,7 +545,7 @@ _SQL_POKRYTI_SOUSEDY = """
 """
 
 
-def _pokryti_sousedy(kod: int, vyloucene_kody: List[int]) -> Optional[float]:
+def _pokryti_sousedy(kod: int, vyloucene_kody: List[int]) -> Optional[Tuple[float, float]]:
     """
     Spočítá, kolik procent území katastru pokrývají ostatní katastry v DB.
 
@@ -558,7 +558,8 @@ def _pokryti_sousedy(kod: int, vyloucene_kody: List[int]) -> Optional[float]:
 
     :param kod: Kód katastru, jehož území se posuzuje (hranice z DB).
     :param vyloucene_kody: Kódy katastrů, které se do pokrytí nezapočítají.
-    :return: Pokrytí v procentech, nebo ``None``, když ho nejde spočítat.
+    :return: Dvojice ``(pokrytí v procentech, pokrytá plocha v m²)``, nebo
+        ``None``, když pokrytí nejde spočítat.
     """
     try:
         with transaction.atomic(), connection.cursor() as cursor:
@@ -572,7 +573,7 @@ def _pokryti_sousedy(kod: int, vyloucene_kody: List[int]) -> Optional[float]:
         return None
     if not row or not row[0]:
         return None
-    return float(row[1]) / float(row[0]) * 100.0
+    return float(row[1]) / float(row[0]) * 100.0, float(row[1])
 
 
 def _vyhodnot_katastry_bez_hranice(
@@ -582,7 +583,7 @@ def _vyhodnot_katastry_bez_hranice(
     mazane_kody: Iterable[int] = (),
     odmitnute_kody: Iterable[int] = (),
     vynutit_metadata: bool = False,
-) -> List[int]:
+) -> Dict[int, float]:
     """
     Rozhodne o katastrech, které přišly ve změnovém souboru bez hranice.
 
@@ -614,12 +615,15 @@ def _vyhodnot_katastry_bez_hranice(
         neříká – zrušení smí podložit jen hranice opravdu načtená ze souboru
         nebo nezměněná.
     :param vynutit_metadata: Předá se do :func:`_upsert_katastr` u ponechaných.
-    :return: Kódy katastrů, které se mají smazat jako zrušené.
+    :return: Katastry, které se mají smazat jako zrušené: kód → plocha v m²,
+        kterou z jejich území pokrývají ostatní katastry. Tu kontrola pokrytí
+        po smazání nepočítá jako díru (viz :func:`_apply_changes`).
     """
-    zrusit: List[int] = []
+    zrusit: Dict[int, float] = {}
     vyloucene_kody = [ev.kod for ev in bez_hranice] + list(mazane_kody) + list(odmitnute_kody)
     for ev in bez_hranice:
-        pokryti = _pokryti_sousedy(ev.kod, vyloucene_kody)
+        vysledek = _pokryti_sousedy(ev.kod, vyloucene_kody)
+        pokryti, pokryta_plocha = vysledek if vysledek is not None else (None, 0.0)
         if pokryti is not None and pokryti >= _MIN_POKRYTI_KU_BEZ_HRANICE_PCT:
             logger.warning(
                 "heslar.ruian_sync.syncer._vyhodnot_katastry_bez_hranice.zrusen",
@@ -630,7 +634,7 @@ def _vyhodnot_katastry_bez_hranice(
                 f"Katastr {ev.kod} ({ev.payload.nazev}) přišel bez hranice a jeho území z {pokryti:.1f} % "
                 f"převzaly sousední katastry – bere se jako zrušený a maže se.",
             )
-            zrusit.append(ev.kod)
+            zrusit[ev.kod] = pokryta_plocha
             continue
 
         logger.warning(
@@ -776,7 +780,7 @@ def _apply_changes(
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----
     db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
     nesmazane = []
-    ke_smazani = mazane_kody + zrusene_kody
+    ke_smazani = mazane_kody + list(zrusene_kody)
     for kod in ke_smazani:
         if kod in db_katastr_codes:
             katastr = RuianKatastr.objects.select_related("okres").filter(kod=kod).first()
@@ -785,6 +789,12 @@ def _apply_changes(
                 continue
             if _delete_katastr(katastr, run):
                 run.katastr_deletes += 1
+                if kod in zrusene_kody and plocha_pred is not None:
+                    # Území zrušeného katastru převzali sousedé – často už v souboru
+                    # dřívějšího dne, kdy součet ploch kvůli překryvu stoupl. Smazání
+                    # ho teď sníží, ač díra nevzniká; od výchozího součtu se proto
+                    # odečte pokrytá část a díru ohlásí jen zbytek, který nikdo nepokrývá.
+                    plocha_pred -= zrusene_kody[kod]
             else:
                 nesmazane.append(kod)
 
@@ -1267,6 +1277,10 @@ def _upsert_katastr(
     a aktualizuje Fedoru pro Projekt/AZ/SN/NeidentAkce.
     Při změně geometrie vyprázdní FK ``pian`` (PIAN samotný zůstává).
 
+    Hranici, kterou GEOS odmítne, nepřepíše: u stávajícího katastru ponechá
+    starou a nastaví ``dto.hranice_odmitnuta``, nový katastr nezaloží
+    a zapíše varování (hranice je povinná).
+
     :param existing: Stávající záznam nebo ``None``.
     :param dto: Nová data.
     :param run: Audit záznam (countery se zde inkrementují u ``affected_*``).
@@ -1296,12 +1310,28 @@ def _upsert_katastr(
                 extra={"kod": dto.kod, "okres_kod": dto.okres_kod},
             )
             raise RuianMissingMandatoryFieldError("katastr", dto.kod, ["okres"])
+        hranice = _geos_or_none(dto.hranice_wkt)
+        if hranice is None:
+            # Hranici odmítl parser nebo GEOS (katastr, kterému hranice v souboru
+            # opravdu chybí, sem nedojde – viz _apply_changes). Sloupec je NOT NULL,
+            # uložení by shodilo celý den; nový katastr se proto nezaloží, stejně
+            # jako katastr bez hranice, a operátor dostane varování.
+            logger.warning(
+                "heslar.ruian_sync.syncer._upsert_katastr.novy_bez_hranice",
+                extra={"kod": dto.kod, "nazev": dto.nazev},
+            )
+            _append_run_warning(
+                run,
+                f"Katastr {dto.kod} ({dto.nazev}) v databázi není a jeho hranici se nepodařilo načíst – "
+                f"nezaložen (hranice je povinná).",
+            )
+            return (False, False)
         katastr = RuianKatastr(
             kod=dto.kod,
             nazev=dto.nazev,
             okres=okres,
             definicni_bod=_geos_or_none(dto.definicni_bod_wkt),
-            hranice=_geos_or_none(dto.hranice_wkt),
+            hranice=hranice,
         )
         katastr.save()
         return (True, True)

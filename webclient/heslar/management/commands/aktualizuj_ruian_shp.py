@@ -53,6 +53,15 @@ from heslar.ruian_sync.zamek import ruian_sync_lock
 logger = logging.getLogger(__name__)
 
 
+def _dnes() -> date:
+    """
+    Vrátí dnešní datum; samostatně kvůli nahrazení v testech.
+
+    :return: Dnešní datum podle místního času serveru.
+    """
+    return datetime.now().date()
+
+
 #: Po kolika dnech odstupu ÚZSZ od ``--valid-to`` se upozorní. ÚZSZ vychází
 #: řidčeji než se aktualizuje SHP, takže odstup je normální; teprve delší
 #: prodleva znamená, že katastrům vzniklým mezitím budou chybět definiční body
@@ -217,7 +226,8 @@ class Command(BaseCommand):
         :return: Datum kotvy.
         :raises CommandError: Když má zadaná hodnota neplatný formát, nebo
             když chybí a datum vygenerování SHP nejde zjistit (adresář,
-            archiv bez vrstev ``.shp``).
+            archiv bez vrstev ``.shp``), nebo když odvozená kotva leží mimo
+            retenci změnových souborů ČÚZK (``RUIAN_RETENCE_ZDROJE_DNU``).
         """
         if zadane is not None:
             # Prázdný řetězec (např. nenastavená proměnná shellu) je chyba
@@ -234,6 +244,21 @@ class Command(BaseCommand):
                 f"zadejte proto --valid-to: poslední den, jehož změny SHP jistě obsahuje."
             )
         valid_to = datum_shp - timedelta(days=1)
+        # Import až tady: cron.tasks táhne celou sadu úloh, příkaz z něj potřebuje jen konstantu.
+        from cron.tasks import RUIAN_RETENCE_ZDROJE_DNU
+
+        stari = (_dnes() - valid_to).days
+        if stari >= RUIAN_RETENCE_ZDROJE_DNU:
+            # Typicky přebalený archiv se starými časy souborů. Taková kotva leží
+            # mimo retenci změnových souborů ČÚZK – cron by dny po ní nestáhl
+            # a kotva by se už nikdy neposunula.
+            raise CommandError(
+                f"Podle časů souborů v ZIP vznikl archiv {datum_shp.isoformat()}, kotva by byla "
+                f"{valid_to.isoformat()} – před {stari} dny, mimo retenci změnových souborů ČÚZK "
+                f"({RUIAN_RETENCE_ZDROJE_DNU} dnů), takže by denní sync nenavázal. Časy souborů v archivu "
+                f"nejspíš neodpovídají obsahu: stáhněte aktuální 1.zip přímo od ČÚZK, nebo zadejte "
+                f"--valid-to ručně."
+            )
         self.stdout.write(
             self.style.WARNING(
                 f"  --valid-to nezadáno: podle časů souborů v ZIP vznikl archiv {datum_shp.isoformat()}, "
@@ -268,7 +293,9 @@ class Command(BaseCommand):
           :meth:`_datum_vygenerovani_shp`). ČÚZK generuje archiv večer,
           ale změnový soubor téhož dne v něm ještě není; dřívější
           kotva je přitom neškodná – denní sync jen znovu aplikuje den, který
-          už v datech je. U adresáře, kde datum nejde zjistit, jen upozorní;
+          už v datech je – pokud leží v retenci změnových souborů ČÚZK (odvozenou
+          kotvu mimo ni odmítne už :meth:`_urci_valid_to`). U adresáře, kde
+          datum nejde zjistit, jen upozorní;
         * ÚZSZ **novější** než ``valid_to`` je podezřelé, protože definiční
           body by pocházely z pozdějšího stavu, než jaký se deklaruje;
         * velký odstup ÚZSZ od ``valid_to`` je jen upozornění, že definiční
@@ -281,7 +308,7 @@ class Command(BaseCommand):
         :raises CommandError: Když ``--valid-to`` leží v budoucnosti nebo je
             pozdější než den před vygenerováním SHP.
         """
-        dnes = datetime.now().date()
+        dnes = _dnes()
         if valid_to > dnes:
             raise CommandError(
                 f"--valid-to {valid_to.isoformat()} leží v budoucnosti (dnes je {dnes.isoformat()}). "

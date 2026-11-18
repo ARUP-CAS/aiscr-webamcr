@@ -989,10 +989,11 @@ def _reassign_all_projekt() -> Dict[str, int]:
 def _reassign_all_az() -> Dict[str, int]:
     """
     Iteruje všechny :class:`ArcheologickyZaznam` **s alespoň jednou DJ**
-    a volá :func:`reassign_az`.
+    a volá :func:`reassign_az_se_zmenou`. Za změněný se počítá AZ i tehdy,
+    když se změnily jen ostatní katastry (M2M ``katastry``) a hlavní zůstal.
 
     AZ **bez DJ** se přeskakuje – v batch módu (bez ``exclude_kod``) by
-    ``reassign_az`` použil fallback bod = vlastní
+    přepočet použil fallback bod = vlastní
     ``hlavni_katastr.definicni_bod`` a spatial query by vždy našla
     zpět tentýž katastr (no-op). Smysl má jen AZ s DJ, kde PIAN intersect
     může vrátit jinou sadu katastrů (např. po posunu hranice).

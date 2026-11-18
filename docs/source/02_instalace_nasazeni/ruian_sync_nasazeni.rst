@@ -117,6 +117,8 @@ Příkaz kontroluje:
 * ``--valid-to`` pozdější než den před vygenerováním ``1.zip`` **odmítne**.
   U rozbaleného adresáře datum zjistit nejde (časy souborů určilo rozbalení),
   příkaz u zadané hodnoty jen upozorní a bez ní skončí chybou;
+* odvozenou kotvu starší než retence změnových souborů ČÚZK (92 dnů)
+  **odmítne** – časy souborů v archivu pak nejspíš neodpovídají obsahu;
 * ÚZSZ novější než ``--valid-to`` vypíše varování – definiční body by
   pocházely z pozdějšího stavu, než jaký se ukládá jako kotva;
 * ÚZSZ starší o víc než 60 dnů vypíše varování – katastrům vzniklým mezitím
@@ -128,7 +130,10 @@ plný sync s ``1.zip`` vygenerovaným 12. 10. 2026 a kotvou 12. 10. vynechal
 změnový soubor z 12. 10.; Luhačovice zůstaly ve starém stavu, zatímco
 sousední Ludkovice a Biskupice dostaly novou hranici o dva dny později, a
 katastry se překrývaly. Dřívější datum je naopak neškodné – cron jen zopakuje dny,
-které už v datech jsou.
+které už v datech jsou – ale **jen v rámci retence** změnových souborů ČÚZK
+(92 dnů). Dny starší cron už nestáhne, kotva se neposune a hlásí se ``ERROR``
+``mimo_retenci_zdroje``; odvozenou kotvu mimo retenci (typicky u přebaleného
+archivu se starými časy souborů) proto příkaz odmítne.
 
 Cron během plného synchu
 ------------------------
@@ -207,15 +212,26 @@ zapíše řádek „… bere se jako zrušený a maže se“.
 Když pokrytí nestačí, hranice se ponechá a ve ``warnings`` je řádek „… hranice
 ponechána, zkontrolujte“ – může jít o vadný export a je třeba ho prověřit.
 Katastr bez hranice, který v databázi není, se nezakládá (hranice je povinná).
+Totéž platí pro nový katastr, jehož hranici sync nedokázal načíst (nepodporovaný
+GML, neplatná geometrie) – ve ``warnings`` je řádek „… hranici se nepodařilo
+načíst – nezaložen“.
+
+Kontrola pokrytí po zrušení nepočítá jako díru tu část území, kterou pokrývají
+sousedé – i když nástupce dostal novou hranici v souboru dřívějšího dne.
+Ohlásí se jen zbytek, který nepokrývá žádný katastr.
 
 **Návrat na starší verzi.** Mazání neprobíhá v jedné transakci: když den
 selže až po smazání takového katastru (typicky jiný katastr nejde smazat kvůli
 navázaným záznamům, ``RuianNesmazatelnyKatastrError``), smazání zůstane
-zapsané a cron den zopakuje. Verze bez této logiky (před PR #4508) by
-při opakování smazaný katastr bez hranice zakládala znovu, selhala na povinné
-hranici a další dny by neprošly. Po takovém selhání proto den **dokončete
-touto verzí**, než se vrátíte ke starší nebo pustíte souběžně staré workery;
-jinak je nutná ruční oprava dat.
+zapsané a cron den zopakuje. Taková chyba se ale opakuje při každém pokusu,
+dokud se **neopraví záznamy, které smazání blokují** – teprve pak den doběhne.
+Verze bez této logiky (před PR #4508) by při opakování smazaný katastr bez
+hranice zakládala znovu a selhala na povinné hranici; nic by přitom nezapsala,
+jen by další dny neprošly. Po takovém selhání proto den **dokončete touto
+verzí** (po opravě blokujících záznamů), než se vrátíte ke starší nebo pustíte
+souběžně staré workery. Když už starší verze běží, stačí nasadit tuto a nechat
+cron den zopakovat; ruční oprava dat je potřeba, jen když den touto verzí
+dokončit nejde.
 
 Když plný sync selže
 --------------------
