@@ -264,7 +264,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://django-registration.readthedocs.io/
    * - django-rosetta
-     - 0.10.3
+     - 0.10.4
      - MIT License
      - https://github.com/mbi/django-rosetta
    * - django-tables2
@@ -288,7 +288,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/django-celery-results
    * - django_compressor
-     - 4.6.0
+     - 4.7.0
      - MIT
      - https://django-compressor.readthedocs.io/en/latest/
    * - djangorestframework
@@ -552,7 +552,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/setuptools
    * - simplejson
-     - 4.2.0
+     - 4.3.0
      - MIT OR AFL-2.1
      - https://github.com/simplejson/simplejson
    * - sniffio
@@ -568,7 +568,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 4.1.1
+     - 4.1.2
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.15.8
+     - 21.15.9
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
