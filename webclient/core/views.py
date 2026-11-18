@@ -99,6 +99,7 @@ from django.http import (
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
@@ -1405,6 +1406,74 @@ def get_projekt_soubor_name(projekt: Projekt, file_name):
     only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
     return re.sub("[^A-Za-z0-9_]", "_", only_ascii) + split_file[1]
     # Potřebné odstranit omezení `soubor_filepath_key`.
+
+
+@method_decorator(never_cache, name="dispatch")
+class SouboryTableView(LoginRequiredMixin, View):
+    """
+    Základ pohledů, které vrací samotnou tabulku souborů (``core/filetable.html``) pro tlačítko
+    „Načíst zbývající záznamy“.
+
+    Kontext odpovídá ``include`` tabulky v detailu záznamu, takže řádky vypadají a chovají se stejně.
+    Potomek nastaví ``model``, ``vazba_trida``, ``next_url`` a ``allow_replace`` podle detailu
+    a implementuje ``get_show()``. Přístup hlídá ``PermissionMiddleware`` podle řádku oprávnění
+    dané cesty, který odpovídá detailu záznamu.
+    """
+
+    model = None
+    vazba_trida = None
+    next_url = None
+    allow_replace = True
+
+    def get_queryset(self):
+        """
+        Vrátí queryset, ve kterém se záznam dohledá podle identifikátoru.
+
+        :return: Queryset modelu ``model``.
+        """
+        return self.model.objects.all()
+
+    def get_soubory(self, zaznam):
+        """
+        Vrátí soubory záznamu ve stejném pořadí jako v detailu.
+
+        Výchozí pořadí je ``SouborVazby.serazene_soubory()``; záznam bez vazby souborů nemá žádné soubory.
+
+        :param zaznam: Záznam, jehož soubory se zobrazují.
+        :return: Seznam nebo queryset souborů, nebo ``None``, pokud záznam vazbu souborů nemá.
+        """
+        return zaznam.soubory.serazene_soubory() if zaznam.soubory else None
+
+    def get_show(self, zaznam, user):
+        """
+        Vrátí příznaky zobrazení tabulky stejné jako v detailu záznamu.
+
+        :param zaznam: Záznam, jehož soubory se zobrazují.
+        :param user: Přihlášený uživatel.
+        :return: Slovník příznaků (``soubor_nahled``, ``soubor_stahnout`` apod.).
+        :raises NotImplementedError: Pokud potomek metodu neimplementuje.
+        """
+        raise NotImplementedError
+
+    def get(self, request, ident_cely):
+        """
+        Vykreslí tabulku souborů záznamu.
+
+        :param request: HTTP požadavek s parametrem ``SOUVISEJICI_RADKY_PARAM``; tag ``omezit_radky``
+            z něj čte, kterou část řádků vrátit.
+        :param ident_cely: Identifikátor záznamu.
+        :return: ``HttpResponse`` s HTML tabulky souborů.
+        """
+        zaznam = get_object_or_404(self.get_queryset(), ident_cely=ident_cely)
+        context = {
+            "soubory": self.get_soubory(zaznam),
+            "show": self.get_show(zaznam, request.user),
+            "ident": zaznam.ident_cely,
+            "vazba_trida": self.vazba_trida,
+            "next_url": self.next_url,
+            "allow_replace": self.allow_replace,
+        }
+        return HttpResponse(render_to_string("core/filetable.html", context, request=request))
 
 
 def check_stav_changed(request, zaznam, prefix=None):

@@ -194,6 +194,12 @@ Třídy
       :param check_status: Při ``True`` ověří stav před aktualizací v IGSN.
       :param reload_record: Určuje, zda se má záznam před aktualizací znovu načíst.
 
+   .. py:method:: get_externi_odkazy()
+
+      Vrátí externí odkazy záznamu pro tabulku externích zdrojů v jeho detailu (akce i lokality).
+
+      :return: Queryset externích odkazů seřazený podle identifikátoru zdroje a ``id`` (zdroj lze připojit vícekrát).
+
 
 .. py:class:: ArcheologickyZaznamKatastr
 

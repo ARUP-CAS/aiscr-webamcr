@@ -25,6 +25,15 @@ Třídy
 
       :return: Navázaný objekt (Projekt, Dokument nebo SamostatnyNalez).
 
+   .. py:method:: serazene_soubory()
+
+      Vrátí soubory vazby seřazené pro tabulku souborů v detailu dokumentu, 3D modelu a samostatného nálezu.
+
+      Pořadí určuje ``soubor_nazev_razeni_klic``; ``sorted`` je stabilní, takže u shodných názvů zůstává
+      pořadí podle ``Soubor.Meta.ordering`` (``nazev``, ``id``).
+
+      :return: Seznam souborů s načtenou historií a distribucemi.
+
 
 .. py:class:: Soubor
 

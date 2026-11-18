@@ -408,6 +408,20 @@ body.app-dark-theme {
         }
     }
 
+    // "Load remaining records" button below related-record tables on detail pages.
+    .app-nacist-zbyvajici-btn {
+        --bs-btn-color: #{$body-text-dark};
+        --bs-btn-border-color: #{$gray-600-dark};
+        --bs-btn-hover-color: #{$body-text-dark};
+        --bs-btn-hover-bg: #{$gray-400-dark};
+        --bs-btn-hover-border-color: #{$gray-700-dark};
+        --bs-btn-active-color: #{$body-text-dark};
+        --bs-btn-active-bg: #{$gray-500-dark};
+        --bs-btn-active-border-color: #{$gray-700-dark};
+        --bs-btn-disabled-color: #{$gray-600-dark};
+        --bs-btn-disabled-border-color: #{$gray-500-dark};
+    }
+
     // Borders
     .border,
     .border-top,

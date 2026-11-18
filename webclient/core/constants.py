@@ -213,3 +213,13 @@ API_REQUEST_LOG_STATUS_FAILURE: Final = "failure"
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT: Final = "samostatny_nalez_xml_import"
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH: Final = "samostatny_nalez_evidencni_cislo_patch"
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD: Final = "samostatny_nalez_fotografie_upload"
+
+# Related-record tables on detail pages — rows shown on first render; the rest load on demand.
+SOUVISEJICI_RADKY_LIMIT: Final = 20
+SOUVISEJICI_RADKY_PARAM: Final = "vse_radky"
+# Template context flag that disables the limit (attach/detach modals pass it via {% include ... with %}).
+SOUVISEJICI_RADKY_BEZ_LIMITU: Final = "bez_limitu"
+# Keys of the omezit_radky result; templates read them literally as omezene.radky / .klic / .zbyvajici_url.
+SOUVISEJICI_RADKY_VYSLEDEK_RADKY: Final = "radky"
+SOUVISEJICI_RADKY_VYSLEDEK_KLIC: Final = "klic"
+SOUVISEJICI_RADKY_VYSLEDEK_ZBYVAJICI_URL: Final = "zbyvajici_url"

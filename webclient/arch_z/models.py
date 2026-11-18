@@ -596,6 +596,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_update(check_status, reload_record)
 
+    def get_externi_odkazy(self):
+        """
+        Vrátí externí odkazy záznamu pro tabulku externích zdrojů v jeho detailu (akce i lokality).
+
+        :return: Queryset externích odkazů seřazený podle identifikátoru zdroje a ``id`` (zdroj lze připojit vícekrát).
+        """
+        return self.externi_odkazy.select_related("externi_zdroj").order_by("externi_zdroj__ident_cely", "id")
+
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
     """Databázový model vazeb archeologického záznamu na další katastry."""

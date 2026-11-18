@@ -6,6 +6,27 @@ Definice views.
 Třídy
 ------
 
+.. py:class:: SamostatnyNalezSouboryTableView
+
+   Vrací samotnou tabulku souborů samostatného nálezu (odpovídá ``pas/detail.html``).
+
+   **Metody:**
+
+   .. py:method:: get_queryset()
+
+      Vrátí samostatné nálezy s předem načtenou vazbou souborů.
+
+      :return: Queryset samostatných nálezů.
+
+   .. py:method:: get_show()
+
+      Vrátí příznaky zobrazení z ``get_detail_template_shows()`` samostatného nálezu.
+
+      :param zaznam: Samostatný nález, jehož soubory se zobrazují.
+      :param user: Přihlášený uživatel.
+      :return: Slovník příznaků zobrazení.
+
+
 .. py:class:: SamostatnyNalezCreateView
 
    Implementuje komponentu ``SamostatnyNalezCreateView`` v rámci aplikace.

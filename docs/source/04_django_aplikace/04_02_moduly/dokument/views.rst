@@ -6,6 +6,31 @@ Definice views.
 Třídy
 ------
 
+.. py:class:: DokumentSouboryTableView
+
+   Vrací samotnou tabulku souborů dokumentu (odpovídá ``dokument/dok/detail.html``).
+
+   ``get_detail_template_shows()`` sám rozliší 3D model podle identifikátoru, takže stejná metoda
+   slouží i potomkovi pro 3D modely.
+
+   **Metody:**
+
+   .. py:method:: get_show()
+
+      Vrátí příznaky zobrazení z ``get_detail_template_shows()`` dokumentu nebo 3D modelu.
+
+      :param zaznam: Dokument nebo 3D model, jehož soubory se zobrazují.
+      :param user: Přihlášený uživatel.
+      :return: Slovník příznaků zobrazení.
+
+
+.. py:class:: Model3DSouboryTableView
+
+   Vrací samotnou tabulku souborů 3D modelu (odpovídá ``dokument/detail_model_3D.html``).
+
+   Přístup hlídá ``PermissionMiddleware`` podle stejných pravidel jako detail 3D modelu.
+
+
 .. py:class:: Model3DListView
 
    Třida pohledu pro zobrazení listu/tabulky s modelama 3D.
