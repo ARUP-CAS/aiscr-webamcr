@@ -304,7 +304,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 4.2.10
+     - 4.2.12
      - MIT
      - https://github.com/tox-dev/filelock
    * - freezegun
@@ -364,7 +364,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.5.4
+     - 2.5.5
      - BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
      - https://numpy.org
    * - odfpy
@@ -384,7 +384,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
-     - 3.1.0
+     - 3.1.1
      - BSD-3-Clause
      - https://pandas.pydata.org
    * - pdf2image
@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.42
+     - 9.0.43
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/jazzband/pip-tools/
    * - platformdirs
-     - 4.14.5
+     - 4.14.7
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -428,7 +428,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pre-commit/pre-commit
    * - prettytable
-     - 3.18.0
+     - 3.19.0
      - BSD-3-Clause
      - https://github.com/prettytable/prettytable
    * - prometheus_client
@@ -488,11 +488,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - LGPLv3
      - https://gitlab.com/doctormo/python-crontab/
    * - python-dateutil
-     - 3.0.0
-     - Apache Software License; BSD License
+     - 4.0.0
+     - BSD-3-Clause
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.9.5
+     - 1.9.6
      - MIT
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -504,7 +504,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2026.5
+     - 2026.6
      - MIT License
      - http://pythonhosted.org/pytz
    * - rarfile
@@ -544,7 +544,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sourceforge.net/p/ruamel-yaml/code/ci/default/tree/
    * - selenium
-     - 4.51.0
+     - 4.52.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -555,10 +555,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 4.2.0
      - MIT OR AFL-2.1
      - https://github.com/simplejson/simplejson
-   * - six
-     - 1.17.0
-     - MIT License
-     - https://github.com/benjaminp/six
    * - sniffio
      - 1.3.1
      - Apache Software License; MIT License
@@ -572,7 +568,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 4.0.1
+     - 4.1.1
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -628,11 +624,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/astanin/python-tabulate
    * - texttable
-     - 1.7.2
-     - MIT License
+     - 1.7.3
+     - MIT
      - https://github.com/foutaise/texttable/
    * - tornado
-     - 6.6
+     - 6.6.1
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
@@ -668,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.15.6
+     - 21.15.8
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
