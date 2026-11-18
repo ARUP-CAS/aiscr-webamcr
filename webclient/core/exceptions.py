@@ -132,3 +132,7 @@ class StateChangedError(Exception):
         :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
+
+
+class GpsDataRemovalError(ValueError):
+    """Fotografii nelze bezpečně zbavit GPS metadat a nesmí se archivovat."""
