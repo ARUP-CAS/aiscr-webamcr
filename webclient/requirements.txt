@@ -92,7 +92,7 @@ django-celery-beat==2.9.0
     # via -r requirements.in
 django-celery-results==2.6.0
     # via -r requirements.in
-django-compressor==4.6.0
+django-compressor==4.7.0
     # via
     #   -r requirements.in
     #   django-libsass
