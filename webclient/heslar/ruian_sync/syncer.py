@@ -583,7 +583,7 @@ def _vyhodnot_katastry_bez_hranice(
     mazane_kody: Iterable[int] = (),
     odmitnute_kody: Iterable[int] = (),
     vynutit_metadata: bool = False,
-) -> Dict[int, float]:
+) -> List[int]:
     """
     Rozhodne o katastrech, které přišly ve změnovém souboru bez hranice.
 
@@ -615,15 +615,13 @@ def _vyhodnot_katastry_bez_hranice(
         neříká – zrušení smí podložit jen hranice opravdu načtená ze souboru
         nebo nezměněná.
     :param vynutit_metadata: Předá se do :func:`_upsert_katastr` u ponechaných.
-    :return: Katastry, které se mají smazat jako zrušené: kód → plocha v m²,
-        kterou z jejich území pokrývají ostatní katastry. Tu kontrola pokrytí
-        po smazání nepočítá jako díru (viz :func:`_apply_changes`).
+    :return: Kódy katastrů, které se mají smazat jako zrušené.
     """
-    zrusit: Dict[int, float] = {}
+    zrusit: List[int] = []
     vyloucene_kody = [ev.kod for ev in bez_hranice] + list(mazane_kody) + list(odmitnute_kody)
     for ev in bez_hranice:
         vysledek = _pokryti_sousedy(ev.kod, vyloucene_kody)
-        pokryti, pokryta_plocha = vysledek if vysledek is not None else (None, 0.0)
+        pokryti = None if vysledek is None else vysledek[0]
         if pokryti is not None and pokryti >= _MIN_POKRYTI_KU_BEZ_HRANICE_PCT:
             logger.warning(
                 "heslar.ruian_sync.syncer._vyhodnot_katastry_bez_hranice.zrusen",
@@ -634,7 +632,7 @@ def _vyhodnot_katastry_bez_hranice(
                 f"Katastr {ev.kod} ({ev.payload.nazev}) přišel bez hranice a jeho území z {pokryti:.1f} % "
                 f"převzaly sousední katastry – bere se jako zrušený a maže se.",
             )
-            zrusit[ev.kod] = pokryta_plocha
+            zrusit.append(ev.kod)
             continue
 
         logger.warning(
@@ -656,6 +654,33 @@ def _vyhodnot_katastry_bez_hranice(
         if changed:
             run.katastr_upserts += 1
     return zrusit
+
+
+def _prekryv_pred_zmenami(kody: List[int], vyloucene_kody: List[int]) -> Dict[int, float]:
+    """
+    Změří, kolik plochy katastrů bez hranice už před změnami pokrývají jiné katastry.
+
+    Ten překryv je ve výchozím součtu ploch (:func:`_soucet_plochy_katastru`)
+    započítaný dvakrát – typicky nástupce dostal novou hranici v souboru
+    dřívějšího dne. Když se katastr bez hranice zruší, součet klesne i o tuto
+    část, přestože díra nevzniká; :func:`_apply_changes` ji proto od výchozího
+    součtu odečte. Měří se **před** upserty: nástupce, který území převezme
+    až v tomtéž souboru, součet zvýší a zrušení ho zase sníží – ten překryv ve
+    výchozím součtu není a odečíst by se neměl.
+
+    :param kody: Katastry bez hranice, které jsou v DB (kandidáti na zrušení).
+    :param vyloucene_kody: Další katastry, které se do pokrytí nezapočítají
+        (mazané tímtéž souborem).
+    :return: Kód → plocha v m², kterou z jeho území pokrývají ostatní katastry;
+        katastr, u něhož pokrytí nejde spočítat, ve výsledku chybí.
+    """
+    vyloucene = list(kody) + list(vyloucene_kody)
+    prekryv: Dict[int, float] = {}
+    for kod in kody:
+        vysledek = _pokryti_sousedy(kod, vyloucene)
+        if vysledek is not None:
+            prekryv[kod] = vysledek[1]
+    return prekryv
 
 
 def _apply_changes(
@@ -728,6 +753,21 @@ def _apply_changes(
     # 13 000 katastrů s polygony překračoval PostgreSQL ``statement_timeout``
     # (stejný důvod jako v ``_apply_full_state``, viz komentář tamtéž).
     db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
+    mazane_kody = [ev.kod for ev in bucket[LEVEL_KATASTR] if ev.event_type == EVENT_DELETE]
+    # Pro kontrolu pokrytí na konci – viz _prekryv_pred_zmenami.
+    prekryv_pred: Dict[int, float] = {}
+    if plocha_pred is not None:
+        prekryv_pred = _prekryv_pred_zmenami(
+            [
+                ev.kod
+                for ev in bucket[LEVEL_KATASTR]
+                if ev.event_type == EVENT_UPSERT
+                and not ev.payload.hranice_wkt
+                and not ev.payload.hranice_odmitnuta
+                and ev.kod in db_katastr_codes
+            ],
+            mazane_kody,
+        )
     bez_hranice: List[RuianChangeEvent] = []
     for ev in bucket[LEVEL_KATASTR]:
         # Jen hranice, která v souboru opravdu chybí. Odmítnutou (nepodporovaný
@@ -765,7 +805,6 @@ def _apply_changes(
             if hranice_changed or (vynutit_metadata and ev.payload.hranice_wkt):
                 hranice_changed_kody.add(ev.kod)
 
-    mazane_kody = [ev.kod for ev in bucket[LEVEL_KATASTR] if ev.event_type == EVENT_DELETE]
     odmitnute_kody = [
         ev.kod for ev in bucket[LEVEL_KATASTR] if ev.event_type == EVENT_UPSERT and ev.payload.hranice_odmitnuta
     ]
@@ -780,7 +819,7 @@ def _apply_changes(
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----
     db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
     nesmazane = []
-    ke_smazani = mazane_kody + list(zrusene_kody)
+    ke_smazani = mazane_kody + zrusene_kody
     for kod in ke_smazani:
         if kod in db_katastr_codes:
             katastr = RuianKatastr.objects.select_related("okres").filter(kod=kod).first()
@@ -790,11 +829,9 @@ def _apply_changes(
             if _delete_katastr(katastr, run):
                 run.katastr_deletes += 1
                 if kod in zrusene_kody and plocha_pred is not None:
-                    # Území zrušeného katastru převzali sousedé – často už v souboru
-                    # dřívějšího dne, kdy součet ploch kvůli překryvu stoupl. Smazání
-                    # ho teď sníží, ač díra nevzniká; od výchozího součtu se proto
-                    # odečte pokrytá část a díru ohlásí jen zbytek, který nikdo nepokrývá.
-                    plocha_pred -= zrusene_kody[kod]
+                    # Překryv, který byl ve výchozím součtu navíc, smazáním zmizí,
+                    # aniž by vznikla díra – viz _prekryv_pred_zmenami.
+                    plocha_pred -= prekryv_pred.get(kod, 0.0)
             else:
                 nesmazane.append(kod)
 
@@ -1279,7 +1316,8 @@ def _upsert_katastr(
 
     Hranici, kterou GEOS odmítne, nepřepíše: u stávajícího katastru ponechá
     starou a nastaví ``dto.hranice_odmitnuta``, nový katastr nezaloží
-    a zapíše varování (hranice je povinná).
+    a zapíše varování (hranice je povinná). Chybějící definiční bod nového
+    katastru se dopočte jako centroid hranice, stejně jako v plném syncu.
 
     :param existing: Stávající záznam nebo ``None``.
     :param dto: Nová data.
@@ -1326,11 +1364,20 @@ def _upsert_katastr(
                 f"nezaložen (hranice je povinná).",
             )
             return (False, False)
+        definicni_bod = _geos_or_none(dto.definicni_bod_wkt)
+        if definicni_bod is None:
+            # Sloupec je NOT NULL. Stejně jako plný sync (ShpUzszSource._centroid_wkt)
+            # se dopočte centroid hranice – historická konvence projektu.
+            logger.warning(
+                "heslar.ruian_sync.syncer._upsert_katastr.definicni_bod_z_centroidu",
+                extra={"kod": dto.kod, "nazev": dto.nazev},
+            )
+            definicni_bod = hranice.centroid
         katastr = RuianKatastr(
             kod=dto.kod,
             nazev=dto.nazev,
             okres=okres,
-            definicni_bod=_geos_or_none(dto.definicni_bod_wkt),
+            definicni_bod=definicni_bod,
             hranice=hranice,
         )
         katastr.save()

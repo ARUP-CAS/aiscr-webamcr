@@ -211,6 +211,22 @@ class Command(BaseCommand):
         except ValueError:
             return None
 
+    def _nejpozdejsi_kotva(self, shp_path) -> Optional[date]:
+        """
+        Vrátí nejpozdější přípustnou kotvu pro SHP archiv – den před jeho vygenerováním.
+
+        ČÚZK generuje archiv večer, ale změnový soubor téhož dne v něm ještě
+        není (ověřeno na archivu z 12. 10. 2026), takže archiv jistě obsahuje
+        jen změny do předchozího dne. Jediné místo s tímto pravidlem – používá
+        ho odvození kotvy i kontrola zadané hodnoty.
+
+        :param shp_path: Cesta k ``1.zip`` nebo k adresáři s vrstvami.
+        :return: Den před vygenerováním archivu, nebo ``None``, když datum
+            vygenerování nejde zjistit (viz :meth:`_datum_vygenerovani_shp`).
+        """
+        datum_shp = self._datum_vygenerovani_shp(shp_path)
+        return None if datum_shp is None else datum_shp - timedelta(days=1)
+
     def _urci_valid_to(self, shp_path, zadane: Optional[str]) -> date:
         """
         Určí kotvu ``valid_to`` – ze zadané hodnoty, nebo z data vygenerování SHP.
@@ -237,27 +253,29 @@ class Command(BaseCommand):
             except ValueError as exc:
                 raise CommandError(f"Neplatný formát --valid-to (očekáván YYYY-MM-DD): {exc}")
 
-        datum_shp = self._datum_vygenerovani_shp(shp_path)
-        if datum_shp is None:
+        valid_to = self._nejpozdejsi_kotva(shp_path)
+        if valid_to is None:
             raise CommandError(
                 f"U {shp_path} nejde zjistit datum vygenerování SHP (není to ZIP od ČÚZK), "
                 f"zadejte proto --valid-to: poslední den, jehož změny SHP jistě obsahuje."
             )
-        valid_to = datum_shp - timedelta(days=1)
+        datum_shp = valid_to + timedelta(days=1)
         # Import až tady: cron.tasks táhne celou sadu úloh, příkaz z něj potřebuje jen konstantu.
         from cron.tasks import RUIAN_RETENCE_ZDROJE_DNU
 
-        stari = (_dnes() - valid_to).days
-        if stari >= RUIAN_RETENCE_ZDROJE_DNU:
-            # Typicky přebalený archiv se starými časy souborů. Taková kotva leží
-            # mimo retenci změnových souborů ČÚZK – cron by dny po ní nestáhl
-            # a kotva by se už nikdy neposunula.
+        # Denní sync začne dnem po kotvě; ČÚZK drží změnové soubory staré
+        # nejvýš RUIAN_RETENCE_ZDROJE_DNU dnů (92 dnů ještě HTTP 200, 93 už 404).
+        stari_prvniho_dne = (_dnes() - datum_shp).days
+        if stari_prvniho_dne > RUIAN_RETENCE_ZDROJE_DNU:
+            # Typicky přebalený archiv se starými časy souborů. První den po
+            # takové kotvě už ČÚZK nenabízí – cron by ho nestáhl a kotva by se
+            # už nikdy neposunula.
             raise CommandError(
                 f"Podle časů souborů v ZIP vznikl archiv {datum_shp.isoformat()}, kotva by byla "
-                f"{valid_to.isoformat()} – před {stari} dny, mimo retenci změnových souborů ČÚZK "
-                f"({RUIAN_RETENCE_ZDROJE_DNU} dnů), takže by denní sync nenavázal. Časy souborů v archivu "
-                f"nejspíš neodpovídají obsahu: stáhněte aktuální 1.zip přímo od ČÚZK, nebo zadejte "
-                f"--valid-to ručně."
+                f"{valid_to.isoformat()}. Změnový soubor z {datum_shp.isoformat()}, kterým by denní sync "
+                f"navázal, je starý {stari_prvniho_dne} dnů – mimo retenci ČÚZK ({RUIAN_RETENCE_ZDROJE_DNU} "
+                f"dnů), takže by denní sync nenavázal. Časy souborů v archivu nejspíš neodpovídají obsahu: "
+                f"stáhněte aktuální 1.zip přímo od ČÚZK, nebo zadejte --valid-to ručně."
             )
         self.stdout.write(
             self.style.WARNING(
@@ -315,25 +333,23 @@ class Command(BaseCommand):
                 f"Kotva by přeskočila denní změny za {(valid_to - dnes).days} dnů a nikdo by se to nedozvěděl."
             )
 
-        datum_shp = self._datum_vygenerovani_shp(shp_path)
-        if datum_shp is None:
+        nejpozdeji = self._nejpozdejsi_kotva(shp_path)
+        if nejpozdeji is None:
             self.stdout.write(
                 self.style.WARNING(
                     f"  U {shp_path} nejde zjistit datum vygenerování SHP (není to ZIP od ČÚZK). "
                     f"Ověřte, že --valid-to není pozdější než den před vygenerováním dat."
                 )
             )
-        else:
-            nejpozdeji = datum_shp - timedelta(days=1)
-            if valid_to > nejpozdeji:
-                raise CommandError(
-                    f"--valid-to {valid_to.isoformat()} je pozdější než stav SHP: archiv vygeneroval ČÚZK "
-                    f"{datum_shp.isoformat()} (podle časů souborů v ZIP), --valid-to smí být nejvýš "
-                    f"{nejpozdeji.isoformat()}. Pozdější kotva by denní sync přeskočil o změny "
-                    f"{(nejpozdeji + timedelta(days=1)).isoformat()} až {valid_to.isoformat()}. Zadejte "
-                    f"--valid-to {nejpozdeji.isoformat()} nebo dřívější; dřívější datum je bezpečné, denní sync "
-                    f"dny navíc jen znovu aplikuje."
-                )
+        elif valid_to > nejpozdeji:
+            raise CommandError(
+                f"--valid-to {valid_to.isoformat()} je pozdější než stav SHP: archiv vygeneroval ČÚZK "
+                f"{(nejpozdeji + timedelta(days=1)).isoformat()} (podle časů souborů v ZIP), --valid-to smí být nejvýš "
+                f"{nejpozdeji.isoformat()}. Pozdější kotva by denní sync přeskočil o změny "
+                f"{(nejpozdeji + timedelta(days=1)).isoformat()} až {valid_to.isoformat()}. Zadejte "
+                f"--valid-to {nejpozdeji.isoformat()} nebo dřívější; dřívější datum je bezpečné, denní sync "
+                f"dny navíc jen znovu aplikuje."
+            )
 
         datum_uzsz = self._datum_snapshotu(uzsz_path)
         if datum_uzsz is None:

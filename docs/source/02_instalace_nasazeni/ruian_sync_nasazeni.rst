@@ -233,6 +233,30 @@ souběžně staré workery. Když už starší verze běží, stačí nasadit tu
 cron den zopakovat; ruční oprava dat je potřeba, jen když den touto verzí
 dokončit nejde.
 
+**Den sloučení zpracovaný starší verzí.** Pravidlo 95 % se uplatní jen při
+zpracování dne. Den, který před nasazením této verze **úspěšně** uzavřela
+starší verze, se znovu nevyhodnotí: cron pokračuje až po kotvě a rušenému
+katastru zůstala stará hranice, která se překrývá s nástupcem (tak to vypadá
+po 4. 11. 2026 u Nových Petrovic a Okříšek, pokud den zpracovala starší verze).
+Po nasazení ověřte dotazem, které katastry z větší části překrývá jiný::
+
+    SELECT a.kod, a.nazev, b.kod AS kod_prekryva, b.nazev AS nazev_prekryva,
+           round((ST_Area(ST_Intersection(a.hranice, b.hranice)) / ST_Area(a.hranice) * 100)::numeric, 1) AS pct
+    FROM ruian_katastr a
+    JOIN ruian_katastr b ON a.id <> b.id AND ST_Intersects(a.hranice, b.hranice)
+    WHERE ST_Area(ST_Intersection(a.hranice, b.hranice)) > 0.5 * ST_Area(a.hranice)
+    ORDER BY pct DESC;
+
+V čistém stavu nevrátí nic. Nalezený katastr se dořeší jednou z cest:
+
+* **počkat na formální zánik** – ``ZaniklePrvky`` v pozdějším změnovém souboru
+  katastr smaže běžnou cestou a navázané záznamy přepočítá; do té doby
+  zůstává překryv;
+* **plný sync** z čerstvého ``1.zip`` – SHP katastr bez hranice neobsahuje,
+  takže ho plný sync smaže jako chybějící ve snapshotu. Plný sync ale
+  nevyhodnocuje pokrytí: ověřte předem, že katastr v ``KATUZE_P`` opravdu
+  chybí, jinak se nic nezmění.
+
 Když plný sync selže
 --------------------
 

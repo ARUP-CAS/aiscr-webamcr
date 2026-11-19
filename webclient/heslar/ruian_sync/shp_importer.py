@@ -531,9 +531,11 @@ class ShpUzszSource(RuianSource):
                     for member in zf.namelist():
                         member_path = Path(member)
                         if member_path.stem == basename and member_path.suffix.lower() in _SHP_PRIPONY:
-                            zf.extract(member, str(unpack_dir))
+                            # Bere se cesta, kam extract() soubor skutečně zapsal – název
+                            # v ZIP (např. ``../KATUZE_P.shp``) extract() očistí, ale
+                            # sestavený ze surového názvu by mířil mimo unpack_dir.
+                            extracted = Path(zf.extract(member, str(unpack_dir)))
                             # Pokud je v ZIPu uložen v podadresáři, přemístit do unpack_dir.
-                            extracted = unpack_dir / member
                             if extracted != unpack_dir / member_path.name:
                                 extracted.replace(unpack_dir / member_path.name)
                 logger.info(

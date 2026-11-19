@@ -351,7 +351,9 @@ def _iter_elements(path: Path, local_names: Tuple[str, ...]) -> Iterator:
         # historických přetečení v libxml2 byla dosažitelná právě jen s vypnutými
         # limity. resolve_entities=False blokuje XXE i „billion laughs".
         # Obojí je bezpečnostní nastavení, neměnit bez rozmyslu.
-        ctx = etree.iterparse(stream, events=("end",), resolve_entities=False)
+        # Komentáře a instrukce zpracování se zahazují: jejich ``tag`` není
+        # jméno prvku a ``etree.QName`` nad ním při procházení potomků spadne.
+        ctx = etree.iterparse(stream, events=("end",), resolve_entities=False, remove_comments=True, remove_pis=True)
         for _, elem in ctx:
             parent = elem.getparent()
             if parent is None:
