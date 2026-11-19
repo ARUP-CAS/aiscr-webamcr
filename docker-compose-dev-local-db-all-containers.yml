@@ -92,7 +92,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.10.2
+    image: redis:8.10.3
     ports:
       - "6379:6379"
     secrets:
@@ -100,7 +100,7 @@ services:
     command: sh -c 'redis-server /home/redis/redis.conf'
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.96.0-alpine
+    image: oliver006/redis_exporter:v1.97.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -113,7 +113,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/redis_exporter_entrypoint.sh"]
 
   grafana:
-    image: grafana/grafana-enterprise:13.2
+    image: grafana/grafana-enterprise:13.3
     restart: always
     depends_on:
       - prometheus
@@ -128,7 +128,7 @@ services:
       - "3000:3000"
 
   prometheus:
-    image: prom/prometheus:v3.15.1
+    image: prom/prometheus:v3.16.0
     volumes:
       - ./prometheus:/etc/prometheus
     ports:
@@ -191,14 +191,14 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   selenium:
-    image: selenium/standalone-chromium:155.0
+    image: selenium/standalone-chromium:156.0
     ports:
       - 4444:4444
       - 5900:5900
     shm_size: '2gb'
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.5.5
+    image: docker.elastic.co/logstash/logstash:9.5.6
     depends_on:
       - elasticsearch
     ports:
@@ -212,7 +212,7 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.6
     environment:
       - discovery.type=single-node
       - http.host=0.0.0.0
@@ -224,7 +224,7 @@ services:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.5.5
+    image: docker.elastic.co/kibana/kibana:9.5.6
     restart: always
     ports:
       - 5601:5601
