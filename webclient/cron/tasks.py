@@ -83,7 +83,7 @@ from cron.zamek import (
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
-from django.db import connection, transaction
+from django.db import OperationalError, connection, transaction
 from django.db.models import F, Min, Model, Q
 from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
@@ -442,6 +442,25 @@ FEDORA_CONFLICT_MAX_ATTEMPTS = 3
 FEDORA_CONFLICT_RETRY_DELAY_SECONDS = 5
 
 
+class _ProjectLockedError(Exception):
+    """Řádek projektu drží jiná transakce, takže ho cron v tomto běhu přeskočí."""
+
+
+#: Kód chyby PostgreSQL ``lock_not_available`` vracený při ``SELECT ... FOR UPDATE NOWAIT``.
+PG_LOCK_NOT_AVAILABLE = "55P03"
+
+
+def _is_lock_not_available(err: OperationalError) -> bool:
+    """
+    Určí, zda chyba DB znamená, že řádek zamkla jiná transakce.
+
+    :param err: Zachycená chyba ``OperationalError`` z ``select_for_update(nowait=True)``.
+    :return: ``True``, pokud původní chyba ovladače nese kód ``55P03``; jiné chyby (např. ztráta spojení) ne.
+    """
+    cause = err.__cause__
+    return getattr(cause, "pgcode", None) == PG_LOCK_NOT_AVAILABLE
+
+
 def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix):
     """
     Zpracuje jeden projekt jako jednu transakci DB a Fedory a při konfliktu Fedory ji zopakuje.
@@ -454,8 +473,11 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
     Projekt se načítá s ``select_for_update()`` až uvnitř atomic bloku a stav ověřuje ``is_pending``
     pod zámkem řádku. Souběžná změna projektu (např. vrácení zrušeného projektu) tak buď proběhne
     před ověřením, nebo počká na commit; mezi ověřením a zápisem se nemůže vklínit.
-    Zámek řádku se drží po dobu požadavků do Fedory. Je to záměrná cena za atomicitu: dávka
-    zpracovává projekty jeden po druhém a zámek se týká jen aktuálního projektu.
+    Zámek řádku se drží po dobu požadavků do Fedory (u souborů a metadat jsou limity až stovky sekund
+    na jedno volání). Je to záměrná cena za atomicitu: dávka zpracovává projekty jeden po druhém a zámek
+    se týká jen aktuálního projektu. Zámek se bere s ``nowait``: pokud řádek drží jiná transakce
+    (např. uživatel právě vrací projekt), projekt se v tomto běhu přeskočí s logem ``locked_skipped``
+    a vybere se při dalším běhu, takže cron ani požadavek uživatele na sebe nečekají do ``statement_timeout``.
 
     Snapshot projektu v Redis se po commitu obnoví znovu, protože úloha zařazená signálem při
     ``item.save()`` mohla číst ještě nepotvrzený stav.
@@ -476,7 +498,12 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
         db_committed = False
         try:
             with transaction.atomic():
-                item: Projekt = Projekt.objects.select_for_update().get(pk=projekt_pk)
+                try:
+                    item: Projekt = Projekt.objects.select_for_update(nowait=True).get(pk=projekt_pk)
+                except OperationalError as err:
+                    if _is_lock_not_available(err):
+                        raise _ProjectLockedError(projekt_pk) from err
+                    raise
                 if not is_pending(item):
                     logger.debug(f"{log_prefix}.do.project.skipped", extra={"projekt": item.ident_cely})
                     return False
@@ -497,6 +524,9 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
             _refresh_projekt_redis_snapshot(projekt_pk, log_prefix)
             fedora_transaction.mark_transaction_as_closed()
             return True
+        except _ProjectLockedError:
+            logger.warning(f"{log_prefix}.do.project.locked_skipped", extra={"projekt_pk": projekt_pk})
+            return False
         except FedoraUpdatedByAnotherTransactionError as err:
             _rollback_fedora_transaction_quietly(fedora_transaction)
             if attempt < FEDORA_CONFLICT_MAX_ATTEMPTS:
@@ -568,6 +598,11 @@ def delete_personal_data_canceled_projects():
 
     kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
 
+    Pole ``Oznamovatel.oznamovatel`` (jméno nebo označení oznamovatele) se záměrně nepřepisuje: základní údaje
+    mají zůstat k dispozici i po anonymizaci ostatních osobních údajů.
+
+    Projekt, který byl po zrušení vrácen a znovu zrušen, se zpracuje až rok po posledním zrušení.
+
     Úloha trvá hodiny, proto běží pod zámkem ``cron.zamek.cron_task_lock``; druhá instance se přeskočí.
     Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
     """
@@ -594,12 +629,18 @@ def delete_personal_data_canceled_projects():
             )
 
             def is_pending(item: Projekt) -> bool:
-                """Ověří, že projekt je stále zrušený a má oznamovatele, jehož údaje ještě nebyly odstraněny."""
-                return (
-                    item.stav == PROJEKT_STAV_ZRUSENY
-                    and item.has_oznamovatel()
-                    and deleted_string not in (item.oznamovatel.email or "")
+                """Ověří, že projekt je zrušený naposledy před více než rokem a jeho oznamovatel ještě nebyl anonymizován."""
+                if item.stav != PROJEKT_STAV_ZRUSENY or not item.has_oznamovatel():
+                    return False
+                if deleted_string in (item.oznamovatel.email or ""):
+                    return False
+                last_cancel = (
+                    item.historie.historie.filter(typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
+                    .order_by("-datum_zmeny")
+                    .values_list("datum_zmeny", flat=True)
+                    .first()
                 )
+                return last_cancel is not None and last_cancel.date() < year_ago
 
             def apply_changes(item: Projekt):
                 """Přepíše údaje oznamovatele a odstraní projektovou dokumentaci."""

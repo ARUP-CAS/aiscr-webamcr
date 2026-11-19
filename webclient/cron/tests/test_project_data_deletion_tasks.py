@@ -1,6 +1,7 @@
 """Testy plánovaných úloh mazajících osobní údaje projektů: zámek proti souběhu, atomicita a opakování při konfliktu Fedory."""
 
 import contextlib
+import datetime
 from unittest.mock import MagicMock, call, patch
 
 from core.repository_connector import FedoraUpdatedByAnotherTransactionError
@@ -12,6 +13,7 @@ from cron.zamek import (
     LOCK_DELETE_UNSUBMITED_PROJECTS,
     cron_task_lock,
 )
+from django.db import OperationalError
 from django.test import SimpleTestCase
 
 LOG_PREFIX = "core.cron.test"
@@ -119,12 +121,45 @@ class ProcessProjectInFedoraTransactionTest(SimpleTestCase):
         self.mocks["transaction"].atomic.side_effect = None
         self.mocks["transaction"].atomic.return_value = atomic
         self.mocks["projekt"].objects.select_for_update.side_effect = (
-            lambda: order.append("lock") or self.mocks["projekt"].objects
+            lambda **kwargs: order.append("lock") or self.mocks["projekt"].objects
         )
 
         self.assertTrue(self._run(is_pending=lambda item: order.append("is_pending") or True))
 
         self.assertEqual(order[:3], ["atomic_enter", "lock", "is_pending"])
+        self.mocks["projekt"].objects.select_for_update.assert_called_once_with(nowait=True)
+
+    def _lock_error(self, pgcode):
+        """Nastaví ``select_for_update`` tak, aby selhalo chybou ``OperationalError`` s daným kódem ovladače."""
+        cause = Exception("driver error")
+        cause.pgcode = pgcode
+        error = OperationalError("could not obtain lock")
+        error.__cause__ = cause
+        self.mocks["projekt"].objects.select_for_update.side_effect = error
+
+    def test_row_locked_by_another_transaction_skips_project_without_fedora_transaction(self):
+        """Řádek držený jinou transakcí se přeskočí s varováním; Fedora transakce ani zápisy nevzniknou."""
+        self._lock_error(tasks.PG_LOCK_NOT_AVAILABLE)
+        apply_changes = MagicMock()
+
+        with self.assertLogs(tasks.logger, level="WARNING") as logs:
+            self.assertFalse(self._run(apply_changes=apply_changes))
+
+        apply_changes.assert_not_called()
+        self.mocks["fedora_transaction"].assert_not_called()
+        self.mocks["sleep"].assert_not_called()
+        self.mocks["snapshot"].delay.assert_not_called()
+        self.assertTrue(any(f"{LOG_PREFIX}.do.project.locked_skipped" in line for line in logs.output))
+
+    def test_other_operational_error_on_lock_is_logged_as_error_not_as_skip(self):
+        """Jiná chyba DB při zamykání (např. ztráta spojení) se nezamění za držený zámek a zaloguje se jako chyba."""
+        self._lock_error("08006")
+
+        with self.assertLogs(tasks.logger, level="WARNING") as logs:
+            self.assertFalse(self._run())
+
+        self.assertFalse(any("locked_skipped" in line for line in logs.output))
+        self.assertTrue(any(f"{LOG_PREFIX}.do.project.error" in line for line in logs.output))
 
     def test_snapshot_is_refreshed_once_after_commit(self):
         """Po úspěšném commitu se jednou zařadí obnova Redis snapshotu projektu."""
@@ -356,15 +391,25 @@ class DeleteProjectDataTasksTest(SimpleTestCase):
         self.assertEqual([c.args[0] for c in self.process.call_args_list], [1, 2, 3])
 
     def test_personal_data_task_recognises_already_anonymised_project(self):
-        """Projekt s odstraněnými údaji nebo vrácený ze zrušení úloha nepovažuje za čekající."""
+        """Projekt s odstraněnými údaji, vrácený ze zrušení nebo nedávno znovu zrušený úloha nepovažuje za čekající."""
         with patch.object(tasks, "cron_task_lock", self._lock(True)):
             tasks.delete_personal_data_canceled_projects()
         is_pending = self.process.call_args_list[0].args[1]
 
-        pending = MagicMock()
-        pending.stav = tasks.PROJEKT_STAV_ZRUSENY
-        pending.has_oznamovatel.return_value = True
-        pending.oznamovatel.email = "a@example.org"
+        def _cancelled_project(days_ago):
+            """Vytvoří zrušený projekt s oznamovatelem; ``days_ago`` je stáří posledního zrušení (``None`` = bez záznamu)."""
+            item = MagicMock()
+            item.stav = tasks.PROJEKT_STAV_ZRUSENY
+            item.has_oznamovatel.return_value = True
+            item.oznamovatel.email = "a@example.org"
+            when = None if days_ago is None else datetime.datetime.now() - datetime.timedelta(days=days_ago)
+            last_cancel = item.historie.historie.filter.return_value.order_by.return_value.values_list.return_value
+            last_cancel.first.return_value = when
+            return item
+
+        pending = _cancelled_project(400)
+        recancelled = _cancelled_project(10)
+        without_cancel_history = _cancelled_project(None)
         restored = MagicMock()
         restored.stav = tasks.PROJEKT_STAV_ZAPSANY
         restored.has_oznamovatel.return_value = True
@@ -379,6 +424,8 @@ class DeleteProjectDataTasksTest(SimpleTestCase):
 
         self.assertTrue(is_pending(pending))
         self.assertFalse(is_pending(restored))
+        self.assertFalse(is_pending(recancelled))
+        self.assertFalse(is_pending(without_cancel_history))
         self.assertFalse(is_pending(done))
         self.assertFalse(is_pending(without_reporter))
 

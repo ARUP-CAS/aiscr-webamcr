@@ -84,6 +84,11 @@ Třídy
    konkrétní status message ``failed_lock_lost``.
 
 
+.. py:class:: _ProjectLockedError
+
+   Řádek projektu drží jiná transakce, takže ho cron v tomto běhu přeskočí.
+
+
 Funkce
 ------
 
@@ -124,6 +129,13 @@ Funkce
 
    Každý den kontrola a odeslání emailů E-N-01 a E-N-02
 
+.. py:function:: _is_lock_not_available(err)
+
+   Určí, zda chyba DB znamená, že řádek zamkla jiná transakce.
+
+   :param err: Zachycená chyba ``OperationalError`` z ``select_for_update(nowait=True)``.
+   :return: ``True``, pokud původní chyba ovladače nese kód ``55P03``; jiné chyby (např. ztráta spojení) ne.
+
 .. py:function:: _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix)
 
    Zpracuje jeden projekt jako jednu transakci DB a Fedory a při konfliktu Fedory ji zopakuje.
@@ -136,8 +148,11 @@ Funkce
    Projekt se načítá s ``select_for_update()`` až uvnitř atomic bloku a stav ověřuje ``is_pending``
    pod zámkem řádku. Souběžná změna projektu (např. vrácení zrušeného projektu) tak buď proběhne
    před ověřením, nebo počká na commit; mezi ověřením a zápisem se nemůže vklínit.
-   Zámek řádku se drží po dobu požadavků do Fedory. Je to záměrná cena za atomicitu: dávka
-   zpracovává projekty jeden po druhém a zámek se týká jen aktuálního projektu.
+   Zámek řádku se drží po dobu požadavků do Fedory (u souborů a metadat jsou limity až stovky sekund
+   na jedno volání). Je to záměrná cena za atomicitu: dávka zpracovává projekty jeden po druhém a zámek
+   se týká jen aktuálního projektu. Zámek se bere s ``nowait``: pokud řádek drží jiná transakce
+   (např. uživatel právě vrací projekt), projekt se v tomto běhu přeskočí s logem ``locked_skipped``
+   a vybere se při dalším běhu, takže cron ani požadavek uživatele na sebe nečekají do ``statement_timeout``.
 
    Snapshot projektu v Redis se po commitu obnoví znovu, protože úloha zařazená signálem při
    ``item.save()`` mohla číst ještě nepotvrzený stav.
@@ -177,6 +192,11 @@ Funkce
    Rok po zrušení projektu nahradit související údaje v tabulce oznamovatel řetězcem “RRRR-MM-DD: údaj odstraněn”,
 
    kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
+
+   Pole ``Oznamovatel.oznamovatel`` (jméno nebo označení oznamovatele) se záměrně nepřepisuje: základní údaje
+   mají zůstat k dispozici i po anonymizaci ostatních osobních údajů.
+
+   Projekt, který byl po zrušení vrácen a znovu zrušen, se zpracuje až rok po posledním zrušení.
 
    Úloha trvá hodiny, proto běží pod zámkem ``cron.zamek.cron_task_lock``; druhá instance se přeskočí.
    Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.

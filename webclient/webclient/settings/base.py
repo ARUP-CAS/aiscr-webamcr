@@ -625,6 +625,9 @@ EMAIL_HOST = get_mail_secret("EMAIL_HOST")
 EMAIL_PORT = get_mail_secret("EMAIL_PORT")
 EMAIL_HOST_USER = get_mail_secret("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = get_mail_secret("EMAIL_HOST_PASSWORD")
+# Timeout SMTP spojení v sekundách. Bez něj zaseknutý SMTP server blokuje volající kód neomezeně dlouho,
+# např. cron úlohy držící zámek proti souběhu.
+EMAIL_TIMEOUT = 60
 EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME", "http://mailtrap.io")
 # DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
