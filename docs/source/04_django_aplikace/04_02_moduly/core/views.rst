@@ -1028,12 +1028,17 @@ Funkce
 
    Ověří soubor vazba.
 
-   :param typ_vazby: Parametr ``typ_vazby`` ovlivňuje větvení podmínek.
-   :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-   :param id_zaznamu: Parametr ``id_zaznamu`` předává se do volání ``filter()``.
+   Hodnoty ``model3d`` a ``dokument`` se k oprávněním vážou odlišnými řádky matice, proto musí
+   ``typ_vazby`` odpovídat skutečnému typu dokumentu (3D model vs. běžný dokument); jinak by šlo
+   omezení přístupnosti obejít záměnou segmentu v URL.
 
-   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-   :raises ZaznamSouborNotmatching: Vyvolá se při splnění podmínky ``soubor.count() > 0``.
+   :param typ_vazby: Typ vazby z URL (``model3d``, ``dokument``, ``pas`` nebo ``projekt``).
+   :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+   :param id_zaznamu: Primární klíč souboru, který musí patřit k záznamu.
+
+   :return: ``True``, pokud soubor patří k záznamu odpovídajícího typu.
+   :raises ZaznamSouborNotmatching: Soubor nepatří k záznamu, typ dokumentu neodpovídá ``typ_vazby``
+       nebo je ``typ_vazby`` neznámá.
 
 .. py:function:: _check_import_ownership(request, job_id, redis_connector)
 

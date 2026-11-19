@@ -2354,19 +2354,29 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
     """
     Ověří soubor vazba.
 
-    :param typ_vazby: Parametr ``typ_vazby`` ovlivňuje větvení podmínek.
-    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-    :param id_zaznamu: Parametr ``id_zaznamu`` předává se do volání ``filter()``.
+    Hodnoty ``model3d`` a ``dokument`` se k oprávněním vážou odlišnými řádky matice, proto musí
+    ``typ_vazby`` odpovídat skutečnému typu dokumentu (3D model vs. běžný dokument); jinak by šlo
+    omezení přístupnosti obejít záměnou segmentu v URL.
 
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-        :raises ZaznamSouborNotmatching: Vyvolá se při splnění podmínky ``soubor.count() > 0``.
+    :param typ_vazby: Typ vazby z URL (``model3d``, ``dokument``, ``pas`` nebo ``projekt``).
+    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+    :param id_zaznamu: Primární klíč souboru, který musí patřit k záznamu.
+
+    :return: ``True``, pokud soubor patří k záznamu odpovídajícího typu.
+    :raises ZaznamSouborNotmatching: Soubor nepatří k záznamu, typ dokumentu neodpovídá ``typ_vazby``
+        nebo je ``typ_vazby`` neznámá.
     """
     if typ_vazby == "model3d" or typ_vazby == "dokument":
-        soubor = get_object_or_404(Dokument, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+        dokument = get_object_or_404(Dokument, ident_cely=ident)
+        if dokument.je_model_3d != (typ_vazby == "model3d"):
+            raise ZaznamSouborNotmatching
+        soubor = dokument.soubory.soubory.filter(pk=id_zaznamu)
     elif typ_vazby == "pas":
         soubor = get_object_or_404(SamostatnyNalez, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
     elif typ_vazby == "projekt":
         soubor = get_object_or_404(Projekt, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+    else:
+        raise ZaznamSouborNotmatching
     if soubor.count() > 0:
         return True
     else:

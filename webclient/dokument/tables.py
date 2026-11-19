@@ -268,7 +268,7 @@ class DokumentTable(SearchTable):
             thumbnail_url = reverse(
                 "core:download_thumbnail",
                 args=(
-                    "model3d",
+                    "dokument",
                     record.ident_cely,
                     soubor.id,
                 ),
@@ -276,7 +276,7 @@ class DokumentTable(SearchTable):
             thumbnail_large_url = reverse(
                 "core:download_thumbnail_large",
                 args=(
-                    "model3d",
+                    "dokument",
                     record.ident_cely,
                     soubor.id,
                 ),
