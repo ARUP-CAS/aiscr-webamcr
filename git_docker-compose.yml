@@ -50,7 +50,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.10.2
+    image: redis:8.10.3
     ports:
       - "6379:6379"
     secrets:
@@ -63,7 +63,7 @@ services:
       - redis_data:/data
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.96.0-alpine
+    image: oliver006/redis_exporter:v1.97.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -142,7 +142,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   grafana:
-    image: grafana/grafana-enterprise:13.2
+    image: grafana/grafana-enterprise:13.3
     restart: always
     depends_on:
       - prometheus
@@ -159,7 +159,7 @@ services:
       - git-reverse-proxy
 
   prometheus:
-    image: prom/prometheus:v3.15.1
+    image: prom/prometheus:v3.16.0
     volumes:
       - ./prometheus:/etc/prometheus
     networks:
@@ -175,7 +175,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.5.5
+    image: docker.elastic.co/logstash/logstash:9.5.6
     # Image Logstashe neumí *_FILE proměnné; heslo pro logstash.conf (${ES_PASSWORD}) se načte ze secretu.
     entrypoint:
       - bash
@@ -193,7 +193,7 @@ services:
       - logstash_elastic_pass
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.6
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
@@ -216,7 +216,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.5.5
+    image: docker.elastic.co/kibana/kibana:9.5.6
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -230,7 +230,7 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-chromium:155.0
+    image: selenium/standalone-chromium:156.0
     ports:
       - 4444:4444
       - 7900:7900
