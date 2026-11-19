@@ -1609,6 +1609,30 @@ class TestSekceNadDatabazi(TestCase):
             ["KOŠUMBERK -> LUŽE", "odesláno"],
         )
 
+    def test_jen_texty_se_zastavi_na_hesle_pristupnosti_bez_razeni(self):
+        """
+        Kontrola hesel přístupnosti běží i bez sekce geometrie.
+
+        Sekce ``texty`` posuzuje chráněnost podle řazení stejně jako geometrie;
+        heslo bez řazení by záznam tiše udělalo veřejným a texty by zůstaly skutečné.
+        """
+        from django.core.management import CommandError
+        from django.test import override_settings
+        from heslar.hesla import HESLAR_PRISTUPNOST
+        from heslar.models import Heslar
+        from lokalita.models import Lokalita
+
+        Heslar.objects.create(
+            ident_cely="HES-PRIST-Y", heslo="Y", heslo_en="Y", nazev_heslare_id=HESLAR_PRISTUPNOST, razeni=None
+        )
+        prikaz = _OmezenyPrikaz.vytvor({Lokalita: [self.d.lokalita.pk]})
+
+        with override_settings(TEST_ENV=True), self.assertRaisesRegex(CommandError, "nejde nahradit"):
+            prikaz.handle(**_volby_prikazu(jen="texty"))
+
+        self.assertIn("HES-PRIST-Y", prikaz.stdout.getvalue())
+        self.assertEqual(Lokalita.objects.get(pk=self.d.lokalita.pk).nazev, "Hradiště")
+
     def test_pid_nese_prefix_instance(self):
         """Uložené DOI a IGSN dostanou prefix cílové instance ze settings."""
         from django.test import override_settings
@@ -2094,7 +2118,7 @@ class TestSekceGeometrie(TestCase):
         prikaz = _OmezenyPrikaz.vytvor({})
         stav = {}
 
-        def kontrola(_volby):
+        def kontrola(_volby, geometrie=True):
             stav["kontrola"] = self._drzi_zamek_ruian()
 
         def geometrie(_volby):
@@ -2109,6 +2133,23 @@ class TestSekceGeometrie(TestCase):
             prikaz.handle(**_volby_prikazu(dry_run=True))
 
         self.assertEqual(stav, {"kontrola": True, "geometrie": True})
+        self.assertFalse(self._drzi_zamek_ruian())
+
+    def test_sekce_geometrie_projde_pod_drzenym_zamkem_ruian(self):
+        """
+        Skutečná sekce geometrie pod už drženým zámkem RÚIAN zámek získá znovu a vnější nepustí.
+
+        Na tom stojí držení zámku v ``handle()``: zámek je session-level advisory
+        lock s počítadlem, takže vnořené získání projde a vnitřní uvolnění ho
+        nechá držený. Kdyby se zámek změnil na transakční nebo per-connection,
+        tento test spadne.
+        """
+        from heslar.ruian_sync.zamek import ruian_sync_lock
+
+        with ruian_sync_lock() as ziskan:
+            self.assertTrue(ziskan)
+            self._spust()
+            self.assertTrue(self._drzi_zamek_ruian())
         self.assertFalse(self._drzi_zamek_ruian())
 
     def test_bezici_sync_ruian_zastavi_beh_pred_kontrolou(self):

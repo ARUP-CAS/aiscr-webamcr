@@ -134,6 +134,12 @@ souběhu dojít nemůže – ale znamená to, že jeden z nich bude odmítnut:
   ``lock_not_acquired``;
 * běží-li cron, ``aktualizuj_ruian_shp`` skončí ``CommandError``.
 
+Stejný zámek drží i ``anonymizace_dat`` na testovacím serveru, pokud běží se
+sekcí ``geometrie`` – a to po celou dobu běhu, ne jen během přesunu poloh.
+Denní ``sync_ruian_changes`` se mezitím přeskočí se stejným ``ERROR``
+``lock_not_acquired``; vynechaný den dožene příští běh, protože pokračuje od
+kotvy posledního úspěšného synchu (``RuianSyncRun``).
+
 Doporučený postup je ``celery_beat`` na dobu plného synchu **zastavit** a pustit
 ho až po jeho dokončení; zámek je pojistka proti omylu, ne náhrada plánování.
 

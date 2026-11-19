@@ -121,11 +121,13 @@ class Command(BaseCommand):
     spustit plný sync katastrů ještě před tímto příkazem, jinak ho předběžná
     kontrola zastaví.
 
-    Před první sekcí běží předběžná kontrola (jen když je vybraná sekce
-    ``geometrie``): najde chráněné polohy a katastry, které nepůjde nahradit
-    (PIAN v okrese bez hranice, okres bez jiného katastru, vadná zdrojová
-    geometrie bez možnosti vypnout trigger), vypíše je podle důvodu
-    a v ostrém běhu skončí chybou dřív, než cokoli zapíše. Běh, po kterém
+    Před první sekcí běží předběžná kontrola (když je vybraná sekce ``texty``
+    nebo ``geometrie``): najde heslo přístupnosti bez řazení a u sekce
+    ``geometrie`` i chráněné polohy a katastry, které nepůjde nahradit (PIAN
+    v okrese bez hranice, okres bez jiného katastru, vadná zdrojová geometrie
+    bez možnosti vypnout trigger). Nález vypíše podle důvodu a v ostrém běhu
+    skončí chybou dřív, než cokoli zapíše. Se sekcí ``geometrie`` drží příkaz
+    po celý běh zámek synchronizace RÚIAN. Běh, po kterém
     některá chráněná poloha nebo katastr zůstaly skutečné nebo došlo k chybě,
     skončí nenulovým návratovým kódem a úspěch nehlásí.
 
@@ -336,10 +338,12 @@ class Command(BaseCommand):
         self._vypis_banner(sekce, options)
 
         with contextlib.ExitStack() as zamky:
-            if "geometrie" in sekce:
+            geometrie = "geometrie" in sekce
+            if geometrie:
                 if not zamky.enter_context(ruian_sync_lock()):
                     raise CommandError(ZPRAVA_BEZI_SYNC_RUIAN)
-                self._predbezna_kontrola(options)
+            if geometrie or "texty" in sekce:
+                self._predbezna_kontrola(options, geometrie=geometrie)
 
             for nazev in sekce:
                 self.statistika[nazev] = {"zpracovano": 0, "zmeneno": 0, "preskoceno": 0, "chyb": 0}
@@ -1050,34 +1054,63 @@ class Command(BaseCommand):
         """
         return not splnuje_pravidla_databaze(pian.geom_sjtsk) or self._zdroj_wgs_je_vadny(pian)
 
-    def _predbezna_kontrola(self, options):
+    def _predbezna_kontrola(self, options, geometrie=True):
         """
-        Před prvním zápisem zjistí chráněné polohy a katastry, které nepůjde nahradit.
+        Před prvním zápisem zjistí chráněné údaje, které nepůjde nahradit.
 
-        Hledají se jen strukturální stavy, které náhoda nezmění: PIAN v okrese
-        bez hranice, katastrální PIAN v okrese bez jiného použitelného katastru,
-        PIAN s vadnou zdrojovou geometrií, když nejde vypnout trigger validace,
-        chráněný archeologický záznam nebo projekt v okrese s jediným
-        katastrem a heslo přístupnosti bez vyplněného řazení (podle řazení se
-        posuzuje chráněnost ve všech sekcích). Kontrola používá tytéž predikáty
-        jako sekce ``geometrie``.
-        Vzácná náhodná selhání zachytí až vyhodnocení výsledku běhu.
+        Vždy se kontrolují hesla přístupnosti: podle jejich řazení se posuzuje
+        chráněnost v sekcích ``texty`` i ``geometrie`` a heslo bez řazení by SQL
+        tiše vyhodnotilo jako veřejné. Když je vybraná sekce ``geometrie``,
+        přidá se kontrola poloh (:meth:`_problemy_geometrie`).
 
         V dry-runu se nález jen vypíše, v ostrém běhu příkaz skončí dřív, než
         cokoli zapíše.
 
         :param options: Pojmenované argumenty z příkazového řádku.
+        :param geometrie: Zda kontrolovat i polohy pro sekci ``geometrie``.
         :raises CommandError: Pokud kontrola něco najde a nejde o dry-run, nebo
             pokud neodpovídají souřadnicové systémy či žádný okres nemá hranici.
         """
-        from arch_z.models import ArcheologickyZaznam
         from heslar.hesla import HESLAR_PRISTUPNOST
         from heslar.models import Heslar
-        from pian.models import Pian
-        from projekt.models import Projekt
 
         self.stdout.write("")
         self.stdout.write("--- předběžná kontrola ---")
+        problemy = self._problemy_geometrie(options) if geometrie else {}
+
+        # Chráněnost se všude posuzuje podle ``razeni > PRISTUPNOST_MIN_RAZENI``, které
+        # SQL pro ``NULL`` vyhodnotí jako nepravdu. Záznam s takovým heslem by se tiše
+        # bral jako veřejný, proto se běh raději zastaví.
+        bez_razeni = list(
+            Heslar.objects.filter(nazev_heslare_id=HESLAR_PRISTUPNOST, razeni__isnull=True).values_list(
+                "ident_cely", flat=True
+            )
+        )
+        if bez_razeni:
+            problemy["pristupnost_bez_razeni"] = bez_razeni
+
+        self._vypis_predbezne_kontroly(problemy, options)
+
+    def _problemy_geometrie(self, options):
+        """
+        Zjistí chráněné polohy a katastry, které sekce ``geometrie`` nepůjde nahradit.
+
+        Hledají se jen strukturální stavy, které náhoda nezmění: PIAN v okrese
+        bez hranice, katastrální PIAN v okrese bez jiného použitelného katastru,
+        PIAN s vadnou zdrojovou geometrií, když nejde vypnout trigger validace,
+        a chráněný archeologický záznam nebo projekt v okrese s jediným
+        katastrem. Kontrola používá tytéž predikáty jako sekce ``geometrie``
+        a ukládá si chráněné PIANy, které pak sekce převezme. Vzácná náhodná
+        selhání zachytí až vyhodnocení výsledku běhu.
+
+        :param options: Pojmenované argumenty z příkazového řádku.
+        :return: Slovník ``{důvod: [ident_cely, ...]}``.
+        :raises CommandError: Pokud neodpovídají souřadnicové systémy či žádný okres nemá hranici.
+        """
+        from arch_z.models import ArcheologickyZaznam
+        from pian.models import Pian
+        from projekt.models import Projekt
+
         self._overr_srid()
         self._overr_hranice_okresu()
         self.lze_vypnout_trigger = self._lze_vypnout_trigger()
@@ -1108,17 +1141,6 @@ class Command(BaseCommand):
         identy_pianu = dict(Pian.objects.filter(pk__in=id_pianu).values_list("pk", "ident_cely"))
         problemy = {duvod: [identy_pianu[pk] for pk in seznam] for duvod, seznam in problemy.items()}
 
-        # Chráněnost se všude posuzuje podle ``razeni > PRISTUPNOST_MIN_RAZENI``, které
-        # SQL pro ``NULL`` vyhodnotí jako nepravdu. Záznam s takovým heslem by se tiše
-        # bral jako veřejný, proto se běh raději zastaví.
-        bez_razeni = list(
-            Heslar.objects.filter(nazev_heslare_id=HESLAR_PRISTUPNOST, razeni__isnull=True).values_list(
-                "ident_cely", flat=True
-            )
-        )
-        if bez_razeni:
-            problemy["pristupnost_bez_razeni"] = bez_razeni
-
         bez_katastru = self._okresy_bez_jineho_katastru()
         if bez_katastru:
             zaznamy = ArcheologickyZaznam.objects.filter(
@@ -1130,8 +1152,7 @@ class Command(BaseCommand):
             )
             if identy:
                 problemy["bez_nahodneho_katastru"] = sorted(identy)
-
-        self._vypis_predbezne_kontroly(problemy, options)
+        return problemy
 
     def _vypis_predbezne_kontroly(self, problemy, options):
         """
