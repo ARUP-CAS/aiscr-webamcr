@@ -232,9 +232,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
         )
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-    # Úspěch vrací uvnitř ``atomic`` bloku, sem se dostane jen chyba Fedory (obě výjimky výše).
-    if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-        fedora_transaction.rollback_transaction()
+    # Úspěch vrací uvnitř ``atomic`` bloku; Fedora transakci při chybě odvolá už konektor před vyhozením výjimky.
     return JsonResponse({"success": False}, status=400)
 
 
@@ -282,7 +280,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         soubor.deleted_by_user = request.user
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
-        transaction_error = False
         # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint).
         try:
             with transaction.atomic():
@@ -310,21 +307,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return JsonResponse({"success": False}, status=400)
-        if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
-            # Není jisté, zda je 404 jediná správná varianta.
-            logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            django_messages = []
-            for message in messages.get_messages(request):
-                django_messages.append(
-                    {
-                        "level": message.level,
-                        "message": message.message,
-                        "extra_tags": message.tags,
-                    }
-                )
-            fedora_transaction.rollback_transaction()
-            return JsonResponse({"messages": django_messages}, status=400)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -334,7 +316,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
-        if not transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+        if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
             transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         return JsonResponse({"redirect": response})
     else:
