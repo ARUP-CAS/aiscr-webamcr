@@ -9,8 +9,9 @@ import json
 from unittest.mock import MagicMock, patch
 
 from arch_z.models import ArcheologickyZaznam
-from core.constants import AZ_STAV_ZAPSANY, ROLE_BADATEL_ID
+from core.constants import AZ_STAV_ZAPSANY, PIAN_NEPOTVRZEN, ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
+from core.repository_connector import DryRunFedoraTransaction
 from core.tests.fake_redis import FakeRedis
 from cron import tasks as cron_tasks
 from dj.models import DokumentacniJednotka
@@ -229,6 +230,7 @@ class RunDataImportDokumentacniJednotkaTest(TestCase):
         fake_redis: FakeRedis,
         save_metadata_side_effect=None,
         refresh_lock_side_effect=None,
+        record_deletion_side_effect=None,
     ):
         save_metadata_calls: list = []
 
@@ -254,6 +256,7 @@ class RunDataImportDokumentacniJednotkaTest(TestCase):
             "xml_generator.models.ModelWithMetadata.record_deletion",
             autospec=True,
             return_value=None,
+            side_effect=record_deletion_side_effect,
         ), patch(
             "cron.tasks.FedoraTransaction"
         ) as fedora_transaction_mock, patch(
@@ -430,3 +433,41 @@ class RunDataImportDokumentacniJednotkaTest(TestCase):
         details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)
+
+    def test_update_moving_dj_off_orphaned_unconfirmed_pian_deletes_pian(self):
+        """Ověřuje, že UPDATE DJ, po kterém osiří nepotvrzený PIAN, import dokončí a PIAN smaže mimo dry-run transakci.
+
+        Dřív signál DJ mazal PIAN s ``DryRunFedoraTransaction`` a ``record_deletion`` padal na chybějícím
+        ``main_record`` (issue #391, F41).
+        """
+        orphan = Pian(
+            ident_cely="P-0001-100002",
+            stav=PIAN_NEPOTVRZEN,
+            geom_system="5514",
+            geom="SRID=4326;POINT(14.5 50.0)",
+            geom_sjtsk="SRID=5514;POINT(-700000 -1050000)",
+            typ=self.pian.typ,
+            presnost=self.pian.presnost,
+            zm10=self.pian.zm10,
+            zm50=self.pian.zm50,
+        )
+        orphan.suppress_signal = True
+        orphan.save()
+        dj = self._create_existing_dj()
+        dj.pian = orphan
+        dj.suppress_signal = True
+        dj.save()
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+        deletion_transactions: dict = {}
+
+        def capture_transaction(record, fedora_transaction=None, *args, **kwargs):
+            deletion_transactions[record.ident_cely] = fedora_transaction
+
+        self._run_import(fake_redis, record_deletion_side_effect=capture_transaction)
+
+        progress_raw = fake_redis.get(f"import_data_progress_{JOB_ID}")
+        self.assertEqual(int(progress_raw.decode("utf-8")), cron_tasks.IMPORT_PROGRESS_PHASE_FINISHED)
+        self.assertEqual(DokumentacniJednotka.objects.get(ident_cely=DJ_IDENT).pian, self.pian)
+        self.assertFalse(Pian.objects.filter(ident_cely="P-0001-100002").exists())
+        self.assertIn("P-0001-100002", deletion_transactions)
+        self.assertNotIsInstance(deletion_transactions["P-0001-100002"], DryRunFedoraTransaction)

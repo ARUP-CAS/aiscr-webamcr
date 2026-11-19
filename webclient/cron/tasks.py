@@ -2498,6 +2498,18 @@ def run_data_import(job_id, user_id, lock_token):
                             add_item_fedora_update_target(mapper_class.fedora_update_targets(record), record_id)
                         pending_fedora_update.clear()
 
+                        # Records the signals asked to delete during the row (e.g. an unconfirmed PIAN left
+                        # without DJs); deleted like DELETE rows, with the Fedora part committed after the DB.
+                        for orphan in getattr(fedora_transaction, "pending_deletions", ()):
+                            orphan_transaction = FedoraDeletionOnlyTransaction()
+                            queue_fedora_delete_commit(
+                                record_id, orphan_transaction, {"ident_cely": getattr(orphan, "ident_cely", None)}
+                            )
+                            deleted_records[(orphan.__class__, orphan.pk)] = getattr(orphan, "ident_cely", None)
+                            orphan.active_transaction = orphan_transaction
+                            orphan.skip_container_check = True
+                            orphan.delete()
+
                         add_item_fedora_update_target(fedora_transaction.updated_ident_cely, record_id)
                         logger.info("cron.tasks.run_data_import.success", extra={"index": record_id, "job_id": job_id})
                         redis_connector.rpush(job_key("import_data_progress_ids"), record_id)

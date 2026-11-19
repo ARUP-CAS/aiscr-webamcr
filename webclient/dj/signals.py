@@ -2,7 +2,7 @@ import logging
 
 from arch_z.signals import invalidate_arch_z_related_models
 from core.constants import PIAN_NEPOTVRZEN
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import DryRunFedoraTransaction, FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -90,9 +90,14 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                         "dj.signals.save_dokumentacni_jednotka.delete_initial_pian",
                         extra={"transaction": fedora_transaction.uid, "pian": initial_pian.ident_cely},
                     )
-                    initial_pian.active_transaction = fedora_transaction
-                    initial_pian.skip_container_check = True
-                    initial_pian.delete()
+                    if isinstance(fedora_transaction, DryRunFedoraTransaction):
+                        # Import: dry-run transakce nesmí zapisovat do Fedory, PIAN smaže import po zpracování
+                        # řádku ve vlastní transakci mazání.
+                        fedora_transaction.pending_deletions.append(initial_pian)
+                    else:
+                        initial_pian.active_transaction = fedora_transaction
+                        initial_pian.skip_container_check = True
+                        initial_pian.delete()
                     instance.initial_pian_id = None
         except ValueError as err:
             logger.debug(

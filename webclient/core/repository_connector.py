@@ -3103,6 +3103,9 @@ class DryRunFedoraTransaction(BaseFedoraTransaction):
         """Inicializuje instanci třídy."""
         super().__init__()
         self.updated_ident_cely: set[str] = set()
+        # Záznamy, které signály během datové fáze potřebují smazat (např. osiřelý nepotvrzený PIAN).
+        # Smaže je až import ve vlastní transakci mazání, protože dry-run transakce do Fedory nezapisuje.
+        self.pending_deletions: list = []
 
     def add_updated_ident_cely(self, ident_cely: str):
         """
