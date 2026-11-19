@@ -1,6 +1,7 @@
 import logging
 
-from django.contrib import admin
+from core.connectors import RedisConnector
+from django.contrib import admin, messages
 from django.http import StreamingHttpResponse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -19,6 +20,7 @@ from heslar.models import (
     RuianSyncRun,
 )
 from pid.views import WikiDataAutocompleteView
+from redis.exceptions import RedisError
 from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
@@ -449,6 +451,51 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     )
     readonly_fields = ("ident_cely",)
 
+    def _import_blocks_changes(self, request):
+        """Zakáže změny organizací během importu; při výpadku Redis ponechá jen čtení.
+
+        :param request: Požadavek správce, v němž se výsledek kontroly krátkodobě uchová.
+        :return: ``True``, pokud import probíhá nebo nelze jeho stav ověřit.
+        """
+        if not hasattr(request, "_organization_import_blocked"):
+            try:
+                blocked = RedisConnector.is_data_import_running(RedisConnector.get_connection())
+            except RedisError:
+                logger.exception("heslar.admin.OrganizaceAdmin.import_status_unavailable")
+                blocked = True
+            request._organization_import_blocked = blocked
+        return request._organization_import_blocked
+
+    def has_add_permission(self, request):
+        """Povolí přidání organizace jen mimo probíhající import.
+
+        :param request: Požadavek správce.
+        :return: Oprávnění správce omezené stavem importu.
+        """
+        return super().has_add_permission(request) and not self._import_blocks_changes(request)
+
+    def has_change_permission(self, request, obj=None):
+        """Povolí změnu organizace jen mimo probíhající import.
+
+        :param request: Požadavek správce.
+        :param obj: Organizace, pro kterou se oprávnění vyhodnocuje.
+        :return: Oprávnění správce omezené stavem importu.
+        """
+        return super().has_change_permission(request, obj) and not self._import_blocks_changes(request)
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        """Při importu zobrazí upozornění a organizaci ponechá pouze ke čtení.
+
+        :param request: Požadavek správce; POST stále podléhá kontrole oprávnění.
+        :param object_id: Identifikátor organizace, případně ``None`` při přidání.
+        :param form_url: Cílová URL formuláře.
+        :param extra_context: Dodatečný kontext formuláře.
+        :return: Standardní odpověď administračního formuláře.
+        """
+        if self._import_blocks_changes(request):
+            self.message_user(request, _("heslar.admin.OrganizaceAdmin.import_blocks_changes"), messages.WARNING)
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
     def has_delete_permission(self, request, obj=None):
         """
         Určí, zda delete permission.
@@ -458,6 +505,8 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
 
             :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
         """
+        if self._import_blocks_changes(request):
+            return False
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)

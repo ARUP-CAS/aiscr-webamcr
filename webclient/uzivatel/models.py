@@ -31,7 +31,7 @@ from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator
-from django.db import models
+from django.db import connection, models
 from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
@@ -209,6 +209,17 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         else:
             return self.user_str
 
+    @property
+    def organizace_podstrom_ids(self):
+        """Vrátí ID vlastní organizace a potomků; výsledek se cacheuje v instanci uživatele."""
+        cache = self.__dict__.get("_organizace_podstrom_ids")
+        generation = Organizace._subtree_cache_version
+        organization_id = self.organizace_id
+        if cache is None or cache[:2] != (generation, organization_id):
+            cache = (generation, organization_id, Organizace.get_subtree_ids(organization_id))
+            self.__dict__["_organizace_podstrom_ids"] = cache
+        return cache[2]
+
     def display_name(self, viewer=None):
         """
         Textová reprezentace uživatele pro tabulky a autocomplete pole.
@@ -248,7 +259,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             )
             # Archeologům přidej ke spolupracím s jinými archeology i jejich organizaci.
             if self.hlavni_role == archeolog_group:
-                moje_spolupracujici_organizace.append(self.organizace)
+                moje_spolupracujici_organizace.extend(self.organizace_podstrom_ids)
             return moje_spolupracujici_organizace
         elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
             # Admin a archivář standardně spolupracují se všemi organizacemi.
@@ -538,6 +549,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     IDENT_PREFIX = "ORG"
     SEQUENCE_NAME = "organizace_ident_seq"
+    _subtree_cache_version = 0
 
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
     nazev_zkraceny = models.CharField(
@@ -602,6 +614,92 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         null=True,
     )
 
+    @staticmethod
+    def find_cycles(parent_graph, roots=None):
+        """Najde cykly v grafu rodičů bez rekurze a vrátí uzavřené cesty.
+
+        :param parent_graph: Slovník uzel → rodič; chybějící rodič ukončí cestu.
+        :param roots: Výchozí uzly pro kontrolu; ``None`` znamená celý graf.
+        :return: Seznam cyklů v pořadí průchodu, s prvním uzlem zopakovaným na konci.
+        """
+        completed = set()
+        cycles = []
+        for root in parent_graph if roots is None else roots:
+            path = []
+            positions = {}
+            current = root
+            while current in parent_graph and current not in completed:
+                if current in positions:
+                    cycles.append(path[positions[current] :] + [current])
+                    break
+                positions[current] = len(path)
+                path.append(current)
+                current = parent_graph[current]
+            completed.update(path)
+        return cycles
+
+    @classmethod
+    def get_hierarchy_cycles(cls):
+        """Načte celou hierarchii a vrátí cykly označené identifikátory organizací.
+
+        :return: Uzavřené cesty cyklů; prázdný seznam pro hierarchii bez cyklů.
+        """
+        return cls.find_cycles(dict(cls.objects.values_list("ident_cely", "soucast__ident_cely")))
+
+    @classmethod
+    def get_subtree_ids(cls, root_id):
+        """
+        Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
+
+        :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
+        :return: ID kořene a bezpečně dosažitelných potomků; pro chybějící kořen prázdný seznam.
+        """
+        if root_id is None:
+            return []
+
+        table = connection.ops.quote_name(cls._meta.db_table)
+        pk_column = connection.ops.quote_name(cls._meta.pk.column)
+        parent_column = connection.ops.quote_name(cls._meta.get_field("soucast").column)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                WITH RECURSIVE organizational_subtree(id, parent_id) AS (
+                    SELECT root.{pk_column}, root.{parent_column}
+                    FROM {table} AS root
+                    WHERE root.{pk_column} = %s
+                    UNION
+                    SELECT child.{pk_column}, child.{parent_column}
+                    FROM {table} AS child
+                    JOIN organizational_subtree AS parent
+                      ON child.{parent_column} = parent.id
+                )
+                SELECT id, parent_id FROM organizational_subtree
+                """,
+                [root_id],
+            )
+            parent_graph = dict(cursor.fetchall())
+        cycles = cls.find_cycles(parent_graph)
+        if cycles:
+            logger.error("uzivatel.Organizace.get_subtree_ids.cycle", extra={"root_id": root_id, "cycles": cycles})
+            cycle_edges = {(child_id, parent_id) for cycle in cycles for child_id, parent_id in zip(cycle, cycle[1:])}
+            children_by_parent = {}
+            for child_id, parent_id in parent_graph.items():
+                if parent_id is not None and (child_id, parent_id) not in cycle_edges:
+                    children_by_parent.setdefault(parent_id, []).append(child_id)
+
+            reachable = []
+            pending = [root_id]
+            seen = set()
+            while pending:
+                current_id = pending.pop()
+                if current_id in seen:
+                    continue
+                seen.add(current_id)
+                reachable.append(current_id)
+                pending.extend(children_by_parent.get(current_id, ()))
+            return reachable
+        return list(parent_graph)
+
     def save(self, *args, **kwargs):
         """
         Uloží změny objektu.
@@ -626,6 +724,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                 )
         else:
             super().save(*args, **kwargs)
+        type(self)._subtree_cache_version += 1
 
     def __str__(self):
         """

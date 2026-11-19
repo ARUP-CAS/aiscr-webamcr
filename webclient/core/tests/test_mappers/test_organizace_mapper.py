@@ -7,10 +7,14 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
     ImportDataLimitChoicesError,
+    ImportDataOrganizationCycleError,
     OrganizaceMapper,
 )
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.utils.translation import gettext_lazy as _
+from heslar.forms import OrganizaceAdminForm
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, HeslarNazev
 from uzivatel.models import Organizace
@@ -477,7 +481,33 @@ class OrganizaceMapperCheckRequiredFieldsTest(TestCase):
 
 
 class OrganizaceMapperValidateBatchOrderingTest(TestCase):
-    """Testy pro OrganizaceMapper.validate_batch_ordering — detekce dopředných referencí v soucast."""
+    """Testy pro dopředné reference a výslednou hierarchii organizací."""
+
+    def setUp(self):
+        """Vytvoří potřebné číselníky a existující strom organizací."""
+        _, self.typ_org = _create_heslar_nazev_a_heslar("Typ organizace", "Veřejná", HESLAR_ORGTYP_IDENT)
+        _, self.pristupnost = _create_heslar_nazev_a_heslar(
+            "Přístupnost", "Veřejná přístupnost", HESLAR_PRISTUPNOST_IDENT
+        )
+        _, self.licence = _create_heslar_nazev_a_heslar("Licence", "CC BY", HESLAR_LICENCE_IDENT)
+        self.org_a = self._create_organization("ORG-CYCLE-A", "CYCLE-A")
+        self.org_b = self._create_organization("ORG-CYCLE-B", "CYCLE-B", self.org_a)
+        self.org_c = self._create_organization("ORG-CYCLE-C", "CYCLE-C", self.org_b)
+
+    def _create_organization(self, ident_cely, short_name, soucast=None):
+        organization = Organizace(
+            ident_cely=ident_cely,
+            nazev=short_name,
+            nazev_zkraceny=short_name,
+            nazev_zkraceny_en=short_name,
+            typ_organizace=self.typ_org,
+            zverejneni_pristupnost=self.pristupnost,
+            licence=self.licence,
+            soucast=soucast,
+        )
+        organization.suppress_signal = True
+        organization.save()
+        return organization
 
     def _row(self, ident_cely, soucast=None):
         """Sestaví minimální řádkový slovník s ident_cely a soucast."""
@@ -488,9 +518,29 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         OrganizaceMapper.validate_batch_ordering([])
 
     def test_no_soucast_references_passes(self):
-        """Záznamy bez soucast neprojdou žádnou kontrolou a validace projde."""
-        payloads = [self._row("ORG-000001"), self._row("ORG-000002"), self._row("ORG-000003")]
+        """Záznamy s chybějícím polem soucast projdou validací."""
+        payloads = [
+            {"ident_cely": "ORG-000001"},
+            {"ident_cely": "ORG-000002"},
+            {"ident_cely": "ORG-000003"},
+        ]
         OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_attribute_only_batch_skips_hierarchy_query(self):
+        """Dávka bez pole soucast nečte organizační graf."""
+        payloads = [{"ident_cely": "ORG-000001", "nazev": "Nový název"}]
+        with patch("core.import_data_mappers.Organizace.objects") as mock_objects:
+            OrganizaceMapper.validate_batch_ordering(payloads, UPDATE)
+        mock_objects.values_list.assert_not_called()
+
+    def test_organization_blank_identifier_normalization_is_scoped_and_preserves_nonblank_text(self):
+        """Normalizace organizací rozpozná prázdné sentinely bez úpravy platných identifikátorů."""
+        for value in (None, float("nan"), "", "   ", "  NaN ", " nOnE "):
+            with self.subTest(value=value):
+                self.assertIsNone(OrganizaceMapper._normalize_organization_identifier(value))
+        self.assertEqual(OrganizaceMapper._normalize_organization_identifier(" ORG-PARENT "), " ORG-PARENT ")
+        self.assertIsNone(OrganizaceMapper({"soucast": "  nAn "}).value_dict["soucast"])
+        self.assertNotIn("soucast", OrganizaceMapper({"ident_cely": "ORG-000001"}).value_dict)
 
     def test_soucast_none_passes(self):
         """Záznam se soucast=None neprojde kontrolou pořadí."""
@@ -501,6 +551,14 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         """Záznam se soucast=float('nan') (pandas prázdná hodnota) neprojde kontrolou pořadí."""
         payloads = [self._row("ORG-000001", soucast=float("nan")), self._row("ORG-000002")]
         OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_padded_blank_sentinels_pass_without_database_parent_lookup(self):
+        """Obalené prázdné sentinely se shodně rozpoznají jako chybějící rodič."""
+        for value in ("  ", "  NaN ", " nOnE "):
+            with self.subTest(value=value), patch("core.import_data_mappers.Organizace.objects") as mock_objects:
+                OrganizaceMapper.validate_batch_ordering([self._row("ORG-000001", soucast=value)])
+                mock_objects.filter.assert_not_called()
+                mock_objects.values_list.assert_called_once()
 
     def test_parent_before_child_in_batch_passes(self):
         """Pokud je nadřazená organizace definována dříve v CSV než podřízená, validace projde."""
@@ -536,9 +594,9 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         """Pokud soucast odkazuje na organizaci, která již existuje v DB, validace projde (i když není v CSV dříve)."""
         payloads = [self._row("ORG-CHILD", soucast="ORG-EXISTING")]
         with patch("core.import_data_mappers.Organizace.objects") as mock_objects:
-            mock_objects.filter.return_value.exists.return_value = True
+            mock_objects.filter.return_value.values_list.return_value = ["ORG-EXISTING"]
             OrganizaceMapper.validate_batch_ordering(payloads)
-        mock_objects.filter.assert_called_once_with(ident_cely="ORG-EXISTING")
+        mock_objects.filter.assert_called_once_with(ident_cely__in=["ORG-EXISTING"])
 
     def test_multiple_children_with_shared_parent_passes(self):
         """Více potomků odkazujících na jednoho předka, který je definován jako první, projde validací."""
@@ -560,3 +618,68 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
             OrganizaceMapper.validate_batch_ordering(payloads)
         self.assertEqual(ctx.exception.child_ident_cely, "ORG-CHILD")
         self.assertEqual(ctx.exception.parent_ident_cely, "ORG-MIDDLE")
+
+    def test_self_cycle_in_updated_organization_is_rejected(self):
+        """Aktualizace organizace, která se nastaví jako vlastní součást, je odmítnuta."""
+        with self.assertRaises(ImportDataOrganizationCycleError):
+            OrganizaceMapper.validate_batch_ordering([self._row(self.org_a.ident_cely, self.org_a.ident_cely)], UPDATE)
+
+    def test_cycle_between_two_updated_organizations_is_rejected_before_writes(self):
+        """Cyklus mezi dvěma aktualizovanými uzly je zjištěn před zápisem do databáze."""
+        payloads = [
+            self._row(self.org_a.ident_cely, self.org_b.ident_cely),
+            self._row(self.org_b.ident_cely, self.org_a.ident_cely),
+        ]
+        existing_relations = list(Organizace.objects.values_list("ident_cely", "soucast__ident_cely"))
+
+        with CaptureQueriesContext(connection) as queries:
+            with self.assertRaises(ImportDataOrganizationCycleError):
+                OrganizaceMapper.validate_batch_ordering(payloads, UPDATE)
+
+        self.assertEqual(
+            list(Organizace.objects.values_list("ident_cely", "soucast__ident_cely")),
+            existing_relations,
+        )
+        self.assertFalse(
+            any(query["sql"].lstrip().lower().startswith(("insert ", "update ", "delete ")) for query in queries)
+        )
+
+    def test_cycle_spanning_unchanged_database_organizations_is_rejected(self):
+        """Aktualizace se odmítne i při cyklu procházejícím nezměněné uzly z databáze."""
+        with self.assertRaises(ImportDataOrganizationCycleError):
+            OrganizaceMapper.validate_batch_ordering([self._row(self.org_a.ident_cely, self.org_c.ident_cely)], UPDATE)
+
+    def test_explicit_clearing_of_soucast_breaks_existing_cycle(self):
+        """Prázdná součást v importu aktualizace se započítá do výsledného grafu."""
+        self.org_a.soucast = self.org_c
+        self.org_a.save()
+
+        OrganizaceMapper.validate_batch_ordering([self._row(self.org_a.ident_cely, None)], UPDATE)
+
+    def test_valid_tree_with_updated_parent_passes(self):
+        """Aktualizace, která ponechá strom bez cyklu, projde."""
+        OrganizaceMapper.validate_batch_ordering([self._row(self.org_c.ident_cely, None)], UPDATE)
+
+    def test_admin_form_rejects_self_and_descendant_parent(self):
+        """Admin formulář vrací chybu přímo u pole součást pro vlastní i potomkový uzel."""
+        for parent_id in (self.org_a.pk, self.org_b.pk):
+            form = OrganizaceAdminForm(data={"soucast": parent_id}, instance=self.org_a)
+            self.assertFalse(form.is_valid())
+            self.assertIn("soucast", form.errors)
+
+    def test_admin_form_accepts_parent_outside_edited_subtree(self):
+        """Admin formulář nadále přijme platný stromový vztah."""
+        parent = self._create_organization("ORG-CYCLE-PARENT", "CYCLE-PARENT")
+        form = OrganizaceAdminForm(data={"soucast": parent.pk}, instance=self.org_a)
+
+        self.assertNotIn("soucast", form.errors)
+
+    def test_admin_form_can_repair_cycle_but_cannot_keep_it_through_a_descendant(self):
+        """Oprava odpojením rodiče projde, ale nový vztah uvnitř cyklu neprojde."""
+        Organizace.objects.filter(pk=self.org_a.pk).update(soucast=self.org_c)
+        invalid = OrganizaceAdminForm(data={"soucast": self.org_b.pk}, instance=self.org_a)
+        self.assertFalse(invalid.is_valid())
+        self.assertIn("soucast", invalid.errors)
+        repair = OrganizaceAdminForm(data={"soucast": ""}, instance=self.org_a)
+        repair.is_valid()
+        self.assertNotIn("soucast", repair.errors)
