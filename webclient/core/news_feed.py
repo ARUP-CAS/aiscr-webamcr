@@ -21,7 +21,7 @@ from typing import Optional
 
 import bleach
 from bs4 import BeautifulSoup
-from django.conf import settings
+from core.news_feed_config import get_news_feed_config
 from django.utils.translation import gettext, gettext_noop
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,13 @@ _warning_cache = {}
 
 
 def _log_warning_rate_limited(slug: Optional[str], message: str):
-    """Logs a warning only once per hour for the same slug."""
+    """Omezí opakování varování pro stejnou položku na nastavený interval.
+
+    Varování bez identifikátoru položky zapisuje bez časového omezení.
+
+    :param slug: Identifikátor položky novinek používaný pro omezení opakovaných varování.
+    :param message: Varování o chybě zpracování položky kanálu.
+    """
     if not slug:
         logger.warning(message)
         return
@@ -89,7 +95,7 @@ def _log_warning_rate_limited(slug: Optional[str], message: str):
     current_time = datetime.now()
     last_logged = _warning_cache.get(slug)
 
-    if last_logged is None or (current_time - last_logged).total_seconds() > settings.NEWS_FEED_WARNING_RATE_LIMIT:
+    if last_logged is None or (current_time - last_logged).total_seconds() > get_news_feed_config().warning_rate_limit:
         logger.warning(message)
         _warning_cache[slug] = current_time
 
@@ -105,16 +111,6 @@ class NewsItem:
     badge: Optional[str] = None
     image: Optional[str] = None
     authors: Optional[str] = None
-
-
-def get_news_feed_cache_keys(language: str) -> tuple[str, str]:
-    """Vrátí klíče čerstvé a zastaralé kopie kanálu pro daný jazyk.
-
-    :param language: Jazykový kód novinkového kanálu.
-    :return: Dvojice klíčů cache pro čerstvou a zastaralou kopii kanálu.
-    """
-    cache_key = f"{settings.NEWS_FEED_CACHE_KEY_PREFIX}:{language}"
-    return cache_key, f"{cache_key}:stale"
 
 
 def _parse_item(item_data: dict) -> NewsItem:
