@@ -1,4 +1,4 @@
-"""Runtime configuration for the login news feed."""
+"""Nastavení novinkového kanálu přihlašovací stránky za běhu aplikace."""
 
 import hashlib
 import json
@@ -19,7 +19,6 @@ NEWS_FEED_GROUP = "news_feed"
 NEWS_FEED_CONFIG_CACHE_KEY = "news_feed:configuration:v1"
 NEWS_FEED_CONFIG_GENERATION_KEY = "news_feed:configuration:generation:v1"
 NEWS_FEED_CONFIG_CACHE_TTL = 60
-NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY = "news_feed_block_height:v1"
 NEWS_FEED_MIN_CACHE_TTL = 600
 
 NEWS_FEED_DEFAULTS = {
@@ -48,7 +47,7 @@ _TRUSTED_FEED_HOST = "arup-cas.github.io"
 
 @dataclass(frozen=True)
 class NewsFeedConfig:
-    """Immutable parsed configuration shared by web and worker processes."""
+    """Neměnný snímek ověřeného nastavení novinek sdílený webovými procesy a pracovníky Celery."""
 
     block_height: int
     base_url: str
@@ -91,6 +90,12 @@ class NewsFeedConfig:
 
 
 def _positive_integer(value: str) -> int:
+    """Převede hodnotu nastavení novinek na kladné celé číslo.
+
+    :param value: Textová hodnota číselného nastavení.
+    :return: Celé číslo větší než nula.
+    :raises ValueError: Pokud hodnotu nelze převést nebo není kladná.
+    """
     result = int(value)
     if result <= 0:
         raise ValueError("must be a positive integer")
@@ -98,6 +103,12 @@ def _positive_integer(value: str) -> int:
 
 
 def _parse_base_url(value: str) -> str:
+    """Ověří adresář kanálu na důvěryhodném hostiteli a sjednotí zápis URL.
+
+    :param value: HTTPS URL adresáře kanálu bez přihlašovacích údajů, dotazu a fragmentu.
+    :return: URL s důvěryhodným hostitelem a bez koncového lomítka.
+    :raises ValueError: Pokud URL nesplňuje omezení důvěryhodného zdroje.
+    """
     value = value.strip().rstrip("/")
     parsed = urlsplit(value)
     if (
@@ -115,6 +126,12 @@ def _parse_base_url(value: str) -> str:
 
 
 def _parse_languages(value: str) -> tuple[str, ...]:
+    """Převede JSON seznam jazyků novinek na ověřenou n-tici kódů.
+
+    :param value: Neprázdné JSON pole jedinečných jazykových kódů podporovaných aplikací.
+    :return: N-tice jazykových kódů ve vstupním pořadí.
+    :raises ValueError: Pokud JSON nebo seznam jazyků není platný.
+    """
     parsed = json.loads(value)
     if not isinstance(parsed, list) or not parsed:
         raise ValueError("must be a non-empty JSON array")
@@ -127,6 +144,12 @@ def _parse_languages(value: str) -> tuple[str, ...]:
 
 
 def _parse_timeout(value: str) -> float:
+    """Ověří časový limit požadavku na novinkový kanál.
+
+    :param value: Textový zápis časového limitu v sekundách.
+    :return: Kladný konečný časový limit jako desetinné číslo.
+    :raises ValueError: Pokud hodnota není kladné konečné číslo.
+    """
     result = float(value)
     if not math.isfinite(result) or result <= 0:
         raise ValueError("must be a positive finite number")
@@ -134,9 +157,18 @@ def _parse_timeout(value: str) -> float:
 
 
 def _parse_cache_prefix(value: str) -> str:
+    """Ověří prefix klíčů cache novinek a odstraní okolní bílé znaky.
+
+    :param value: Prefix o délce 1 až 64 znaků začínající písmenem nebo číslicí.
+    :return: Prefix obsahující pouze písmena ASCII, číslice, dvojtečky, podtržítka a pomlčky.
+    :raises ValueError: Pokud prefix nesplňuje požadovanou délku nebo formát.
+    """
     value = value.strip()
     if not _CACHE_PREFIX_RE.fullmatch(value):
-        raise ValueError("must be 1-64 letters, digits, colon, underscore, or hyphen")
+        raise ValueError(
+            "must start with an ASCII letter or digit and contain 1-64 ASCII letters, digits, colons, "
+            "underscores, or hyphens"
+        )
     return value
 
 
@@ -145,6 +177,9 @@ def parse_news_feed_value(item_id: str, value: str):
 
     :param item_id: Identifikátor určující způsob převodu.
     :param value: Textová hodnota nastavení k převodu.
+    :return: Ověřená hodnota podle identifikátoru: celé číslo pro výšku, TTL a interval varování,
+        řetězec pro URL a prefix cache, n-tice jazykových kódů nebo desetinný časový limit.
+    :raises ValueError: Pokud identifikátor není podporován nebo hodnota nesplňuje jeho formát a omezení.
     """
     if item_id == "news_feed_block_height":
         return _positive_integer(value)
@@ -192,6 +227,10 @@ def validate_news_feed_setting(instance) -> None:
 
 
 def _default_config() -> NewsFeedConfig:
+    """Sestaví snímek výchozího nastavení novinek bez čtení databáze.
+
+    :return: Výchozí konfigurace s neměnnou n-ticí jazykových kódů.
+    """
     return NewsFeedConfig(
         block_height=NEWS_FEED_DEFAULTS["news_feed_block_height"],
         base_url=NEWS_FEED_DEFAULTS["news_feed_base_url"],
@@ -264,7 +303,7 @@ def get_news_feed_config(force_refresh: bool = False) -> NewsFeedConfig:
 
 
 def invalidate_news_feed_config_cache() -> None:
-    """Invalidate the parsed configuration shared by all application processes."""
+    """Změní generaci cache nastavení novinek sdílenou všemi procesy aplikace."""
     cache = caches["default"]
     cache.set(NEWS_FEED_CONFIG_GENERATION_KEY, uuid.uuid4().hex, timeout=None)
 

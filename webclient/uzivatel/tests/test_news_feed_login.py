@@ -1,4 +1,4 @@
-"""Login-view tests for cached feed content and live height configuration."""
+"""Testy novinek z cache a aktuálního nastavení výšky na přihlašovací stránce."""
 
 from unittest.mock import patch
 
@@ -15,7 +15,7 @@ from uzivatel.views import UserLoginView
     }
 )
 class NewsFeedLoginViewTest(TestCase):
-    """Ensures login uses cache and sees committed block-height changes."""
+    """Ověří čtení novinek z cache a zobrazení potvrzených změn výšky bloku."""
 
     def setUp(self):
         """Připraví izolovaný stav pro test nastavení zpráv."""
@@ -26,7 +26,10 @@ class NewsFeedLoginViewTest(TestCase):
         )
 
     def render_context(self):
-        """Sestaví kontext přihlašovací stránky pro český jazyk."""
+        """Sestaví kontext přihlašovací stránky pro český jazyk.
+
+        :return: Kontext obsahující novinky a výšku bloku pro připravený požadavek.
+        """
         request = RequestFactory().get("/login/")
         request.LANGUAGE_CODE = "cs"
         view = UserLoginView()

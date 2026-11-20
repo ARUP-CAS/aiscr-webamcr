@@ -3982,6 +3982,8 @@ def load_news_feed(self, languages=None):
 
     :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
         použije se seznam z nastavení aplikace.
+    :return: ``True``, pokud zpracování skončilo bez vyžádání opakování úlohy;
+        výsledek nepotvrzuje zveřejnění dat vyřazených kvůli změně konfigurace.
     """
     try:
         from core.news_feed_scheduler import reconcile_news_feed_schedule

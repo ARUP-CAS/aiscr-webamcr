@@ -513,6 +513,8 @@ Funkce
 
    :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
        použije se seznam z nastavení aplikace.
+   :return: ``True``, pokud zpracování skončilo bez vyžádání opakování úlohy;
+       výsledek nepotvrzuje zveřejnění dat vyřazených kvůli změně konfigurace.
 
 .. py:function:: run_news_feed_warmup()
 

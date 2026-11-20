@@ -6,14 +6,14 @@ Modul news_feed_config.
 Přehled modulu
 --------------
 
-Runtime configuration for the login news feed.
+Nastavení novinkového kanálu přihlašovací stránky za běhu aplikace.
 
 Třídy
 ------
 
 .. py:class:: NewsFeedConfig
 
-   Immutable parsed configuration shared by web and worker processes.
+   Neměnný snímek ověřeného nastavení novinek sdílený webovými procesy a pracovníky Celery.
 
    **Metody:**
 
@@ -42,23 +42,43 @@ Funkce
 
 .. py:function:: _positive_integer(value)
 
-   Popis není k dispozici.
+   Převede hodnotu nastavení novinek na kladné celé číslo.
+
+   :param value: Textová hodnota číselného nastavení.
+   :return: Celé číslo větší než nula.
+   :raises ValueError: Pokud hodnotu nelze převést nebo není kladná.
 
 .. py:function:: _parse_base_url(value)
 
-   Popis není k dispozici.
+   Ověří adresář kanálu na důvěryhodném hostiteli a sjednotí zápis URL.
+
+   :param value: HTTPS URL adresáře kanálu bez přihlašovacích údajů, dotazu a fragmentu.
+   :return: URL s důvěryhodným hostitelem a bez koncového lomítka.
+   :raises ValueError: Pokud URL nesplňuje omezení důvěryhodného zdroje.
 
 .. py:function:: _parse_languages(value)
 
-   Popis není k dispozici.
+   Převede JSON seznam jazyků novinek na ověřenou n-tici kódů.
+
+   :param value: Neprázdné JSON pole jedinečných jazykových kódů podporovaných aplikací.
+   :return: N-tice jazykových kódů ve vstupním pořadí.
+   :raises ValueError: Pokud JSON nebo seznam jazyků není platný.
 
 .. py:function:: _parse_timeout(value)
 
-   Popis není k dispozici.
+   Ověří časový limit požadavku na novinkový kanál.
+
+   :param value: Textový zápis časového limitu v sekundách.
+   :return: Kladný konečný časový limit jako desetinné číslo.
+   :raises ValueError: Pokud hodnota není kladné konečné číslo.
 
 .. py:function:: _parse_cache_prefix(value)
 
-   Popis není k dispozici.
+   Ověří prefix klíčů cache novinek a odstraní okolní bílé znaky.
+
+   :param value: Prefix o délce 1 až 64 znaků začínající písmenem nebo číslicí.
+   :return: Prefix obsahující pouze písmena ASCII, číslice, dvojtečky, podtržítka a pomlčky.
+   :raises ValueError: Pokud prefix nesplňuje požadovanou délku nebo formát.
 
 .. py:function:: parse_news_feed_value(item_id, value)
 
@@ -66,6 +86,9 @@ Funkce
 
    :param item_id: Identifikátor určující způsob převodu.
    :param value: Textová hodnota nastavení k převodu.
+   :return: Ověřená hodnota podle identifikátoru: celé číslo pro výšku, TTL a interval varování,
+       řetězec pro URL a prefix cache, n-tice jazykových kódů nebo desetinný časový limit.
+   :raises ValueError: Pokud identifikátor není podporován nebo hodnota nesplňuje jeho formát a omezení.
 
 .. py:function:: validate_news_feed_setting(instance)
 
@@ -75,7 +98,9 @@ Funkce
 
 .. py:function:: _default_config()
 
-   Popis není k dispozici.
+   Sestaví snímek výchozího nastavení novinek bez čtení databáze.
+
+   :return: Výchozí konfigurace s neměnnou n-ticí jazykových kódů.
 
 .. py:function:: get_news_feed_config(force_refresh)
 
@@ -86,7 +111,7 @@ Funkce
 
 .. py:function:: invalidate_news_feed_config_cache()
 
-   Invalidate the parsed configuration shared by all application processes.
+   Změní generaci cache nastavení novinek sdílenou všemi procesy aplikace.
 
 .. py:function:: get_news_feed_cache_keys(language, config)
 

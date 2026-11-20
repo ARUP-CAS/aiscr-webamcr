@@ -1,4 +1,4 @@
-"""Tests for the central login news-feed configuration reader."""
+"""Testy společného načítání nastavení novinek přihlašovací stránky."""
 
 import json
 from importlib import import_module
@@ -23,7 +23,7 @@ from django.test import TestCase, override_settings
     CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "news-feed-tests"}}
 )
 class NewsFeedConfigTest(TestCase):
-    """Covers defaults, parsing, malformed rows, and stable feed identities."""
+    """Ověří výchozí hodnoty, převod nastavení, neplatné záznamy a identity zdrojů novinek."""
 
     def setUp(self):
         """Připraví izolovaný stav pro test nastavení zpráv."""
@@ -134,7 +134,7 @@ class NewsFeedConfigTest(TestCase):
 
 
 class NewsFeedSettingValidationTest(TestCase):
-    """Validates administrator values without involving unrelated setting groups."""
+    """Ověří administrátorská nastavení novinek bez zásahu do ostatních skupin."""
 
     def setUp(self):
         """Připraví izolovaný stav pro test nastavení zpráv."""
@@ -180,7 +180,7 @@ class NewsFeedSettingValidationTest(TestCase):
     }
 )
 class SeedNewsFeedSettingsMigrationTest(TestCase):
-    """Checks one-time migration seeding preserves existing administrator choices."""
+    """Ověří zachování uložených administrátorských hodnot při jednorázové inicializaci novinek."""
 
     def test_creates_missing_settings_and_preserves_existing_values(self):
         """Ověří doplnění chybějících nastavení a zachování existujících hodnot."""

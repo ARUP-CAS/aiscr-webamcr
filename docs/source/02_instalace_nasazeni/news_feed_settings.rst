@@ -26,7 +26,8 @@ neplatná nebo duplicitní hodnota se zaznamená do logu a použije se výchozí
      - Celé číslo nejméně ``600`` sekund; platnost čerstvé kopie v cache.
    * - ``news_feed_cache_key_prefix``
      - ``news_feed``
-     - 1 až 64 písmen, číslic, dvojteček, podtržítek nebo pomlček.
+     - 1 až 64 znaků; první musí být písmeno ASCII nebo číslice,
+       další mohou obsahovat také dvojtečku, podtržítko a pomlčku.
    * - ``news_feed_timeout``
      - ``10``
      - Kladné konečné číslo v sekundách; timeout HTTP požadavku.
@@ -44,6 +45,13 @@ včetně výšky bloku a URL zdroje, zachová. Pokud existující URL zdroje neo
 novému výchozímu kanálu, migrace vypíše upozornění k ruční kontrole. Další nasazení
 migraci znovu nespustí a běžný deployment nevyžaduje žádný inicializační příkaz.
 Po vytvoření lze hodnoty spravovat v administraci ``CustomAdminSettings``.
+
+Současně migrace vytvoří nebo přenastaví úlohu Celery Beat ``load-news-feed``.
+Nastaví volání ``cron.tasks.load_news_feed`` a interval podle TTL, zapne úlohu,
+nahradí poziční argumenty prázdným seznamem a pojmenované argumenty prázdným
+slovníkem, odstraní alternativní plán crontab, solar či clocked a vypne příznak
+``one_off``. Toto přenastavení proběhne pouze při migraci; následné sladění plánu
+zachovává níže popsaná nastavení operátora.
 
 Načítání a cache
 ----------------
@@ -80,4 +88,6 @@ nemaže nesouvisející záznamy Redis.
 
    Datová migrace se spouští v rámci běžného kroku ``migrate`` při prvním nasazení
    této verze. Před nasazením v živém prostředí ověřte cílovou databázi a ponechte
-   si původní administrační hodnoty pro případ návratu.
+   si původní administrační hodnoty i stav úlohy ``load-news-feed``: povolení,
+   volanou úlohu, typ a hodnoty plánu, argumenty a příznak ``one_off``.
+   Zpětná migrace tyto hodnoty automaticky neobnoví.

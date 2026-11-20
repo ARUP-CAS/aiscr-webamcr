@@ -1,4 +1,4 @@
-"""Focused tests for asynchronous news-feed loading and source isolation."""
+"""Testy asynchronního načítání novinek a oddělení zdrojů v cache."""
 
 from unittest.mock import Mock, patch
 
@@ -13,7 +13,7 @@ from django.test import TestCase, override_settings
     CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "news-feed-task-tests"}}
 )
 class LoadNewsFeedTest(TestCase):
-    """Checks fetch settings, stale results, and same-source fallback behavior."""
+    """Ověří nastavení stahování, vyřazení starých výsledků a záložní kopii stejného zdroje."""
 
     def setUp(self):
         """Připraví izolovaný stav pro test nastavení zpráv."""

@@ -1,4 +1,4 @@
-"""Seed login news-feed settings once for each database."""
+"""Jednorázová inicializace nastavení novinek přihlašovací stránky v každé databázi."""
 
 import json
 import warnings
@@ -23,7 +23,7 @@ _PERIODIC_TASK_PATH = "cron.tasks.load_news_feed"
 
 
 def seed_news_feed_settings(apps, schema_editor):
-    """Create missing settings and the initial database-backed Beat schedule."""
+    """Vytvoří chybějící nastavení a přenastaví databázový plán novinkového kanálu."""
     CustomAdminSettings = apps.get_model("core", "CustomAdminSettings")
     db_alias = schema_editor.connection.alias
     manager = CustomAdminSettings.objects.using(db_alias)

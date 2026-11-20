@@ -3,7 +3,6 @@ import logging
 from core.models import Soubor
 from core.news_feed_config import (
     FETCH_SETTING_IDS,
-    NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY,
     NEWS_FEED_GROUP,
     get_news_feed_config,
     invalidate_news_feed_config_cache,
@@ -37,7 +36,11 @@ def news_feed_settings_capture_previous_identity(sender, instance, raw=False, **
 
 
 def _apply_news_feed_setting_change(previous, current):
-    """Apply cache and task changes after a news-feed setting transaction commits."""
+    """Zneplatní cache a naplánuje obnovu novinek po potvrzení změny nastavení.
+
+    :param previous: Původní skupina, identifikátor a hodnota nastavení; při vytvoření chybí.
+    :param current: Uložená skupina, identifikátor a hodnota nastavení; při smazání chybí.
+    """
     old_group, old_id, old_value = previous if previous else (None, None, None)
     new_group, new_id, new_value = current if current else (None, None, None)
     old_relevant = old_group == NEWS_FEED_GROUP
@@ -46,7 +49,6 @@ def _apply_news_feed_setting_change(previous, current):
         return
 
     invalidate_news_feed_config_cache()
-    caches["default"].delete(NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY)
     changed_ids = set()
     if old_relevant and (not new_relevant or old_id != new_id or old_value != new_value):
         changed_ids.add(old_id)

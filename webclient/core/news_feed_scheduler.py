@@ -1,4 +1,4 @@
-"""Reconciliation helpers for the database-backed login news-feed schedule."""
+"""Sladění databázového plánu obnovy novinek na přihlašovací stránce."""
 
 import logging
 

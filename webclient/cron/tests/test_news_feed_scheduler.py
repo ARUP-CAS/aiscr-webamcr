@@ -1,4 +1,4 @@
-"""Tests for the database-backed news-feed Beat interval."""
+"""Testy databázového intervalu obnovy novinek v plánovači Celery Beat."""
 
 from core.news_feed_config import NewsFeedConfig
 from core.news_feed_scheduler import reconcile_news_feed_schedule
@@ -7,12 +7,13 @@ from django_celery_beat.models import IntervalSchedule, PeriodicTask, PeriodicTa
 
 
 class NewsFeedSchedulerTest(TestCase):
-    """Ensures TTL changes reconcile the task row and wake DatabaseScheduler."""
+    """Ověří sladění intervalu při změně TTL a upozornění databázového plánovače."""
 
     def config(self, ttl):
         """Sestaví konfiguraci zpráv se zadanou dobou platnosti.
 
         :param ttl: Doba platnosti zpráv v sekundách.
+        :return: Snímek nastavení novinek se zadanou dobou platnosti a ostatními výchozími hodnotami.
         """
         return NewsFeedConfig(
             block_height=300,

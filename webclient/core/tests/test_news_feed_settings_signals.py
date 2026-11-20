@@ -1,12 +1,8 @@
-"""Tests for transaction-aware login news-feed setting changes."""
+"""Testy změn nastavení novinek navázaných na potvrzení databázové transakce."""
 
 from unittest.mock import patch
 
-from core.news_feed_config import (
-    NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY,
-    NEWS_FEED_CONFIG_GENERATION_KEY,
-    get_news_feed_config,
-)
+from core.news_feed_config import NEWS_FEED_CONFIG_GENERATION_KEY, get_news_feed_config
 from core.setting_models import CustomAdminSettings
 from django.core.cache import caches
 from django.db import transaction
@@ -19,7 +15,7 @@ from django.test import TestCase, override_settings
     }
 )
 class NewsFeedSettingsSignalTest(TestCase):
-    """Ensures committed changes invalidate only feed-specific runtime state."""
+    """Ověří zneplatnění stavu novinek až po potvrzení změny nastavení."""
 
     def setUp(self):
         """Připraví izolovaný stav pro test nastavení zpráv."""
@@ -30,6 +26,7 @@ class NewsFeedSettingsSignalTest(TestCase):
 
         :param item_id: Identifikátor nastavení zpráv.
         :param value: Hodnota uložená do nastavení.
+        :return: Uložený záznam nastavení s aktuální hodnotou bez spuštění signálu.
         """
         existing = CustomAdminSettings.objects.filter(item_group="news_feed", item_id=item_id).first()
         if existing:
@@ -47,15 +44,12 @@ class NewsFeedSettingsSignalTest(TestCase):
         :param dispatch: Náhrada pro spuštění asynchronní obnovy.
         """
         setting = self.create_without_signal("news_feed_block_height", "300")
-        cache = caches["default"]
         self.assertEqual(get_news_feed_config().block_height, 300)
-        cache.set(NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY, "300")
         with self.captureOnCommitCallbacks(execute=True):
             setting.value = "420"
             setting.save()
 
         self.assertEqual(get_news_feed_config().block_height, 420)
-        self.assertIsNone(cache.get(NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY))
         dispatch.assert_not_called()
 
     @patch("cron.tasks.load_news_feed.delay")

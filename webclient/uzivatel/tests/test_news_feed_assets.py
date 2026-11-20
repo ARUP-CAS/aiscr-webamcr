@@ -1,4 +1,4 @@
-"""Source-level checks for responsive embedded news-feed images."""
+"""Kontroly zdrojových stylů a skriptů pro responzivní obrázky v novinkách."""
 
 from pathlib import Path
 
@@ -6,7 +6,7 @@ from django.test import SimpleTestCase
 
 
 class NewsFeedResponsiveAssetsTest(SimpleTestCase):
-    """Guards the responsive image rules and post-load height recalculation hooks."""
+    """Ověří omezení rozměrů obrázků a přepočet výšky novinek po jejich načtení."""
 
     @classmethod
     def setUpClass(cls):

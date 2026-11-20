@@ -21,7 +21,6 @@ from typing import Optional
 
 import bleach
 from bs4 import BeautifulSoup
-from core.news_feed_config import get_news_feed_cache_keys as _configured_cache_keys
 from core.news_feed_config import get_news_feed_config
 from django.utils.translation import gettext, gettext_noop
 
@@ -82,7 +81,13 @@ _warning_cache = {}
 
 
 def _log_warning_rate_limited(slug: Optional[str], message: str):
-    """Logs a warning only once per hour for the same slug."""
+    """Omezí opakování varování pro stejnou položku na nastavený interval.
+
+    Varování bez identifikátoru položky zapisuje bez časového omezení.
+
+    :param slug: Identifikátor položky novinek používaný pro omezení opakovaných varování.
+    :param message: Varování o chybě zpracování položky kanálu.
+    """
     if not slug:
         logger.warning(message)
         return
@@ -106,15 +111,6 @@ class NewsItem:
     badge: Optional[str] = None
     image: Optional[str] = None
     authors: Optional[str] = None
-
-
-def get_news_feed_cache_keys(language: str) -> tuple[str, str]:
-    """Vrátí klíče čerstvé a poslední úspěšné kopie kanálu pro daný jazyk.
-
-    :param language: Jazykový kód novinkového kanálu.
-    :return: Dvojice klíčů cache pro čerstvou a poslední úspěšnou kopii kanálu.
-    """
-    return _configured_cache_keys(language)
 
 
 def _parse_item(item_data: dict) -> NewsItem:

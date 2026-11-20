@@ -17,7 +17,10 @@ Funkce
 
 .. py:function:: _apply_news_feed_setting_change(previous, current)
 
-   Apply cache and task changes after a news-feed setting transaction commits.
+   Zneplatní cache a naplánuje obnovu novinek po potvrzení změny nastavení.
+
+   :param previous: Původní skupina, identifikátor a hodnota nastavení; při vytvoření chybí.
+   :param current: Uložená skupina, identifikátor a hodnota nastavení; při smazání chybí.
 
 .. py:function:: news_feed_settings_saved(sender, instance, raw)
 
