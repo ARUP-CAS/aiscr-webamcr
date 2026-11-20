@@ -35,6 +35,16 @@ Aplikace proto musí stát po celou dobu migrací:
 6. Založit plánovanou úlohu denního synchu (viz `Plánování denního synchu`_)
    a teprve pak spustit ``celery_beat``.
 
+.. note::
+
+   Hranice okresů (``ruian_okres.hranice``) plní až plný sync v kroku 5.
+   Dokud ho neprošla produkce, kopie produkční databáze obnovená na
+   testovacím serveru hranice okresů nemá a sekce ``geometrie`` příkazu
+   ``anonymizace_dat`` nemá kam chráněné polohy přesunout – předběžná kontrola
+   příkazu běh zastaví dřív, než cokoli zapíše. Na testovacím serveru proto
+   po obnově kopie a migracích spusťte plný sync ``aktualizuj_ruian_shp``
+   ještě **před** ``anonymizace_dat``.
+
 Pořadí migrací
 ~~~~~~~~~~~~~~
 
@@ -123,6 +133,13 @@ souběhu dojít nemůže – ale znamená to, že jeden z nich bude odmítnut:
 * běží-li plný sync, ``sync_ruian_changes`` se přeskočí s ``ERROR``
   ``lock_not_acquired``;
 * běží-li cron, ``aktualizuj_ruian_shp`` skončí ``CommandError``.
+
+Stejný zámek drží i ``anonymizace_dat`` na testovacím serveru, pokud běží se
+sekcí ``texty`` nebo ``geometrie`` – a to po celou dobu běhu, ne jen během
+přesunu poloh a mazání poznámek změn katastru.
+Denní ``sync_ruian_changes`` se mezitím přeskočí se stejným ``ERROR``
+``lock_not_acquired``; vynechaný den dožene příští běh, protože pokračuje od
+kotvy posledního úspěšného synchu (``RuianSyncRun``).
 
 Doporučený postup je ``celery_beat`` na dobu plného synchu **zastavit** a pustit
 ho až po jeho dokončení; zámek je pojistka proti omylu, ne náhrada plánování.

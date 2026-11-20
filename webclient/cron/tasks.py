@@ -3729,7 +3729,9 @@ def sync_ruian_changes(reassign_records: bool = True):
             # hustěji, než stíhá doběhnout – obojí je potřeba vidět.
             logger.error(
                 "cron.tasks.sync_ruian_changes.lock_not_acquired",
-                extra={"info": "Jiný běh sync_ruian_changes stále drží advisory lock, přeskakuji."},
+                extra={
+                    "info": "Zámek synchronizace RÚIAN drží jiný proces (sync RÚIAN nebo anonymizace_dat), přeskakuji."
+                },
             )
             return
         _sync_ruian_changes_locked(reassign_records)
