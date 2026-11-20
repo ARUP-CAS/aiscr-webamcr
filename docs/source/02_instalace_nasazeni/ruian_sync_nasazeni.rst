@@ -135,7 +135,8 @@ souběhu dojít nemůže – ale znamená to, že jeden z nich bude odmítnut:
 * běží-li cron, ``aktualizuj_ruian_shp`` skončí ``CommandError``.
 
 Stejný zámek drží i ``anonymizace_dat`` na testovacím serveru, pokud běží se
-sekcí ``geometrie`` – a to po celou dobu běhu, ne jen během přesunu poloh.
+sekcí ``texty`` nebo ``geometrie`` – a to po celou dobu běhu, ne jen během
+přesunu poloh a mazání poznámek změn katastru.
 Denní ``sync_ruian_changes`` se mezitím přeskočí se stejným ``ERROR``
 ``lock_not_acquired``; vynechaný den dožene příští běh, protože pokračuje od
 kotvy posledního úspěšného synchu (``RuianSyncRun``).

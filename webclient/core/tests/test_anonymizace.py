@@ -1627,9 +1627,12 @@ class TestSekceNadDatabazi(TestCase):
         )
         prikaz = _OmezenyPrikaz.vytvor({Lokalita: [self.d.lokalita.pk]})
 
-        with override_settings(TEST_ENV=True), self.assertRaisesRegex(CommandError, "nejde nahradit"):
+        with override_settings(TEST_ENV=True), self.assertRaises(CommandError) as chyba:
             prikaz.handle(**_volby_prikazu(jen="texty"))
 
+        # Bez sekce geometrie se polohy nekontrolují, hláška o nich proto nesmí mluvit.
+        self.assertNotIn("poloh", str(chyba.exception))
+        self.assertNotIn("poloh", prikaz.stdout.getvalue())
         self.assertIn("HES-PRIST-Y", prikaz.stdout.getvalue())
         self.assertEqual(Lokalita.objects.get(pk=self.d.lokalita.pk).nazev, "Hradiště")
 
@@ -2150,6 +2153,33 @@ class TestSekceGeometrie(TestCase):
             self.assertTrue(ziskan)
             self._spust()
             self.assertTrue(self._drzi_zamek_ruian())
+        self.assertFalse(self._drzi_zamek_ruian())
+
+    def test_jen_texty_bezi_pod_zamkem_ruian(self):
+        """
+        Běh jen se sekcí ``texty`` drží zámek RÚIAN po celou dobu sekce.
+
+        Sekce maže poznámky změn katastru, které zapisuje sync RÚIAN; bez zámku
+        by souběžný sync mohl po výběru zapsat novou poznámku se skutečnými katastry.
+        """
+        from unittest import mock
+
+        from django.test import override_settings
+
+        prikaz = _OmezenyPrikaz.vytvor({})
+        stav = {}
+
+        def texty(_volby):
+            stav["texty"] = self._drzi_zamek_ruian()
+
+        with (
+            override_settings(TEST_ENV=True),
+            mock.patch.object(prikaz, "_sekce_texty", side_effect=texty),
+            mock.patch("cacheops.invalidate_all"),
+        ):
+            prikaz.handle(**_volby_prikazu(dry_run=True, jen="texty"))
+
+        self.assertEqual(stav, {"texty": True})
         self.assertFalse(self._drzi_zamek_ruian())
 
     def test_bezici_sync_ruian_zastavi_beh_pred_kontrolou(self):

@@ -126,8 +126,8 @@ class Command(BaseCommand):
     ``geometrie`` i chráněné polohy a katastry, které nepůjde nahradit (PIAN
     v okrese bez hranice, okres bez jiného katastru, vadná zdrojová geometrie
     bez možnosti vypnout trigger). Nález vypíše podle důvodu a v ostrém běhu
-    skončí chybou dřív, než cokoli zapíše. Se sekcí ``geometrie`` drží příkaz
-    po celý běh zámek synchronizace RÚIAN. Běh, po kterém
+    skončí chybou dřív, než cokoli zapíše. Se sekcí ``texty`` nebo ``geometrie``
+    drží příkaz po celý běh zámek synchronizace RÚIAN. Běh, po kterém
     některá chráněná poloha nebo katastr zůstaly skutečné nebo došlo k chybě,
     skončí nenulovým návratovým kódem a úspěch nehlásí.
 
@@ -226,7 +226,8 @@ class Command(BaseCommand):
         self.statistika = {}
         self.duvody_preskoceni = {}
         self.identy_preskocenych = {}
-        self.lze_vypnout_trigger = False
+        #: Zda smíme při zápisu PIANů vypnout trigger validace; ``None`` = ještě nezjištěno.
+        self.lze_vypnout_trigger = None
         self.piany_s_vadou_zdroje = set()
         self.generator_nahody = random.Random()
         self.generator_poloh = None
@@ -312,11 +313,12 @@ class Command(BaseCommand):
         """
         Provede vybrané sekce anonymizace nad cílovou databází.
 
-        Když je vybraná sekce ``geometrie``, drží příkaz zámek synchronizace RÚIAN
-        od předběžné kontroly až do konce běhu. Kontrola si ukládá chráněné PIANy
-        a predikáty okresů, které pak sekce geometrie použije; sync RÚIAN mezi
-        kontrolou a zápisem by je mohl zneplatnit. Zámek je session-level advisory
-        lock, takže ho sekce geometrie ve stejném spojení získá znovu.
+        Když je vybraná sekce ``texty`` nebo ``geometrie``, drží příkaz zámek
+        synchronizace RÚIAN od předběžné kontroly až do konce běhu. Kontrola si
+        ukládá chráněné PIANy a predikáty okresů, které pak sekce geometrie
+        použije, a sekce ``texty`` maže poznámky změn katastru, které sync RÚIAN
+        zapisuje; souběžný sync by mohl obojí zneplatnit. Zámek je session-level
+        advisory lock, takže ho sekce geometrie ve stejném spojení získá znovu.
 
         :param args: Poziční argumenty příkazu (nepoužívá se).
         :param options: Pojmenované argumenty z příkazového řádku.
@@ -339,10 +341,9 @@ class Command(BaseCommand):
 
         with contextlib.ExitStack() as zamky:
             geometrie = "geometrie" in sekce
-            if geometrie:
+            if geometrie or "texty" in sekce:
                 if not zamky.enter_context(ruian_sync_lock()):
                     raise CommandError(ZPRAVA_BEZI_SYNC_RUIAN)
-            if geometrie or "texty" in sekce:
                 self._predbezna_kontrola(options, geometrie=geometrie)
 
             for nazev in sekce:
@@ -939,7 +940,7 @@ class Command(BaseCommand):
 
         self._overr_srid()
         self._overr_hranice_okresu()
-        if "lze_vypnout_trigger" not in self._predikaty:
+        if self.lze_vypnout_trigger is None:
             self.lze_vypnout_trigger = self._lze_vypnout_trigger()
         self.generator_poloh = GeneratorPoloh()
 
@@ -1068,8 +1069,9 @@ class Command(BaseCommand):
 
         :param options: Pojmenované argumenty z příkazového řádku.
         :param geometrie: Zda kontrolovat i polohy pro sekci ``geometrie``.
-        :raises CommandError: Pokud kontrola něco najde a nejde o dry-run, nebo
-            pokud neodpovídají souřadnicové systémy či žádný okres nemá hranici.
+        :raises CommandError: Pokud kontrola něco najde a nejde o dry-run;
+            s ``geometrie=True`` také pokud neodpovídají souřadnicové systémy
+            nebo žádný okres nemá hranici.
         """
         from heslar.hesla import HESLAR_PRISTUPNOST
         from heslar.models import Heslar
@@ -1114,7 +1116,6 @@ class Command(BaseCommand):
         self._overr_srid()
         self._overr_hranice_okresu()
         self.lze_vypnout_trigger = self._lze_vypnout_trigger()
-        self._predikaty["lze_vypnout_trigger"] = self.lze_vypnout_trigger
 
         problemy = {}
         bez_hranice = self._okresy_bez_hranice()
@@ -1163,11 +1164,11 @@ class Command(BaseCommand):
         :raises CommandError: Pokud kontrola něco našla a nejde o dry-run.
         """
         if not problemy:
-            self.stdout.write("Všechny chráněné polohy a katastry jde nahradit.")
+            self.stdout.write("Předběžná kontrola nic nenašla.")
             return
 
         celkem = sum(len(identy) for identy in problemy.values())
-        self.stdout.write(f"Chráněné polohy a katastry, které nepůjde nahradit: {celkem}")
+        self.stdout.write(f"Předběžná kontrola našla problémy, kvůli kterým nejde pokračovat: {celkem}")
         for duvod, identy in sorted(problemy.items(), key=lambda polozka: -len(polozka[1])):
             self.stdout.write(f"  {len(identy)}× {POPISY_DUVODU.get(duvod, duvod)}")
             self._vypis_identy(identy)
@@ -1181,7 +1182,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"Ostrý běh by se zastavil před prvním zápisem.{napoveda}"))
             return
         raise CommandError(
-            f"Předběžná kontrola našla {celkem} chráněných poloh nebo katastrů, které nejde nahradit; "
+            f"Předběžná kontrola našla {celkem} problémů, kvůli kterým nejde pokračovat (výčet výše); "
             f"nic se nezapsalo.{napoveda}"
         )
 
