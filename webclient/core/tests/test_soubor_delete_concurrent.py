@@ -70,7 +70,13 @@ class _DeleteViewTestMixin:
         ft = mock.Mock(uid="tx1", status=FedoraTransactionStatus.ACTIVE)
         connector = mock.Mock()
         if delete_side_effect is not None:
-            getattr(connector, delete_method).side_effect = delete_side_effect
+
+            def _connector_rollback_and_raise(*args, **kwargs):
+                """Simuluje ``_send_request``: transakci Fedory odvolá ještě před vyhozením chyby."""
+                ft.rollback_transaction()
+                raise delete_side_effect
+
+            getattr(connector, delete_method).side_effect = _connector_rollback_and_raise
         session_identifier = mock.Mock()
         session_identifier.get_ident.return_value = "X-M-000023036"
         session_identifier.file_exists.return_value = True

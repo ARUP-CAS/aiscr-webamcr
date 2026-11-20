@@ -281,6 +281,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
         # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint).
+        # Transakci Fedory před vyhozením obou zachycených výjimek odvolá už ``FedoraRepositoryConnector._send_request``.
         try:
             with transaction.atomic():
                 soubor.delete()
@@ -294,8 +295,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
             return JsonResponse({"success": False}, status=400)
         except FedoraBinaryFileAlreadyDeletedError as err:
             # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
@@ -304,8 +303,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
             return JsonResponse({"success": False}, status=400)
         next_url = request.POST.get("next")
         if next_url:
@@ -316,8 +313,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
-        if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         return JsonResponse({"redirect": response})
     else:
         context = {
