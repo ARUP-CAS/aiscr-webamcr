@@ -90,6 +90,7 @@ from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
+from heslar.ruian_sync.vfr_download import RUIAN_RETENCE_ZDROJE_DNU, kotva_mimo_retenci
 from heslar.ruian_sync.zamek import RUIAN_SYNC_LOCK_KEY, ruian_sync_lock  # noqa: F401 – reexport
 from historie.models import Historie
 from lokalita.models import Lokalita
@@ -3593,16 +3594,6 @@ ERROR_PRERUSENY_BEH = "Běh byl přerušen zvenčí (zabití procesu nebo restar
 #: 10 dnů je bezpečně nad běžným provozem včetně svátků.
 RUIAN_NO_DOWNLOAD_ERROR_DAYS = 10
 
-#: Jak dlouho ČÚZK drží denní změnové soubory ke stažení. Změřeno 8. 9. 2026
-#: proti ``https://vdp.cuzk.gov.cz/vymenny_format/soucasna/``: ``-92 dní``
-#: ještě vrací HTTP 200, ``-93 dní`` už 404 – tedy klouzavé okno 3 měsíců.
-#:
-#: Po překročení téhle hranice přestává platit záruka, na které stojí zotavení
-#: z výpadku (nepotvrzené dny se po opravě URL stáhnou znovu): zameškané dny
-#: na serveru prostě nejsou. Denní sync už mezeru nedožene a jediná cesta zpět
-#: je plný sync ze SHP.
-RUIAN_RETENCE_ZDROJE_DNU = 92
-
 
 def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
     """
@@ -3613,7 +3604,9 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
 
     * od :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS` dnů – ``dlouho_bez_dat``, tedy
       „něco je špatně, ověřte URL“; zameškané dny jsou pořád ke stažení,
-    * od :data:`RUIAN_RETENCE_ZDROJE_DNU` dnů – ``mimo_retenci_zdroje``:
+    * jakmile první zameškaný den vypadne z retence zdroje
+      (:func:`~heslar.ruian_sync.vfr_download.kotva_mimo_retenci`, stejné
+      pravidlo jako u ``--valid-to`` plného synchu) – ``mimo_retenci_zdroje``:
       soubory už ze serveru zmizely, denní sync mezeru nedožene a operátor
       musí spustit plný sync ``manage.py aktualizuj_ruian_shp``.
 
@@ -3642,7 +3635,7 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         return
 
     stari = (today - posledni_s_daty.data_valid_to).days
-    if stari >= RUIAN_RETENCE_ZDROJE_DNU:
+    if kotva_mimo_retenci(posledni_s_daty.data_valid_to, today):
         # Nejstarší zameškané dny už ČÚZK nenabízí – denní sync je nedožene
         # ani po opravě URL. Tady už nestačí hlásit „dlouho bez dat“, operátor
         # musí vědět, že se z toho dostane výhradně plným syncem.

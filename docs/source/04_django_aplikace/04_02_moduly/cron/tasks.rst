@@ -425,7 +425,9 @@ Funkce
 
    * od :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS` dnů – ``dlouho_bez_dat``, tedy
      „něco je špatně, ověřte URL“; zameškané dny jsou pořád ke stažení,
-   * od :data:`RUIAN_RETENCE_ZDROJE_DNU` dnů – ``mimo_retenci_zdroje``:
+   * jakmile první zameškaný den vypadne z retence zdroje
+     (:func:`~heslar.ruian_sync.vfr_download.kotva_mimo_retenci`, stejné
+     pravidlo jako u ``--valid-to`` plného synchu) – ``mimo_retenci_zdroje``:
      soubory už ze serveru zmizely, denní sync mezeru nedožene a operátor
      musí spustit plný sync ``manage.py aktualizuj_ruian_shp``.
 

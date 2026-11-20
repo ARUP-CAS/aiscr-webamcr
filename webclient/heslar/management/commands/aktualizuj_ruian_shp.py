@@ -48,9 +48,25 @@ from heslar.models import RuianSyncRun
 from heslar.ruian_sync import ShpUzszSource
 from heslar.ruian_sync import syncer as ruian_syncer
 from heslar.ruian_sync.souhrn_varovani import SberVarovani
+from heslar.ruian_sync.vfr_download import RUIAN_RETENCE_ZDROJE_DNU, kotva_mimo_retenci
 from heslar.ruian_sync.zamek import ruian_sync_lock
 
 logger = logging.getLogger(__name__)
+
+
+def _popis_mimo_retenci(valid_to: date) -> str:
+    """
+    Vysvětlí operátorovi, proč kotva mimo retenci změnových souborů nestačí.
+
+    :param valid_to: Odmítnutá kotva.
+    :return: Věta pro chybovou hlášku.
+    """
+    prvni_den = valid_to + timedelta(days=1)
+    return (
+        f"Denní sync by navázal změnovým souborem z {prvni_den.isoformat()}, který je starý "
+        f"{(_dnes() - prvni_den).days} dnů – mimo retenci ČÚZK ({RUIAN_RETENCE_ZDROJE_DNU} dnů). "
+        f"Soubor už na serveru není, kotva by se nikdy neposunula."
+    )
 
 
 def _dnes() -> date:
@@ -243,7 +259,8 @@ class Command(BaseCommand):
         :raises CommandError: Když má zadaná hodnota neplatný formát, nebo
             když chybí a datum vygenerování SHP nejde zjistit (adresář,
             archiv bez vrstev ``.shp``), nebo když odvozená kotva leží mimo
-            retenci změnových souborů ČÚZK (``RUIAN_RETENCE_ZDROJE_DNU``).
+            retenci změnových souborů ČÚZK (viz
+            :func:`heslar.ruian_sync.vfr_download.kotva_mimo_retenci`).
         """
         if zadane is not None:
             # Prázdný řetězec (např. nenastavená proměnná shellu) je chyba
@@ -260,22 +277,14 @@ class Command(BaseCommand):
                 f"zadejte proto --valid-to: poslední den, jehož změny SHP jistě obsahuje."
             )
         datum_shp = valid_to + timedelta(days=1)
-        # Import až tady: cron.tasks táhne celou sadu úloh, příkaz z něj potřebuje jen konstantu.
-        from cron.tasks import RUIAN_RETENCE_ZDROJE_DNU
-
-        # Denní sync začne dnem po kotvě; ČÚZK drží změnové soubory staré
-        # nejvýš RUIAN_RETENCE_ZDROJE_DNU dnů (92 dnů ještě HTTP 200, 93 už 404).
-        stari_prvniho_dne = (_dnes() - datum_shp).days
-        if stari_prvniho_dne > RUIAN_RETENCE_ZDROJE_DNU:
-            # Typicky přebalený archiv se starými časy souborů. První den po
-            # takové kotvě už ČÚZK nenabízí – cron by ho nestáhl a kotva by se
-            # už nikdy neposunula.
+        if kotva_mimo_retenci(valid_to, _dnes()):
+            # Typicky přebalený archiv se starými časy souborů. Odmítne se už
+            # tady, aby chyba neradila zadat --valid-to ručně – i ruční kotvu
+            # mimo retenci odmítne _zkontroluj_valid_to.
             raise CommandError(
                 f"Podle časů souborů v ZIP vznikl archiv {datum_shp.isoformat()}, kotva by byla "
-                f"{valid_to.isoformat()}. Změnový soubor z {datum_shp.isoformat()}, kterým by denní sync "
-                f"navázal, je starý {stari_prvniho_dne} dnů – mimo retenci ČÚZK ({RUIAN_RETENCE_ZDROJE_DNU} "
-                f"dnů), takže by denní sync nenavázal. Časy souborů v archivu nejspíš neodpovídají obsahu: "
-                f"stáhněte aktuální 1.zip přímo od ČÚZK, nebo zadejte --valid-to ručně."
+                f"{valid_to.isoformat()}. {_popis_mimo_retenci(valid_to)} Časy souborů v archivu nejspíš "
+                f"neodpovídají obsahu, nebo je archiv starý: stáhněte aktuální 1.zip přímo od ČÚZK."
             )
         self.stdout.write(
             self.style.WARNING(
@@ -311,9 +320,11 @@ class Command(BaseCommand):
           :meth:`_datum_vygenerovani_shp`). ČÚZK generuje archiv večer,
           ale změnový soubor téhož dne v něm ještě není; dřívější
           kotva je přitom neškodná – denní sync jen znovu aplikuje den, který
-          už v datech je – pokud leží v retenci změnových souborů ČÚZK (odvozenou
-          kotvu mimo ni odmítne už :meth:`_urci_valid_to`). U adresáře, kde
-          datum nejde zjistit, jen upozorní;
+          už v datech je. U adresáře, kde datum nejde zjistit, jen upozorní;
+        * kotva, po které by denní sync navazoval změnovým souborem mimo
+          retenci ČÚZK (:func:`~heslar.ruian_sync.vfr_download.kotva_mimo_retenci`),
+          se odmítne vždy – zadaná, odvozená i u adresáře. Takový soubor už na
+          serveru není a kotva by se nikdy neposunula;
         * ÚZSZ **novější** než ``valid_to`` je podezřelé, protože definiční
           body by pocházely z pozdějšího stavu, než jaký se deklaruje;
         * velký odstup ÚZSZ od ``valid_to`` je jen upozornění, že definiční
@@ -323,14 +334,23 @@ class Command(BaseCommand):
         :param shp_path: Cesta k ``1.zip`` nebo k adresáři s vrstvami.
         :param uzsz_path: Cesta k souboru ÚZSZ.
         :param valid_to: Datum zadané přes ``--valid-to``.
-        :raises CommandError: Když ``--valid-to`` leží v budoucnosti nebo je
-            pozdější než den před vygenerováním SHP.
+        :raises CommandError: Když ``--valid-to`` leží v budoucnosti, je
+            pozdější než den před vygenerováním SHP, nebo by po něm denní sync
+            navazoval souborem mimo retenci ČÚZK.
         """
         dnes = _dnes()
         if valid_to > dnes:
             raise CommandError(
                 f"--valid-to {valid_to.isoformat()} leží v budoucnosti (dnes je {dnes.isoformat()}). "
                 f"Kotva by přeskočila denní změny za {(valid_to - dnes).days} dnů a nikdo by se to nedozvěděl."
+            )
+        if kotva_mimo_retenci(valid_to, dnes):
+            # Platí pro každou kotvu – zadanou, odvozenou i u adresáře. Hlídač
+            # stáří dat v cronu by tu nepomohl: porovnává nejnovější kotvu
+            # s daty, takže starší kotva plného synchu po nedávné deltě projde tiše.
+            raise CommandError(
+                f"--valid-to {valid_to.isoformat()}: {_popis_mimo_retenci(valid_to)} Použijte čerstvý "
+                f"1.zip od ČÚZK a kotvu odpovídající jeho stavu."
             )
 
         nejpozdeji = self._nejpozdejsi_kotva(shp_path)

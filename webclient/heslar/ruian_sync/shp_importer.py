@@ -97,6 +97,18 @@ _FALLBACK_EXPECTED = {
 }
 
 
+#: Nastavení ``iterparse`` pro ÚZSZ. Komentáře a instrukce zpracování se zahazují:
+#: jejich ``tag`` není jméno prvku a ``etree.QName`` nad ním spadne (stejně jako
+#: v :mod:`heslar.ruian_sync.vfr_parser`). ``resolve_entities=False`` blokuje XXE.
+_UZSZ_ITERPARSE = {
+    "events": ("end",),
+    "huge_tree": True,
+    "resolve_entities": False,
+    "remove_comments": True,
+    "remove_pis": True,
+}
+
+
 class ShpUzszSource(RuianSource):
     """
     :class:`RuianSource` načítající polygony z SHP a definiční body z VFR `ST_UZSZ`.
@@ -153,7 +165,7 @@ class ShpUzszSource(RuianSource):
         """
         try:
             with self._open_uzsz_stream() as fh:
-                ctx = etree.iterparse(fh, events=("end",), huge_tree=True, resolve_entities=False)
+                ctx = etree.iterparse(fh, **_UZSZ_ITERPARSE)
                 for _, elem in ctx:
                     if etree.QName(elem.tag).localname == "TypSouboru":
                         typ = (elem.text or "").strip()
@@ -264,7 +276,7 @@ class ShpUzszSource(RuianSource):
         # Pokud bychom dostali duplicitní zápis pro tentýž kód, převálcujeme jej
         # poslední hodnotou – v UZSZ jsou všechny instance pro daný kód shodné.
         with self._open_uzsz_stream() as fh:
-            ctx = etree.iterparse(fh, events=("end",), huge_tree=True, resolve_entities=False)
+            ctx = etree.iterparse(fh, **_UZSZ_ITERPARSE)
             for _, elem in ctx:
                 if etree.QName(elem.tag).localname != "Point":
                     continue
@@ -528,7 +540,13 @@ class ShpUzszSource(RuianSource):
                         stary.unlink()
                 with zipfile.ZipFile(str(self.shp_path)) as zf:
                     # Rozbalit všechny pomocné soubory (.shp, .shx, .dbf, .prj, .cpg)
-                    for member in zf.namelist():
+                    for info in zf.infolist():
+                        # Položka adresáře pojmenovaná jako vrstva (``KATUZE_P.shp/``
+                        # v přebaleném archivu) by se rozbalila jako adresář a GDAL by
+                        # dostal adresář místo souboru – přeskočí se.
+                        if info.is_dir():
+                            continue
+                        member = info.filename
                         member_path = Path(member)
                         if member_path.stem == basename and member_path.suffix.lower() in _SHP_PRIPONY:
                             # Bere se cesta, kam extract() soubor skutečně zapsal – název
@@ -542,7 +560,7 @@ class ShpUzszSource(RuianSource):
                     "heslar.ruian_sync.shp_importer._resolve_shp_layer.extracted",
                     extra={"file": basename, "unpack_dir": str(unpack_dir), "zip": str(self.shp_path)},
                 )
-            if not target.exists():
+            if not target.is_file():
                 raise FileNotFoundError(f"SHP layer {basename} nebyl v archivu {self.shp_path} nalezen.")
             return target
 

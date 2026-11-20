@@ -844,8 +844,12 @@ class StariPoslednichDatTests(TestCase):
         self.assertIn("dlouho_bez_dat", self._hlaska(tasks.RUIAN_NO_DOWNLOAD_ERROR_DAYS + 1))
 
     def test_tesne_pred_retenci_stale_jen_varovani(self):
-        """Den před hranicí retence se ještě dá spolehnout na denní sync."""
-        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU - 1)
+        """
+        Dokud je první zameškaný den (kotva + 1) v retenci, denní sync ho ještě dožene.
+
+        Kotva stará 93 dnů → první den starý 92 dnů, ČÚZK ho ještě nabízí.
+        """
+        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU + 1)
 
         self.assertIn("dlouho_bez_dat", hlasky)
         self.assertNotIn("mimo_retenci_zdroje", hlasky)
@@ -857,7 +861,7 @@ class StariPoslednichDatTests(TestCase):
         Rada „ověřte URL“ by tu byla zavádějící, proto ji nahradí výzva
         ke spuštění plného syncu.
         """
-        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU)
+        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU + 2)
 
         self.assertIn("mimo_retenci_zdroje", hlasky)
         self.assertNotIn("dlouho_bez_dat", hlasky)
@@ -2118,6 +2122,12 @@ class DatumSnapshotuTests(SimpleTestCase):
 
         self.vystup = io.StringIO()
         self.command = Command(stdout=self.vystup)
+        # Pevné „dnes“ kousek po datech v testech, ať je retence změnových
+        # souborů nevyřadí s plynoucím časem. Testy retence si ho přenastaví.
+        self.dnes = datetime.date(2026, 9, 1)
+        patcher = mock.patch(_DNES_PRIKAZU, return_value=self.dnes)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def _shp_zip(self, *casy):
         """
@@ -2214,6 +2224,26 @@ class DatumSnapshotuTests(SimpleTestCase):
 
         self.assertIn("mimo retenci", str(chyceno.exception))
 
+    def test_rucni_valid_to_mimo_retenci_se_odmitne(self):
+        """
+        I ručně zadaná kotva mimo retenci změnových souborů se odmítne – u ZIP i u adresáře.
+
+        Plný sync ze starého archivu se starou kotvou by jinak kotvu vrátil do
+        dnů, které ČÚZK už nenabízí, a denní sync by nenavázal.
+        """
+        from django.core.management.base import CommandError
+
+        uzsz = Path("/d/20260731_ST_UZSZ.xml.zip")
+        adresar = Path(tempfile.gettempdir())
+        with mock.patch(_DNES_PRIKAZU, return_value=datetime.date(2026, 11, 20)):
+            # Kotva 19. 8. → první den 20. 8. je starý 92 dnů, ČÚZK ho ještě nabízí.
+            self.command._zkontroluj_valid_to(adresar, uzsz, datetime.date(2026, 8, 19))
+            # Kotva 18. 8. → první den 19. 8. je starý 93 dnů, už není.
+            for shp in (self._shp_zip((2026, 8, 20, 20, 27, 14)), adresar):
+                with self.subTest(shp=shp), self.assertRaises(CommandError) as chyceno:
+                    self.command._zkontroluj_valid_to(shp, uzsz, datetime.date(2026, 8, 18))
+                self.assertIn("mimo retenci", str(chyceno.exception))
+
     def test_zadane_valid_to_ma_prednost(self):
         """Ručně zadaná kotva se použije, i když by šla odvodit (ověří ji až kontrola)."""
         cesta = self._shp_zip((2026, 10, 12, 20, 27, 6))
@@ -2267,7 +2297,7 @@ class DatumSnapshotuTests(SimpleTestCase):
 
         from django.core.management.base import CommandError
 
-        zitra = datetime.date.today() + datetime.timedelta(days=1)
+        zitra = self.dnes + datetime.timedelta(days=1)
         with self.assertRaises(CommandError) as chyceno:
             self.command._zkontroluj_valid_to(Path("/d/neni_zip"), Path("/d/20260731_ST_UZSZ.xml.zip"), zitra)
 
@@ -2657,10 +2687,15 @@ class KatastrBezHraniceTests(TestCase):
         udalost = self._udalost(960197, f"MULTIPOLYGON((({x0} {y0},{x1} {y0},{x1} {y1},{x0} {y1},{x0} {y0})))")
         ulozene = []
 
-        with mock.patch.object(RuianKatastr, "save", autospec=True, side_effect=ulozene.append):
+        with mock.patch.object(RuianKatastr, "save", autospec=True, side_effect=ulozene.append), mock.patch.object(
+            syncer, "_append_run_warning", lambda run, text: self.varovani.append(text)
+        ):
             vysledek = syncer._upsert_katastr(None, udalost.payload, self.run)
 
         self.assertEqual(vysledek, (True, True))
+        # Přibližný definiční bod musí být vidět v auditu běhu, ne jen v logu.
+        self.assertEqual(len(self.varovani), 1)
+        self.assertIn("centroid hranice", self.varovani[0])
         self.assertEqual(len(ulozene), 1)
         self.assertEqual(ulozene[0].definicni_bod.srid, 5514)
         self.assertAlmostEqual(ulozene[0].definicni_bod.x, (x0 + x1) / 2)
@@ -2691,6 +2726,34 @@ class KatastrBezHraniceTests(TestCase):
             syncer, "_check_katastry_topology", kontrola
         ), mock.patch.object(self.run, "save"):
             syncer._apply_changes([self._udalost(self.RUSENY)], self.run)
+
+        self.assertFalse(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
+        self.assertEqual(ubytky, [None])
+
+    def test_formalni_zanik_pokryteho_katastru_neni_dira(self):
+        """
+        Formální zánik (``ZaniklePrvky``) katastru, jehož území už pokrývá nástupce, se nehlásí jako díra.
+
+        Runbook doporučuje na formální zánik počkat – ten pak nesmí vyvolat
+        planý poplach. Součet ploch se počítá doopravdy.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        ubytky = []
+
+        def kontrola(run, plocha_pred):
+            ubytky.append(syncer._zkontroluj_pokryti(run, plocha_pred))
+
+        def smaz(katastr, run):
+            # Přímo SQL – ``delete()`` by přes signály psal do Fedory.
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM ruian_katastr WHERE id = %s", [katastr.pk])
+            return True
+
+        zanik = RuianChangeEvent(level=LEVEL_KATASTR, event_type=EVENT_DELETE, kod=self.RUSENY, payload=None)
+        with self._patche(), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology", kontrola
+        ), mock.patch.object(self.run, "save"):
+            syncer._apply_changes([zanik], self.run)
 
         self.assertFalse(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
         self.assertEqual(ubytky, [None])
@@ -3138,6 +3201,48 @@ class PresmerovaniPriStahovaniTests(SimpleTestCase):
         self.assertEqual(odpoved.status_code, 200)
 
 
+class UzszKomentareTests(SimpleTestCase):
+    """
+    Testy, že XML komentář ani instrukce zpracování v ÚZSZ neshodí plný sync.
+
+    Jejich ``tag`` není jméno prvku a ``etree.QName`` nad ním spadne – stejná
+    třída chyb jako v parseru změnových VFR.
+    """
+
+    def _zdroj(self, obsah):
+        """
+        Zapíše ÚZSZ XML a sestaví nad ním :class:`ShpUzszSource` bez kontrol konstruktoru.
+
+        :param obsah: Text XML.
+        :return: Instance s nastaveným ``uzsz_path``.
+        """
+        from heslar.ruian_sync.shp_importer import ShpUzszSource
+
+        adresar = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, adresar, ignore_errors=True)
+        cesta = Path(adresar) / "20260731_ST_UZSZ.xml"
+        cesta.write_text(obsah, encoding="utf-8")
+        zdroj = ShpUzszSource.__new__(ShpUzszSource)
+        zdroj.uzsz_path = cesta
+        return zdroj
+
+    def test_komentar_a_pi_neshodi_hlavicku_ani_definicni_body(self):
+        """Hlavička se ověří a definiční bod katastru načte i s komentáři a instrukcemi zpracování."""
+        zdroj = self._zdroj(
+            f'<?xml version="1.0" encoding="UTF-8"?><VymennyFormat xmlns:gml="{GML}"><!-- export -->'
+            "<Hlavicka><?pi data?><TypSouboru>ST_UZSZ</TypSouboru></Hlavicka><Data>"
+            '<KatastralniUzemi><!-- bod --><gml:MultiPoint gml:id="DKU.668753">'
+            '<gml:pointMember><gml:Point gml:id="DKU.668753.1"><?pi data?>'
+            "<gml:pos>-700000.00 -1100000.00</gml:pos></gml:Point></gml:pointMember></gml:MultiPoint>"
+            "</KatastralniUzemi></Data></VymennyFormat>"
+        )
+
+        zdroj._validate_uzsz_header()
+        _kraje, _okresy, katastry = zdroj._load_uzsz_definicni_body()
+
+        self.assertIn(668753, katastry)
+
+
 class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
     """
     Testy rozbalení vrstvy SHP z novějšího archivu (#4455).
@@ -3237,6 +3342,23 @@ class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
         self.assertEqual(target, self.unpack_dir / "VUSC_P.shp")
         self.assertEqual(target.read_bytes(), b"nova")
         self.assertEqual(cizi.read_bytes(), b"cizi")
+
+    def test_adresar_pojmenovany_jako_vrstva_se_preskoci(self):
+        """
+        Položka adresáře ``VUSC_P.shp/`` se nerozbalí jako vrstva.
+
+        Jen adresář → chybí vrstva (``FileNotFoundError``), ne adresář pro GDAL.
+        Adresář vedle skutečné vrstvy → vrátí se soubor.
+        """
+        self._zapis_archiv({"VUSC_P.shp/": b""})
+        with self.assertRaises(FileNotFoundError):
+            self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self._zapis_archiv({"VUSC_P.shp/": b"", "data/VUSC_P.shp": b"nova"})
+        target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertTrue(target.is_file())
+        self.assertEqual(target.read_bytes(), b"nova")
 
     def test_aktualni_kopie_se_nerozbaluje(self):
         """Kopie novější než archiv se vrátí beze změny a archiv se neotevře."""
