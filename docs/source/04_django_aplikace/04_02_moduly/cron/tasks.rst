@@ -133,12 +133,13 @@ Funkce
 
    Každý den kontrola a odeslání emailů E-N-01 a E-N-02
 
-.. py:function:: _is_lock_not_available(err)
+.. py:function:: _last_cancellation_date(projekt)
 
-   Určí, zda chyba DB znamená, že řádek zamkla jiná transakce.
+   Vrátí datum posledního zrušení projektu z jeho historie.
 
-   :param err: Zachycená chyba ``OperationalError`` z ``select_for_update(nowait=True)``.
-   :return: ``True``, pokud původní chyba ovladače nese kód ``55P03``; jiné chyby (např. ztráta spojení) ne.
+   :param projekt: Projekt, jehož historie se prohledává.
+   :return: Datum a čas nejnovější změny typu ``RUSENI_PROJ`` nebo ``RUSENI_STARE_PROJ``; ``None``, pokud projekt
+       nemá historii nebo v ní zrušení není.
 
 .. py:function:: _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix)
 

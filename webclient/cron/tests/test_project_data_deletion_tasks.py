@@ -5,6 +5,7 @@ import datetime
 from unittest.mock import MagicMock, call, patch
 
 from core.repository_connector import FedoraUpdatedByAnotherTransactionError
+from core.utils import PG_LOCK_NOT_AVAILABLE
 from cron import tasks
 from cron.zamek import (
     LOCK_CANCEL_OLD_PROJECTS,
@@ -14,7 +15,9 @@ from cron.zamek import (
     cron_task_lock,
 )
 from django.db import OperationalError
+from django.db.models import QuerySet
 from django.test import SimpleTestCase
+from historie.models import HistorieVazby
 
 LOG_PREFIX = "core.cron.test"
 
@@ -139,7 +142,7 @@ class ProcessProjectInFedoraTransactionTest(SimpleTestCase):
 
     def test_row_locked_by_another_transaction_skips_project_without_fedora_transaction(self):
         """Řádek držený jinou transakcí se přeskočí s varováním; Fedora transakce ani zápisy nevzniknou."""
-        self._lock_error(tasks.PG_LOCK_NOT_AVAILABLE)
+        self._lock_error(PG_LOCK_NOT_AVAILABLE)
         apply_changes = MagicMock()
 
         with self.assertLogs(tasks.logger, level="WARNING") as logs:
@@ -402,10 +405,16 @@ class DeleteProjectDataTasksTest(SimpleTestCase):
             item.stav = tasks.PROJEKT_STAV_ZRUSENY
             item.has_oznamovatel.return_value = True
             item.oznamovatel.email = "a@example.org"
-            when = None if days_ago is None else datetime.datetime.now() - datetime.timedelta(days=days_ago)
-            last_cancel = item.historie.historie.filter.return_value.order_by.return_value.values_list.return_value
-            last_cancel.first.return_value = when
+            item.days_ago = days_ago
             return item
+
+        def _last_cancel(item):
+            """Vrátí čas posledního zrušení podle ``days_ago`` nastaveného na falešném projektu."""
+            if item.days_ago is None:
+                return None
+            return datetime.datetime.now() - datetime.timedelta(days=item.days_ago)
+
+        self.enterContext(patch.object(tasks, "_last_cancellation_date", side_effect=_last_cancel))
 
         pending = _cancelled_project(400)
         recancelled = _cancelled_project(10)
@@ -493,3 +502,33 @@ class DailyProjectTasksLockTest(SimpleTestCase):
             LOCK_DELETE_UNSUBMITED_PROJECTS,
         ]
         self.assertEqual(len(keys), len(set(keys)))
+
+
+class LastCancellationDateTest(SimpleTestCase):
+    """Testy výběru data posledního zrušení projektu z historie přes skutečný queryset."""
+
+    def test_project_without_history_has_no_cancellation(self):
+        """Projekt bez vazby na historii (nullable pole) nemá datum zrušení a nesahá do DB."""
+        projekt = MagicMock()
+        projekt.historie = None
+
+        self.assertIsNone(tasks._last_cancellation_date(projekt))
+
+    def test_queries_reverse_manager_of_historie_newest_first(self):
+        """Dotaz jde přes skutečný zpětný manažer ``historie_set``: filtr na zrušení a řazení od nejnovější změny."""
+        projekt = MagicMock()
+        projekt.historie = HistorieVazby(pk=7)
+        captured = {}
+
+        def _first(queryset):
+            captured["queryset"] = queryset
+            return "datum"
+
+        with patch.object(QuerySet, "first", _first):
+            self.assertEqual(tasks._last_cancellation_date(projekt), "datum")
+
+        sql = str(captured["queryset"].query)
+        self.assertIn('"historie"."vazba" = 7', sql)
+        self.assertIn(tasks.RUSENI_PROJ, sql)
+        self.assertIn(tasks.RUSENI_STARE_PROJ, sql)
+        self.assertRegex(sql, r"ORDER BY .* DESC")

@@ -71,6 +71,7 @@ from core.translation import format_message
 from core.utils import (
     check_import_report_directory,
     hodnota_pro_log,
+    is_lock_not_available,
     iter_pk_chunks,
     translate_status_value,
     upsert_import_report_index_entry,
@@ -460,19 +461,22 @@ class _ProjectLockedError(Exception):
     """Řádek projektu drží jiná transakce, takže ho cron v tomto běhu přeskočí."""
 
 
-#: Kód chyby PostgreSQL ``lock_not_available`` vracený při ``SELECT ... FOR UPDATE NOWAIT``.
-PG_LOCK_NOT_AVAILABLE = "55P03"
-
-
-def _is_lock_not_available(err: OperationalError) -> bool:
+def _last_cancellation_date(projekt):
     """
-    Určí, zda chyba DB znamená, že řádek zamkla jiná transakce.
+    Vrátí datum posledního zrušení projektu z jeho historie.
 
-    :param err: Zachycená chyba ``OperationalError`` z ``select_for_update(nowait=True)``.
-    :return: ``True``, pokud původní chyba ovladače nese kód ``55P03``; jiné chyby (např. ztráta spojení) ne.
+    :param projekt: Projekt, jehož historie se prohledává.
+    :return: Datum a čas nejnovější změny typu ``RUSENI_PROJ`` nebo ``RUSENI_STARE_PROJ``; ``None``, pokud projekt
+        nemá historii nebo v ní zrušení není.
     """
-    cause = err.__cause__
-    return getattr(cause, "pgcode", None) == PG_LOCK_NOT_AVAILABLE
+    if projekt.historie is None:
+        return None
+    return (
+        projekt.historie.historie_set.filter(typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
+        .order_by("-datum_zmeny")
+        .values_list("datum_zmeny", flat=True)
+        .first()
+    )
 
 
 def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix):
@@ -515,7 +519,7 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
                 try:
                     item: Projekt = Projekt.objects.select_for_update(nowait=True).get(pk=projekt_pk)
                 except OperationalError as err:
-                    if _is_lock_not_available(err):
+                    if is_lock_not_available(err):
                         raise _ProjectLockedError(projekt_pk) from err
                     raise
                 if not is_pending(item):
@@ -648,12 +652,7 @@ def delete_personal_data_canceled_projects():
                     return False
                 if deleted_string in (item.oznamovatel.email or ""):
                     return False
-                last_cancel = (
-                    item.historie.historie.filter(typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
-                    .order_by("-datum_zmeny")
-                    .values_list("datum_zmeny", flat=True)
-                    .first()
-                )
+                last_cancel = _last_cancellation_date(item)
                 return last_cancel is not None and last_cancel.date() < year_ago
 
             def apply_changes(item: Projekt):

@@ -28,7 +28,7 @@ from django.conf import ENVIRONMENT_VARIABLE, settings
 from django.contrib.gis.db.models.functions import AsGeoJSON, PointOnSurface
 from django.core.cache import caches
 from django.core.paginator import Paginator
-from django.db import connection, connections
+from django.db import OperationalError, connection, connections
 from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils import timezone
@@ -44,6 +44,20 @@ from rosetta.conf import settings as rosetta_settings
 
 logger = logging.getLogger(__name__)
 cache = caches[rosetta_settings.ROSETTA_CACHE_NAME]
+
+
+#: Kód chyby PostgreSQL ``lock_not_available`` vracený při ``SELECT ... FOR UPDATE NOWAIT``.
+PG_LOCK_NOT_AVAILABLE = "55P03"
+
+
+def is_lock_not_available(err: OperationalError) -> bool:
+    """
+    Určí, zda chyba DB znamená, že řádek zamkla jiná transakce.
+
+    :param err: Zachycená chyba ``OperationalError`` z ``select_for_update(nowait=True)``.
+    :return: ``True``, pokud původní chyba ovladače nese kód ``55P03``; jiné chyby (např. ztráta spojení) ne.
+    """
+    return getattr(err.__cause__, "pgcode", None) == PG_LOCK_NOT_AVAILABLE
 
 
 class CannotFindCadasterCentre(Exception):

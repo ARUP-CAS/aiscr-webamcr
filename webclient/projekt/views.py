@@ -48,6 +48,7 @@ from core.message_constants import (
     DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT,
     MAXIMUM_IDENT_DOSAZEN,
     PRISTUP_ZAKAZAN,
+    PROJEKT_NEKDO_ZMENIL_STAV,
     PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
     PROJEKT_NELZE_SMAZAT,
@@ -87,6 +88,7 @@ from core.utils import (
     get_projects_from_envelope,
     get_timezone,
     hodnota_pro_log,
+    is_lock_not_available,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -96,7 +98,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.db import transaction
+from django.db import OperationalError, transaction
 from django.db.models import Q
 from django.db.models.functions import Length
 from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse
@@ -1548,6 +1550,26 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            # Řádek projektu může držet cron (anonymizace po zrušení) po dobu volání do Fedory. Čekání by skončilo
+            # po ``statement_timeout`` a otevřená Fedora transakce by zůstala viset, proto se zámek bere bez čekání
+            # a před vytvořením Fedora transakce.
+            try:
+                projekt = Projekt.objects.select_for_update(nowait=True).get(pk=projekt.pk)
+            except OperationalError as err:
+                if not is_lock_not_available(err):
+                    raise
+                logger.info("projekt.views.vratit_navrh_zruseni.locked", extra={"ident_cely": ident_cely})
+                messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+                return JsonResponse(
+                    {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+                    status=403,
+                )
+            if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_ZRUSENY]:
+                messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+                return JsonResponse(
+                    {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+                    status=403,
+                )
             projekt.create_transaction(request.user, PROJEKT_USPESNE_VRACEN)
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
