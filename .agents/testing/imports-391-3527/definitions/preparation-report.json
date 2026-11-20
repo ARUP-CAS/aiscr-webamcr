@@ -1,0 +1,217 @@
+{
+  "behaviour": {
+    "controlled": 17,
+    "coverage_items": 749,
+    "covered_by_inputs": 729,
+    "deferred_batches": [
+      "N07x-deferred-known-defects",
+      "V17-branches-update",
+      "V18-branches-update",
+      "V19-branches-update"
+    ],
+    "deferred_coverage": [
+      "historie.branch.cooperation-owner",
+      "historie.branch.file-owner",
+      "historie.branch.user-owner",
+      "historie.field.vazba.missing-lookup",
+      "komponenty.field.vazba.missing-lookup",
+      "soubory.field.vazba.missing-lookup"
+    ],
+    "procedures": 2,
+    "uploads": 79
+  },
+  "binary_sources": {
+    "bytes": 25346682,
+    "files": 40000,
+    "sha256": "48be57b8dfd5aef902f0e0fbd7a20d4e9f9738f59fd30214755df46accda0829"
+  },
+  "credential_target_2026_11_14": {
+    "change": "fedora-read/fedora-search/capture accept --credential-target (Windows Credential Manager generic entry)",
+    "inputs_vs_r5": "byte-identical; manifests differ only in generator_hashes"
+  },
+  "delivery": "generated/delivery-2026-11-14-r7",
+  "deployed_revision": {
+    "last_recorded_test_deployment": {
+      "commit": "3d4a4dd15e83c769eaa78235c985b326ae838a24",
+      "deployed": "2026-11-06",
+      "tag": "v2.0.0-alpha.2"
+    },
+    "note": "Confirm at session start and start runs with a deployment-parity record",
+    "parity": "different: webclient/core/repository_connector.py (#4493 not deployed); PO catalogs equal in all used entries",
+    "state": "unverified"
+  },
+  "history": {
+    "2026-11-09": {
+      "evidence": "52 focused local tests, source-only Git-candidate CLI/offline build and regression execution, full-size ZIP contents, 40000 binary source entries checked against SHA256/SHA512 manifests, isolated portable controls and 85-card blocked handoff rehearsal",
+      "portable_rehearsal": {
+        "cards": 85,
+        "checksum_file": "exports/imports-391-3527-2026-11-09-repaired-final.zip.sha256",
+        "export_files": 672,
+        "fresh_python_isolated": true,
+        "isolated_regression_tests": 11,
+        "live_complete": false,
+        "mode": "offline-rehearsal",
+        "next_candidate": "B01-foundations",
+        "open_spec_all": "passed",
+        "open_spec_strict": "passed",
+        "source_only_git_snapshot": "passed",
+        "ui": "unobserved"
+      },
+      "verification_remediation": {
+        "git_visible_helpers": 25,
+        "live_outcomes": "unexecuted",
+        "load_provenance_controls": "missing/mismatched/stale/altered evidence, simulation, missing events and selected input revisions",
+        "original_defects_reproduced_before_fix": true,
+        "resolved": [
+          "W1",
+          "W2",
+          "W3"
+        ],
+        "retention_controls": "real XLSX validation/terminal/later-task originals, snapshots and stored-byte tampering"
+      }
+    }
+  },
+  "known_defects": [
+    {
+      "deferred_batches": [
+        "N07x-deferred-known-defects",
+        "V17-branches-update",
+        "V18-branches-update",
+        "V19-branches-update"
+      ],
+      "evidence_kind": "source-confirmed",
+      "id": "vazba-lookup-fallback"
+    }
+  ],
+  "lint": {
+    "black": "passed (idempotent)",
+    "flake8": "passed",
+    "isort": "passed"
+  },
+  "live_imports_executed": false,
+  "live_outcomes": "unexecuted",
+  "load_distributions": {
+    "distributions": 20000,
+    "expected_parent_groups": 5000,
+    "files": 10000,
+    "measured_rows": 40000,
+    "paradata": 20000,
+    "parent_records": 5000
+  },
+  "load_relational": {
+    "combined": {
+      "batch": "L01-relational-50000",
+      "blocked_by": "vazba-lookup-fallback",
+      "measured_rows": 50000,
+      "state": "blocked"
+    },
+    "substitute": {
+      "imports": [
+        {
+          "batch": "L01a-relational-parents-30000",
+          "documentation_units": 10000,
+          "fieldwork_events": 10000,
+          "measured_rows": 30000,
+          "projects": 10000
+        },
+        {
+          "batch": "L01b-relational-components-20000",
+          "components": 10000,
+          "finds": 10000,
+          "measured_rows": 20000
+        }
+      ],
+      "label": "two-import substitute"
+    }
+  },
+  "mode": "offline-preparation",
+  "portable_export": {
+    "bundle": "exports/imports-391-3527-2026-11-14-r7.zip",
+    "checksum_file": "exports/imports-391-3527-2026-11-14-r7.zip.sha256"
+  },
+  "preflight_fix_2026_11_14": {
+    "binary_sources_sha256_unchanged": true,
+    "changed_inputs_vs_r4": {
+      "behaviour": [
+        "sql/references.sql"
+      ],
+      "load-distributions": [
+        "sql/references.sql"
+      ],
+      "load-relational": [
+        "sql/references.sql"
+      ]
+    },
+    "defects": [
+      "references.sql filtered kladyzm.kategorie=10/50; the application uses KLADYZM10=1 and KLADYZM50=3 (core/constants.py), so zm10/zm50 were null and spatial-unit inputs stayed unresolved",
+      "references.sql matched PIAN geometry types by heslo LIKE 'ploch%'/'lini%'; the application resolves GEOMETRY_PLOCHA/GEOMETRY_LINIE from CustomAdminSettings with source defaults, and no TEST term matched 'ploch%'"
+    ],
+    "environment_fact": "TEST has no ruian_katastr with pian_id set; az_dokumentacni_jednotky.branch.cadastral-existing-pian needs controlled setup and is not satisfied by fallback",
+    "fix": "reference SQL reads the application constants pinned in the inventory (spatial_constants; core/constants.py and heslar/hesla_dynamicka.py added to source_hashes)",
+    "found_by": "live behaviour preflight against TEST reference export (run behaviour-2026-11-14-live)",
+    "tests": 77
+  },
+  "previous_bundle_sha256": "a2f26740b1fe78e2e51d564b66ca5fe62acd87b6aec1c28a748c993bbd1e7dab",
+  "recipe_audit_2026_11_14": {
+    "application_observations": [
+      "Pian INSERT with one coordinate system rejected (missing geom_sjtsk): check_required_fields runs before transform_geometries derives the other system",
+      "Czech msgstr empty for core_admin.ImportDataMissingReferencedValueError.message.model_field and core_admin.ImportDataMissingHeslarValueError.message"
+    ],
+    "behaviour_namespace": "950000; the live run continues on r7 via revise-run (B01 input unchanged, B02 changed after its failed validation)",
+    "found_by": "live B02-domain-graph validation (run behaviour-2026-11-14-live): 14 of 59 rows rejected",
+    "pack_changes": [
+      "recipe_audit.audit_rows over all apply-insert rows (0 findings in r7)",
+      "az_pian supplies geom_sjtsk via DB-computed S-JTSK companions point/line/polygon_5514",
+      "new probes az_pian.field.geom_sjtsk.missing-required and projekty_oznamovatele.field.telefon.missing-required"
+    ],
+    "pack_defects": [
+      "projekty_oznamovatele.telefon empty although Oznamovatel.telefon is non-nullable",
+      "dokumenty_posudky.posudek used a document ident; DokumentPosudek.posudek is FK Heslar (HESLAR_POSUDEK_TYP); branch self-reference replaced by wrong-vocabulary"
+    ],
+    "tests": 86
+  },
+  "remediation_2026_11_14": {
+    "changed_inputs_vs_r3": {
+      "behaviour": [
+        "N07-field-boundaries (3 rows moved)",
+        "N07x-deferred-known-defects (added)"
+      ],
+      "load-distributions": [],
+      "load-relational": [
+        "L01a-relational-parents-30000 (added)",
+        "L01b-relational-components-20000 (added)"
+      ]
+    },
+    "relocated_to": ".agents/testing/imports-391-3527/",
+    "tasks": [
+      "9.1",
+      "9.2",
+      "9.3",
+      "9.4",
+      "9.5",
+      "9.6",
+      "9.7"
+    ]
+  },
+  "removed_superseded": {
+    "date": "2026-11-14",
+    "decision": "operator",
+    "items": [
+      "generated/behaviour",
+      "generated/load",
+      "generated/delivery-2026-11-08-r1",
+      "generated/delivery-2026-11-08-r2",
+      "generated/delivery-2026-11-09-r3",
+      "generated/portable-rehearsal-2026-11-09",
+      "generated/verification-repaired-export",
+      "runs/behaviour/offline-delivery-rehearsal-2026-11-09 (simulation)",
+      "exports/imports-391-3527-2026-11-09*.zip and .sha256"
+    ]
+  },
+  "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+  "source_hash_mode": "sha256-lf-text-v1",
+  "unit_tests": {
+    "failed": 0,
+    "passed": 69
+  }
+}

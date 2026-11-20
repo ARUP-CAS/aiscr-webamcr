@@ -1,0 +1,664 @@
+"""Lokální záznam kontrolních bodů a předání bez opakování importních akcí."""
+
+from __future__ import annotations
+
+import re
+from datetime import datetime, timezone
+from pathlib import Path
+
+from .common import digest, inside, json_bytes, read_json, save_json, write_new
+
+
+def start_run(root, manifest, run_id, deployment, mode="live", window=None, parity=None):
+    """
+    Založí nezávislý běh; nevykoná žádnou činnost v aplikaci.
+
+    Nasazení jiné než pinovaný commit se přijme jen s platným záznamem zdrojové shody, který se uloží do běhu.
+
+    :param root: Nový adresář běhu.
+    :param manifest: Vybraný manifest sady.
+    :param run_id: Bezpečné ID běhu.
+    :param deployment: Ověřená nasazená revize.
+    :param mode: ``live`` nebo ``simulation``.
+    :param window: Schválené okno zátěžového běhu.
+    :param parity: Záznam shody z ``deployment-parity``, nebo ``None`` pro pinovaný commit.
+    :return: Uložený záznam běhu.
+    :raises ValueError: Neznámé nebo neověřené nasazení či neplatné parametry běhu.
+    """
+    from .deployment import identity
+
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,60}", run_id):
+        raise ValueError("Unsafe run ID")
+    if not deployment or deployment.lower() in ("unknown", "test", "latest"):
+        raise ValueError("Record the actual deployed revision first")
+    if parity is not None and not identity(manifest, deployment, parity)[0]:
+        raise ValueError("Parity record does not verify this deployment: " + identity(manifest, deployment, parity)[2])
+    if manifest["suite"] == "load" and not window:
+        raise ValueError("Load suite needs its separately authorized window")
+    if mode not in ("live", "simulation"):
+        raise ValueError("Unknown evidence mode")
+    record = {
+        "run_id": run_id,
+        "suite": manifest["suite"],
+        "namespace": manifest["namespace"],
+        "deployment": deployment,
+        "mode": mode,
+        "window": window,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "manifest_sha256": digest(json_bytes(manifest)),
+        "manifest": manifest,
+    }
+    if parity is not None:
+        record["deployment_parity"] = parity
+    save_json(inside(root, "run.json"), record)
+    return record
+
+
+# Události řetězce, které nejsou kontrolními body dávky (opravy a rozhodnutí o bránách).
+NON_BATCH_PHASES = ("correction", "gate-resolution")
+# ``not-executed`` uzavírá dávku bez provedení (operátor rozhodl scénář nespouštět); důvod nese událost.
+# ``known-defect`` povolí vědomé provedení odložené dávky (reprodukce známé vady, např. k odblokování úklidu).
+# ``removed-by-setup`` uzavře odloženou část, jejíž řádky odstranila schválená příprava (už nic neblokuje);
+# ``retry`` vyžádá novou dávku se stejným vstupem po neúspěšném běhu, který nic nezměnil (revokovaný import).
+GATE_ACCEPTANCE = (
+    "accepted",
+    "rejected",
+    "record-behaviour",
+    "not-executed",
+    "known-defect",
+    "removed-by-setup",
+    "retry",
+)
+
+
+def checkpoints(root):
+    """Načte původní události a ověří jejich návaznost."""
+    previous, result = None, []
+    for path in sorted((root / "events").glob("*.json")):
+        event = read_json(path)
+        if event.get("previous_sha256") != previous:
+            raise ValueError("Checkpoint chain was altered")
+        result.append(event)
+        previous = digest(path.read_bytes())
+    return result
+
+
+def effective_checkpoints(root):
+    """
+    Vrátí kontrolní body bez těch, které pozdější opravná událost výslovně zneplatnila.
+
+    Řetězec událostí se nikdy nepřepisuje; oprava je nová událost ``phase == "correction"`` s čísly
+    zneplatněných událostí a důvodem. Opravné události samy nejsou kontrolními body dávky.
+
+    :param root: Adresář běhu.
+    :return: Platné kontrolní body v pořadí záznamu.
+    """
+    events = checkpoints(root)
+    voided = {n for e in events if e.get("phase") == "correction" for n in e.get("voids", [])}
+    return [e for n, e in enumerate(events, 1) if n not in voided and e.get("phase") not in NON_BATCH_PHASES]
+
+
+def gate_resolution(root, batch_id, input_sha256):
+    """
+    Vrátí platné rozhodnutí o kontrolované bráně dávky pro daný vstup, nebo ``None``.
+
+    :param root: Adresář běhu.
+    :param batch_id: ID dávky s ``execution_gate``.
+    :param input_sha256: Hash vstupu, k němuž se rozhodnutí váže; jiný vstup potřebuje nové rozhodnutí.
+    :return: Poslední nezneplatněná událost ``phase == "gate-resolution"`` nebo ``None``.
+    """
+    events = checkpoints(root)
+    voided = {n for e in events if e.get("phase") == "correction" for n in e.get("voids", [])}
+    matches = [
+        e
+        for n, e in enumerate(events, 1)
+        if n not in voided
+        and e.get("phase") == "gate-resolution"
+        and e["batch_id"] == batch_id
+        and e.get("input_sha256") == input_sha256
+    ]
+    return matches[-1] if matches else None
+
+
+def executed_inputs(root):
+    """
+    Vrátí pro každou provedenou dávku hash vstupu, se kterým skutečně běžela (z jejích kontrolních bodů).
+
+    Revize vstupů se porovnává s tímto hashem, ne s poslední zaregistrovanou revizí: chybně zaregistrovanou
+    revizi tak lze opravit a provedená dávka nemůže tiše dostat jiný vstup.
+
+    :param root: Adresář běhu.
+    :return: Slovník ``ID dávky -> input_sha256``.
+    """
+    executed = executed_batches(root)
+    result = {}
+    for event in effective_checkpoints(root):
+        if event["batch_id"] in executed and event.get("input_sha256"):
+            result[event["batch_id"]] = event["input_sha256"]
+    return result
+
+
+def refuse_executed_changes(root, old, new):
+    """
+    Odmítne revizi, která odebere provedenou dávku nebo jí změní vstup, operaci, pokrytí či závislosti.
+
+    :param root: Adresář běhu.
+    :param old: Dávky poslední registrované revize (``ID -> dávka``).
+    :param new: Dávky nové revize (``ID -> dávka``).
+    :raises ValueError: Při odebrání nebo změně provedené dávky.
+    """
+    ran = executed_inputs(root)
+    for batch_id in sorted(executed_batches(root)):
+        if batch_id not in new:
+            raise ValueError("Pack revision removes executed batch " + batch_id)
+        if new[batch_id].get("input_sha256") != ran.get(batch_id, old.get(batch_id, {}).get("input_sha256")) or any(
+            new[batch_id].get(key) != old.get(batch_id, {}).get(key)
+            for key in ("operation", "coverage_ids", "prerequisites")
+        ):
+            raise ValueError("Pack revision changes executed batch " + batch_id)
+
+
+def decided_batches(root, acceptance, manifest=None):
+    """
+    Vrátí dávky s platným rozhodnutím daného druhu pro jejich aktuální vstup.
+
+    :param root: Adresář běhu.
+    :param acceptance: Druh rozhodnutí (``GATE_ACCEPTANCE``).
+    :param manifest: Aktuální manifest; ``None`` načte poslední revizi vstupů.
+    :return: Slovník ``ID dávky -> hash vstupu``.
+    """
+    manifest = manifest or current_manifest(root)
+    return {
+        b["id"]: b.get("input_sha256")
+        for b in manifest["batches"]
+        if (gate_resolution(root, b["id"], b.get("input_sha256")) or {}).get("acceptance") == acceptance
+    }
+
+
+def not_executed_batches(root, manifest=None):
+    """
+    Vrátí dávky, o nichž operátor rozhodl, že se na cíli neprovedou (platné rozhodnutí ``not-executed``).
+
+    :param root: Adresář běhu.
+    :param manifest: Aktuální manifest; ``None`` načte poslední revizi vstupů.
+    :return: Množina ID dávek uzavřených bez provedení pro jejich aktuální vstup.
+    """
+    manifest = manifest or current_manifest(root)
+    return {
+        b["id"]
+        for b in manifest["batches"]
+        if b.get("execution_gate")
+        and (gate_resolution(root, b["id"], b.get("input_sha256")) or {}).get("acceptance") == "not-executed"
+    }
+
+
+def record_gate_resolution(root, batch_id, authorized_by, acceptance, reason):
+    """
+    Zapíše rozhodnutí operátora o kontrolované bráně dávky jako událost řetězce (nikdy se nepřepisuje).
+
+    Brána ``execution_gate`` žádá vyřešení akceptace či přípravy a autorizaci pro konkrétní cíl. Událost
+    nese, kdo provedení autorizoval, jak se rozhodne o akceptaci a proč; váže se k aktuálnímu hashi vstupu.
+    Teprve s ní lze kontrolní bod dávky zapsat jako ``checked``. Zneplatnit ji lze ``record_correction``.
+
+    :param root: Adresář běhu.
+    :param batch_id: ID dávky s ``execution_gate``.
+    :param authorized_by: Kdo provedení na cíli autorizoval.
+    :param acceptance: Rozhodnutí o akceptaci (``accepted``, ``rejected``, ``record-behaviour``) nebo ``not-executed``,
+        které dávku uzavře bez provedení.
+    :param reason: Odůvodnění a rozsah autorizace.
+    :return: Zapsaná událost.
+    :raises ValueError: Bez autorizace či důvodu, s neznámou akceptací, pro dávku bez brány nebo odloženou dávku.
+    """
+    if not str(authorized_by or "").strip() or not str(reason or "").strip():
+        raise ValueError("A gate resolution needs who authorized it and a reason")
+    if acceptance not in GATE_ACCEPTANCE:
+        raise ValueError("Unknown acceptance decision")
+    manifest = current_manifest(root)
+    batch = next((b for b in manifest["batches"] if b["id"] == batch_id), None)
+    if batch is None:
+        raise ValueError("Batch does not belong to this suite/run")
+    if acceptance in ("known-defect", "removed-by-setup"):
+        if not batch.get("deferred"):
+            raise ValueError("Only a batch deferred by a known defect can be executed as a known-defect reproduction")
+    elif acceptance == "retry":
+        terminal = {
+            e["state"]
+            for e in effective_checkpoints(root)
+            if e["batch_id"] == batch_id and e.get("phase") == "terminal"
+        }
+        if terminal != {"failed"}:
+            raise ValueError("A retry needs a batch whose only terminal checkpoint failed")
+    elif batch.get("deferred"):
+        raise ValueError("Batch is deferred by a known importer defect; rebuild after the fix instead of executing it")
+    elif not batch.get("execution_gate"):
+        raise ValueError("Batch has no execution gate to resolve")
+    events = checkpoints(root)
+    event = {
+        "phase": "gate-resolution",
+        "batch_id": batch_id,
+        "input_sha256": batch.get("input_sha256"),
+        "execution_gate": batch.get("execution_gate"),
+        "deferred_defects": (batch.get("deferred") or {}).get("defects"),
+        "authorized_by": authorized_by,
+        "acceptance": acceptance,
+        "reason": reason,
+        "state": "checked",
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "previous_sha256": digest(json_bytes(events[-1])) if events else None,
+    }
+    save_json(inside(root, f"events/{len(events) + 1:04}.json"), event)
+    return event
+
+
+def record_correction(root, voids, reason, reviewer):
+    """
+    Zneplatní chybně zaznamenané kontrolní body novou událostí; původní události zůstávají v řetězci.
+
+    :param root: Adresář běhu.
+    :param voids: Pořadová čísla zneplatňovaných událostí (``events/NNNN.json``).
+    :param reason: Proč byl záznam chybný.
+    :param reviewer: Kdo opravu schválil.
+    :return: Zapsaná opravná událost.
+    :raises ValueError: Bez důvodu či recenzenta, nebo při neexistující či opravné cílové události.
+    """
+    if not str(reason or "").strip() or not str(reviewer or "").strip():
+        raise ValueError("A correction needs a reason and a reviewer")
+    events = checkpoints(root)
+    for number in voids:
+        if not 1 <= number <= len(events) or events[number - 1].get("phase") == "correction":
+            raise ValueError(f"Cannot void event {number}")
+    event = {
+        "phase": "correction",
+        "batch_id": events[voids[0] - 1]["batch_id"],
+        "voids": sorted(voids),
+        "voided_digests": [digest(json_bytes(events[n - 1])) for n in sorted(voids)],
+        "reason": reason,
+        "reviewer": reviewer,
+        "state": "checked",
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "previous_sha256": digest(json_bytes(events[-1])) if events else None,
+    }
+    save_json(inside(root, f"events/{len(events) + 1:04}.json"), event)
+    return event
+
+
+def retain(root, batch_id, files):
+    """Zachová původní důkazy; odlišné existující soubory nepřepíše."""
+    result = {}
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", batch_id):
+        raise ValueError("Unsafe batch ID")
+    for kind, source in files.items():
+        if not re.fullmatch(r"[a-z0-9-]+", kind):
+            raise ValueError("Unsafe evidence kind")
+        source = Path(source)
+        if source.is_symlink() or not source.is_file():
+            raise ValueError("Evidence must be an ordinary local file")
+        data = source.read_bytes()
+        destination = inside(root, f"{batch_id}/originals/{kind}/{digest(data)}{source.suffix}")
+        write_new(destination, data)
+        result[kind] = {"path": destination.relative_to(root).as_posix(), "sha256": digest(data), "bytes": len(data)}
+    return result
+
+
+SOURCE_IDENTITY = ("suite", "namespace", "source_commit", "source_hash_mode", "source_hashes")
+UNCHANGED_PHASES = {("preflight", None), ("validation", "failed"), ("validation", "blocked")}
+
+
+def identity_manifest(root):
+    """
+    Vrátí manifest, který určuje identitu generátoru a pokrytí běhu.
+
+    Je to manifest poslední zaznamenané revize balíčku (``revise_pack``), jinak původní manifest z ``run.json``.
+
+    :param root: Adresář běhu.
+    :return: Manifest s platnými ``generator_hashes``, ``coverage`` a ``known_defects``.
+    """
+    revisions = sorted((root / "pack-revisions").glob("*.json"))
+    if revisions:
+        return read_json(inside(root, read_json(revisions[-1])["manifest"]))
+    return read_json(root / "run.json")["manifest"]
+
+
+def executed_batches(root):
+    """
+    Vrátí dávky, u nichž mohla proběhnout změna dat nebo existuje validovaná úloha.
+
+    Za neprovedené se považují jen dávky, jejichž jediné kontrolní body jsou preflight nebo neúspěšná či
+    blokovaná validace; ty v aplikaci nic nezměnily ani nezaložily schválitelnou úlohu.
+
+    :param root: Adresář běhu.
+    :return: Množina ID dávek.
+    """
+    result = set()
+    for event in effective_checkpoints(root):
+        phase = event.get("phase", "terminal")
+        if (phase, None) in UNCHANGED_PHASES or (phase, event["state"]) in UNCHANGED_PHASES:
+            continue
+        result.add(event["batch_id"])
+    return result
+
+
+def revise_pack(root, manifest, reason, reviewer):
+    """
+    Převede běh na opravenou revizi balíčku bez opakování již provedených dávek.
+
+    Zdrojová identita (sada, jmenný prostor, zdrojový commit a otisky) se nesmí změnit. Každá dávka, která
+    v běhu cokoli provedla, musí mít v nové revizi bajtově shodný vstup a stejný kontrakt operace, pokrytí
+    a závislostí. Měnit se smí jen dávky bez provedení, typicky dávka zamítnutá ve validaci kvůli vadě
+    balíčku. Revize se zaznamená s důvodem, recenzentem a seznamem změněných dávek.
+
+    :param root: Adresář běhu.
+    :param manifest: Manifest opravené revize sestavený ve stejném jmenném prostoru.
+    :param reason: Důvod revize (např. nález z validace).
+    :param reviewer: Kdo revizi schválil.
+    :return: Záznam revize.
+    :raises ValueError: Při změně zdrojové identity, chybějícím důvodu či recenzentovi nebo změně provedené dávky.
+    """
+    if not str(reason or "").strip() or not str(reviewer or "").strip():
+        raise ValueError("A pack revision needs a reason and a reviewer")
+    run = read_json(root / "run.json")
+    for key in SOURCE_IDENTITY:
+        if manifest.get(key) != run["manifest"].get(key):
+            raise ValueError("Pack revision changes the run/source identity: " + key)
+    old = {b["id"]: b for b in current_manifest(root)["batches"]}
+    new = {b["id"]: b for b in manifest["batches"]}
+    refuse_executed_changes(root, old, new)
+    previous = identity_manifest(root)
+    files = sorted((root / "input-revisions").glob("*.json"))
+    revision = inside(root, f"input-revisions/{len(files) + 1:04}.json")
+    save_json(revision, manifest)
+    records = sorted((root / "pack-revisions").glob("*.json"))
+    record = {
+        "manifest": revision.relative_to(root).as_posix(),
+        "manifest_sha256": digest(json_bytes(manifest)),
+        "previous_generator_hashes": previous.get("generator_hashes"),
+        "generator_hashes": manifest.get("generator_hashes"),
+        "reason": reason,
+        "reviewer": reviewer,
+        "executed_batches_unchanged": sorted(executed_batches(root)),
+        "changed_batches": sorted(
+            i for i in set(old) & set(new) if old[i].get("input_sha256") != new[i].get("input_sha256")
+        ),
+        "removed_batches": sorted(set(old) - set(new)),
+        "added_batches": sorted(set(new) - set(old)),
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+    }
+    save_json(inside(root, f"pack-revisions/{len(records) + 1:04}.json"), record)
+    return record
+
+
+def register_inputs(root, manifest):
+    """Retain a late-bound revision without changing run identity or old inputs."""
+    run = read_json(root / "run.json")
+    for key in SOURCE_IDENTITY:
+        if manifest.get(key) != run["manifest"].get(key):
+            raise ValueError("Bound inputs do not belong to this run/source")
+    if manifest.get("generator_hashes") != identity_manifest(root).get("generator_hashes"):
+        raise ValueError("Bound inputs do not belong to this run/source")
+    old = {b["id"]: b for b in current_manifest(root)["batches"]}
+    if not set(old).issubset({b["id"] for b in manifest["batches"]}):
+        raise ValueError("Input revision changes the approved batch scope")
+    # A plain re-registration must not give an executed batch another input either (live: R12 rebuilt from the
+    # stale references-r7 export was registered silently in input-revisions/0045).
+    refuse_executed_changes(root, old, {b["id"]: b for b in manifest["batches"]})
+    for batch in manifest["batches"]:
+        if batch["id"] not in old:
+            parent = old.get(batch.get("derived_from"))
+            if (
+                not parent
+                or batch["operation"] != parent["operation"]
+                or not str(parent.get("expected", "")).startswith("reject")
+                or not str(batch.get("expected", "")).startswith("reject")
+            ):
+                raise ValueError("Only isolated probes from an approved negative batch may be added")
+            if not set(batch["coverage_ids"]).issubset(parent["coverage_ids"]):
+                raise ValueError("Derived probe expands the approved coverage scope")
+            bindings = manifest.get("bindings", {})
+
+            def bound(row):
+                return {
+                    k: bindings.get(v[6:], v) if isinstance(v, str) and v.startswith("$bind:") else v
+                    for k, v in row.items()
+                }
+
+            if any(
+                name not in parent["tables"]
+                or any(bound(row) not in [bound(r) for r in parent["tables"][name]] for row in inputs)
+                for name, inputs in batch["tables"].items()
+            ):
+                raise ValueError("Derived probe changes the original input values")
+            continue
+        original = old[batch["id"]]
+        if any(batch.get(key) != original.get(key) for key in ("operation", "coverage_ids", "prerequisites")):
+            raise ValueError("Input revision changes the operation/coverage/dependency contract")
+    files = sorted((root / "input-revisions").glob("*.json"))
+    if files and read_json(files[-1]) == manifest:
+        return files[-1]
+    path = inside(root, f"input-revisions/{len(files) + 1:04}.json")
+    save_json(path, manifest)
+    return path
+
+
+def current_manifest(root):
+    files = sorted((root / "input-revisions").glob("*.json"))
+    return read_json(files[-1]) if files else read_json(root / "run.json")["manifest"]
+
+
+def record_checkpoint(root, batch_id, task_id, evidence, state, phase="terminal"):
+    """Přidá kontrolní bod s identitou běhu a původním hashem důkazů."""
+    run = read_json(root / "run.json")
+    manifest = current_manifest(root)
+    if batch_id not in {b["id"] for b in manifest["batches"]}:
+        raise ValueError("Batch does not belong to this suite/run")
+    if state not in ("awaiting-human", "awaiting-agent", "checked", "failed", "blocked"):
+        raise ValueError("Unknown checkpoint state")
+    if phase not in (
+        "preflight",
+        "upload",
+        "validation",
+        "approval",
+        "data",
+        "history",
+        "metadata",
+        "binary",
+        "terminal",
+        "recovery",
+    ):
+        raise ValueError("Unknown checkpoint phase")
+    batch = next(b for b in manifest["batches"] if b["id"] == batch_id)
+    gated = batch.get("execution_gate") or batch.get("deferred")
+    resolution = gate_resolution(root, batch_id, batch.get("input_sha256")) if gated else None
+    if batch.get("deferred") and (resolution or {}).get("acceptance") != "known-defect":
+        raise ValueError("Batch is deferred by a known importer defect; rebuild after the fix instead of executing it")
+    if resolution and resolution.get("acceptance") in ("not-executed", "removed-by-setup"):
+        raise ValueError("Batch was resolved as not executed; void that resolution before recording a checkpoint")
+    if state == "checked" and (
+        batch.get("ready") is False
+        or (batch.get("execution_gate") and not batch.get("gate_resolution") and not resolution)
+    ):
+        raise ValueError("Cannot check unresolved inputs or controlled setup as executed")
+    for item in evidence.values():
+        path = inside(root, item["path"])
+        if digest(path.read_bytes()) != item["sha256"]:
+            raise ValueError("Retained evidence changed")
+    events = checkpoints(root)
+    event = {
+        "batch_id": batch_id,
+        "task_id": task_id,
+        "state": state,
+        "evidence": evidence,
+        "phase": phase,
+        "input_sha256": batch.get("input_sha256"),
+        "manifest_sha256": digest(json_bytes(manifest)),
+        "mode": run["mode"],
+        "deployment": run["deployment"],
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "previous_sha256": digest(json_bytes(events[-1])) if events else None,
+    }
+    save_json(inside(root, f"events/{len(events) + 1:04}.json"), event)
+    return event
+
+
+def handoff(root):
+    """Vrátí samostatně použitelnou zprávu pro nového agenta."""
+    run = read_json(root / "run.json")
+    events = effective_checkpoints(root)
+    last = events[-1] if events else None
+    manifest = current_manifest(root)
+    completed = {e["batch_id"] for e in events if e["state"] == "checked" and e.get("phase", "terminal") == "terminal"}
+    # A terminal failure closes the batch too: it ran, its evidence is retained and it is never replayed.
+    failed = {
+        e["batch_id"] for e in events if e["state"] == "failed" and e.get("phase", "terminal") == "terminal"
+    } - completed
+    not_executed = not_executed_batches(root, manifest) - completed - failed
+    removed_by_setup = set(decided_batches(root, "removed-by-setup", manifest)) - completed - failed
+    known_defect_runs = {
+        b
+        for b in decided_batches(root, "known-defect", manifest)
+        if any(x["id"] == b and x.get("deferred") for x in manifest["batches"])
+    }
+    closed = completed | failed | not_executed | removed_by_setup
+    next_batch = next(
+        (
+            b
+            for b in manifest["batches"]
+            if b["id"] not in closed
+            and (not b.get("deferred") or b["id"] in known_defect_runs)
+            and set(b.get("prerequisites", [])).issubset(closed)
+        ),
+        None,
+    )
+    if last and (
+        last["state"] in ("awaiting-agent", "blocked")
+        or (last["state"] == "failed" and last.get("phase") != "terminal")
+    ):
+        action = "Agent reviews/reconciles retained evidence first; no human mutation or replay."
+    elif last and last["state"] == "checked" and last.get("phase") == "validation":
+        action = "Agent checks expected outcome; human may start the same validated task only after a positive approval checkpoint. Do not re-upload."
+    elif next_batch:
+        action = "Agent resolves/preflights and renders the next exact-path card: " + next_batch["id"]
+    else:
+        action = "Agent checks remaining blocked scenarios and produces the evidence report; do not replay imports."
+    return {
+        "run_id": run["run_id"],
+        "suite": run["suite"],
+        "mode": run["mode"],
+        "deployment": run["deployment"],
+        "evidence_root": str(root.resolve()),
+        "last_checkpoint": last,
+        "completed_batches": sorted(completed),
+        "failed_batches": sorted(failed),
+        "not_executed_batches": sorted(not_executed),
+        "removed_by_setup_batches": sorted(removed_by_setup),
+        "next_candidate": next_batch["id"] if next_batch else None,
+        "next_action": action,
+        "deferred_batches": [b["id"] for b in manifest["batches"] if b.get("deferred")],
+        "instruction": "Read START-HERE.md and run.json, verify retained hashes, resume from this checkpoint. "
+        "The human operates the browser. Do not replay executed imports or delete evidence.",
+    }
+
+
+def recovery(manifest, row_states):
+    """Povolí znovupřípravu jen pro explicitně nespuštěné či vrácené řádky."""
+    allowed = {"committed", "rolled-back", "unprocessed", "unknown"}
+    if any(isinstance(value, dict) for value in row_states.values()):
+        if not all(
+            isinstance(value, dict) and set(value) == {"db", "history", "metadata", "binary"}
+            for value in row_states.values()
+        ):
+            raise ValueError("Reconcile every row across DB/history/metadata/binary")
+        if any(state not in allowed or state == "unknown" for value in row_states.values() for state in value.values()):
+            raise ValueError("Reconcile unknown DB/Fedora phase state before recovery")
+        eligible = [
+            key
+            for key, value in row_states.items()
+            if value["db"] in ("rolled-back", "unprocessed") and all(state != "committed" for state in value.values())
+        ]
+        complete = [key for key, value in row_states.items() if all(state == "committed" for state in value.values())]
+        repair = [key for key in row_states if key not in eligible and key not in complete]
+        return {
+            "source_namespace": manifest["namespace"],
+            "eligible_for_rebuild": eligible,
+            "committed": complete,
+            "requires_phase_specific_repair": repair,
+            "execute": False,
+            "note": "DB-committed partial work must never be replayed as INSERT. Review retained actionable Fedora plans and approve a specific repair method.",
+        }
+    if any(value not in allowed for value in row_states.values()):
+        raise ValueError("Unknown recovery row state")
+    if any(value == "unknown" for value in row_states.values()):
+        raise ValueError("Reconcile unknown DB/Fedora row state before preparing recovery")
+    return {
+        "committed": [key for key, value in row_states.items() if value == "committed"],
+        "eligible_for_rebuild": [key for key, value in row_states.items() if value in ("rolled-back", "unprocessed")],
+        "source_namespace": manifest["namespace"],
+        "execute": False,
+        "note": "Reconcile report, DB and direct Fedora evidence before authorizing the remaining operations.",
+    }
+
+
+def cleanup_plan(manifest, snapshot, source, baseline=None):
+    """Name exact actual run-owned candidates; produce no mutation or evidence deletion."""
+    from .oracle import pk
+
+    identities = {
+        r["ident_cely"]
+        for b in manifest["batches"]
+        if b["operation"] == "insert"
+        for inputs in b["tables"].values()
+        for r in inputs
+        if r.get("ident_cely")
+    }
+    targets = {}
+    for table, records in snapshot.items():
+        if not isinstance(records, list):
+            continue
+        model = next((m for m in source["models"].values() if m["table"] == table), None)
+        if model:
+            owned = [r for r in records if r.get("ident_cely") in identities]
+            if owned:
+                targets[table] = {"key": pk(model), "values": sorted({r[pk(model)] for r in owned})}
+    links = {
+        r["soubory"]
+        for t in ("dokument", "projekt", "samostatny_nalez")
+        for r in snapshot.get(t, [])
+        if r.get("ident_cely") in identities and r.get("soubory")
+    }
+    files = [r for r in snapshot.get("soubor", []) if r.get("vazba") in links]
+    previous_pians = {r["id"] for r in (baseline or {}).get("pian", [])}
+    previous_pians.update(r["pian_id"] for r in (baseline or {}).get("ruian_katastr", []) if r.get("pian_id"))
+    derived = {
+        r["pian"]
+        for r in snapshot.get("dokumentacni_jednotka", [])
+        if r.get("ident_cely") in identities and r.get("pian")
+    } - previous_pians
+    derived_rows = [
+        r for r in snapshot.get("pian", []) if r.get("id") in derived and r.get("ident_cely") not in identities
+    ]
+    return {
+        "namespace": manifest["namespace"],
+        "execute": False,
+        "requires_separate_authorization": True,
+        "root_targets": targets,
+        "files": [
+            {"import_key": "soub-" + str(r["id"]), "path": r.get("path"), "owner_link": r["vazba"]} for r in files
+        ],
+        "derived_spatial_units": (
+            [{"id": r["id"], "ident_cely": r["ident_cely"]} for r in derived_rows]
+            if baseline
+            else "UNRECONCILED — provide before snapshot; preserve existing cadastral spatial units"
+        ),
+        "recipe": [
+            "Retain the complete run/evidence folder and this exact target list first",
+            "Agent resolves child/composite keys from the retained scoped snapshot; present child-first DELETE CSV inputs with exact hashes",
+            "Review references/cascade/restrict effects and any unexpected descendants; do not remove unrelated added records",
+            "Human performs approved deletion through the normal import UI; agent verifies these exact IDs/paths and retained evidence afterwards",
+        ],
+        "preserve": [
+            "all original evidence",
+            "shared vocabulary/reference rows",
+            "non-listed records",
+            "Fedora versions/tombstones unless separately approved",
+        ],
+        "baseline_restored": False,
+    }

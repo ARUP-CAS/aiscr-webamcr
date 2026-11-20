@@ -1,0 +1,685 @@
+{
+  "recipes": {
+    "az_adb": {
+      "autor_popisu": "$row:osoby",
+      "autor_revize": "$row:osoby:2",
+      "cislo_popisne": "1",
+      "dokumentacni_jednotka": "$row:az_dokumentacni_jednotky",
+      "parcelni_cislo": "1/1",
+      "podnet": "$ref:HESLAR_ADB_PODNET",
+      "poznamka": "TEST {tag}",
+      "rok_popisu": 2020,
+      "rok_revize": 2021,
+      "sm5": "$ref:sm5",
+      "stratigraficke_jednotky": "TEST",
+      "trat": "TEST",
+      "typ_sondy": "$ref:HESLAR_ADB_TYP",
+      "uzivatelske_oznaceni_sondy": "TEST {tag}"
+    },
+    "az_adb_vyskove_body": {
+      "adb": "$row:az_adb",
+      "geom": "$ref:elevation_point_5514",
+      "typ": "$ref:HESLAR_VYSKOVY_BOD_TYP"
+    },
+    "az_akce": {
+      "hlavni_katastr": "$ref:katastr",
+      "hlavni_typ": "$ref:HESLAR_AKCE_TYP",
+      "hlavni_vedouci": "$row:osoby",
+      "je_nz": "false",
+      "lokalizace_okolnosti": "TEST",
+      "odlozena_nz": "false",
+      "organizace": "$row:organizace",
+      "pristupnost": "$ref:HESLAR_PRISTUPNOST",
+      "projekt": "$row:projekty",
+      "specifikace_data": "$ref:HESLAR_DATUM_SPECIFIKACE",
+      "stav": 1,
+      "typ": "R",
+      "uzivatelske_oznaceni": "TEST {tag}"
+    },
+    "az_akce_vedouci": {
+      "akce": "$row:az_akce",
+      "organizace": "$row:organizace",
+      "vedouci": "$row:osoby:2"
+    },
+    "az_dokumentacni_jednotky": {
+      "archeologicky_zaznam": "$row:az_akce",
+      "nazev": "TEST {tag}",
+      "negativni_jednotka": "false",
+      "pian": "$row:az_pian",
+      "typ": "$ref:HESLAR_DJ_TYP"
+    },
+    "az_katastry": {
+      "archeologicky_zaznam": "$row:az_akce",
+      "katastr": "$ref:secondary_katastr"
+    },
+    "az_lokality": {
+      "druh": "$ref:HESLAR_LOKALITA_DRUH",
+      "hlavni_katastr": "$ref:katastr",
+      "jistota": "$ref:HESLAR_JISTOTA_URCENI",
+      "nazev": "TEST {tag}",
+      "popis": "TEST",
+      "poznamka": "TEST {tag}",
+      "pristupnost": "$ref:HESLAR_PRISTUPNOST",
+      "stav": 1,
+      "typ_lokality": "$ref:HESLAR_LOKALITA_TYP",
+      "uzivatelske_oznaceni": "TEST {tag}",
+      "zachovalost": "$ref:HESLAR_STAV_DOCHOVANI"
+    },
+    "az_pian": {
+      "geom": "POINT(14.5 50.0)",
+      "geom_system": "4326",
+      "presnost": "$ref:HESLAR_PIAN_PRESNOST",
+      "stav": 1,
+      "typ": "$ref:HESLAR_PIAN_TYP",
+      "zm10": "$ref:zm10",
+      "zm50": "$ref:zm50"
+    },
+    "distribution": {
+      "distribution": "atr/alto-xml",
+      "id": "$bind:file.id",
+      "mimetype": "application/xml",
+      "nazev": "alto-{tag}.xml"
+    },
+    "dokumenty": {
+      "cislo_objektu": "1",
+      "datum_vzniku": "2020-01-02",
+      "duveryhodnost": 90,
+      "format": "$ref:HESLAR_DOKUMENT_FORMAT",
+      "geom": "POINT(14.5 50.0)",
+      "geom_system": "4326",
+      "let": "$row:dokumenty_lety",
+      "licence": "$ref:HESLAR_LICENCE",
+      "material_originalu": "$ref:HESLAR_DOKUMENT_MATERIAL",
+      "meritko": "1:100",
+      "nahrada": "$ref:HESLAR_DOKUMENT_NAHRADA",
+      "organizace": "$row:organizace",
+      "oznaceni_originalu": "TEST {tag}",
+      "pocet_variant_originalu": 1,
+      "popis": "TEST {tag}, \"uvozovky\"\nnový řádek",
+      "poznamka": "TEST {tag}",
+      "pristupnost": "$ref:HESLAR_PRISTUPNOST",
+      "rada": "$ref:HESLAR_DOKUMENT_RADA",
+      "region": "TEST",
+      "rok_do": 2020,
+      "rok_od": 2019,
+      "rok_vzniku": 2020,
+      "sirka": 20,
+      "stav": 1,
+      "typ_dokumentu": "$ref:HESLAR_DOKUMENT_TYP",
+      "udalost": "TEST",
+      "udalost_typ": "$ref:HESLAR_UDALOST_TYP",
+      "ulozeni_originalu": "$ref:HESLAR_DOKUMENT_ULOZENI",
+      "vyska": 10,
+      "zachovalost": "$ref:HESLAR_DOKUMENT_ZACHOVALOST",
+      "zeme": "$ref:HESLAR_ZEME"
+    },
+    "dokumenty_autori": {
+      "autor": "$row:osoby",
+      "dokument": "$row:dokumenty",
+      "poradi": 1
+    },
+    "dokumenty_casti": {
+      "archeologicky_zaznam": "$row:az_akce",
+      "dokument": "$row:dokumenty",
+      "poznamka": "TEST {tag}"
+    },
+    "dokumenty_jazyky": {
+      "dokument": "$row:dokumenty",
+      "jazyk": "$ref:HESLAR_JAZYK"
+    },
+    "dokumenty_lety": {
+      "datum": "2020-01-02",
+      "dohlednost": "$ref:HESLAR_DOHLEDNOST",
+      "fotoaparat": "TEST",
+      "hodina_konec": "11:00",
+      "hodina_zacatek": "10:00",
+      "letiste_cil": "$ref:HESLAR_LETISTE",
+      "letiste_start": "$ref:HESLAR_LETISTE",
+      "organizace": "$row:organizace",
+      "pilot": "Synthetic",
+      "pocasi": "$ref:HESLAR_POCASI",
+      "pozorovatel": "$row:osoby",
+      "typ_letounu": "TEST",
+      "ucel_letu": "TEST",
+      "uzivatelske_oznaceni": "TEST {tag}"
+    },
+    "dokumenty_neident_akce": {
+      "dokument_cast": "$row:dokumenty_casti:2",
+      "katastr": "$ref:katastr",
+      "lokalizace": "TEST",
+      "pian": "$row:az_pian",
+      "popis": "TEST",
+      "poznamka": "TEST {tag}",
+      "rok_ukonceni": 2020,
+      "rok_zahajeni": 2019
+    },
+    "dokumenty_neident_akce_vedouci": {
+      "neident_akce": "$row:dokumenty_casti:2",
+      "vedouci": "$row:osoby"
+    },
+    "dokumenty_osoby": {
+      "dokument": "$row:dokumenty",
+      "osoba": "$row:osoby:2"
+    },
+    "dokumenty_posudky": {
+      "dokument": "$row:dokumenty",
+      "posudek": "$row:dokumenty:2"
+    },
+    "dokumenty_tvary": {
+      "dokument": "$row:dokumenty",
+      "poznamka": "TEST {tag}",
+      "tvar": "$ref:HESLAR_LETFOTO_TVAR"
+    },
+    "externi_odkazy": {
+      "archeologicky_zaznam": "$row:az_akce",
+      "externi_zdroj": "$row:externi_zdroje",
+      "paginace": "1-2"
+    },
+    "externi_zdroje": {
+      "misto": "TEST",
+      "nazev": "TEST {tag}",
+      "organizace": "TEST",
+      "paginace_titulu": "1-2",
+      "poznamka": "TEST {tag}",
+      "rok_vydani_vzniku": "2020",
+      "stav": 1,
+      "typ": "$ref:HESLAR_EXTERNI_ZDROJ_TYP",
+      "typ_dokumentu": "$ref:HESLAR_DOKUMENT_TYP",
+      "vydavatel": "TEST"
+    },
+    "externi_zdroje_autori": {
+      "autor": "$row:osoby",
+      "externi_zdroj": "$row:externi_zdroje",
+      "poradi": 1
+    },
+    "externi_zdroje_editori": {
+      "editor": "$row:osoby:2",
+      "externi_zdroj": "$row:externi_zdroje",
+      "poradi": 1
+    },
+    "heslar": {
+      "heslo": "TEST {tag}",
+      "heslo_en": "TEST {tag}",
+      "nazev_heslare": "$ref:vocabulary_name",
+      "popis": "TEST {tag}",
+      "popis_en": "TEST {tag}",
+      "razeni": 900,
+      "zkratka": "T{n}"
+    },
+    "heslar_datace": {
+      "obdobi": "$ref:synthetic_period",
+      "poznamka": "TEST {tag}",
+      "rok_do_max": 200,
+      "rok_do_min": 100,
+      "rok_od_max": 0,
+      "rok_od_min": -100
+    },
+    "heslar_dokument_typ_material": {
+      "dokument_material": "$ref:synthetic_document_material",
+      "dokument_typ": "$ref:synthetic_document_type"
+    },
+    "heslar_hierarchie": {
+      "heslo_nadrazene": "$ref:synthetic_period",
+      "heslo_podrazene": "$ref:synthetic_period_child",
+      "typ": "podřízenost"
+    },
+    "heslar_odkazy": {
+      "heslo": "$ref:synthetic_period",
+      "kod": "{tag}",
+      "nazev_kodu": "test",
+      "scheme_uri": "https://example.invalid/",
+      "skos_mapping_relation": "skos:exactMatch",
+      "uri": "https://example.invalid/{tag}",
+      "zdroj": "TEST {tag}"
+    },
+    "historie": {
+      "datum_zmeny": "2020-01-02 10:00:00",
+      "poznamka": "TEST {tag}",
+      "typ_zmeny": "IMP",
+      "uzivatel": "$row:uzivatele",
+      "vazba": "$row:dokumenty"
+    },
+    "komponenty": {
+      "areal": "$ref:HESLAR_AREAL",
+      "jistota": "true",
+      "obdobi": "$ref:HESLAR_OBDOBI",
+      "poznamka": "TEST {tag}",
+      "presna_datace": "TEST",
+      "vazba": "$row:az_dokumentacni_jednotky"
+    },
+    "komponenty_aktivity": {
+      "aktivita": "$ref:HESLAR_AKTIVITA",
+      "komponenta": "$row:komponenty"
+    },
+    "komponenty_nalezy_objekty": {
+      "druh": "$ref:HESLAR_OBJEKT_DRUH",
+      "komponenta": "$row:komponenty",
+      "pocet": 1,
+      "poznamka": "TEST {tag}",
+      "specifikace": "$ref:HESLAR_OBJEKT_SPECIFIKACE"
+    },
+    "komponenty_nalezy_predmety": {
+      "druh": "$ref:HESLAR_PREDMET_DRUH",
+      "komponenta": "$row:komponenty",
+      "pocet": 2,
+      "poznamka": "TEST {tag}",
+      "specifikace": "$ref:HESLAR_PREDMET_SPECIFIKACE"
+    },
+    "organizace": {
+      "adresa": "TEST",
+      "cteni_dokumentu": "false",
+      "email": "org-{tag}@example.invalid",
+      "ico": "",
+      "licence": "$ref:HESLAR_LICENCE",
+      "mesicu_do_zverejneni": 1,
+      "nazev": "TEST {tag}",
+      "nazev_en": "TEST {tag}",
+      "nazev_zkraceny": "T{tag}",
+      "nazev_zkraceny_en": "E{tag}",
+      "oao": "false",
+      "telefon": "",
+      "typ_organizace": "$ref:HESLAR_ORGANIZACE_TYP",
+      "zanikla": "false",
+      "zverejneni_pristupnost": "$ref:HESLAR_PRISTUPNOST"
+    },
+    "osoby": {
+      "jmeno": "Test{tag}",
+      "prijmeni": "Synthetic{tag}",
+      "rok_narozeni": 1970,
+      "vypis": "TEST {tag}",
+      "vypis_cely": "TEST {tag}"
+    },
+    "paradata": {
+      "distribution": "atr/alto-xml",
+      "mimetype": "application/ld+json",
+      "nazev": "paradata-{tag}.json",
+      "path": "$bind:file.path"
+    },
+    "projekty": {
+      "geom": "POINT(14.5 50.0)",
+      "geom_system": "4326",
+      "hlavni_katastr": "$ref:katastr",
+      "kulturni_pamatka": "$ref:HESLAR_PAMATKOVA_OCHRANA",
+      "lokalizace": "TEST {tag}",
+      "organizace": "$row:organizace",
+      "parcelni_cislo": "1/1",
+      "podnet": "TEST",
+      "stav": 1,
+      "typ_projektu": "$ref:HESLAR_PROJEKT_TYP",
+      "uzivatelske_oznaceni": "TEST {tag}",
+      "vedouci_projektu": "$row:osoby"
+    },
+    "projekty_katastry": {
+      "katastr": "$ref:secondary_katastr",
+      "projekt": "$row:projekty"
+    },
+    "projekty_oznamovatele": {
+      "adresa": "TEST",
+      "email": "notifier-{tag}@example.invalid",
+      "odpovedna_osoba": "Synthetic",
+      "oznamovatel": "TEST {tag}",
+      "poznamka": "TEST {tag}",
+      "projekt": "$row:projekty",
+      "telefon": ""
+    },
+    "samostatne_nalezy": {
+      "datum_nalezu": "2020-01-02",
+      "druh_nalezu": "$ref:HESLAR_PREDMET_DRUH",
+      "evidencni_cislo": "TEST {tag}",
+      "geom": "POINT(14.5 50.0)",
+      "geom_system": "4326",
+      "hloubka": 10,
+      "katastr": "$ref:katastr",
+      "lokalizace": "TEST",
+      "nalezce": "$row:osoby",
+      "obdobi": "$ref:HESLAR_OBDOBI",
+      "okolnosti": "$ref:HESLAR_NALEZOVE_OKOLNOSTI",
+      "pocet": 1,
+      "poznamka": "TEST {tag}",
+      "predano": "false",
+      "predano_organizace": "$row:organizace",
+      "presna_datace": "TEST",
+      "pristupnost": "$ref:HESLAR_PRISTUPNOST",
+      "projekt": "$row:projekty",
+      "specifikace": "$ref:HESLAR_PREDMET_SPECIFIKACE",
+      "stav": 1
+    },
+    "soubory": {
+      "nazev": "test-{tag}.pdf",
+      "vazba": "$row:dokumenty"
+    },
+    "uzivatele": {
+      "date_joined": "2020-01-01 00:00:00",
+      "email": "user-{tag}@example.invalid",
+      "first_name": "Synthetic{tag}",
+      "is_active": "false",
+      "is_staff": "false",
+      "is_superuser": "false",
+      "jazyk": "cs",
+      "last_name": "Test{tag}",
+      "organizace": "$row:organizace",
+      "osoba": "$row:osoby"
+    },
+    "uzivatele_notifikace": {
+      "notifikace": "$ref:notification_type",
+      "uzivatel": "$row:uzivatele"
+    },
+    "uzivatele_notifikace_projekty": {
+      "ruian": "$ref:katastr",
+      "uzivatel": "$row:uzivatele"
+    },
+    "uzivatele_opravneni": {
+      "skupina": "$ref:group_name",
+      "uzivatel": "$row:uzivatele"
+    },
+    "uzivatele_spoluprace": {
+      "spolupracovnik": "$row:uzivatele:2",
+      "stav": 1,
+      "vedouci": "$row:uzivatele"
+    }
+  },
+  "variants": {
+    "az_adb": [
+      "fieldwork-and-adp-metadata",
+      "reparent-old-new",
+      "required-map-sheet"
+    ],
+    "az_adb_vyskove_body": [
+      "point-z",
+      "invalid-geometry",
+      "reparent-old-new"
+    ],
+    "az_akce": [
+      "project-fieldwork",
+      "independent-fieldwork",
+      "type-project-constraint",
+      "wrong-subtype",
+      "missing-companion",
+      "partial-update",
+      "reparent-old-new"
+    ],
+    "az_akce_vedouci": [
+      "reparent-old-new",
+      "duplicate-relation"
+    ],
+    "az_dokumentacni_jednotky": [
+      "fieldwork-owner",
+      "site-owner",
+      "cadastral-existing-pian",
+      "cadastral-missing-pian",
+      "reparent-old-new"
+    ],
+    "az_katastry": [
+      "composite-duplicate",
+      "child-delete-history"
+    ],
+    "az_lokality": [
+      "site",
+      "wrong-subtype",
+      "missing-companion",
+      "partial-update"
+    ],
+    "az_pian": [
+      "point",
+      "line",
+      "polygon",
+      "geometry-4326",
+      "geometry-5514",
+      "invalid-geometry",
+      "omitted-versus-clear"
+    ],
+    "distribution": [
+      "nested-name",
+      "exact-mime-filename",
+      "reserved-orig",
+      "reserved-paradata",
+      "reserved-page-thumb",
+      "unsafe-path",
+      "prefix-collision",
+      "same-record-multiple-files",
+      "tombstone-reinsert",
+      "thumb-backfill",
+      "backfill-idempotence",
+      "download-permissions",
+      "duplicate-in-batch",
+      "existing-distribution",
+      "missing-update",
+      "missing-delete",
+      "empty-name",
+      "unsafe-filename",
+      "missing-file-id",
+      "missing-file-uuid",
+      "missing-file-owner",
+      "existing-ancestor-conflict",
+      "existing-descendant-conflict",
+      "missing-binary"
+    ],
+    "dokumenty": [
+      "missing-extra-data",
+      "existing-extra-data",
+      "partial-update",
+      "geometry-4326",
+      "geometry-5514",
+      "confidence-bounds",
+      "csv-null-string",
+      "cascade"
+    ],
+    "dokumenty_autori": [
+      "author-order",
+      "composite-duplicate",
+      "child-delete-history"
+    ],
+    "dokumenty_casti": [
+      "fieldwork-link",
+      "project-link",
+      "unidentified-link",
+      "mutual-exclusion",
+      "reparent-old-new"
+    ],
+    "dokumenty_jazyky": [
+      "wrong-vocabulary",
+      "composite-duplicate"
+    ],
+    "dokumenty_lety": [
+      "date-time-legacy",
+      "nullable-lookups",
+      "flight-metadata",
+      "localized-date",
+      "timezone-date-shift",
+      "date-trailing-junk"
+    ],
+    "dokumenty_neident_akce": [
+      "fk-as-key",
+      "optional-pian-text",
+      "date-boundaries"
+    ],
+    "dokumenty_neident_akce_vedouci": [
+      "composite-duplicate",
+      "child-delete-history"
+    ],
+    "dokumenty_osoby": [
+      "second-person",
+      "composite-duplicate"
+    ],
+    "dokumenty_posudky": [
+      "second-document",
+      "self-reference",
+      "composite-duplicate"
+    ],
+    "dokumenty_tvary": [
+      "wrong-vocabulary",
+      "reparent-old-new"
+    ],
+    "externi_odkazy": [
+      "both-endpoints-update",
+      "reparent-old-new"
+    ],
+    "externi_zdroje": [
+      "all-optional-fields",
+      "partial-update",
+      "legacy-date"
+    ],
+    "externi_zdroje_autori": [
+      "author-order",
+      "composite-duplicate"
+    ],
+    "externi_zdroje_editori": [
+      "editor-order",
+      "composite-duplicate"
+    ],
+    "heslar": [
+      "unique-term",
+      "unique-abbreviation",
+      "unicode-quotes-newline"
+    ],
+    "heslar_datace": [
+      "negative-years",
+      "partial-range-update",
+      "wrong-vocabulary"
+    ],
+    "heslar_dokument_typ_material": [
+      "existing-type-material",
+      "wrong-vocabulary"
+    ],
+    "heslar_hierarchie": [
+      "backward-reference",
+      "forward-reference",
+      "cycle",
+      "self-reference",
+      "both-endpoints-update"
+    ],
+    "heslar_odkazy": [
+      "mapping-relation-choice",
+      "uri-null",
+      "reparent-old-new"
+    ],
+    "historie": [
+      "project-owner",
+      "fieldwork-owner",
+      "site-owner",
+      "document-owner",
+      "individual-find-owner",
+      "spatial-unit-owner",
+      "external-source-owner",
+      "user-owner",
+      "cooperation-owner",
+      "file-owner"
+    ],
+    "komponenty": [
+      "documentation-unit-owner",
+      "document-part-fieldwork-owner",
+      "document-part-document-owner",
+      "reparent-old-new"
+    ],
+    "komponenty_aktivity": [
+      "both-component-owners",
+      "wrong-vocabulary",
+      "composite-duplicate"
+    ],
+    "komponenty_nalezy_objekty": [
+      "both-component-owners",
+      "count-boundary",
+      "wrong-vocabulary"
+    ],
+    "komponenty_nalezy_predmety": [
+      "both-component-owners",
+      "count-boundary",
+      "wrong-vocabulary"
+    ],
+    "organizace": [
+      "hierarchy",
+      "forward-reference",
+      "cycle",
+      "month-limit",
+      "booleans-access"
+    ],
+    "osoby": [
+      "duplicate-name",
+      "nullable-years",
+      "protected-reference-delete"
+    ],
+    "paradata": [
+      "same-batch-distribution",
+      "orig-paradata",
+      "thumb-paradata",
+      "paradata-only-db-xml-unchanged",
+      "nested-name",
+      "tombstone-reinsert",
+      "delete-with-distribution",
+      "download-permissions",
+      "duplicate-in-batch",
+      "missing-distribution",
+      "empty-path",
+      "unknown-path",
+      "unsafe-filename"
+    ],
+    "projekty": [
+      "geometry-4326",
+      "geometry-5514",
+      "partial-update",
+      "omitted-versus-clear",
+      "cascade"
+    ],
+    "projekty_katastry": [
+      "composite-duplicate",
+      "secondary-cadastre",
+      "child-delete-history"
+    ],
+    "projekty_oznamovatele": [
+      "fk-as-key",
+      "partial-update",
+      "child-delete-history"
+    ],
+    "samostatne_nalezy": [
+      "geometry-4326",
+      "geometry-5514",
+      "geometry-clear",
+      "reparent-old-new",
+      "constraints"
+    ],
+    "soubory": [
+      "document-owner",
+      "project-owner",
+      "individual-find-owner",
+      "replace-preserves-path",
+      "delete-parent-history",
+      "gps-removal",
+      "thumbnails",
+      "missing-binary",
+      "mime-extension",
+      "reparent-old-new"
+    ],
+    "uzivatele": [
+      "active-user-delete",
+      "booleans-access",
+      "legacy-datetime",
+      "unique-email",
+      "reparent-old-new",
+      "localized-datetime",
+      "datetime-trailing-junk"
+    ],
+    "uzivatele_notifikace": [
+      "relation-add-remove",
+      "existing-relation",
+      "missing-relation"
+    ],
+    "uzivatele_notifikace_projekty": [
+      "cadastre",
+      "district",
+      "region",
+      "serialized-content-type",
+      "wrong-content-type",
+      "composite-duplicate"
+    ],
+    "uzivatele_opravneni": [
+      "relation-add-remove",
+      "existing-relation",
+      "missing-relation"
+    ],
+    "uzivatele_spoluprace": [
+      "both-peers-metadata",
+      "reparent-old-new",
+      "self-reference"
+    ]
+  }
+}

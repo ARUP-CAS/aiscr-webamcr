@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["run_id", "batch_id", "task_id", "deployment", "state", "evidence", "assertions"],
+  "properties": {
+    "run_id": {"type": "string"},
+    "suite": {"enum": ["behaviour", "load"]},
+    "mode": {"enum": ["live", "simulation"]},
+    "batch_id": {"type": "string"},
+    "task_id": {"type": "string"},
+    "state": {"enum": ["prepared", "passed", "failed", "blocked", "unexecuted", "inapplicable"]},
+    "deployment": {"type": "string", "minLength": 1},
+    "evidence": {"type": "object"},
+    "assertions": {"type": "array", "items": {"type": "object", "required": ["id", "state"]}}
+  }
+}

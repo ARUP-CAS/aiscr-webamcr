@@ -1,0 +1,3828 @@
+[
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "heslar",
+    "coverage_variants": [
+      "unique-term",
+      "unique-abbreviation",
+      "unicode-quotes-newline"
+    ],
+    "lookup_fields": {
+      "nazev_heslare": "LookupImportField(HeslarNazev, 'nazev')"
+    },
+    "methods": [
+      "get_mapping"
+    ],
+    "model_constraints": [
+      "(('nazev_heslare', 'zkratka'), ('nazev_heslare', 'heslo'), ('nazev_heslare', 'heslo_en'))"
+    ],
+    "source_branches": [],
+    "source_line": 2336
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "heslar_datace",
+    "coverage_variants": [
+      "negative-years",
+      "partial-range-update",
+      "wrong-vocabulary"
+    ],
+    "lookup_fields": {
+      "obdobi": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_OBDOBI}, verbose_limit_choices_to=_('core.import_data_mappers.HeslarDataceMapper.obdobi.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 2366
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "heslar_dokument_typ_material",
+    "coverage_variants": [
+      "existing-type-material",
+      "wrong-vocabulary"
+    ],
+    "lookup_fields": {
+      "dokument_material": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_MATERIAL}, verbose_limit_choices_to=_('core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_material.limit_choices'))",
+      "dokument_typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_typ.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping"
+    ],
+    "model_constraints": [
+      "(('dokument_typ', 'dokument_material'),)"
+    ],
+    "source_branches": [],
+    "source_line": 2409
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "heslar_hierarchie",
+    "coverage_variants": [
+      "backward-reference",
+      "forward-reference",
+      "cycle",
+      "self-reference",
+      "both-endpoints-update"
+    ],
+    "lookup_fields": {
+      "heslo_nadrazene": "LookupImportField(Heslar)",
+      "heslo_podrazene": "LookupImportField(Heslar)"
+    },
+    "methods": [
+      "get_mapping",
+      "validate_batch_ordering",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [
+      "(('heslo_podrazene', 'heslo_nadrazene', 'typ'),)",
+      "[CheckConstraint(condition=Q(typ__in=['podřízenost', 'uplatnění', 'výchozí hodnota']), name='heslar_hierarchie_typ_check')]"
+    ],
+    "source_branches": [
+      {
+        "condition": "value is None or str(value).lower() in ('nan', 'none', '')",
+        "ledger_ids": [
+          "heslar_hierarchie.insert",
+          "heslar_hierarchie.update",
+          "heslar_hierarchie.delete",
+          "heslar_hierarchie.branch.backward-reference",
+          "heslar_hierarchie.branch.forward-reference",
+          "heslar_hierarchie.branch.cycle",
+          "heslar_hierarchie.branch.self-reference",
+          "heslar_hierarchie.branch.both-endpoints-update",
+          "heslar_hierarchie.field.typ.missing-required",
+          "heslar_hierarchie.field.heslo_nadrazene.missing-required",
+          "heslar_hierarchie.field.heslo_nadrazene.missing-lookup",
+          "heslar_hierarchie.field.heslo_podrazene.missing-required",
+          "heslar_hierarchie.field.heslo_podrazene.missing-lookup"
+        ],
+        "line": 2485
+      },
+      {
+        "condition": "value_str in in_batch_ident_cely",
+        "ledger_ids": [
+          "heslar_hierarchie.insert",
+          "heslar_hierarchie.update",
+          "heslar_hierarchie.delete",
+          "heslar_hierarchie.branch.backward-reference",
+          "heslar_hierarchie.branch.forward-reference",
+          "heslar_hierarchie.branch.cycle",
+          "heslar_hierarchie.branch.self-reference",
+          "heslar_hierarchie.branch.both-endpoints-update",
+          "heslar_hierarchie.field.typ.missing-required",
+          "heslar_hierarchie.field.heslo_nadrazene.missing-required",
+          "heslar_hierarchie.field.heslo_nadrazene.missing-lookup",
+          "heslar_hierarchie.field.heslo_podrazene.missing-required",
+          "heslar_hierarchie.field.heslo_podrazene.missing-lookup"
+        ],
+        "line": 2488
+      },
+      {
+        "condition": "not Heslar.objects.filter(ident_cely=value_str).exists()",
+        "ledger_ids": [
+          "heslar_hierarchie.insert",
+          "heslar_hierarchie.update",
+          "heslar_hierarchie.delete",
+          "heslar_hierarchie.branch.backward-reference",
+          "heslar_hierarchie.branch.forward-reference",
+          "heslar_hierarchie.branch.cycle",
+          "heslar_hierarchie.branch.self-reference",
+          "heslar_hierarchie.branch.both-endpoints-update",
+          "heslar_hierarchie.field.typ.missing-required",
+          "heslar_hierarchie.field.heslo_nadrazene.missing-required",
+          "heslar_hierarchie.field.heslo_nadrazene.missing-lookup",
+          "heslar_hierarchie.field.heslo_podrazene.missing-required",
+          "heslar_hierarchie.field.heslo_podrazene.missing-lookup"
+        ],
+        "line": 2490
+      }
+    ],
+    "source_line": 2444
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "heslar_odkazy",
+    "coverage_variants": [
+      "mapping-relation-choice",
+      "uri-null",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "heslo": "LookupImportField(Heslar)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 2505
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "organizace",
+    "coverage_variants": [
+      "hierarchy",
+      "forward-reference",
+      "cycle",
+      "month-limit",
+      "booleans-access"
+    ],
+    "lookup_fields": {
+      "licence": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_LICENCE}, verbose_limit_choices_to=_('core.import_data_mappers.OrganizaceMapper.licence.limit_choices'))",
+      "soucast": "LookupImportField(Organizace)",
+      "typ_organizace": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_ORGANIZACE_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.OrganizaceMapper.typ_organizace.limit_choices'))",
+      "zverejneni_pristupnost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PRISTUPNOST}, verbose_limit_choices_to=_('core.import_data_mappers.OrganizaceMapper.zverejneni_pristupnost.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "validate_batch_ordering",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [
+      "[CheckConstraint(condition=Q(mesicu_do_zverejneni__lte=ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX), name='organizace_mesicu_do_zverejneni_max_value_check')]"
+    ],
+    "source_branches": [
+      {
+        "condition": "soucast is not None and str(soucast).lower() not in ('nan', 'none', '')",
+        "ledger_ids": [
+          "organizace.insert",
+          "organizace.update",
+          "organizace.delete",
+          "organizace.branch.hierarchy",
+          "organizace.branch.forward-reference",
+          "organizace.branch.cycle",
+          "organizace.branch.month-limit",
+          "organizace.branch.booleans-access",
+          "organizace.field.ident_cely.missing-required",
+          "organizace.field.ident_cely.overflow",
+          "organizace.field.nazev.missing-required",
+          "organizace.field.nazev.overflow",
+          "organizace.field.nazev_en.overflow",
+          "organizace.field.nazev_zkraceny.missing-required",
+          "organizace.field.nazev_zkraceny.overflow",
+          "organizace.field.nazev_zkraceny_en.missing-required",
+          "organizace.field.nazev_zkraceny_en.overflow",
+          "organizace.field.oao.invalid-type",
+          "organizace.field.email.overflow",
+          "organizace.field.telefon.overflow",
+          "organizace.field.adresa.overflow",
+          "organizace.field.ico.overflow",
+          "organizace.field.zanikla.invalid-type",
+          "organizace.field.cteni_dokumentu.invalid-type",
+          "organizace.field.ror.overflow",
+          "organizace.field.web.overflow",
+          "organizace.field.soucast.missing-lookup",
+          "organizace.field.typ_organizace.missing-required",
+          "organizace.field.typ_organizace.missing-lookup",
+          "organizace.field.zverejneni_pristupnost.missing-required",
+          "organizace.field.zverejneni_pristupnost.missing-lookup",
+          "organizace.field.licence.missing-lookup"
+        ],
+        "line": 2613
+      },
+      {
+        "condition": "ident is not None and str(ident).lower() not in ('nan', 'none', '')",
+        "ledger_ids": [
+          "organizace.insert",
+          "organizace.update",
+          "organizace.delete",
+          "organizace.branch.hierarchy",
+          "organizace.branch.forward-reference",
+          "organizace.branch.cycle",
+          "organizace.branch.month-limit",
+          "organizace.branch.booleans-access",
+          "organizace.field.ident_cely.missing-required",
+          "organizace.field.ident_cely.overflow",
+          "organizace.field.nazev.missing-required",
+          "organizace.field.nazev.overflow",
+          "organizace.field.nazev_en.overflow",
+          "organizace.field.nazev_zkraceny.missing-required",
+          "organizace.field.nazev_zkraceny.overflow",
+          "organizace.field.nazev_zkraceny_en.missing-required",
+          "organizace.field.nazev_zkraceny_en.overflow",
+          "organizace.field.oao.invalid-type",
+          "organizace.field.email.overflow",
+          "organizace.field.telefon.overflow",
+          "organizace.field.adresa.overflow",
+          "organizace.field.ico.overflow",
+          "organizace.field.zanikla.invalid-type",
+          "organizace.field.cteni_dokumentu.invalid-type",
+          "organizace.field.ror.overflow",
+          "organizace.field.web.overflow",
+          "organizace.field.soucast.missing-lookup",
+          "organizace.field.typ_organizace.missing-required",
+          "organizace.field.typ_organizace.missing-lookup",
+          "organizace.field.zverejneni_pristupnost.missing-required",
+          "organizace.field.zverejneni_pristupnost.missing-lookup",
+          "organizace.field.licence.missing-lookup"
+        ],
+        "line": 2617
+      },
+      {
+        "condition": "soucast_str not in seen and (not Organizace.objects.filter(ident_cely=soucast_str).exists())",
+        "ledger_ids": [
+          "organizace.insert",
+          "organizace.update",
+          "organizace.delete",
+          "organizace.branch.hierarchy",
+          "organizace.branch.forward-reference",
+          "organizace.branch.cycle",
+          "organizace.branch.month-limit",
+          "organizace.branch.booleans-access",
+          "organizace.field.ident_cely.missing-required",
+          "organizace.field.ident_cely.overflow",
+          "organizace.field.nazev.missing-required",
+          "organizace.field.nazev.overflow",
+          "organizace.field.nazev_en.overflow",
+          "organizace.field.nazev_zkraceny.missing-required",
+          "organizace.field.nazev_zkraceny.overflow",
+          "organizace.field.nazev_zkraceny_en.missing-required",
+          "organizace.field.nazev_zkraceny_en.overflow",
+          "organizace.field.oao.invalid-type",
+          "organizace.field.email.overflow",
+          "organizace.field.telefon.overflow",
+          "organizace.field.adresa.overflow",
+          "organizace.field.ico.overflow",
+          "organizace.field.zanikla.invalid-type",
+          "organizace.field.cteni_dokumentu.invalid-type",
+          "organizace.field.ror.overflow",
+          "organizace.field.web.overflow",
+          "organizace.field.soucast.missing-lookup",
+          "organizace.field.typ_organizace.missing-required",
+          "organizace.field.typ_organizace.missing-lookup",
+          "organizace.field.zverejneni_pristupnost.missing-required",
+          "organizace.field.zverejneni_pristupnost.missing-lookup",
+          "organizace.field.licence.missing-lookup"
+        ],
+        "line": 2615
+      }
+    ],
+    "source_line": 2545
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "osoby",
+    "coverage_variants": [
+      "duplicate-name",
+      "nullable-years",
+      "protected-reference-delete"
+    ],
+    "lookup_fields": {},
+    "methods": [],
+    "model_constraints": [
+      "[models.UniqueConstraint(fields=['jmeno', 'prijmeni'], name='osoba_jmeno_prijmeni_key')]"
+    ],
+    "source_branches": [],
+    "source_line": 2632
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "projekty",
+    "coverage_variants": [
+      "geometry-4326",
+      "geometry-5514",
+      "partial-update",
+      "omitted-versus-clear",
+      "cascade"
+    ],
+    "lookup_fields": {
+      "hlavni_katastr": "RuianLookupImportField(RuianKatastr, 'kod')",
+      "kulturni_pamatka": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PAMATKOVA_OCHRANA}, verbose_limit_choices_to=_('core.import_data_mappers.ProjektMapper.kulturni_pamatka.limit_choices'))",
+      "organizace": "LookupImportField(Organizace)",
+      "typ_projektu": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PROJEKT_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.ProjektMapper.typ_projektu.limit_choices'))",
+      "vedouci_projektu": "LookupImportField(Osoba)"
+    },
+    "methods": [
+      "get_mapping",
+      "map",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 2652
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "projekty_katastry",
+    "coverage_variants": [
+      "composite-duplicate",
+      "secondary-cadastre",
+      "child-delete-history"
+    ],
+    "lookup_fields": {
+      "katastr": "RuianLookupImportField(RuianKatastr, 'kod')",
+      "projekt": "LookupImportField(Projekt)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('projekt', 'katastr'),)"
+    ],
+    "source_branches": [],
+    "source_line": 2726
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "projekty_oznamovatele",
+    "coverage_variants": [
+      "fk-as-key",
+      "partial-update",
+      "child-delete-history"
+    ],
+    "lookup_fields": {
+      "projekt": "LookupImportField(Projekt)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 2771
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "samostatne_nalezy",
+    "coverage_variants": [
+      "geometry-4326",
+      "geometry-5514",
+      "geometry-clear",
+      "reparent-old-new",
+      "constraints"
+    ],
+    "lookup_fields": {
+      "druh_nalezu": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PREDMET_DRUH}, verbose_limit_choices_to=_('core.import_data_mappers.SamostatnyNalezMapper.druh_nalezu.limit_choices'))",
+      "katastr": "RuianLookupImportField(RuianKatastr, 'kod')",
+      "nalezce": "LookupImportField(Osoba)",
+      "obdobi": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_OBDOBI}, verbose_limit_choices_to=_('core.import_data_mappers.SamostatnyNalezMapper.obdobi.limit_choices'))",
+      "okolnosti": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_NALEZOVE_OKOLNOSTI}, verbose_limit_choices_to=_('core.import_data_mappers.SamostatnyNalezMapper.okolnosti.limit_choices'))",
+      "predano_organizace": "LookupImportField(Organizace)",
+      "pristupnost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PRISTUPNOST}, verbose_limit_choices_to=_('core.import_data_mappers.SamostatnyNalezMapper.pristupnost.limit_choices'))",
+      "projekt": "LookupImportField(Projekt)",
+      "specifikace": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PREDMET_SPECIFIKACE}, verbose_limit_choices_to=_('core.import_data_mappers.SamostatnyNalezMapper.specifikace.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "map",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "[CheckConstraint(condition=Q(geom_system='5514') & Q(geom_sjtsk__isnull=False) | Q(geom_system='4326') & Q(geom__isnull=False) | Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True), name='samostatny_nalez_geom_check')]"
+    ],
+    "source_branches": [],
+    "source_line": 2814
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_akce",
+    "coverage_variants": [
+      "project-fieldwork",
+      "independent-fieldwork",
+      "type-project-constraint",
+      "wrong-subtype",
+      "missing-companion",
+      "partial-update",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "hlavni_katastr": "RuianLookupImportField(RuianKatastr, 'kod')",
+      "hlavni_typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_AKCE_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.ArcheologickyZaznamAkceMapper.hlavni_typ.limit_choices'))",
+      "hlavni_vedouci": "LookupImportField(Osoba)",
+      "organizace": "LookupImportField(Organizace)",
+      "pristupnost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PRISTUPNOST}, verbose_limit_choices_to=_('core.import_data_mappers.ArcheologickyZaznamAkceMapper.pristupnost.limit_choices'))",
+      "projekt": "LookupImportField(Projekt)",
+      "specifikace_data": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DATUM_SPECIFIKACE}, verbose_limit_choices_to=_('core.import_data_mappers.ArcheologickyZaznamAkceMapper.specifikace_data.limit_choices'))",
+      "vedlejsi_typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_AKCE_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.ArcheologickyZaznamAkceMapper.vedlejsi_typ.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "_is_import_null",
+      "import_validation",
+      "record_postprocessing",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "[CheckConstraint(condition=Q(typ_zaznamu='L') | Q(typ_zaznamu='A'), name='archeologicky_zaznam_typ_zaznamu_check')]",
+      "(('typ_zaznamu', 'historie'),)"
+    ],
+    "source_branches": [
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE and ('typ' not in self.value_dict or 'projekt' not in self.value_dict)",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3025
+      },
+      {
+        "condition": "typ == Akce.TYP_AKCE_SAMOSTATNA and (not projekt_is_null)",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3042
+      },
+      {
+        "condition": "typ == Akce.TYP_AKCE_PROJEKTOVA and projekt_is_null",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3044
+      },
+      {
+        "condition": "not self._is_import_null(typ) and typ not in (Akce.TYP_AKCE_SAMOSTATNA, Akce.TYP_AKCE_PROJEKTOVA)",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3046
+      },
+      {
+        "condition": "isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3063
+      },
+      {
+        "condition": "isinstance(record, ArcheologickyZaznam)",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3075
+      },
+      {
+        "condition": "isinstance(record, ArcheologickyZaznam)",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3092
+      },
+      {
+        "condition": "existing_akce is not None",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3036
+      },
+      {
+        "condition": "isinstance(record, Akce)",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3081
+      },
+      {
+        "condition": "isinstance(record, Akce)",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3094
+      },
+      {
+        "condition": "'typ' not in self.value_dict",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3037
+      },
+      {
+        "condition": "'projekt' not in self.value_dict",
+        "ledger_ids": [
+          "az_akce.insert",
+          "az_akce.update",
+          "az_akce.delete",
+          "az_akce.branch.project-fieldwork",
+          "az_akce.branch.independent-fieldwork",
+          "az_akce.branch.type-project-constraint",
+          "az_akce.branch.wrong-subtype",
+          "az_akce.branch.missing-companion",
+          "az_akce.branch.partial-update",
+          "az_akce.branch.reparent-old-new",
+          "az_akce.field.ident_cely.missing-required",
+          "az_akce.field.stav.missing-required",
+          "az_akce.field.stav.invalid-type",
+          "az_akce.field.typ.missing-required",
+          "az_akce.field.typ.overflow",
+          "az_akce.field.projekt.missing-lookup",
+          "az_akce.field.pristupnost.missing-required",
+          "az_akce.field.pristupnost.missing-lookup",
+          "az_akce.field.hlavni_katastr.missing-required",
+          "az_akce.field.hlavni_katastr.missing-lookup",
+          "az_akce.field.je_nz.invalid-type",
+          "az_akce.field.odlozena_nz.invalid-type",
+          "az_akce.field.hlavni_vedouci.missing-lookup",
+          "az_akce.field.organizace.missing-lookup",
+          "az_akce.field.specifikace_data.missing-required",
+          "az_akce.field.specifikace_data.missing-lookup",
+          "az_akce.field.datum_zahajeni.invalid-type",
+          "az_akce.field.datum_ukonceni.invalid-type",
+          "az_akce.field.hlavni_typ.missing-lookup",
+          "az_akce.field.vedlejsi_typ.missing-lookup"
+        ],
+        "line": 3039
+      }
+    ],
+    "source_line": 2912
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_lokality",
+    "coverage_variants": [
+      "site",
+      "wrong-subtype",
+      "missing-companion",
+      "partial-update"
+    ],
+    "lookup_fields": {
+      "druh": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_LOKALITA_DRUH}, verbose_limit_choices_to=_('core.import_data_mappers.LokalitaMapper.druh.limit_choices'))",
+      "hlavni_katastr": "RuianLookupImportField(RuianKatastr, 'kod')",
+      "jistota": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_JISTOTA_URCENI}, verbose_limit_choices_to=_('core.import_data_mappers.LokalitaMapper.jistota.limit_choices'))",
+      "pristupnost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PRISTUPNOST}, verbose_limit_choices_to=_('core.import_data_mappers.LokalitaMapper.pristupnost.limit_choices'))",
+      "typ_lokality": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_LOKALITA_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.LokalitaMapper.typ_lokality.limit_choices'))",
+      "zachovalost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_STAV_DOCHOVANI}, verbose_limit_choices_to=_('core.import_data_mappers.LokalitaMapper.zachovalost.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "record_postprocessing",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "[CheckConstraint(condition=Q(typ_zaznamu='L') | Q(typ_zaznamu='A'), name='archeologicky_zaznam_typ_zaznamu_check')]",
+      "(('typ_zaznamu', 'historie'),)"
+    ],
+    "source_branches": [
+      {
+        "condition": "isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "ledger_ids": [
+          "az_lokality.insert",
+          "az_lokality.update",
+          "az_lokality.delete",
+          "az_lokality.branch.site",
+          "az_lokality.branch.wrong-subtype",
+          "az_lokality.branch.missing-companion",
+          "az_lokality.branch.partial-update",
+          "az_lokality.field.ident_cely.missing-required",
+          "az_lokality.field.igsn.overflow",
+          "az_lokality.field.stav.missing-required",
+          "az_lokality.field.stav.invalid-type",
+          "az_lokality.field.pristupnost.missing-required",
+          "az_lokality.field.pristupnost.missing-lookup",
+          "az_lokality.field.hlavni_katastr.missing-required",
+          "az_lokality.field.hlavni_katastr.missing-lookup",
+          "az_lokality.field.nazev.missing-required",
+          "az_lokality.field.nazev.overflow",
+          "az_lokality.field.typ_lokality.missing-required",
+          "az_lokality.field.typ_lokality.missing-lookup",
+          "az_lokality.field.druh.missing-required",
+          "az_lokality.field.druh.missing-lookup",
+          "az_lokality.field.zachovalost.missing-lookup",
+          "az_lokality.field.jistota.missing-lookup"
+        ],
+        "line": 3186
+      },
+      {
+        "condition": "isinstance(record, Lokalita)",
+        "ledger_ids": [
+          "az_lokality.insert",
+          "az_lokality.update",
+          "az_lokality.delete",
+          "az_lokality.branch.site",
+          "az_lokality.branch.wrong-subtype",
+          "az_lokality.branch.missing-companion",
+          "az_lokality.branch.partial-update",
+          "az_lokality.field.ident_cely.missing-required",
+          "az_lokality.field.igsn.overflow",
+          "az_lokality.field.stav.missing-required",
+          "az_lokality.field.stav.invalid-type",
+          "az_lokality.field.pristupnost.missing-required",
+          "az_lokality.field.pristupnost.missing-lookup",
+          "az_lokality.field.hlavni_katastr.missing-required",
+          "az_lokality.field.hlavni_katastr.missing-lookup",
+          "az_lokality.field.nazev.missing-required",
+          "az_lokality.field.nazev.overflow",
+          "az_lokality.field.typ_lokality.missing-required",
+          "az_lokality.field.typ_lokality.missing-lookup",
+          "az_lokality.field.druh.missing-required",
+          "az_lokality.field.druh.missing-lookup",
+          "az_lokality.field.zachovalost.missing-lookup",
+          "az_lokality.field.jistota.missing-lookup"
+        ],
+        "line": 3198
+      }
+    ],
+    "source_line": 3099
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_akce_vedouci",
+    "coverage_variants": [
+      "reparent-old-new",
+      "duplicate-relation"
+    ],
+    "lookup_fields": {
+      "akce": "LookupImportField(Akce, 'archeologicky_zaznam__ident_cely')",
+      "organizace": "LookupImportField(Organizace)",
+      "vedouci": "LookupImportField(Osoba)"
+    },
+    "methods": [
+      "get_mapping",
+      "get_record_history",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [
+      "(('akce', 'vedouci'),)"
+    ],
+    "source_branches": [],
+    "source_line": 3205
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_katastry",
+    "coverage_variants": [
+      "composite-duplicate",
+      "child-delete-history"
+    ],
+    "lookup_fields": {
+      "archeologicky_zaznam": "LookupImportField(ArcheologickyZaznam)",
+      "katastr": "RuianLookupImportField(RuianKatastr, 'kod')"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('archeologicky_zaznam', 'katastr'),)"
+    ],
+    "source_branches": [],
+    "source_line": 3249
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_pian",
+    "coverage_variants": [
+      "point",
+      "line",
+      "polygon",
+      "geometry-4326",
+      "geometry-5514",
+      "invalid-geometry",
+      "omitted-versus-clear"
+    ],
+    "lookup_fields": {
+      "presnost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PIAN_PRESNOST}, verbose_limit_choices_to=_('core.import_data_mappers.PianMapper.presnost.limit_choices'))",
+      "typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PIAN_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.PianMapper.typ.limit_choices'))",
+      "zm10": "LookupImportField(Kladyzm, 'cislo')",
+      "zm50": "LookupImportField(Kladyzm, 'cislo')"
+    },
+    "methods": [
+      "get_mapping",
+      "map",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "[CheckConstraint(condition=Q(geom_system__in=['4326', '5514']), name='pian_geom_check')]"
+    ],
+    "source_branches": [],
+    "source_line": 3294
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_dokumentacni_jednotky",
+    "coverage_variants": [
+      "fieldwork-owner",
+      "site-owner",
+      "cadastral-existing-pian",
+      "cadastral-missing-pian",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "archeologicky_zaznam": "LookupImportField(ArcheologickyZaznam)",
+      "pian": "LookupImportField(Pian)",
+      "typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DJ_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentacniJednotkaMapper.typ.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "record_postprocessing",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "record.typ.id == TYP_DJ_KATASTR",
+        "ledger_ids": [
+          "az_dokumentacni_jednotky.insert",
+          "az_dokumentacni_jednotky.update",
+          "az_dokumentacni_jednotky.delete",
+          "az_dokumentacni_jednotky.branch.fieldwork-owner",
+          "az_dokumentacni_jednotky.branch.site-owner",
+          "az_dokumentacni_jednotky.branch.cadastral-existing-pian",
+          "az_dokumentacni_jednotky.branch.cadastral-missing-pian",
+          "az_dokumentacni_jednotky.branch.reparent-old-new",
+          "az_dokumentacni_jednotky.field.ident_cely.missing-required",
+          "az_dokumentacni_jednotky.field.negativni_jednotka.invalid-type",
+          "az_dokumentacni_jednotky.field.archeologicky_zaznam.missing-required",
+          "az_dokumentacni_jednotky.field.archeologicky_zaznam.missing-lookup",
+          "az_dokumentacni_jednotky.field.pian.missing-lookup",
+          "az_dokumentacni_jednotky.field.typ.missing-required",
+          "az_dokumentacni_jednotky.field.typ.missing-lookup"
+        ],
+        "line": 3389
+      },
+      {
+        "condition": "(pian := record.archeologicky_zaznam.hlavni_katastr.pian)",
+        "ledger_ids": [
+          "az_dokumentacni_jednotky.insert",
+          "az_dokumentacni_jednotky.update",
+          "az_dokumentacni_jednotky.delete",
+          "az_dokumentacni_jednotky.branch.fieldwork-owner",
+          "az_dokumentacni_jednotky.branch.site-owner",
+          "az_dokumentacni_jednotky.branch.cadastral-existing-pian",
+          "az_dokumentacni_jednotky.branch.cadastral-missing-pian",
+          "az_dokumentacni_jednotky.branch.reparent-old-new",
+          "az_dokumentacni_jednotky.field.ident_cely.missing-required",
+          "az_dokumentacni_jednotky.field.negativni_jednotka.invalid-type",
+          "az_dokumentacni_jednotky.field.archeologicky_zaznam.missing-required",
+          "az_dokumentacni_jednotky.field.archeologicky_zaznam.missing-lookup",
+          "az_dokumentacni_jednotky.field.pian.missing-lookup",
+          "az_dokumentacni_jednotky.field.typ.missing-required",
+          "az_dokumentacni_jednotky.field.typ.missing-lookup"
+        ],
+        "line": 3390
+      }
+    ],
+    "source_line": 3350
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_adb",
+    "coverage_variants": [
+      "fieldwork-and-adp-metadata",
+      "reparent-old-new",
+      "required-map-sheet"
+    ],
+    "lookup_fields": {
+      "autor_popisu": "LookupImportField(Osoba)",
+      "autor_revize": "LookupImportField(Osoba)",
+      "dokumentacni_jednotka": "LookupImportField(DokumentacniJednotka)",
+      "podnet": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_ADB_PODNET}, verbose_limit_choices_to=_('core.import_data_mappers.AdbMapper.podnet.limit_choices'))",
+      "sm5": "LookupImportField(Kladysm5, 'mapno')",
+      "typ_sondy": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_ADB_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.AdbMapper.typ_sondy.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 3418
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "az_adb_vyskove_body",
+    "coverage_variants": [
+      "point-z",
+      "invalid-geometry",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "adb": "LookupImportField(Adb)",
+      "typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_VYSKOVY_BOD_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.AdbVyskovyBod.typ.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 3483
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_lety",
+    "coverage_variants": [
+      "date-time-legacy",
+      "nullable-lookups",
+      "flight-metadata",
+      "localized-date",
+      "timezone-date-shift",
+      "date-trailing-junk"
+    ],
+    "lookup_fields": {
+      "dohlednost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOHLEDNOST}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentLetMapper.dohlednost.limit_choices'))",
+      "letiste_cil": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_LETISTE}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentLetMapper.letiste_cil.limit_choices'))",
+      "letiste_start": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_LETISTE}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentLetMapper.letiste_start.limit_choices'))",
+      "organizace": "LookupImportField(Organizace)",
+      "pocasi": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_POCASI}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentLetMapper.pocasi.limit_choices'))",
+      "pozorovatel": "LookupImportField(Osoba)"
+    },
+    "methods": [
+      "get_mapping"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 3530
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty",
+    "coverage_variants": [
+      "missing-extra-data",
+      "existing-extra-data",
+      "partial-update",
+      "geometry-4326",
+      "geometry-5514",
+      "confidence-bounds",
+      "csv-null-string",
+      "cascade"
+    ],
+    "lookup_fields": {
+      "format": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_FORMAT}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.format.limit_choices'))",
+      "let": "LookupImportField(Let)",
+      "licence": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_LICENCE}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.licence.limit_choices'))",
+      "material_originalu": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_MATERIAL}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.material_originalu.limit_choices'))",
+      "nahrada": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_NAHRADA}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.nahrada.limit_choices'))",
+      "organizace": "LookupImportField(Organizace)",
+      "pristupnost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PRISTUPNOST}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.pristupnost.limit_choices'))",
+      "rada": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_RADA}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.rada.limit_choices'))",
+      "typ_dokumentu": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.typ_dokumentu.limit_choices'))",
+      "udalost_typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_UDALOST_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.udalost_typ.limit_choices'))",
+      "ulozeni_originalu": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_ULOZENI}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.ulozeni_originalu.limit_choices'))",
+      "zachovalost": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_ZACHOVALOST}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.zachovalost.limit_choices'))",
+      "zeme": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_ZEME}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentMapper.zeme.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "create_records",
+      "map",
+      "_get_geometry_db_record",
+      "_geometry_target_model",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3722
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3740
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3745
+      },
+      {
+        "condition": "not filter_kwargs",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3785
+      },
+      {
+        "condition": "isinstance(record, Dokument)",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3806
+      },
+      {
+        "condition": "dokument_extra_data_query.exists()",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3725
+      },
+      {
+        "condition": "dokument_extra_data_query.exists()",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3750
+      },
+      {
+        "condition": "any((value is not None for value in mapping_dict_dokument_extra_data.values()))",
+        "ledger_ids": [
+          "dokumenty.insert",
+          "dokumenty.update",
+          "dokumenty.delete",
+          "dokumenty.branch.missing-extra-data",
+          "dokumenty.branch.existing-extra-data",
+          "dokumenty.branch.partial-update",
+          "dokumenty.branch.geometry-4326",
+          "dokumenty.branch.geometry-5514",
+          "dokumenty.branch.confidence-bounds",
+          "dokumenty.branch.csv-null-string",
+          "dokumenty.branch.cascade",
+          "dokumenty.field.ident_cely.missing-required",
+          "dokumenty.field.doi.overflow",
+          "dokumenty.field.stav.missing-required",
+          "dokumenty.field.stav.invalid-type",
+          "dokumenty.field.datum_zverejneni.invalid-type",
+          "dokumenty.field.vyska.invalid-type",
+          "dokumenty.field.sirka.invalid-type",
+          "dokumenty.field.pocet_variant_originalu.invalid-type",
+          "dokumenty.field.datum_vzniku.invalid-type",
+          "dokumenty.field.geom_system.overflow",
+          "dokumenty.field.let.missing-lookup",
+          "dokumenty.field.typ_dokumentu.missing-required",
+          "dokumenty.field.typ_dokumentu.missing-lookup",
+          "dokumenty.field.material_originalu.missing-required",
+          "dokumenty.field.material_originalu.missing-lookup",
+          "dokumenty.field.rada.missing-required",
+          "dokumenty.field.rada.missing-lookup",
+          "dokumenty.field.organizace.missing-required",
+          "dokumenty.field.organizace.missing-lookup",
+          "dokumenty.field.pristupnost.missing-required",
+          "dokumenty.field.pristupnost.missing-lookup",
+          "dokumenty.field.ulozeni_originalu.missing-lookup",
+          "dokumenty.field.licence.missing-lookup",
+          "dokumenty.field.format.missing-lookup",
+          "dokumenty.field.zachovalost.missing-lookup",
+          "dokumenty.field.nahrada.missing-lookup",
+          "dokumenty.field.udalost_typ.missing-lookup",
+          "dokumenty.field.zeme.missing-lookup"
+        ],
+        "line": 3752
+      }
+    ],
+    "source_line": 3582
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_autori",
+    "coverage_variants": [
+      "author-order",
+      "composite-duplicate",
+      "child-delete-history"
+    ],
+    "lookup_fields": {
+      "autor": "LookupImportField(Osoba)",
+      "dokument": "LookupImportField(Dokument)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('dokument', 'autor'), ('dokument', 'poradi'))"
+    ],
+    "source_branches": [],
+    "source_line": 3813
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_jazyky",
+    "coverage_variants": [
+      "wrong-vocabulary",
+      "composite-duplicate"
+    ],
+    "lookup_fields": {
+      "dokument": "LookupImportField(Dokument)",
+      "jazyk": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_JAZYK}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentJazykMapper.jazyk.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('dokument', 'jazyk'),)"
+    ],
+    "source_branches": [],
+    "source_line": 3858
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_osoby",
+    "coverage_variants": [
+      "second-person",
+      "composite-duplicate"
+    ],
+    "lookup_fields": {
+      "dokument": "LookupImportField(Dokument)",
+      "osoba": "LookupImportField(Osoba)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('dokument', 'osoba'),)"
+    ],
+    "source_branches": [],
+    "source_line": 3906
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_posudky",
+    "coverage_variants": [
+      "second-document",
+      "self-reference",
+      "composite-duplicate"
+    ],
+    "lookup_fields": {
+      "dokument": "LookupImportField(Dokument)",
+      "posudek": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_POSUDEK_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.DokumentPosudekMapper.posudek.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('dokument', 'posudek'),)"
+    ],
+    "source_branches": [],
+    "source_line": 3950
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_tvary",
+    "coverage_variants": [
+      "wrong-vocabulary",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "dokument": "LookupImportField(Dokument)",
+      "tvar": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_LETFOTO_TVAR}, verbose_limit_choices_to=_('core.import_data_mappers.TvarMapper.tvar.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('dokument', 'tvar', 'poznamka'),)"
+    ],
+    "source_branches": [],
+    "source_line": 3998
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_casti",
+    "coverage_variants": [
+      "fieldwork-link",
+      "project-link",
+      "unidentified-link",
+      "mutual-exclusion",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "archeologicky_zaznam": "LookupImportField(ArcheologickyZaznam)",
+      "dokument": "LookupImportField(Dokument)",
+      "projekt": "LookupImportField(Projekt)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "[CheckConstraint(condition=~(Q(archeologicky_zaznam__isnull=False) & Q(projekt__isnull=False)), name='dokument_cast_vazba_check')]"
+    ],
+    "source_branches": [],
+    "source_line": 4046
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_neident_akce",
+    "coverage_variants": [
+      "fk-as-key",
+      "optional-pian-text",
+      "date-boundaries"
+    ],
+    "lookup_fields": {
+      "dokument_cast": "LookupImportField(DokumentCast)",
+      "katastr": "RuianLookupImportField(RuianKatastr, 'kod')"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 4091
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "dokumenty_neident_akce_vedouci",
+    "coverage_variants": [
+      "composite-duplicate",
+      "child-delete-history"
+    ],
+    "lookup_fields": {
+      "neident_akce": "LookupImportField(NeidentAkce, 'dokument_cast__ident_cely')",
+      "vedouci": "LookupImportField(Osoba)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('neident_akce', 'vedouci'),)"
+    ],
+    "source_branches": [],
+    "source_line": 4135
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "komponenty",
+    "coverage_variants": [
+      "documentation-unit-owner",
+      "document-part-fieldwork-owner",
+      "document-part-document-owner",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "areal": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_AREAL}, verbose_limit_choices_to=_('core.import_data_mappers.KomponentaMapper.areal.limit_choices'))",
+      "obdobi": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_OBDOBI}, verbose_limit_choices_to=_('core.import_data_mappers.KomponentaMapper.obdobi.limit_choices'))",
+      "vazba": "VazbaLookupImportField((DokumentacniJednotka, DokumentCast), read_field_name='komponenty')"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "isinstance(navazany_objekt, DokumentCast)",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4222
+      },
+      {
+        "condition": "isinstance(navazany_objekt, DokumentCast)",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4240
+      },
+      {
+        "condition": "navazany_objekt.archeologicky_zaznam",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4223
+      },
+      {
+        "condition": "isinstance(navazany_objekt, DokumentacniJednotka)",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4227
+      },
+      {
+        "condition": "navazany_objekt.archeologicky_zaznam",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4241
+      },
+      {
+        "condition": "isinstance(navazany_objekt, DokumentacniJednotka)",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4245
+      },
+      {
+        "condition": "navazany_objekt.dokument",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4225
+      },
+      {
+        "condition": "navazany_objekt.dokument",
+        "ledger_ids": [
+          "komponenty.insert",
+          "komponenty.update",
+          "komponenty.delete",
+          "komponenty.branch.documentation-unit-owner",
+          "komponenty.branch.document-part-fieldwork-owner",
+          "komponenty.branch.document-part-document-owner",
+          "komponenty.branch.reparent-old-new",
+          "komponenty.field.ident_cely.missing-required",
+          "komponenty.field.jistota.invalid-type",
+          "komponenty.field.vazba.missing-required",
+          "komponenty.field.vazba.missing-lookup",
+          "komponenty.field.obdobi.missing-lookup",
+          "komponenty.field.areal.missing-lookup"
+        ],
+        "line": 4243
+      }
+    ],
+    "source_line": 4179
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "komponenty_aktivity",
+    "coverage_variants": [
+      "both-component-owners",
+      "wrong-vocabulary",
+      "composite-duplicate"
+    ],
+    "lookup_fields": {
+      "aktivita": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_AKTIVITA}, verbose_limit_choices_to=_('core.import_data_mappers.KomponentaAktivitaMapper.aktivita.limit_choices'))",
+      "komponenta": "LookupImportField(Komponenta)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('komponenta', 'aktivita'),)"
+    ],
+    "source_branches": [],
+    "source_line": 4250
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "komponenty_nalezy_objekty",
+    "coverage_variants": [
+      "both-component-owners",
+      "count-boundary",
+      "wrong-vocabulary"
+    ],
+    "lookup_fields": {
+      "druh": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_OBJEKT_DRUH}, verbose_limit_choices_to=_('core.import_data_mappers.NalezObjektMapper.druh.limit_choices'))",
+      "komponenta": "LookupImportField(Komponenta)",
+      "specifikace": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_OBJEKT_SPECIFIKACE}, verbose_limit_choices_to=_('core.import_data_mappers.NalezObjektMapper.specifikace.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 4329
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "komponenty_nalezy_predmety",
+    "coverage_variants": [
+      "both-component-owners",
+      "count-boundary",
+      "wrong-vocabulary"
+    ],
+    "lookup_fields": {
+      "druh": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PREDMET_DRUH}, verbose_limit_choices_to=_('core.import_data_mappers.NalezPredmetMapper.druh.limit_choices'))",
+      "komponenta": "LookupImportField(Komponenta)",
+      "specifikace": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_PREDMET_SPECIFIKACE}, verbose_limit_choices_to=_('core.import_data_mappers.NalezPredmetMapper.specifikace.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 4360
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "externi_zdroje",
+    "coverage_variants": [
+      "all-optional-fields",
+      "partial-update",
+      "legacy-date"
+    ],
+    "lookup_fields": {
+      "typ": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_EXTERNI_ZDROJ_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.ExterniZdrojMapper.typ.limit_choices'))",
+      "typ_dokumentu": "LookupImportField(Heslar, limit_choices_to={'nazev_heslare': HESLAR_DOKUMENT_TYP}, verbose_limit_choices_to=_('core.import_data_mappers.ExterniZdrojMapper.typ_dokumentu.limit_choices'))"
+    },
+    "methods": [
+      "get_mapping",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 4391
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "externi_zdroje_autori",
+    "coverage_variants": [
+      "author-order",
+      "composite-duplicate"
+    ],
+    "lookup_fields": {
+      "autor": "LookupImportField(Osoba)",
+      "externi_zdroj": "LookupImportField(ExterniZdroj)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('externi_zdroj', 'autor'), ('externi_zdroj', 'poradi'))"
+    ],
+    "source_branches": [],
+    "source_line": 4451
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "externi_zdroje_editori",
+    "coverage_variants": [
+      "editor-order",
+      "composite-duplicate"
+    ],
+    "lookup_fields": {
+      "editor": "LookupImportField(Osoba)",
+      "externi_zdroj": "LookupImportField(ExterniZdroj)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('externi_zdroj', 'editor'), ('poradi', 'externi_zdroj'))"
+    ],
+    "source_branches": [],
+    "source_line": 4496
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "externi_odkazy",
+    "coverage_variants": [
+      "both-endpoints-update",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "archeologicky_zaznam": "LookupImportField(ArcheologickyZaznam)",
+      "externi_zdroj": "LookupImportField(ExterniZdroj)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 4541
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "uzivatele",
+    "coverage_variants": [
+      "active-user-delete",
+      "booleans-access",
+      "legacy-datetime",
+      "unique-email",
+      "reparent-old-new",
+      "localized-datetime",
+      "datetime-trailing-junk"
+    ],
+    "lookup_fields": {
+      "organizace": "LookupImportField(Organizace)",
+      "osoba": "LookupImportField(Osoba)"
+    },
+    "methods": [
+      "get_mapping",
+      "get_record_history",
+      "import_validation"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and User.objects.get(pk=user_id).ident_cely == self.value_dict['ident_cely']",
+        "ledger_ids": [
+          "uzivatele.insert",
+          "uzivatele.update",
+          "uzivatele.delete",
+          "uzivatele.branch.active-user-delete",
+          "uzivatele.branch.booleans-access",
+          "uzivatele.branch.legacy-datetime",
+          "uzivatele.branch.unique-email",
+          "uzivatele.branch.reparent-old-new",
+          "uzivatele.branch.localized-datetime",
+          "uzivatele.branch.datetime-trailing-junk",
+          "uzivatele.field.ident_cely.missing-required",
+          "uzivatele.field.ident_cely.overflow",
+          "uzivatele.field.first_name.missing-required",
+          "uzivatele.field.first_name.overflow",
+          "uzivatele.field.last_name.missing-required",
+          "uzivatele.field.last_name.overflow",
+          "uzivatele.field.email.missing-required",
+          "uzivatele.field.email.overflow",
+          "uzivatele.field.telefon.overflow",
+          "uzivatele.field.orcid.overflow",
+          "uzivatele.field.jazyk.overflow",
+          "uzivatele.field.is_active.invalid-type",
+          "uzivatele.field.is_staff.invalid-type",
+          "uzivatele.field.is_superuser.invalid-type",
+          "uzivatele.field.date_joined.invalid-type",
+          "uzivatele.field.last_login.invalid-type",
+          "uzivatele.field.osoba.missing-lookup",
+          "uzivatele.field.organizace.missing-required",
+          "uzivatele.field.organizace.missing-lookup"
+        ],
+        "line": 4640
+      }
+    ],
+    "source_line": 4585
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "uzivatele_notifikace_projekty",
+    "coverage_variants": [
+      "cadastre",
+      "district",
+      "region",
+      "serialized-content-type",
+      "wrong-content-type",
+      "composite-duplicate"
+    ],
+    "lookup_fields": {
+      "ruian": "GenericForeignKeyImportField([RuianKatastr, RuianOkres, RuianKraj], 'kod', 'kod')",
+      "uzivatel": "LookupImportField(User, 'ident_cely')"
+    },
+    "methods": [
+      "get_mapping",
+      "_ruian_content_object",
+      "_get_filter_kwargs_primary_key",
+      "map_field",
+      "create_records",
+      "_check_column_structure",
+      "map",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "[models.UniqueConstraint(fields=['user', 'content_type', 'object_id'], name='unique_pes')]"
+    ],
+    "source_branches": [
+      {
+        "condition": "field_name == 'uzivatel'",
+        "ledger_ids": [
+          "uzivatele_notifikace_projekty.insert",
+          "uzivatele_notifikace_projekty.update",
+          "uzivatele_notifikace_projekty.delete",
+          "uzivatele_notifikace_projekty.branch.cadastre",
+          "uzivatele_notifikace_projekty.branch.district",
+          "uzivatele_notifikace_projekty.branch.region",
+          "uzivatele_notifikace_projekty.branch.serialized-content-type",
+          "uzivatele_notifikace_projekty.branch.wrong-content-type",
+          "uzivatele_notifikace_projekty.branch.composite-duplicate",
+          "uzivatele_notifikace_projekty.field.uzivatel.missing-required",
+          "uzivatele_notifikace_projekty.field.uzivatel.missing-lookup",
+          "uzivatele_notifikace_projekty.field.ruian.missing-lookup"
+        ],
+        "line": 4710
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE",
+        "ledger_ids": [
+          "uzivatele_notifikace_projekty.insert",
+          "uzivatele_notifikace_projekty.update",
+          "uzivatele_notifikace_projekty.delete",
+          "uzivatele_notifikace_projekty.branch.cadastre",
+          "uzivatele_notifikace_projekty.branch.district",
+          "uzivatele_notifikace_projekty.branch.region",
+          "uzivatele_notifikace_projekty.branch.serialized-content-type",
+          "uzivatele_notifikace_projekty.branch.wrong-content-type",
+          "uzivatele_notifikace_projekty.branch.composite-duplicate",
+          "uzivatele_notifikace_projekty.field.uzivatel.missing-required",
+          "uzivatele_notifikace_projekty.field.uzivatel.missing-lookup",
+          "uzivatele_notifikace_projekty.field.ruian.missing-lookup"
+        ],
+        "line": 4721
+      },
+      {
+        "condition": "mapping_column_set != expected_column_set_import and mapping_column_set != expected_column_set_job",
+        "ledger_ids": [
+          "uzivatele_notifikace_projekty.insert",
+          "uzivatele_notifikace_projekty.update",
+          "uzivatele_notifikace_projekty.delete",
+          "uzivatele_notifikace_projekty.branch.cadastre",
+          "uzivatele_notifikace_projekty.branch.district",
+          "uzivatele_notifikace_projekty.branch.region",
+          "uzivatele_notifikace_projekty.branch.serialized-content-type",
+          "uzivatele_notifikace_projekty.branch.wrong-content-type",
+          "uzivatele_notifikace_projekty.branch.composite-duplicate",
+          "uzivatele_notifikace_projekty.field.uzivatel.missing-required",
+          "uzivatele_notifikace_projekty.field.uzivatel.missing-lookup",
+          "uzivatele_notifikace_projekty.field.ruian.missing-lookup"
+        ],
+        "line": 4748
+      }
+    ],
+    "source_line": 4649
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "uzivatele_spoluprace",
+    "coverage_variants": [
+      "both-peers-metadata",
+      "reparent-old-new",
+      "self-reference"
+    ],
+    "lookup_fields": {
+      "spolupracovnik": "LookupImportField(User)",
+      "vedouci": "LookupImportField(User)"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history"
+    ],
+    "model_constraints": [
+      "(('vedouci', 'spolupracovnik'),)"
+    ],
+    "source_branches": [],
+    "source_line": 4794
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "uzivatele_opravneni",
+    "coverage_variants": [
+      "relation-add-remove",
+      "existing-relation",
+      "missing-relation"
+    ],
+    "lookup_fields": {},
+    "methods": [
+      "get_record_history",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 4918
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "soubory",
+    "coverage_variants": [
+      "document-owner",
+      "project-owner",
+      "individual-find-owner",
+      "replace-preserves-path",
+      "delete-parent-history",
+      "gps-removal",
+      "thumbnails",
+      "missing-binary",
+      "mime-extension",
+      "reparent-old-new"
+    ],
+    "lookup_fields": {
+      "nazev": "FileNameImportField()",
+      "vazba": "VazbaLookupImportField(read_field_name='soubory')"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list",
+      "get_record_history",
+      "_validate_extension_allowed_for_vazba",
+      "import_validation",
+      "get_related_history_targets"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "not nazev or vazba_instance is None",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5013
+      },
+      {
+        "condition": "not possible_mimes",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5017
+      },
+      {
+        "condition": "possible_mimes.isdisjoint(allowed_mimes)",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5020
+      },
+      {
+        "condition": "performed_action in (ImportDataAdminForm.PERFORMED_ACTION_INSERT, ImportDataAdminForm.PERFORMED_ACTION_UPDATE)",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5045
+      },
+      {
+        "condition": "performed_action != ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5051
+      },
+      {
+        "condition": "Soubor.objects.filter(nazev=nazev, vazba=vazba_instance).exists()",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5055
+      },
+      {
+        "condition": "seen_in_batch is not None",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5057
+      },
+      {
+        "condition": "isinstance(related_record, ModelWithMetadata)",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5076
+      },
+      {
+        "condition": "key in seen_in_batch",
+        "ledger_ids": [
+          "soubory.insert",
+          "soubory.update",
+          "soubory.delete",
+          "soubory.branch.document-owner",
+          "soubory.branch.project-owner",
+          "soubory.branch.individual-find-owner",
+          "soubory.branch.replace-preserves-path",
+          "soubory.branch.delete-parent-history",
+          "soubory.branch.gps-removal",
+          "soubory.branch.thumbnails",
+          "soubory.branch.missing-binary",
+          "soubory.branch.mime-extension",
+          "soubory.branch.reparent-old-new",
+          "soubory.field.nazev.missing-required",
+          "soubory.field.nazev.missing-lookup",
+          "soubory.field.vazba.missing-required",
+          "soubory.field.vazba.missing-lookup"
+        ],
+        "line": 5059
+      }
+    ],
+    "source_line": 4957
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "distribution",
+    "coverage_variants": [
+      "nested-name",
+      "exact-mime-filename",
+      "reserved-orig",
+      "reserved-paradata",
+      "reserved-page-thumb",
+      "unsafe-path",
+      "prefix-collision",
+      "same-record-multiple-files",
+      "tombstone-reinsert",
+      "thumb-backfill",
+      "backfill-idempotence",
+      "download-permissions",
+      "duplicate-in-batch",
+      "existing-distribution",
+      "missing-update",
+      "missing-delete",
+      "empty-name",
+      "unsafe-filename",
+      "missing-file-id",
+      "missing-file-uuid",
+      "missing-file-owner",
+      "existing-ancestor-conflict",
+      "existing-descendant-conflict",
+      "missing-binary"
+    ],
+    "lookup_fields": {},
+    "methods": [
+      "distribution_exists",
+      "path_conflict",
+      "_raise_if_path_conflict",
+      "_validate_distribution_name",
+      "_validate_import_filename",
+      "validate_batch_ordering",
+      "_get_soubor",
+      "import_validation",
+      "_raise_if_existence_mismatched",
+      "create_records"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "performed_action != ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5218
+      },
+      {
+        "condition": "conflicting_path is not None",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5221
+      },
+      {
+        "condition": "not distribution",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5239
+      },
+      {
+        "condition": "has_unsafe_distribution_segments(distribution)",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5243
+      },
+      {
+        "condition": "is_reserved_distribution_name(distribution) and (not (allow_implicit and distribution in IMPLICIT_DISTRIBUTION_NAMES))",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5245
+      },
+      {
+        "condition": "not nazev or any((char in nazev for char in UNSAFE_IMPORT_FILENAME_CHARS)) or nazev in ('.', '..')",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5267
+      },
+      {
+        "condition": "soubor is None",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5312
+      },
+      {
+        "condition": "not soubor.repository_uuid",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5314
+      },
+      {
+        "condition": "soubor.vazba.navazany_objekt is None",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5316
+      },
+      {
+        "condition": "performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5350
+      },
+      {
+        "condition": "seen_in_batch is not None",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5356
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and exists",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5375
+      },
+      {
+        "condition": "performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not exists)",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5377
+      },
+      {
+        "condition": "soubor_ref is None or distribution is None",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5289
+      },
+      {
+        "condition": "collisions",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5294
+      },
+      {
+        "condition": "key in seen_in_batch",
+        "ledger_ids": [
+          "distribution.insert",
+          "distribution.update",
+          "distribution.delete",
+          "distribution.branch.nested-name",
+          "distribution.branch.exact-mime-filename",
+          "distribution.branch.reserved-orig",
+          "distribution.branch.reserved-paradata",
+          "distribution.branch.reserved-page-thumb",
+          "distribution.branch.unsafe-path",
+          "distribution.branch.prefix-collision",
+          "distribution.branch.same-record-multiple-files",
+          "distribution.branch.tombstone-reinsert",
+          "distribution.branch.thumb-backfill",
+          "distribution.branch.backfill-idempotence",
+          "distribution.branch.download-permissions",
+          "distribution.branch.duplicate-in-batch",
+          "distribution.branch.existing-distribution",
+          "distribution.branch.missing-update",
+          "distribution.branch.missing-delete",
+          "distribution.branch.empty-name",
+          "distribution.branch.unsafe-filename",
+          "distribution.branch.missing-file-id",
+          "distribution.branch.missing-file-uuid",
+          "distribution.branch.missing-file-owner",
+          "distribution.branch.existing-ancestor-conflict",
+          "distribution.branch.existing-descendant-conflict",
+          "distribution.branch.missing-binary"
+        ],
+        "line": 5358
+      }
+    ],
+    "source_line": 5143
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "paradata",
+    "coverage_variants": [
+      "same-batch-distribution",
+      "orig-paradata",
+      "thumb-paradata",
+      "paradata-only-db-xml-unchanged",
+      "nested-name",
+      "tombstone-reinsert",
+      "delete-with-distribution",
+      "download-permissions",
+      "duplicate-in-batch",
+      "missing-distribution",
+      "empty-path",
+      "unknown-path",
+      "unsafe-filename"
+    ],
+    "lookup_fields": {},
+    "methods": [
+      "import_validation",
+      "paradata_exists",
+      "path_conflict",
+      "create_records"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "not path",
+        "ledger_ids": [
+          "paradata.insert",
+          "paradata.update",
+          "paradata.delete",
+          "paradata.branch.same-batch-distribution",
+          "paradata.branch.orig-paradata",
+          "paradata.branch.thumb-paradata",
+          "paradata.branch.paradata-only-db-xml-unchanged",
+          "paradata.branch.nested-name",
+          "paradata.branch.tombstone-reinsert",
+          "paradata.branch.delete-with-distribution",
+          "paradata.branch.download-permissions",
+          "paradata.branch.duplicate-in-batch",
+          "paradata.branch.missing-distribution",
+          "paradata.branch.empty-path",
+          "paradata.branch.unknown-path",
+          "paradata.branch.unsafe-filename"
+        ],
+        "line": 5474
+      },
+      {
+        "condition": "performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE",
+        "ledger_ids": [
+          "paradata.insert",
+          "paradata.update",
+          "paradata.delete",
+          "paradata.branch.same-batch-distribution",
+          "paradata.branch.orig-paradata",
+          "paradata.branch.thumb-paradata",
+          "paradata.branch.paradata-only-db-xml-unchanged",
+          "paradata.branch.nested-name",
+          "paradata.branch.tombstone-reinsert",
+          "paradata.branch.delete-with-distribution",
+          "paradata.branch.download-permissions",
+          "paradata.branch.duplicate-in-batch",
+          "paradata.branch.missing-distribution",
+          "paradata.branch.empty-path",
+          "paradata.branch.unknown-path",
+          "paradata.branch.unsafe-filename"
+        ],
+        "line": 5479
+      },
+      {
+        "condition": "not inserted_in_batch and (not self.distribution_exists(soubor, distribution))",
+        "ledger_ids": [
+          "paradata.insert",
+          "paradata.update",
+          "paradata.delete",
+          "paradata.branch.same-batch-distribution",
+          "paradata.branch.orig-paradata",
+          "paradata.branch.thumb-paradata",
+          "paradata.branch.paradata-only-db-xml-unchanged",
+          "paradata.branch.nested-name",
+          "paradata.branch.tombstone-reinsert",
+          "paradata.branch.delete-with-distribution",
+          "paradata.branch.download-permissions",
+          "paradata.branch.duplicate-in-batch",
+          "paradata.branch.missing-distribution",
+          "paradata.branch.empty-path",
+          "paradata.branch.unknown-path",
+          "paradata.branch.unsafe-filename"
+        ],
+        "line": 5486
+      },
+      {
+        "condition": "seen_in_batch is not None",
+        "ledger_ids": [
+          "paradata.insert",
+          "paradata.update",
+          "paradata.delete",
+          "paradata.branch.same-batch-distribution",
+          "paradata.branch.orig-paradata",
+          "paradata.branch.thumb-paradata",
+          "paradata.branch.paradata-only-db-xml-unchanged",
+          "paradata.branch.nested-name",
+          "paradata.branch.tombstone-reinsert",
+          "paradata.branch.delete-with-distribution",
+          "paradata.branch.download-permissions",
+          "paradata.branch.duplicate-in-batch",
+          "paradata.branch.missing-distribution",
+          "paradata.branch.empty-path",
+          "paradata.branch.unknown-path",
+          "paradata.branch.unsafe-filename"
+        ],
+        "line": 5491
+      },
+      {
+        "condition": "key in seen_in_batch",
+        "ledger_ids": [
+          "paradata.insert",
+          "paradata.update",
+          "paradata.delete",
+          "paradata.branch.same-batch-distribution",
+          "paradata.branch.orig-paradata",
+          "paradata.branch.thumb-paradata",
+          "paradata.branch.paradata-only-db-xml-unchanged",
+          "paradata.branch.nested-name",
+          "paradata.branch.tombstone-reinsert",
+          "paradata.branch.delete-with-distribution",
+          "paradata.branch.download-permissions",
+          "paradata.branch.duplicate-in-batch",
+          "paradata.branch.missing-distribution",
+          "paradata.branch.empty-path",
+          "paradata.branch.unknown-path",
+          "paradata.branch.unsafe-filename"
+        ],
+        "line": 5493
+      }
+    ],
+    "source_line": 5406
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "uzivatele_notifikace",
+    "coverage_variants": [
+      "relation-add-remove",
+      "existing-relation",
+      "missing-relation"
+    ],
+    "lookup_fields": {},
+    "methods": [
+      "get_record_history",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [],
+    "source_branches": [],
+    "source_line": 5556
+  },
+  {
+    "acceptance": "Cycles/self links and negative counts remain explicit questions; no inferred pass. Missing companion/thumbnail/backfill/fault cases require isolated authorized setup.",
+    "class": "historie",
+    "coverage_variants": [
+      "project-owner",
+      "fieldwork-owner",
+      "site-owner",
+      "document-owner",
+      "individual-find-owner",
+      "spatial-unit-owner",
+      "external-source-owner",
+      "user-owner",
+      "cooperation-owner",
+      "file-owner"
+    ],
+    "lookup_fields": {
+      "uzivatel": "LookupImportField(User)",
+      "vazba": "VazbaLookupImportField(read_field_name='historie')"
+    },
+    "methods": [
+      "get_mapping",
+      "_get_updated_ident_cely_record_list"
+    ],
+    "model_constraints": [],
+    "source_branches": [
+      {
+        "condition": "isinstance(navazany_objekt, ModelWithMetadata) or isinstance(navazany_objekt, User)",
+        "ledger_ids": [
+          "historie.insert",
+          "historie.update",
+          "historie.delete",
+          "historie.branch.project-owner",
+          "historie.branch.fieldwork-owner",
+          "historie.branch.site-owner",
+          "historie.branch.document-owner",
+          "historie.branch.individual-find-owner",
+          "historie.branch.spatial-unit-owner",
+          "historie.branch.external-source-owner",
+          "historie.branch.user-owner",
+          "historie.branch.cooperation-owner",
+          "historie.branch.file-owner",
+          "historie.field.datum_zmeny.missing-required",
+          "historie.field.datum_zmeny.invalid-type",
+          "historie.field.typ_zmeny.missing-required",
+          "historie.field.vazba.missing-required",
+          "historie.field.vazba.missing-lookup",
+          "historie.field.uzivatel.missing-required",
+          "historie.field.uzivatel.missing-lookup"
+        ],
+        "line": 5630
+      },
+      {
+        "condition": "isinstance(navazany_objekt, UzivatelSpoluprace)",
+        "ledger_ids": [
+          "historie.insert",
+          "historie.update",
+          "historie.delete",
+          "historie.branch.project-owner",
+          "historie.branch.fieldwork-owner",
+          "historie.branch.site-owner",
+          "historie.branch.document-owner",
+          "historie.branch.individual-find-owner",
+          "historie.branch.spatial-unit-owner",
+          "historie.branch.external-source-owner",
+          "historie.branch.user-owner",
+          "historie.branch.cooperation-owner",
+          "historie.branch.file-owner",
+          "historie.field.datum_zmeny.missing-required",
+          "historie.field.datum_zmeny.invalid-type",
+          "historie.field.typ_zmeny.missing-required",
+          "historie.field.vazba.missing-required",
+          "historie.field.vazba.missing-lookup",
+          "historie.field.uzivatel.missing-required",
+          "historie.field.uzivatel.missing-lookup"
+        ],
+        "line": 5632
+      },
+      {
+        "condition": "isinstance(navazany_objekt, Soubor)",
+        "ledger_ids": [
+          "historie.insert",
+          "historie.update",
+          "historie.delete",
+          "historie.branch.project-owner",
+          "historie.branch.fieldwork-owner",
+          "historie.branch.site-owner",
+          "historie.branch.document-owner",
+          "historie.branch.individual-find-owner",
+          "historie.branch.spatial-unit-owner",
+          "historie.branch.external-source-owner",
+          "historie.branch.user-owner",
+          "historie.branch.cooperation-owner",
+          "historie.branch.file-owner",
+          "historie.field.datum_zmeny.missing-required",
+          "historie.field.datum_zmeny.invalid-type",
+          "historie.field.typ_zmeny.missing-required",
+          "historie.field.vazba.missing-required",
+          "historie.field.vazba.missing-lookup",
+          "historie.field.uzivatel.missing-required",
+          "historie.field.uzivatel.missing-lookup"
+        ],
+        "line": 5634
+      }
+    ],
+    "source_line": 5595
+  },
+  {
+    "branches": [
+      {
+        "condition": "self.require_primary_key_value is None",
+        "line": 1578
+      },
+      {
+        "condition": "mapper is None",
+        "line": 1603
+      },
+      {
+        "condition": "include_primary_key",
+        "line": 1629
+      },
+      {
+        "condition": "isinstance(cls.primary_key, str)",
+        "line": 1646
+      },
+      {
+        "condition": "not self.require_primary_key_value and isinstance(self.primary_key, str) and (self.primary_key not in self.value_dict)",
+        "line": 1669
+      },
+      {
+        "condition": "isinstance(self.primary_key, str)",
+        "line": 1676
+      },
+      {
+        "condition": "isinstance(value, str) and cls.primary_key_prefix",
+        "line": 1707
+      },
+      {
+        "condition": "isinstance(value, str) and prefix",
+        "line": 1726
+      },
+      {
+        "condition": "isinstance(model_field, models.TextField) or isinstance(model_field, models.CharField) or isinstance(model_field, models.URLField)",
+        "line": 1756
+      },
+      {
+        "condition": "isinstance(model_field, models.PositiveIntegerField)",
+        "line": 1762
+      },
+      {
+        "condition": "isinstance(model_field, models.IntegerField)",
+        "line": 1764
+      },
+      {
+        "condition": "isinstance(model_field, models.DecimalField)",
+        "line": 1766
+      },
+      {
+        "condition": "isinstance(model_field, models.DateTimeField)",
+        "line": 1768
+      },
+      {
+        "condition": "isinstance(model_field, models.DateField)",
+        "line": 1770
+      },
+      {
+        "condition": "isinstance(model_field, models.BooleanField)",
+        "line": 1772
+      },
+      {
+        "condition": "isinstance(model_field, pgmodels.PointField)",
+        "line": 1774
+      },
+      {
+        "condition": "isinstance(model_field, pgmodels.GeometryField)",
+        "line": 1776
+      },
+      {
+        "condition": "isinstance(model_field, DateRangeField)",
+        "line": 1778
+      },
+      {
+        "condition": "isinstance(model_field, models.ForeignKey)",
+        "line": 1780
+      },
+      {
+        "condition": "performed_action not in (ImportDataAdminForm.PERFORMED_ACTION_INSERT, ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)",
+        "line": 1811
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "line": 1820
+      },
+      {
+        "condition": "performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)",
+        "line": 1824
+      },
+      {
+        "condition": "self.primary_key and self._get_filter_kwargs_primary_key()",
+        "line": 1866
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "line": 1900
+      },
+      {
+        "condition": "missing_columns or excess_columns",
+        "line": 1920
+      },
+      {
+        "condition": "cls.historie_typ_vazby and (not getattr(instance, 'historie', None))",
+        "line": 1993
+      },
+      {
+        "condition": "cls.soubory_typ_vazby and (not getattr(instance, 'soubory', None))",
+        "line": 1997
+      },
+      {
+        "condition": "cls.komponenty_vazba is True and (not getattr(instance, 'komponenty', None))",
+        "line": 2001
+      },
+      {
+        "condition": "isinstance(record, ModelWithMetadata)",
+        "line": 2041
+      },
+      {
+        "condition": "isinstance(cls.primary_key, str) and cls.primary_key not in field_mapping",
+        "line": 1630
+      },
+      {
+        "condition": "isinstance(self.primary_key, Iterable)",
+        "line": 1681
+      },
+      {
+        "condition": "match",
+        "line": 1709
+      },
+      {
+        "condition": "not match",
+        "line": 1728
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.model_class.objects.filter(**self._get_filter_kwargs_primary_key()).exists()",
+        "line": 1867
+      },
+      {
+        "condition": "mapping_column_set != value_dict_column_set",
+        "line": 1901
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE",
+        "line": 1912
+      },
+      {
+        "condition": "field_name in self.value_dict",
+        "line": 1940
+      },
+      {
+        "condition": "required and (value is None or str(value).lower().strip() in ('nan', '') or pd.isna(value))",
+        "line": 1968
+      },
+      {
+        "condition": "isinstance(cls.primary_key, tuple)",
+        "line": 1632
+      },
+      {
+        "condition": "self.primary_key_filter_field",
+        "line": 1683
+      },
+      {
+        "condition": "isinstance(self.primary_key, str) and field_name != self.primary_key",
+        "line": 1830
+      },
+      {
+        "condition": "performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.objects.filter(**self._get_filter_kwargs_primary_key()).exists())",
+        "line": 1874
+      },
+      {
+        "condition": "missing_columns or excess_columns",
+        "line": 1915
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE",
+        "line": 1917
+      },
+      {
+        "condition": "instance_values",
+        "line": 1948
+      },
+      {
+        "condition": "isinstance(self.primary_key, tuple) and field_name not in self.primary_key",
+        "line": 1832
+      },
+      {
+        "condition": "primary_key not in field_mapping",
+        "line": 1634
+      }
+    ],
+    "ledger_contract": "Baseline operations plus per-field boundary probes and named geometry/owner/forward-reference cases. This is traceability, not measured runtime line coverage.",
+    "shared_helper": "ImportModelMapper",
+    "source_line": 1529
+  },
+  {
+    "branches": [
+      {
+        "condition": "field_name in cls.lookup_fields_mapping",
+        "line": 2217
+      },
+      {
+        "condition": "model_class is None",
+        "line": 2220
+      },
+      {
+        "condition": "import_field is None",
+        "line": 2227
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.value_dict.get('ident_cely') and self.model_class.objects.filter(ident_cely=self.value_dict['ident_cely']).exists()",
+        "line": 2241
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "line": 2296
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE",
+        "line": 2301
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE",
+        "line": 2311
+      },
+      {
+        "condition": "model_alias in alias_to_model",
+        "line": 2204
+      },
+      {
+        "condition": "performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)",
+        "line": 2249
+      },
+      {
+        "condition": "not self.model_class.objects.filter(ident_cely=self.value_dict['ident_cely']).exists()",
+        "line": 2253
+      },
+      {
+        "condition": "not class_1_model.objects.filter(**{'{}__ident_cely'.format(class_1_fk_field): self.value_dict['ident_cely']}).exists()",
+        "line": 2262
+      },
+      {
+        "condition": "field_name in mapping_dict",
+        "line": 2305
+      },
+      {
+        "condition": "field_name in mapping_dict",
+        "line": 2308
+      }
+    ],
+    "ledger_contract": "Baseline operations plus per-field boundary probes and named geometry/owner/forward-reference cases. This is traceability, not measured runtime line coverage.",
+    "shared_helper": "MultipleClassImportModelMapper",
+    "source_line": 2187
+  },
+  {
+    "branches": [
+      {
+        "condition": "not filter_kwargs",
+        "line": 2088
+      },
+      {
+        "condition": "not geom_system_supplied",
+        "line": 2117
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT",
+        "line": 2127
+      },
+      {
+        "condition": "'geom_system' in mapping_dict",
+        "line": 2129
+      },
+      {
+        "condition": "geom_system == '4326' and mapping_dict.get('geom')",
+        "line": 2131
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE",
+        "line": 2143
+      },
+      {
+        "condition": "not str(mapping_dict.get(column) or '').strip()",
+        "line": 2125
+      },
+      {
+        "condition": "status != 'OK'",
+        "line": 2133
+      },
+      {
+        "condition": "geom_system == '5514' and mapping_dict.get('geom_sjtsk')",
+        "line": 2136
+      },
+      {
+        "condition": "not has_any_geometry_column",
+        "line": 2145
+      },
+      {
+        "condition": "geom_system_present",
+        "line": 2152
+      },
+      {
+        "condition": "geom_system == '4326'",
+        "line": 2164
+      },
+      {
+        "condition": "status != 'OK'",
+        "line": 2140
+      },
+      {
+        "condition": "db_record is not None",
+        "line": 2154
+      },
+      {
+        "condition": "geom",
+        "line": 2166
+      },
+      {
+        "condition": "geom_system == '5514'",
+        "line": 2172
+      },
+      {
+        "condition": "ok",
+        "line": 2168
+      },
+      {
+        "condition": "'geom' in mapping_dict",
+        "line": 2170
+      },
+      {
+        "condition": "geom_sjtsk",
+        "line": 2178
+      },
+      {
+        "condition": "ok",
+        "line": 2180
+      },
+      {
+        "condition": "'geom_sjtsk' in mapping_dict",
+        "line": 2182
+      }
+    ],
+    "ledger_contract": "Baseline operations plus per-field boundary probes and named geometry/owner/forward-reference cases. This is traceability, not measured runtime line coverage.",
+    "shared_helper": "GeometryTransformMixin",
+    "source_line": 2057
+  },
+  {
+    "branches": [
+      {
+        "condition": "not isinstance(lookup_model_classes, Iterable)",
+        "line": 1163
+      },
+      {
+        "condition": "limit_choices_to and lookup_model_classes != Heslar",
+        "line": 1173
+      },
+      {
+        "condition": "records is None",
+        "line": 1214
+      },
+      {
+        "condition": "lookup_cache is None",
+        "line": 1227
+      },
+      {
+        "condition": "self.limit_choices_to",
+        "line": 1279
+      },
+      {
+        "condition": "str(value).lower() == 'nan' or value is None or len(str(value)) == 0",
+        "line": 1305
+      },
+      {
+        "condition": "self.limit_choices_to and 'nazev_heslare' in self.limit_choices_to",
+        "line": 1333
+      },
+      {
+        "condition": "lookup_model_classes is None",
+        "line": 1167
+      },
+      {
+        "condition": "value is None",
+        "line": 1253
+      },
+      {
+        "condition": "not all((getattr(record, k).pk == v for k, v in self.limit_choices_to.items()))",
+        "line": 1280
+      },
+      {
+        "condition": "record",
+        "line": 1312
+      },
+      {
+        "condition": "record",
+        "line": 1317
+      },
+      {
+        "condition": "len(filtered_records) == 1",
+        "line": 1328
+      }
+    ],
+    "ledger_contract": "Baseline operations plus per-field boundary probes and named geometry/owner/forward-reference cases. This is traceability, not measured runtime line coverage.",
+    "shared_helper": "LookupImportField",
+    "source_line": 1139
+  },
+  {
+    "branches": [
+      {
+        "condition": "value is None",
+        "line": 1390
+      },
+      {
+        "condition": "record and self.lookup_model_class_list",
+        "line": 1396
+      },
+      {
+        "condition": "record and hasattr(record, self.read_field_name)",
+        "line": 1412
+      },
+      {
+        "condition": "len(filtered_records) == 1",
+        "line": 1420
+      },
+      {
+        "condition": "isinstance(record, Dokument)",
+        "line": 1397
+      },
+      {
+        "condition": "Dokument in self.lookup_model_class_list",
+        "line": 1398
+      },
+      {
+        "condition": "DokumentCast in self.lookup_model_class_list",
+        "line": 1401
+      },
+      {
+        "condition": "DokumentacniJednotka in self.lookup_model_class_list",
+        "line": 1409
+      }
+    ],
+    "ledger_contract": "Baseline operations plus per-field boundary probes and named geometry/owner/forward-reference cases. This is traceability, not measured runtime line coverage.",
+    "shared_helper": "VazbaLookupImportField",
+    "source_line": 1367
+  },
+  {
+    "branches": [
+      {
+        "condition": "performed_action not in self.supported_actions",
+        "line": 4870
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists",
+        "line": 4910
+      },
+      {
+        "condition": "performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and (not relation_exists)",
+        "line": 4912
+      }
+    ],
+    "ledger_contract": "Baseline operations plus per-field boundary probes and named geometry/owner/forward-reference cases. This is traceability, not measured runtime line coverage.",
+    "shared_helper": "UserRelationMapperMixin",
+    "source_line": 4837
+  }
+]
