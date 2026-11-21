@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
+# SPDX-License-Identifier: MIT
+# delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+exclude_tmpdir_env_var = true
+exclude_slash_tmp = true

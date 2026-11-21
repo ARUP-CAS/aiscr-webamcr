@@ -77,16 +77,18 @@ aiscr-webamcr/
 python -m venv .venv
 .venv/Scripts/activate   # Windows
 # source .venv/bin/activate  # Linux / macOS
-pip install -r requirements-dev.txt
+pip install -r webclient/requirements-dev.txt
 
 # 2. Start infrastructure services
 docker compose -f docker-compose-dev-local-db-all-containers.yml up -d
 
 # 3. Start Django
+cd webclient
 python manage.py migrate
 python manage.py runserver
 
 # 4. Start Celery worker (in a separate terminal)
+cd webclient
 celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 ```
 

@@ -9,7 +9,7 @@
       "webclient/webclient/settings/sample_secrets_db.json",
       "webclient/webclient/settings/sample_secrets_mail_client.json",
       "webclient/core/authenticators.py",
-      "webclient/uzivatel/models.py (prvních 150 řádků)",
+      "webclient/uzivatel/models.py (first 150 lines)",
       "webclient/core/templatetags/template_tags.py",
       "webclient/core/context_processors.py",
       "webclient/vypis/fields.py",
@@ -20,78 +20,78 @@
       "webclient/projekt/forms.py",
       "webclient/dokument/forms.py",
       "webclient/uzivatel/forms.py",
-      "webclient/arch_z/filters.py (relevantní řádky)",
-      "webclient/core/ident_cely.py (relevantní řádky)",
-      "webclient/core/utils.py (relevantní řádky)",
-      "webclient/cron/tasks.py (relevantní řádky)"
+      "webclient/arch_z/filters.py (relevant lines)",
+      "webclient/core/ident_cely.py (relevant lines)",
+      "webclient/core/utils.py (relevant lines)",
+      "webclient/cron/tasks.py (relevant lines)"
     ],
-    "note": "GitHub Issues nebyly dostupné bez autentizace — cross-reference nebylo možné provést. CVE kontrola vyžaduje přístup k externím databázím. Kontejnerové a infrastrukturové bezpečnostní nálezy jsou vedeny zvlášť v .agents/analysis/docker_analysis.json (SEC-Dxx) a nejsou zde duplicitně rozepisovány."
+    "note": "GitHub Issues were not available without authentication — cross-referencing could not be performed. The CVE check requires access to external databases. Container and infrastructure security findings are kept separately in .agents/analysis/docker_analysis.json (SEC-Dxx) and are not duplicated here."
   },
   "django_security_settings": {
     "DEBUG": {
       "base_py": false,
       "production_py": "get_secret('DEBUG', 'True') == 'True'",
       "dev_py": true,
-      "issue": "Výchozí fallback v production.py je řetězec 'True'. Pokud klíč DEBUG chybí v secrets souboru, DEBUG bude True v produkci.",
-      "severity": "Vysoká",
+      "issue": "The default fallback in production.py is the string 'True'. If the DEBUG key is missing from the secrets file, DEBUG will be True in production.",
+      "severity": "High",
       "id": "SEC-01"
     },
     "SECRET_KEY": {
-      "source": "get_secret('SECRET_KEY') z Docker secrets nebo sample_secrets_db.json",
+      "source": "get_secret('SECRET_KEY') from Docker secrets or sample_secrets_db.json",
       "sample_value": "\"secret\" (placeholder)",
-      "issue": "Žádný hardcoded SECRET_KEY v produkčním kódu. Sample soubor obsahuje triviální hodnotu 'secret', ale je záměrný placeholder.",
-      "severity": "Nízká"
+      "issue": "No hardcoded SECRET_KEY in the production code. The sample file contains the trivial value 'secret', but it is an intentional placeholder.",
+      "severity": "Low"
     },
     "ALLOWED_HOSTS": {
       "base_py": "[]",
       "production_py": "get_secret('ALLOWED_HOSTS').split()",
       "dev_py": "['*']",
-      "status": "OK — správně konfigurováno přes secrets v produkci"
+      "status": "OK — correctly configured via secrets in production"
     },
     "CSRF_TRUSTED_ORIGINS": {
       "production_py": "get_secret('CSRF_TRUSTED_ORIGINS', '').split()",
-      "status": "OK — nakonfigurováno v produkci"
+      "status": "OK — configured in production"
     },
     "SECURE_PROXY_SSL_HEADER": {
       "base_py": "('HTTP_X_FORWARDED_PROTO', 'https')",
-      "status": "OK — aplikace je za NGINX proxy"
+      "status": "OK — the application is behind an NGINX proxy"
     },
     "USE_X_FORWARDED_HOST": {
       "base_py": true,
-      "status": "OK — očekávané při provozu za proxy"
+      "status": "OK — expected when running behind a proxy"
     },
     "missing_secure_headers": {
       "id": "SEC-03",
-      "severity": "Střední",
-      "SECURE_HSTS_SECONDS": "není nastaveno — HSTS nezajištěno na úrovni Djanga",
-      "SECURE_SSL_REDIRECT": "není nastaveno",
-      "SESSION_COOKIE_SECURE": "není nastaveno",
-      "CSRF_COOKIE_SECURE": "není nastaveno",
-      "SECURE_CONTENT_TYPE_NOSNIFF": "není nastaveno",
-      "note": "NGINX proxy může tyto hlavičky zajišťovat na síťové vrstvě — nutno ověřit v proxy/default.conf. Nicméně bezpečnostní doporučení Django Security checklist doporučuje nastavit i na úrovni Djanga."
+      "severity": "Medium",
+      "SECURE_HSTS_SECONDS": "not set — HSTS not ensured at the Django level",
+      "SECURE_SSL_REDIRECT": "not set",
+      "SESSION_COOKIE_SECURE": "not set",
+      "CSRF_COOKIE_SECURE": "not set",
+      "SECURE_CONTENT_TYPE_NOSNIFF": "not set",
+      "note": "The NGINX proxy may provide these headers at the network layer — must be verified in proxy/default.conf. Nevertheless, the Django Security checklist recommendation is to set them at the Django level as well."
     },
     "SESSION_ENGINE": {
       "value": "django.contrib.sessions.backends.signed_cookies",
-      "note": "Session data uložena v cookie — podepsaná (HMAC), ale nešifrovaná. Velikost session je omezena cca 4 KB. Citlivá data nesmí být ukládána v session.",
-      "severity": "Nízká"
+      "note": "Session data stored in a cookie — signed (HMAC), but not encrypted. The session size is limited to about 4 KB. Sensitive data must not be stored in the session.",
+      "severity": "Low"
     },
     "CLAMD": {
       "base_py": {"CLAMD_HOST": null, "CLAMD_PORT": null},
       "production_py": {"CLAMD_HOST": "get_secret('CLAMD_HOST')", "CLAMD_PORT": 3310},
-      "note": "ClamAV antivirové skenování souborů aktivní pouze v produkci — v dev je deaktivováno (záměrné)."
+      "note": "ClamAV antivirus file scanning is active only in production — in dev it is deactivated (intentional)."
     }
   },
   "secrets_management": {
-    "mechanism": "Docker secrets + fallback na sample JSON soubory",
+    "mechanism": "Docker secrets + fallback to sample JSON files",
     "db_secrets": {
       "path": "/run/secrets/db_conf",
       "fallback": "webclient/webclient/settings/sample_secrets_db.json",
       "committed_sample": true,
-      "sample_content_risk": "Obsahuje triviální hodnoty (SECRET_KEY='secret', DB_PASS='test_secretpass') — záměrný placeholder pro dev prostředí"
+      "sample_content_risk": "Contains trivial values (SECRET_KEY='secret', DB_PASS='test_secretpass') — an intentional placeholder for the dev environment"
     },
     "mail_secrets": {
       "id": "SEC-02",
-      "severity": "Střední",
+      "severity": "Medium",
       "path": "/run/secrets/mail_conf",
       "fallback": "webclient/webclient/settings/sample_secrets_mail_client.json",
       "committed_sample": true,
@@ -100,34 +100,34 @@
         "EMAIL_HOST_USER": "c527585b412e2a",
         "EMAIL_HOST_PASSWORD": "5dc4f8f4a8cdf0"
       },
-      "issue": "Mailtrap přihlašovací údaje v commitu vypadají jako reálné sandbox credentials. Pokud jsou tyto hodnoty aktivní, jsou přístupné komukoli s přístupem k repozitáři. Mailtrap sandbox credentials umožňují čtení zachycených e-mailů."
+      "issue": "The Mailtrap credentials in the commit look like real sandbox credentials. If these values are active, they are accessible to anyone with access to the repository. Mailtrap sandbox credentials allow reading captured emails."
     },
     "redis_secrets": {
       "path": "/run/secrets/redis_pass",
-      "mechanism": "přímé čtení souboru přes get_plain_redis_pass() / get_redis_pass()",
+      "mechanism": "direct reading of the file via get_plain_redis_pass() / get_redis_pass()",
       "status": "OK"
     },
     "fedora_secrets": {
-      "source": "get_secret() z db_conf",
+      "source": "get_secret() from db_conf",
       "fields": ["FEDORA_USER", "FEDORA_USER_PASSWORD", "FEDORA_ADMIN_USER", "FEDORA_ADMIN_USER_PASSWORD"],
       "status": "OK"
     },
     "datacite_secrets": {
       "fields": ["DOI_USER", "DOI_USER_PASSWORD", "IGSN_USER", "IGSN_USER_PASSWORD"],
-      "source": "get_secret() z db_conf",
+      "source": "get_secret() from db_conf",
       "status": "OK"
     }
   },
   "authentication": {
-    "backend": "core.authenticators.AMCRAuthUser (rozšíření ModelBackend)",
+    "backend": "core.authenticators.AMCRAuthUser (an extension of ModelBackend)",
     "inactive_user_behavior": {
-      "current": "Neaktivní uživatelé: vyvolá ValidationError místo vrácení False",
-      "correct_pattern": "user_can_authenticate() by mělo vracet False pro neaktivní uživatele (Django standard)",
-      "risk": "Volající kód může neočekávaně zachytit výjimku; nebo ji nezachytit a způsobit 500 error místo standardního odmítnutí přihlášení",
-      "severity": "Nízká"
+      "current": "Inactive users: raises ValidationError instead of returning False",
+      "correct_pattern": "user_can_authenticate() should return False for inactive users (the Django standard)",
+      "risk": "The calling code may unexpectedly catch the exception; or fail to catch it and cause a 500 error instead of a standard login rejection",
+      "severity": "Low"
     },
     "cas_integration": {
-      "note": "CAS SSO zmiňováno v AGENTS.md pro aplikaci uzivatel, ale v auditovaných souborech nebyla nalezena přímá CAS implementace — pravděpodobně v middleware nebo v neauditovaných částech uzivatel/."
+      "note": "CAS SSO is mentioned in AGENTS.md for the uzivatel application, but no direct CAS implementation was found in the audited files — probably in middleware or in unaudited parts of uzivatel/."
     },
     "rest_framework": {
       "id": "SEC-04",
@@ -136,31 +136,31 @@
         "TokenAuthentication"
       ],
       "token_expiration_hours": 24,
-      "issue": "BasicAuthentication přenáší přihlašovací údaje s každým požadavkem (Base64, nikoliv šifrování). Bezpečné pouze nad HTTPS. DRF bez SessionAuthentication — CSRF ochrana není nutná.",
-      "severity": "Nízká — přijatelné za HTTPS proxy"
+      "issue": "BasicAuthentication transmits the credentials with every request (Base64, not encryption). Safe only over HTTPS. DRF without SessionAuthentication — CSRF protection is not necessary.",
+      "severity": "Low — acceptable behind an HTTPS proxy"
     },
     "recaptcha": {
-      "production": "RECAPTCHA klíče z secrets souboru",
+      "production": "RECAPTCHA keys from the secrets file",
       "dev": "SKIP_RECAPTCHA = True, fake private key",
-      "base_py": "SKIP_RECAPTCHA = False (přepsáno v dev.py)",
+      "base_py": "SKIP_RECAPTCHA = False (overridden in dev.py)",
       "status": "OK"
     }
   },
   "known_vulnerabilities": [
     {
-      "note": "Kontrola CVE vyžaduje přístup k externím databázím (pip audit, safety check, OSV) — nebylo možné provést offline.",
-      "recommendation": "Spustit 'pip audit' nebo 'safety check -r webclient/requirements.txt' v CI pipeline pro kontinuální CVE monitoring.",
-      "priority": "Vysoká"
+      "note": "The CVE check requires access to external databases (pip audit, safety check, OSV) — it could not be performed offline.",
+      "recommendation": "Run 'pip audit' or 'safety check -r webclient/requirements.txt' in the CI pipeline for continuous CVE monitoring.",
+      "priority": "High"
     },
     {
-      "note": "Další bezpečnostní nálezy na úrovni Docker image a infrastruktury (otevřené porty, verze obrazů, injekce secrets) jsou popsány v .agents/analysis/docker_analysis.json pod identifikátory SEC-D01…SEC-D06 a jsou považovány za součást celkové bezpečnostní stopy systému.",
-      "severity": "Střední"
+      "note": "Additional security findings at the Docker image and infrastructure level (open ports, image versions, secret injection) are described in .agents/analysis/docker_analysis.json under the identifiers SEC-D01…SEC-D06 and are considered part of the overall security footprint of the system.",
+      "severity": "Medium"
     },
     {
       "package": "distlib",
-      "usage": "webclient/uzivatel/models.py:28 — import cached_property z distlib.util",
-      "note": "distlib je interní pip závislost, není určena pro přímé použití v aplikačním kódu. Viz BUG-003.",
-      "severity": "Nízká"
+      "usage": "webclient/uzivatel/models.py:28 — import of cached_property from distlib.util",
+      "note": "distlib is an internal pip dependency, not intended for direct use in application code. See BUG-003.",
+      "severity": "Low"
     }
   ],
   "csrf_xss_issues": [
@@ -168,32 +168,32 @@
       "id": "XSS-01",
       "file": "webclient/core/templatetags/template_tags.py:30",
       "pattern": "mark_safe(\"'%s'\" % str(getattr(mc, message, 'Message constant not found')))",
-      "description": "Výsledek mark_safe závisí na hodnotách v core.message_constants. Konstanty jsou developer-definované — přímé riziko XSS nízké. Vzor je ale křehký: pokud by konstanta obsahovala apostrof nebo HTML, mohl by být vložen do JS kontextu.",
-      "severity": "Nízká"
+      "description": "The result of mark_safe depends on the values in core.message_constants. The constants are developer-defined — the direct XSS risk is low. However, the pattern is fragile: if a constant contained an apostrophe or HTML, it could be injected into the JS context.",
+      "severity": "Low"
     },
     {
       "id": "XSS-02",
       "file": "webclient/vypis/fields.py:363",
       "pattern": "mark_safe(value.get_ident_cely_link)",
-      "description": "Property `get_ident_cely_link` vrací HTML odkaz s hodnotou ident_cely z databáze. Pokud ident_cely není escapováno v property, hrozí stored XSS. Nutno auditovat implementaci property na příslušném modelu.",
-      "severity": "Střední",
-      "action_needed": "Ověřit implementaci `get_ident_cely_link` property na všech modelech kde je definována"
+      "description": "The `get_ident_cely_link` property returns an HTML link with the ident_cely value from the database. If ident_cely is not escaped in the property, stored XSS is possible. The property implementation on the relevant model must be audited.",
+      "severity": "Medium",
+      "action_needed": "Verify the implementation of the `get_ident_cely_link` property on all models where it is defined"
     },
     {
       "id": "XSS-03",
       "file": "webclient/vypis/fields.py:438",
       "pattern": "mark_safe(new_instance)",
-      "description": "Proměnná `new_instance` pochází z atributového přístupu k Dokument.extra_data. Pokud hodnota obsahuje neescapovaný uživatelský vstup, hrozí XSS.",
-      "severity": "Střední",
-      "action_needed": "Ověřit co vrací přistupovaný atribut Dokument.extra_data a zda je hodnota escapovaná"
+      "description": "The `new_instance` variable comes from attribute access to Dokument.extra_data. If the value contains unescaped user input, XSS is possible.",
+      "severity": "Medium",
+      "action_needed": "Verify what the accessed Dokument.extra_data attribute returns and whether the value is escaped"
     },
     {
       "id": "XSS-04",
       "file": "webclient/vypis/views.py:79",
       "pattern": "mark_safe(field.get_name(instance))",
-      "description": "Název pole z instance vrácen jako mark_safe. Závisí na implementaci `get_name()` v konkrétní field třídě.",
-      "severity": "Střední",
-      "action_needed": "Ověřit implementaci `get_name()` ve všech field třídách v vypis/fields.py"
+      "description": "The field name from the instance is returned as mark_safe. It depends on the implementation of `get_name()` in the specific field class.",
+      "severity": "Medium",
+      "action_needed": "Verify the implementation of `get_name()` in all field classes in vypis/fields.py"
     },
     {
       "id": "XSS-05",
@@ -205,16 +205,16 @@
         "webclient/dokument/forms.py:280,490",
         "webclient/uzivatel/forms.py:102,107,406"
       ],
-      "pattern": "mark_safe('<button ...>...</button>') nebo mark_safe('<i ...>')",
-      "description": "Všechna použití jsou hardcoded HTML bez uživatelského vstupu — bezpečné. Jedná se o widget rozšíření pro crispy-forms.",
-      "severity": "Nízká — přijatelné"
+      "pattern": "mark_safe('<button ...>...</button>') or mark_safe('<i ...>')",
+      "description": "All uses are hardcoded HTML without user input — safe. These are widget extensions for crispy-forms.",
+      "severity": "Low — acceptable"
     },
     {
       "id": "XSS-06",
       "file": "webclient/core/context_processors.py:91,124,128,131,132,137,142,143",
       "pattern": "mark_safe(hardcoded_value_or_settings_value)",
-      "description": "Většina použití wrappuje hardcoded konstanty (čísla, 'true', 'logoutFunction'). Výjimka: `mark_safe(_(translation_key))` — přeložené texty jsou pod kontrolou vývojářů.",
-      "severity": "Nízká"
+      "description": "Most uses wrap hardcoded constants (numbers, 'true', 'logoutFunction'). Exception: `mark_safe(_(translation_key))` — the translated texts are under the developers' control.",
+      "severity": "Low"
     }
   ],
   "raw_sql_usage": [
@@ -223,50 +223,50 @@
       "query": "select nextval(%s)",
       "parameterized": true,
       "user_input": false,
-      "risk": "Žádné"
+      "risk": "None"
     },
     {
       "file": "webclient/core/ident_cely.py:76-78",
       "query": "select id, ident_cely from public.archeologicky_zaznam where ident_cely like %s",
       "parameterized": true,
       "user_input": false,
-      "risk": "Žádné"
+      "risk": "None"
     },
     {
-      "file": "webclient/core/utils.py (více míst: řádky ~148-490)",
-      "query": "GIS dotazy (ST_MakeEnvelope, ST_Within, ST_AsGML, apod.) + Pian.objects.raw()",
+      "file": "webclient/core/utils.py (multiple places: lines ~148-490)",
+      "query": "GIS queries (ST_MakeEnvelope, ST_Within, ST_AsGML, etc.) + Pian.objects.raw()",
       "parameterized": true,
-      "user_input": "Souřadnice bbox z HTTP požadavku — ale vždy parametrizované přes %s",
-      "risk": "Nízké — parametrizované dotazy chrání před SQL injection"
+      "user_input": "bbox coordinates from the HTTP request — but always parameterized via %s",
+      "risk": "Low — parameterized queries protect against SQL injection"
     },
     {
       "file": "webclient/arch_z/filters.py:773-775",
       "query": "queryset.extra(where=['ST_Z(geom) >= %s'], params=[value])",
       "parameterized": true,
-      "user_input": "Hodnota filtru z formuláře",
-      "risk": "Nízké — parametrizované. Pozn.: .extra() deprecated v Django 4.0.",
-      "note": "Viz refactoring_backlog.md ORM-06"
+      "user_input": "The filter value from a form",
+      "risk": "Low — parameterized. Note: .extra() deprecated in Django 4.0.",
+      "note": "See refactoring_backlog.md ORM-06"
     },
     {
       "file": "webclient/cron/tasks.py:470",
       "query": "REFRESH MATERIALIZED VIEW amcr_heat_projekt_lx2",
       "parameterized": false,
       "user_input": false,
-      "risk": "Žádné — Celery task bez uživatelského vstupu"
+      "risk": "None — a Celery task without user input"
     },
     {
       "file": "webclient/core/management/commands/transform_to_sjtsk.py",
-      "query": "Model.objects.raw(query_select) — čtyřikrát pro Pian, SamostatnyNalez, Projekt, DokumentExtraData",
+      "query": "Model.objects.raw(query_select) — four times for Pian, SamostatnyNalez, Projekt, DokumentExtraData",
       "parameterized": false,
       "user_input": false,
-      "risk": "Žádné — management command, SELECT bez WHERE z uživatelského vstupu"
+      "risk": "None — a management command, SELECT without a WHERE from user input"
     },
     {
       "file": "webclient/core/tests/test_selenium.py:573-575",
-      "query": "f-string SQL pro terminaci DB spojení (pg_terminate_backend)",
+      "query": "f-string SQL for terminating DB connections (pg_terminate_backend)",
       "parameterized": false,
       "user_input": false,
-      "risk": "Nízké — testovací kód, hodnota pochází z connection.settings_dict (interní konfigurace)"
+      "risk": "Low — test code, the value comes from connection.settings_dict (internal configuration)"
     }
   ]
 }

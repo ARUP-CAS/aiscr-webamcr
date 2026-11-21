@@ -36,6 +36,13 @@ Třídy
 
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: is_data_import_running()
+
+      Ověří, zda aktivní import stále vlastní svůj Redis zámek a zapisuje data.
+
+      :param connection: Redis spojení s bytovými nebo dekódovanými odpověďmi.
+      :return: ``True`` pouze pro fázi ``importing`` s platným vlastnickým tokenem.
+
    .. py:method:: acquire_import_lock()
 
       Atomicky získá Redis lock pro běžící hromadný import.

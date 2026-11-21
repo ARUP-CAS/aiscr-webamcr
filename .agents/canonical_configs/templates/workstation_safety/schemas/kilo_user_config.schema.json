@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kilo Code user config safety template",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["permission"],
+  "properties": {
+    "permission": {
+      "type": "object",
+      "required": ["external_directory", "doom_loop", "bash"],
+      "properties": {
+        "external_directory": { "type": "string", "const": "deny" },
+        "doom_loop": { "type": "string", "const": "deny" },
+        "edit": { "type": "string", "enum": ["ask", "deny"] },
+        "read": {
+          "type": "object",
+          "properties": {
+            "*.env": { "type": "string", "const": "deny" },
+            "*.env.*": { "type": "string", "const": "deny" },
+            "*.key": { "type": "string", "const": "deny" }
+          },
+          "additionalProperties": { "type": "string" }
+        },
+        "bash": {
+          "type": "object",
+          "properties": {
+            "git push --force*": { "type": "string", "const": "deny" },
+            "git clean*": { "type": "string", "const": "deny" },
+            "rm -rf /": { "type": "string", "const": "deny" },
+            "format *": { "type": "string", "const": "deny" },
+            ">*": { "type": "string", "enum": ["ask", "deny"] }
+          },
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

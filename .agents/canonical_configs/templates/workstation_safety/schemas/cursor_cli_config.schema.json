@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cursor CLI user config safety template",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["permissions"],
+  "properties": {
+    "permissions": {
+      "type": "object",
+      "required": ["deny"],
+      "properties": {
+        "deny": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

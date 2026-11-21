@@ -938,7 +938,22 @@ Třídy
 
 .. py:class:: FedoraTransactionCommitFailedError
 
-   Implementuje komponentu ``FedoraTransactionCommitFailedError`` v rámci aplikace.
+   Selhání commitu (nebo rollbacku) Fedora transakce – chybová odpověď, výpadek spojení nebo vypršení timeoutu.
+
+   Dědí z ``FedoraError``, aby ji zachytily ``handle_fedora_error``, ``ErrorMiddleware`` i obsluhy v API
+   a selhání prošlo společnou cestou s rollbackem transakce a uvolněním zámku záznamu (#4473).
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje výjimku selhání commitu transakce.
+
+      :param message: Chybová zpráva (text odpovědi Fedory nebo popis výjimky spojení).
+      :param url: URL transakce ve Fedoře.
+      :param code: HTTP kód odpovědi, pokud Fedora odpověděla.
+      :param headers: HTTP hlavičky odpovědi.
+      :param fedora_transaction: Transakce, jejíž commit selhal; používá se pro záložní rollback.
 
 
 .. py:class:: FedoraTransactionUnsupportedOperationError
