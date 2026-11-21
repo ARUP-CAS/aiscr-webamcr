@@ -171,4 +171,23 @@ Rosetta (Translations)
 * Obsahuje samostatný soubor s definicí pro každý jazyk aplikace
 * Po kliknutí na soubor jazyka se zobrazí editovací tabulka v které je možné editovat překlad
 * Po uložení překladu se automaticky pregenerují soubory pro překlad, které používá aplikace
-* Překlady je možné importovat a exportovat pomocí standardních PO souborů
+* Překlady je možné importovat a exportovat pomocí standardních PO souborů; import nejdřív připraví
+  zálohu původního souboru, nový ``.po`` i ``.mo`` a teprve pak je nahradí, takže aplikace nikdy nenačte
+  rozepsaný soubor a nepovedený import katalog nezmění
+* Uložený, importovaný nebo ze zálohy obnovený překlad v katalozích aplikace (``LOCALE_PATHS``, runtime
+  volume ``/vol/web/locale``) se projeví bez restartu: webová aplikace ho převezme nejpozději do minuty
+  při dalším požadavku a odesílané notifikační e-maily (úlohy Celery) při další úloze; e-mailová část
+  platí, jakmile služby Celery běží s verzí obsahující tuto kontrolu (nasazení, které aktualizuje jen
+  web a proxy, Celery neaktualizuje – viz
+  `#4541 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/4541>`_)
+* Katalogy Djanga a knihoven třetích stran, které Rosetta také zobrazuje, jsou součástí image; jejich
+  změna se projeví až s novou image
+* Totéž platí po nasazení nové verze: procesy, které katalogy načetly ještě před jejich aktualizací,
+  převezmou nové katalogy automaticky a překlady přidané ve verzi se zobrazí bez druhého restartu
+* Úprava provedená v běžící aplikaci platí jen do dalšího nasazení nebo restartu webového kontejneru,
+  kdy katalogy nahradí obsah z repozitáře (postup přenosu úpravy do repozitáře popisuje
+  :doc:`preklady`)
+* Interval kontroly změn určuje nastavení ``TRANSLATION_CATALOG_CHECK_INTERVAL`` (výchozí 60 sekund);
+  hodnota ``None`` mechanismus vypne a katalogy se pak načtou jen při startu procesu
+* Akce pro restart aplikace zůstává k dispozici jako záložní možnost pro okamžité projevení změn ve webové
+  aplikaci

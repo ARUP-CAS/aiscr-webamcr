@@ -41,9 +41,13 @@ Služba ``sidecar`` zůstává beze změny a průběžně synchronizuje obsah vo
 #. Po nasazení ověřte, že se katalog zobrazuje v Rosettě pouze jednou a že
    aplikace používá nově zacommitované hodnoty.
 
-Import nového souboru v Rosettě před uložením přejmenuje původní katalog na
-``django_backup_DDMMYYYYHHMMSS.po``. Zálohy vytvořené Rosettou i entrypointem
-zůstávají na runtime volume a do repozitáře se nepřenášejí.
+Import nového souboru v Rosettě nejdřív připraví zálohu (kopii původního katalogu
+``django_backup_DDMMYYYYHHMMSS.po``), nový ``.po`` i zkompilovaný ``.mo`` v dočasných
+souborech vedle katalogu a teprve pak je bezprostředně po sobě přejmenuje na cílové
+soubory. Pokud se nahraný soubor nepodaří načíst nebo se cokoli z přípravy nezdaří,
+katalog ani seznam záloh se nezmění a administrace zobrazí chybovou hlášku. Zálohy
+vytvořené Rosettou i entrypointem zůstávají na runtime volume a do repozitáře se
+nepřenášejí.
 
 Text odstávky
 -------------

@@ -103,6 +103,31 @@ Třídy
       :return: přesměrování na login nebo žádná akce.
 
 
+.. py:class:: TranslationCatalogReloadMiddleware
+
+   Middleware, které na začátku požadavku ověří změnu runtime překladových katalogů.
+
+   Musí být v ``MIDDLEWARE`` před ``django.middleware.locale.LocaleMiddleware``, aby se
+   případné nové načtení katalogů provedlo dřív, než se aktivuje jazyk požadavku. Díky
+   tomu se úpravy překladů na serveru (Rosetta, import katalogu, obnova zálohy) i nové
+   katalogy z nasazení projeví ve workerech uWSGI bez restartu aplikace.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje middleware.
+
+      :param get_response: Callable z middleware řetězce, který zpracuje požadavek a vrátí response.
+
+   .. py:method:: __call__()
+
+      Ověří runtime katalogy (s omezením četnosti) a předá požadavek dál.
+
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná zbytkem řetězce middleware.
+
+
 .. py:class:: StatusMessageMiddleware
 
    Middleware pro zobrazení stavových zpráv z Fedora transakcí skrze Redis.

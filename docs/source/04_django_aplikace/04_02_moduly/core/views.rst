@@ -610,11 +610,16 @@ Třídy
 
    .. py:method:: form_valid()
 
-      Provádí operaci form valid.
+      Importuje nahraný katalog ``.po`` do runtime katalogu zvoleného jazyka.
 
-      :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
+      Nejdřív vyhodnotí ``po_file_path``, které ověří jazyk a právo uživatele ho překládat
+      (jinak vyvolá ``Http404``), a teprve potom předá nahraný soubor funkci
+      ``import_translation_catalog`` (záloha, atomická náhrada ``.po`` a ``.mo``). Chybu
+      importu zapíše do logu a zobrazí jako chybovou hlášku; úspěch oznámí hláškou.
 
-      :return: Vrací výsledek volání ``redirect()``.
+      :param form: Validní ``TranslationImportForm``; nahraný soubor je v ``cleaned_data["file"]``.
+      :return: Přesměrování na seznam katalogů (``rosetta-file-list``).
+      :raises Http404: Pokud jazyk neexistuje nebo ho uživatel nesmí překládat.
 
    .. py:method:: get_context_data()
 
@@ -623,12 +628,6 @@ Třídy
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
       :return: Vrací proměnná ``context``.
-
-   .. py:method:: handle_uploaded_file()
-
-      Zpracuje uploaded file.
-
-      :param f: Pomocný stream/objekt používaný interně funkcí.
 
 
 .. py:class:: TranslationFileListWithBackupView
