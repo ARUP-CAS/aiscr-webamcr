@@ -8,3 +8,4 @@ Dokumentace modulu cron.
    :caption: Contents:
 
    tasks
+   zamek

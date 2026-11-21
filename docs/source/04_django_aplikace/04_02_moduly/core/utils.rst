@@ -184,6 +184,13 @@ Třídy
 Funkce
 ------
 
+.. py:function:: is_lock_not_available(err)
+
+   Určí, zda chyba DB znamená, že řádek zamkla jiná transakce.
+
+   :param err: Zachycená chyba ``OperationalError`` z ``select_for_update(nowait=True)``.
+   :return: ``True``, pokud původní chyba ovladače nese kód ``55P03``; jiné chyby (např. ztráta spojení) ne.
+
 .. py:function:: file_validate_epsg(epsg)
 
    Ověří, zda je zadaný EPSG kód podporován (aktuálně pouze WGS-84/4326).
