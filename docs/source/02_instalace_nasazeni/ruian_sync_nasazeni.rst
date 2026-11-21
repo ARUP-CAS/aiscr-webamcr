@@ -274,11 +274,15 @@ export a katastr dál existuje:
 * **obnova:** ověřte, že kód katastru je v ``KATUZE_P`` čerstvého ``1.zip``,
   a spusťte plný sync – katastr se založí znovu. Navázané záznamy se tím
   nevrátí: v Django shellu spusťte ``reassign_all()`` z
-  ``heslar.ruian_sync.reassign``, který prostorově přepočítá projekty, AZ
-  a SN s geometrií a aktualizuje jim metadata ve Fedoře. Záznamy bez vlastní
-  geometrie (projekty bez ``geom``, AZ bez DJ) a neidentifikované akce
-  ``reassign_all()`` nepřepočítá – dohledejte je podle historie změny
-  katastru z data chybného běhu a opravte ručně.
+  ``heslar.ruian_sync.reassign``. Ten přepočítá hlavní katastr projektů
+  s ``geom``, katastr SN s ``geom`` a u AZ s první DJ jinou než celokatastr
+  hlavní katastr i M2M ``katastry``; změněným záznamům aktualizuje metadata
+  ve Fedoře. ``reassign_all()`` nepřepočítá záznamy bez vlastní geometrie
+  (projekty bez ``geom``, AZ, jejichž DJ nemají PIAN), AZ, jejichž první DJ
+  je typu celokatastr, ani M2M ``katastry`` projektů (při mazání se v nich
+  katastr nahradil nástupcem); neidentifikované akce neřeší vůbec. Všechny
+  tyto záznamy dohledejte podle historie změny katastru z data chybného
+  běhu a opravte ručně.
 
 Před prvním denním syncem po nasazení této verze je rozumné mít čerstvou
 zálohu databáze – obnova z ní je nejkratší cesta zpět.
