@@ -155,7 +155,7 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
                 instance.initial_heslo_nadrazene.save_metadata(fedora_transaction)
             if instance.initial_heslo_podrazene and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
                 instance.initial_heslo_podrazene.save_metadata(fedora_transaction)
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
             logger.debug(
                 "heslo.signals.save_metadata_heslar_hierarchie.end",
                 extra={"transaction": getattr(fedora_transaction, "uid", None)},
@@ -224,7 +224,7 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
                 heslo.save_metadata(fedora_transaction)
             heslo = Heslar.objects.get(pk=instance.heslo.pk)
             heslo.save_metadata(fedora_transaction)
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
             logger.debug(
                 "heslo.signals.save_metadata_heslar_odkaz.save_medata",
                 extra={

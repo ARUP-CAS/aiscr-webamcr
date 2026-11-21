@@ -16,6 +16,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -164,12 +165,12 @@ def smazat_vb(request, ident_cely):
             redirect_url = safe_redirect
         if resp:
             logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"value": str(resp)})
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
             response = JsonResponse({"redirect": redirect_url})
         else:
             logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"ident_cely": str(ident_cely)})
             fedora_transaction.rollback_transaction()
             response = JsonResponse({"redirect": redirect_url}, status=403)
-        fedora_transaction.mark_transaction_as_closed()
         return response
     else:
         return render(request, "core/transakce_modal.html", context)

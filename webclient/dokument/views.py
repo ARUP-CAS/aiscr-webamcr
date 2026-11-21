@@ -856,7 +856,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         self.active_transaction = self.get_object().create_transaction(request.user)
         self.active_transaction.redirect_on_error = False
         super().post(request, *args, **kwargs)
-        self.active_transaction.mark_transaction_as_closed()
+        transaction.on_commit(self.active_transaction.mark_transaction_as_closed)
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_invalid(self, form):
@@ -2364,7 +2364,7 @@ def smazat(request, ident_cely):
                 resp1 = dokument.delete()
                 if resp1:
                     logger.debug("dokument.views.smazat.deleted", extra={"value": resp1})
-                    fedora_transaction.mark_transaction_as_closed()
+                    transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
                     if "3D" in ident_cely:
                         return JsonResponse({"redirect": reverse("dokument:index-model-3D")})
                     else:
@@ -2373,10 +2373,12 @@ def smazat(request, ident_cely):
                     raise ValueError("dokument.views.smazat.deleted")
         except (DoiWriteError, FedoraError, ValueError) as err:
             logger.info("dokument.views.smazat.post_error", extra={"ident_cely": ident_cely, "error": err})
-            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
                 dokument.doi_update(False, True)
+            # Rollback DB se nastavuje až po kompenzaci DOI, protože ta čte z DB (``refresh_from_db``)
+            # a Django po ``set_rollback(True)`` v téže transakci další dotaz odmítne.
+            transaction.set_rollback(True)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
@@ -2776,16 +2778,18 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
                     lokalita_update.igsn_update()
                 if dokument_update:
                     dokument_update.doi_update()
-                fedora_transaction.mark_transaction_as_closed()
+                transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
                 return JsonResponse({"redirect": zaznam.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("dokument.views.odpojit.post_error", extra={"error": err, "ident_cely": zaznam.ident_cely})
-            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if lokalita_update:
                 lokalita_update.igsn_update(False, True)
             if dokument_update:
                 dokument_update.doi_update(False, True)
+            # Rollback DB se nastavuje až po kompenzaci IGSN/DOI, protože ta čte z DB (``refresh_from_db``)
+            # a Django po ``set_rollback(True)`` v téže transakci další dotaz odmítne.
+            transaction.set_rollback(True)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
     else:
         warnings = []
@@ -2887,7 +2891,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                 transaction.set_rollback(True)
                 fedora_transaction.rollback_transaction()
             else:
-                fedora_transaction.mark_transaction_as_closed()
+                transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:

@@ -33,7 +33,7 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
                 instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
             instance.save_metadata()
         if instance.close_active_transaction_when_finished:
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         logger.debug(
             "adb.signals.adb_save_metadata.save_metadata",
             extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid},
