@@ -72,7 +72,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD
      - https://github.com/Anorov/PySocks
    * - PyYAML
-     - 6.0.3
+     - 6.0.4
      - MIT License
      - https://pyyaml.org/
    * - Pygments
@@ -140,7 +140,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.10.23
+     - 2026.11.20
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/jazzband/pip-tools/
    * - platformdirs
-     - 4.14.7
+     - 4.14.8
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -568,7 +568,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 4.1.2
+     - 4.1.3
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.15.9
+     - 21.15.11
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
