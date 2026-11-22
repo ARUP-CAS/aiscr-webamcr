@@ -18,11 +18,13 @@ logger = logging.getLogger(__name__)
 
 # Stav kontroly runtime katalogů pro aktuální proces: otisk souborů `django.mo`, ze kterých
 # proces naposledy načetl katalogy, otisk stavu souborů, jehož načtení naposledy selhalo
-# (opakuje se až po další změně souborů), a monotónní čas poslední kontroly. Každý proces
+# (opakuje se po změně nebo po pětiminutové prodlevě), a monotónní časy kontrol. Každý proces
 # (worker uWSGI, potomek Celery) má vlastní kopii; po forku se první kontrola v potomkovi
 # postará o nové načtení (viz `reload_translation_catalogs_if_changed`).
-_catalog_state = {"fingerprint": None, "failed_fingerprint": None, "last_check": None}
+_catalog_state = {"fingerprint": None, "failed_fingerprint": None, "last_check": None, "failed_at": None}
 _catalog_lock = threading.Lock()
+_UNKNOWN_FINGERPRINT = object()
+_CATALOG_RETRY_COOLDOWN = 300
 
 
 def format_message(message_id, **params) -> str:
@@ -102,30 +104,26 @@ def _ordered_language_codes():
     return codes
 
 
-def _reload_translation_catalogs():
+def _reload_translation_catalogs(fingerprint):
     """
     Znovu načte překladové katalogy procesu metodou „sestavit, pak vyměnit“.
 
-    Uloží stávající mezipaměti ``gettext._translations`` a ``trans_real._translations``,
-    vyprázdní mezipaměť modulu ``gettext`` a pro každý jazyk z ``settings.LANGUAGES``
-    (výchozí jako první) sestaví nový překladový objekt. Teprve když se všechny katalogy
-    podaří načíst, zůstanou nové objekty v platnosti, vynuluje se ``trans_real._default``
-    a je-li v aktuálním kontextu aktivní jazyk, aktivuje se znovu se stejným kódem, aby
-    ukazoval na nový katalog. Při jakékoli výjimce během sestavení (např. rozepsaný,
-    poškozený nebo nečitelný ``django.mo``) obnoví obě původní mezipaměti, zapíše varování
-    a proces dál používá dříve načtené katalogy. Chybějící soubor výjimku nevyvolá (Django
-    ho nahradí prázdným katalogem), proto ho zachytí už volající
-    ``reload_translation_catalogs_if_changed`` a tuto funkci vůbec nezavolá.
+    Před sestavením uloží obě mezipaměti, výchozí katalog a přesný stav aktivního jazyka.
+    Sestaví každý jazyk (výchozí jako první) a znovu ověří metadata souborů. Změnila-li se,
+    kandidáta odmítne. Jinak vynuluje výchozí katalog a obnoví aktivaci stejného jazyka nad
+    novými objekty. Při chybě včetně dokončení aktivace obnoví celý původní stav a výjimku
+    předá volajícímu, který ji zachytí a zapíše varování.
 
-    :return: ``True`` při úspěšném načtení, ``False`` když se původní katalogy ponechaly.
+    :param fingerprint: Otisk očekávaných katalogů pořízený před sestavením.
+    :return: ``True`` při úspěšném načtení.
+    :raises Exception: Chyba sestavení nebo dokončení aktivace; původní stav se obnoví.
     """
     previous_gettext_cache = gettext_module._translations
     previous_django_cache = trans_real._translations
-    active = getattr(trans_real._active, "value", None)
-    try:
-        active_language = active.to_language() if active is not None else None
-    except AttributeError:
-        active_language = None
+    previous_default = trans_real._default
+    missing_active = object()
+    active = getattr(trans_real._active, "value", missing_active)
+    active_language = getattr(active, "to_language", lambda: None)()
 
     new_django_cache = {}
     try:
@@ -133,19 +131,22 @@ def _reload_translation_catalogs():
         trans_real._translations = new_django_cache
         for language_code in _ordered_language_codes():
             trans_real.translation(language_code)
-    except Exception as error:
+        if _catalog_fingerprint() != fingerprint:
+            raise OSError("Translation catalog metadata changed while loading")
+        trans_real._default = None
+        if active_language is not None:
+            django_translation.activate(active_language)
+        logger.info("core.translation.reload_catalogs.reloaded", extra={"languages": list(new_django_cache)})
+    except Exception:
         gettext_module._translations = previous_gettext_cache
         trans_real._translations = previous_django_cache
-        logger.warning(
-            "core.translation.reload_catalogs.failed",
-            extra={"error": repr(error), "paths": _catalog_paths()},
-        )
-        return False
-
-    trans_real._default = None
-    if active_language is not None:
-        django_translation.activate(active_language)
-    logger.info("core.translation.reload_catalogs.reloaded", extra={"languages": list(new_django_cache)})
+        trans_real._default = previous_default
+        if active is missing_active:
+            with contextlib.suppress(AttributeError):
+                del trans_real._active.value
+        else:
+            trans_real._active.value = active
+        raise
     return True
 
 
@@ -155,43 +156,71 @@ def reload_translation_catalogs_if_changed():
 
     Kontrola proběhne nejvýše jednou za ``settings.TRANSLATION_CATALOG_CHECK_INTERVAL``
     sekund (``0`` = při každém volání, ``None`` = mechanismus vypnut). Porovná otisk souborů
-    ``django.mo`` s otiskem uloženým při posledním úspěšném načtení; první kontrola v procesu
-    načítá vždy, protože proces mohl katalogy načíst ještě před jejich aktualizací (např.
-    Celery spuštěné souběžně s nasazením). Otisk se pořizuje před načtením, takže zápis
-    během načítání vyvolá při další kontrole jen jedno nadbytečné načtení, nikoli
-    přehlédnutou změnu.
+    ``django.mo`` s otiskem uloženým při posledním úspěšném načtení. První kontrola zkusí
+    načíst přítomné katalogy i bez změny, protože proces je mohl načíst před aktualizací
+    (např. Celery spuštěné souběžně s nasazením). Metadata se porovnají před sestavením i po něm;
+    zjištěná změna odmítne kandidáta a zachová původní překlady. Dvojice kontrol nezaručuje
+    konzistentní snímek souborů: změna tam a zpět se shodnými metadaty může uniknout.
 
     Chybí-li některý očekávaný ``django.mo``, nebo se katalogy nepodaří načíst, proces
     ponechá dříve načtené katalogy, zapíše jedno varování a otisk si uloží jako neúspěšný.
-    Dokud se soubory znovu nezmění, další kontroly nic nenačítají ani nelogují; jakýkoli
-    další zápis (dokončení zápisu z Rosetty, obnova souboru) změní otisk a načtení se
-    zkusí znovu.
+    Změněný otisk dovolí další pokus při běžné kontrole; shodný neúspěšný stav se zkusí
+    znovu nejdřív za 300 sekund od posledního pokusu. Další selhání stejného stavu se
+    nelogují. Úspěch nebo návrat k již načtenému otisku neúspěšný stav vymaže. Stejná
+    prodleva platí pro chybu před zjištěním otisku. Neočekávané výjimky neuniknou do
+    požadavku ani úlohy a chyba po změně překladového stavu obnoví původní objekty.
+
+    Obnova bez změny metadat může čekat na prodlevu i na další interval kontroly;
+    nečinný proces čeká až na požadavek či úlohu. Nezměněný chybný katalog tak stojí
+    nejvýše jeden pokus za pět minut v každém procesu. Novému procesu bez dříve
+    načteného platného katalogu tento mechanismus nezaručí existenci starého překladu.
 
     :return: ``True``, pokud se katalogy znovu načetly, jinak ``False``.
     """
-    interval = getattr(settings, "TRANSLATION_CATALOG_CHECK_INTERVAL", 60)
-    if interval is None:
-        return False
-    now = time.monotonic()
     with _catalog_lock:
-        last_check = _catalog_state["last_check"]
-        if last_check is not None and now - last_check < interval:
-            return False
-        _catalog_state["last_check"] = now
-        fingerprint = _catalog_fingerprint()
-        if fingerprint in (_catalog_state["fingerprint"], _catalog_state["failed_fingerprint"]):
-            return False
-        missing_paths = [path for path, metadata in fingerprint if metadata is None]
-        if missing_paths:
-            logger.warning("core.translation.reload_catalogs.missing", extra={"paths": missing_paths})
+        fingerprint = _UNKNOWN_FINGERPRINT
+        now = None
+        try:
+            now = time.monotonic()
+            failed_at = _catalog_state["failed_at"]
+            cooling_down = failed_at is not None and now - failed_at < _CATALOG_RETRY_COOLDOWN
+            if _catalog_state["failed_fingerprint"] is _UNKNOWN_FINGERPRINT and cooling_down:
+                return False
+            interval = getattr(settings, "TRANSLATION_CATALOG_CHECK_INTERVAL", 60)
+            if interval is None:
+                return False
+            last_check = _catalog_state["last_check"]
+            if last_check is not None and now - last_check < interval:
+                return False
+            _catalog_state["last_check"] = now
+            fingerprint = _catalog_fingerprint()
+            if fingerprint == _catalog_state["fingerprint"]:
+                _catalog_state["failed_fingerprint"] = None
+                _catalog_state["failed_at"] = None
+                return False
+            repeated_failure = fingerprint == _catalog_state["failed_fingerprint"]
+            if repeated_failure and cooling_down:
+                return False
+            missing_paths = [path for path, metadata in fingerprint if metadata is None]
+            if missing_paths:
+                _catalog_state["failed_fingerprint"] = fingerprint
+                _catalog_state["failed_at"] = now
+                if not repeated_failure:
+                    logger.warning("core.translation.reload_catalogs.missing", extra={"paths": missing_paths})
+                return False
+            _reload_translation_catalogs(fingerprint)
+            _catalog_state["fingerprint"] = fingerprint
+            _catalog_state["failed_fingerprint"] = None
+            _catalog_state["failed_at"] = None
+            return True
+        except Exception as error:
+            repeated_failure = fingerprint == _catalog_state["failed_fingerprint"]
             _catalog_state["failed_fingerprint"] = fingerprint
+            _catalog_state["failed_at"] = now
+            if not repeated_failure:
+                with contextlib.suppress(Exception):
+                    logger.warning("core.translation.reload_catalogs.failed", extra={"error": repr(error)})
             return False
-        if not _reload_translation_catalogs():
-            _catalog_state["failed_fingerprint"] = fingerprint
-            return False
-        _catalog_state["fingerprint"] = fingerprint
-        _catalog_state["failed_fingerprint"] = None
-        return True
 
 
 def reload_translation_catalogs_on_task_prerun(sender=None, **kwargs):
@@ -200,6 +229,9 @@ def reload_translation_catalogs_on_task_prerun(sender=None, **kwargs):
 
     Díky tomu úlohy (např. notifikační e-maily) překládají podle aktuálních katalogů
     i ve workeru, který katalogy načetl před nasazením nebo před úpravou na serveru.
+    Pomocná funkce zachytí chyby kontroly i aktivace a zachová původní překlady.
+    Celery navíc zachytává výjimky přijímačů signálů; samotná výjimka přijímače
+    proto automaticky neoznačuje úlohu jako neúspěšnou.
 
     :param sender: Úloha, která se spouští (signál ji předává, kontrola ji nepoužívá).
     :param kwargs: Další argumenty signálu ``task_prerun`` (``task_id``, ``task``, ``args`` …).
@@ -240,26 +272,6 @@ def _prepare_temporary_file(target_path, write_content, mode_source=None):
     return temp_path
 
 
-def replace_file_atomically(target_path, write_content):
-    """
-    Nahradí soubor v jednom kroku, aby žádný proces nenačetl rozepsaný obsah.
-
-    Obsah připraví ``_prepare_temporary_file`` v dočasném souboru ve stejném adresáři a ten se
-    pak přes ``os.replace`` přejmenuje na cílovou cestu. Při chybě se dočasný soubor smaže,
-    cílový soubor zůstane beze změny a výjimka se předá dál.
-
-    :param target_path: Cesta k nahrazovanému souboru.
-    :param write_content: Funkce, která dostane cestu dočasného souboru a zapíše do něj obsah.
-    """
-    temp_path = _prepare_temporary_file(target_path, write_content)
-    try:
-        os.replace(temp_path, target_path)
-    except BaseException:
-        with contextlib.suppress(OSError):
-            os.unlink(temp_path)
-        raise
-
-
 def import_translation_catalog(po_file_path, uploaded_file):
     """
     Nahradí runtime katalog nahraným souborem a zkompiluje k němu ``.mo``.
@@ -272,6 +284,11 @@ def import_translation_catalog(po_file_path, uploaded_file):
     dočasné soubory bezprostředně po sobě na zálohu ``<název>_backup_<ddmmYYYYHHMMSS>.po``
     (název rozpozná seznam záloh), na ``.po`` a na sousední ``.mo``. Běžící procesy tak nikdy
     nenačtou rozepsaný katalog a změnu převezmou při další kontrole katalogů.
+
+    Každé přejmenování je atomické samostatně; nejde o transakci nad dvojicí katalogů.
+    Selže-li náhrada ``.po``, publikovaná záloha zůstane. Selže-li následná náhrada ``.mo``,
+    zůstane nové ``.po``, původní ``.mo`` a záloha původního ``.po``. Při zachycené chybě
+    se zbývající dočasné soubory smažou. Obnova po ukončení procesu není zaručena.
 
     :param po_file_path: Cesta k nahrazovanému souboru ``.po``.
     :param uploaded_file: Nahraný soubor (``UploadedFile``), jehož obsah se zapíše do ``.po``.

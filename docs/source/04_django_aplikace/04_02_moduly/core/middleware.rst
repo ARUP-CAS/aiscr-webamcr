@@ -107,7 +107,7 @@ Třídy
 
    Middleware, které na začátku požadavku ověří změnu runtime překladových katalogů.
 
-   Musí být v ``MIDDLEWARE`` před ``django.middleware.locale.LocaleMiddleware``, aby se
+   Musí být v ``MIDDLEWARE`` bezprostředně před ``django.middleware.locale.LocaleMiddleware``, aby se
    případné nové načtení katalogů provedlo dřív, než se aktivuje jazyk požadavku. Díky
    tomu se úpravy překladů na serveru (Rosetta, import katalogu, obnova zálohy) i nové
    katalogy z nasazení projeví ve workerech uWSGI bez restartu aplikace.

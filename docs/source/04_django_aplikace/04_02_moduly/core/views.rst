@@ -615,7 +615,8 @@ Třídy
       Nejdřív vyhodnotí ``po_file_path``, které ověří jazyk a právo uživatele ho překládat
       (jinak vyvolá ``Http404``), a teprve potom předá nahraný soubor funkci
       ``import_translation_catalog`` (záloha, atomická náhrada ``.po`` a ``.mo``). Chybu
-      importu zapíše do logu a zobrazí jako chybovou hlášku; úspěch oznámí hláškou.
+      importu zapíše podrobně do logu a zobrazí pevnou přeloženou hlášku bez textu
+      výjimky a cest k souborům; úspěch oznámí hláškou.
 
       :param form: Validní ``TranslationImportForm``; nahraný soubor je v ``cleaned_data["file"]``.
       :return: Přesměrování na seznam katalogů (``rosetta-file-list``).

@@ -49,22 +49,19 @@ Funkce
 
    :return: Seznam kódů jazyků bez duplicit.
 
-.. py:function:: _reload_translation_catalogs()
+.. py:function:: _reload_translation_catalogs(fingerprint)
 
    Znovu načte překladové katalogy procesu metodou „sestavit, pak vyměnit“.
 
-   Uloží stávající mezipaměti ``gettext._translations`` a ``trans_real._translations``,
-   vyprázdní mezipaměť modulu ``gettext`` a pro každý jazyk z ``settings.LANGUAGES``
-   (výchozí jako první) sestaví nový překladový objekt. Teprve když se všechny katalogy
-   podaří načíst, zůstanou nové objekty v platnosti, vynuluje se ``trans_real._default``
-   a je-li v aktuálním kontextu aktivní jazyk, aktivuje se znovu se stejným kódem, aby
-   ukazoval na nový katalog. Při jakékoli výjimce během sestavení (např. rozepsaný,
-   poškozený nebo nečitelný ``django.mo``) obnoví obě původní mezipaměti, zapíše varování
-   a proces dál používá dříve načtené katalogy. Chybějící soubor výjimku nevyvolá (Django
-   ho nahradí prázdným katalogem), proto ho zachytí už volající
-   ``reload_translation_catalogs_if_changed`` a tuto funkci vůbec nezavolá.
+   Před sestavením uloží obě mezipaměti, výchozí katalog a přesný stav aktivního jazyka.
+   Sestaví každý jazyk (výchozí jako první) a znovu ověří metadata souborů. Změnila-li se,
+   kandidáta odmítne. Jinak vynuluje výchozí katalog a obnoví aktivaci stejného jazyka nad
+   novými objekty. Při chybě včetně dokončení aktivace obnoví celý původní stav a výjimku
+   předá volajícímu, který ji zachytí a zapíše varování.
 
-   :return: ``True`` při úspěšném načtení, ``False`` když se původní katalogy ponechaly.
+   :param fingerprint: Otisk očekávaných katalogů pořízený před sestavením.
+   :return: ``True`` při úspěšném načtení.
+   :raises Exception: Chyba sestavení nebo dokončení aktivace; původní stav se obnoví.
 
 .. py:function:: reload_translation_catalogs_if_changed()
 
@@ -72,17 +69,24 @@ Funkce
 
    Kontrola proběhne nejvýše jednou za ``settings.TRANSLATION_CATALOG_CHECK_INTERVAL``
    sekund (``0`` = při každém volání, ``None`` = mechanismus vypnut). Porovná otisk souborů
-   ``django.mo`` s otiskem uloženým při posledním úspěšném načtení; první kontrola v procesu
-   načítá vždy, protože proces mohl katalogy načíst ještě před jejich aktualizací (např.
-   Celery spuštěné souběžně s nasazením). Otisk se pořizuje před načtením, takže zápis
-   během načítání vyvolá při další kontrole jen jedno nadbytečné načtení, nikoli
-   přehlédnutou změnu.
+   ``django.mo`` s otiskem uloženým při posledním úspěšném načtení. První kontrola zkusí
+   načíst přítomné katalogy i bez změny, protože proces je mohl načíst před aktualizací
+   (např. Celery spuštěné souběžně s nasazením). Metadata se porovnají před sestavením i po něm;
+   zjištěná změna odmítne kandidáta a zachová původní překlady. Dvojice kontrol nezaručuje
+   konzistentní snímek souborů: změna tam a zpět se shodnými metadaty může uniknout.
 
    Chybí-li některý očekávaný ``django.mo``, nebo se katalogy nepodaří načíst, proces
    ponechá dříve načtené katalogy, zapíše jedno varování a otisk si uloží jako neúspěšný.
-   Dokud se soubory znovu nezmění, další kontroly nic nenačítají ani nelogují; jakýkoli
-   další zápis (dokončení zápisu z Rosetty, obnova souboru) změní otisk a načtení se
-   zkusí znovu.
+   Změněný otisk dovolí další pokus při běžné kontrole; shodný neúspěšný stav se zkusí
+   znovu nejdřív za 300 sekund od posledního pokusu. Další selhání stejného stavu se
+   nelogují. Úspěch nebo návrat k již načtenému otisku neúspěšný stav vymaže. Stejná
+   prodleva platí pro chybu před zjištěním otisku. Neočekávané výjimky neuniknou do
+   požadavku ani úlohy a chyba po změně překladového stavu obnoví původní objekty.
+
+   Obnova bez změny metadat může čekat na prodlevu i na další interval kontroly;
+   nečinný proces čeká až na požadavek či úlohu. Nezměněný chybný katalog tak stojí
+   nejvýše jeden pokus za pět minut v každém procesu. Novému procesu bez dříve
+   načteného platného katalogu tento mechanismus nezaručí existenci starého překladu.
 
    :return: ``True``, pokud se katalogy znovu načetly, jinak ``False``.
 
@@ -92,6 +96,9 @@ Funkce
 
    Díky tomu úlohy (např. notifikační e-maily) překládají podle aktuálních katalogů
    i ve workeru, který katalogy načetl před nasazením nebo před úpravou na serveru.
+   Pomocná funkce zachytí chyby kontroly i aktivace a zachová původní překlady.
+   Celery navíc zachytává výjimky přijímačů signálů; samotná výjimka přijímače
+   proto automaticky neoznačuje úlohu jako neúspěšnou.
 
    :param sender: Úloha, která se spouští (signál ji předává, kontrola ji nepoužívá).
    :param kwargs: Další argumenty signálu ``task_prerun`` (``task_id``, ``task``, ``args`` …).
@@ -110,17 +117,6 @@ Funkce
    :param mode_source: Soubor, jehož práva dočasný soubor převezme; ``None`` = cílový soubor.
    :return: Cesta k připravenému dočasnému souboru.
 
-.. py:function:: replace_file_atomically(target_path, write_content)
-
-   Nahradí soubor v jednom kroku, aby žádný proces nenačetl rozepsaný obsah.
-
-   Obsah připraví ``_prepare_temporary_file`` v dočasném souboru ve stejném adresáři a ten se
-   pak přes ``os.replace`` přejmenuje na cílovou cestu. Při chybě se dočasný soubor smaže,
-   cílový soubor zůstane beze změny a výjimka se předá dál.
-
-   :param target_path: Cesta k nahrazovanému souboru.
-   :param write_content: Funkce, která dostane cestu dočasného souboru a zapíše do něj obsah.
-
 .. py:function:: import_translation_catalog(po_file_path, uploaded_file)
 
    Nahradí runtime katalog nahraným souborem a zkompiluje k němu ``.mo``.
@@ -133,6 +129,11 @@ Funkce
    dočasné soubory bezprostředně po sobě na zálohu ``<název>_backup_<ddmmYYYYHHMMSS>.po``
    (název rozpozná seznam záloh), na ``.po`` a na sousední ``.mo``. Běžící procesy tak nikdy
    nenačtou rozepsaný katalog a změnu převezmou při další kontrole katalogů.
+
+   Každé přejmenování je atomické samostatně; nejde o transakci nad dvojicí katalogů.
+   Selže-li náhrada ``.po``, publikovaná záloha zůstane. Selže-li následná náhrada ``.mo``,
+   zůstane nové ``.po``, původní ``.mo`` a záloha původního ``.po``. Při zachycené chybě
+   se zbývající dočasné soubory smažou. Obnova po ukončení procesu není zaručena.
 
    :param po_file_path: Cesta k nahrazovanému souboru ``.po``.
    :param uploaded_file: Nahraný soubor (``UploadedFile``), jehož obsah se zapíše do ``.po``.

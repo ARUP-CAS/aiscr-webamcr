@@ -254,6 +254,7 @@ HLIDACI_PES_NEUSPESNE_SMAZAN: Final = _("core.message_constants.notifikaceProjek
 
 # rosseta
 TRANSLATION_UPLOAD_SUCCESS: Final = _("core.message_constants.translationUploadSucces.text")
+TRANSLATION_UPLOAD_ERROR: Final = _("core.message_constants.translationUploadError.text")
 TRANSLATION_DELETE_CANNOT_MAIN: Final = _("core.message_constants.translationDeleteCannotMain.text")
 TRANSLATION_DELETE_SUCCESS: Final = _("core.message_constants.translationDeleteSucces.text")
 TRANSLATION_DELETE_ERROR: Final = _("core.message_constants.translationDeleteError.text")

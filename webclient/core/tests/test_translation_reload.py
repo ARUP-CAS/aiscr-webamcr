@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import polib
@@ -11,7 +12,6 @@ from core.translation import (
     connect_translation_catalog_signals,
     import_translation_catalog,
     reload_translation_catalogs_if_changed,
-    replace_file_atomically,
 )
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -60,6 +60,7 @@ class RuntimeCatalogTestMixin:
         catalog_reload._catalog_state["fingerprint"] = None
         catalog_reload._catalog_state["failed_fingerprint"] = None
         catalog_reload._catalog_state["last_check"] = None
+        catalog_reload._catalog_state["failed_at"] = None
 
     def mo_path(self, language_code):
         """
@@ -121,6 +122,32 @@ class RuntimeCatalogTestMixin:
         with translation.override(language_code):
             return translation.gettext(message_id)
 
+    @staticmethod
+    def translation_state():
+        """
+        Uloží přesné objekty mezipamětí, výchozí překlad a přítomnost aktivního jazyka.
+
+        :return: Pětice stavových hodnot pro kontrolu obnovy po chybě.
+        """
+        return (
+            gettext_module._translations,
+            trans_real._translations,
+            trans_real._default,
+            hasattr(trans_real._active, "value"),
+            getattr(trans_real._active, "value", None),
+        )
+
+    def assert_translation_state(self, previous):
+        """
+        Ověří totožnost původních objektů i původní přítomnost aktivního jazyka.
+
+        :param previous: Stav vrácený ``translation_state`` před neúspěšnou kontrolou.
+        """
+        current = self.translation_state()
+        for index in (0, 1, 2, 4):
+            self.assertIs(current[index], previous[index])
+        self.assertEqual(current[3], previous[3])
+
 
 class CatalogChangeDetectionTest(RuntimeCatalogTestMixin, SimpleTestCase):
     """Testy detekce změn runtime katalogů a omezení četnosti kontrol."""
@@ -157,7 +184,7 @@ class CatalogChangeDetectionTest(RuntimeCatalogTestMixin, SimpleTestCase):
 
     @override_settings(TRANSLATION_CATALOG_CHECK_INTERVAL=None)
     def test_disabled_check_never_reloads(self):
-        """Hodnota ``None`` mechanismus vypne a katalogy zůstanou načtené jen jednou."""
+        """Hodnota ``None`` vypne kontrolu a zachová již načtený katalog."""
         self.assertEqual(self.translated("cs"), "Původní")
         self.write_catalogs({TEST_KEY: "Nový text"}, {TEST_KEY: "New text"})
         with patch.object(catalog_reload, "_reload_translation_catalogs") as reload_mock:
@@ -219,6 +246,73 @@ class CatalogReloadTest(RuntimeCatalogTestMixin, SimpleTestCase):
         self.assertEqual(self.translated("cs"), "Původní")
         self.assertEqual(self.translated("en"), "Original")
 
+    def test_missing_english_catalog_keeps_application_translations(self):
+        """Chybějící anglický katalog nepřepne proces na katalogy bez aplikačních překladů."""
+        os.remove(self.mo_path("en"))
+        with self.assertLogs("core.translation", level="WARNING"):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assertEqual(self.translated("en"), "Original")
+        self.assertEqual(self.translated("cs"), "Původní")
+
+    def test_english_catalog_disappearing_during_build_is_rejected(self):
+        """Zmizení anglického katalogu až při sestavení odmítne fallback a zachová původní překlady."""
+        self.write_catalog("cs", {TEST_KEY: "Nový překlad"})
+        previous = self.translation_state()
+        adopted = catalog_reload._catalog_state["fingerprint"]
+        original_translation = trans_real.translation
+
+        def remove_english_catalog(language_code):
+            """
+            Odebere očekávaný anglický soubor před jeho načtením knihovnou Django.
+
+            :param language_code: Kód jazyka právě sestavovaného katalogu.
+            :return: Překladový objekt vytvořený knihovnou Django.
+            """
+            if language_code == "en":
+                os.remove(self.mo_path("en"))
+            return original_translation(language_code)
+
+        with (
+            patch.object(trans_real, "translation", side_effect=remove_english_catalog),
+            self.assertLogs("core.translation", level="WARNING"),
+        ):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assert_translation_state(previous)
+        self.assertEqual(catalog_reload._catalog_state["fingerprint"], adopted)
+        self.assertEqual(self.translated("en"), "Original")
+        self.write_catalog("en", {TEST_KEY: "Restored translation"})
+        self.assertTrue(reload_translation_catalogs_if_changed())
+        self.assertEqual(self.translated("en"), "Restored translation")
+
+    def test_catalog_changed_during_build_is_retried_when_stable(self):
+        """Změněný kandidát se odmítne a stabilní verze se převezme při následující kontrole."""
+        self.write_catalog("cs", {TEST_KEY: "První změna"})
+        previous = self.translation_state()
+        before_build = catalog_reload._catalog_fingerprint()
+        original_translation = trans_real.translation
+
+        def rewrite_after_loading(language_code):
+            """
+            Změní český soubor až po sestavení jeho překladového objektu.
+
+            :param language_code: Kód právě sestavovaného jazyka.
+            :return: Překladový objekt načtený před změnou souboru.
+            """
+            result = original_translation(language_code)
+            if language_code == "cs":
+                self.write_catalog("cs", {TEST_KEY: "Stabilní překlad"})
+            return result
+
+        with (
+            patch.object(trans_real, "translation", side_effect=rewrite_after_loading),
+            self.assertLogs("core.translation", level="WARNING"),
+        ):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assert_translation_state(previous)
+        self.assertEqual(catalog_reload._catalog_state["failed_fingerprint"], before_build)
+        self.assertTrue(reload_translation_catalogs_if_changed())
+        self.assertEqual(self.translated("cs"), "Stabilní překlad")
+
     def test_restored_catalog_is_adopted_after_missing(self):
         """Katalog obnovený po výpadku se při další kontrole převezme."""
         os.remove(self.mo_path("cs"))
@@ -228,8 +322,8 @@ class CatalogReloadTest(RuntimeCatalogTestMixin, SimpleTestCase):
         self.assertTrue(reload_translation_catalogs_if_changed())
         self.assertEqual(self.translated("cs"), "Obnovený překlad")
 
-    def test_persistent_corrupt_catalog_is_not_retried(self):
-        """Nezměněný poškozený katalog se sestavuje i loguje jen jednou, ne při každé kontrole."""
+    def test_persistent_corrupt_catalog_is_not_retried_immediately(self):
+        """Nezměněný poškozený katalog se před uplynutím prodlevy znovu nesestavuje ani neloguje."""
         with open(self.mo_path("cs"), "wb") as target:
             target.write(b"\x00" * 10)
         with (
@@ -244,8 +338,8 @@ class CatalogReloadTest(RuntimeCatalogTestMixin, SimpleTestCase):
         self.assertEqual(len(captured.records), 1)
         self.assertEqual(self.translated("cs"), "Původní")
 
-    def test_persistent_missing_catalog_is_not_retried(self):
-        """Trvale chybějící katalog nespouští sestavení a varování se zapíše jen jednou."""
+    def test_persistent_missing_catalog_is_not_retried_immediately(self):
+        """Chybějící katalog před uplynutím prodlevy nespouští sestavení ani opakované varování."""
         os.remove(self.mo_path("cs"))
         with (
             patch.object(
@@ -265,6 +359,185 @@ class CatalogReloadTest(RuntimeCatalogTestMixin, SimpleTestCase):
         self.assertTrue(reload_translation_catalogs_if_changed())
         self.assertEqual(translation.get_language(), "en")
         self.assertEqual(translation.gettext(TEST_KEY), "Corrected translation")
+
+    def test_unexpected_fingerprint_error_keeps_state_and_warns_once(self):
+        """Neočekávaná chyba kontroly neunikne volajícímu, nemění překlady a opakovaně nevaruje."""
+        previous = self.translation_state()
+        adopted = catalog_reload._catalog_state["fingerprint"]
+        with (
+            patch.object(catalog_reload, "_catalog_fingerprint", side_effect=ValueError("fingerprint failed")),
+            self.assertLogs("core.translation", level="WARNING") as captured,
+        ):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assertEqual(len(captured.records), 1)
+        self.assert_translation_state(previous)
+        self.assertEqual(catalog_reload._catalog_state["fingerprint"], adopted)
+
+    def test_failed_reactivation_restores_caches_default_and_active_object(self):
+        """Chyba po změně aktivního objektu obnoví přesně oba cache, výchozí katalog i původní jazyk."""
+        translation.activate("en")
+        translation.gettext(TEST_KEY)
+        previous = self.translation_state()
+        adopted = catalog_reload._catalog_state["fingerprint"]
+        self.write_catalogs({TEST_KEY: "Nový překlad"}, {TEST_KEY: "New translation"})
+
+        def failing_activate(language_code):
+            """
+            Změní aktivní překlad na nový objekt a pak vyvolá chybu dokončení.
+
+            :param language_code: Jazyk aktivovaný při novém načtení.
+            """
+            trans_real._active.value = trans_real._translations[language_code]
+            raise RuntimeError("activation failed")
+
+        with (
+            patch.object(catalog_reload.django_translation, "activate", side_effect=failing_activate) as activate_mock,
+            self.assertLogs("core.translation", level="WARNING"),
+        ):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        activate_mock.assert_called_once_with("en")
+        self.assert_translation_state(previous)
+        self.assertEqual(catalog_reload._catalog_state["fingerprint"], adopted)
+        self.assertEqual(translation.gettext(TEST_KEY), "Original")
+
+    def test_finishing_failure_restores_absent_active_language(self):
+        """Chyba při dokončení obnoví i původní nepřítomnost aktivního jazyka a výchozí katalog."""
+        translation.deactivate()
+        previous = self.translation_state()
+        self.assertFalse(previous[3])
+        self.write_catalog("cs", {TEST_KEY: "Nový překlad"})
+        with (
+            patch.object(catalog_reload.logger, "info", side_effect=RuntimeError("finishing failed")),
+            self.assertLogs("core.translation", level="WARNING"),
+        ):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assert_translation_state(previous)
+
+
+class CatalogFailureRetryTest(RuntimeCatalogTestMixin, SimpleTestCase):
+    """Testy pevné prodlevy neúspěšných stavů pomocí monotónního času bez čekání."""
+
+    def setUp(self):
+        """Načte platné katalogy s podvrženým monotónním časem 100 sekund."""
+        super().setUp()
+        clock_patch = patch.object(catalog_reload.time, "monotonic", return_value=100.0)
+        self.clock = clock_patch.start()
+        self.addCleanup(clock_patch.stop)
+        self.write_catalogs({TEST_KEY: "Původní"}, {TEST_KEY: "Original"})
+        self.assertTrue(reload_translation_catalogs_if_changed())
+
+    def test_transient_read_failure_recovers_with_unchanged_metadata(self):
+        """Přechodná chyba čtení se opraví bez dalšího zápisu po pevné prodlevě 300 sekund."""
+        self.write_catalog("cs", {TEST_KEY: "Obnovený překlad"})
+        fingerprint = catalog_reload._catalog_fingerprint()
+        with (
+            patch.object(trans_real, "translation", side_effect=OSError("temporary read failure")),
+            self.assertLogs("core.translation", level="WARNING"),
+        ):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        self.clock.return_value = 399.0
+        self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assertEqual(self.translated("cs"), "Původní")
+        self.clock.return_value = 400.0
+        self.assertTrue(reload_translation_catalogs_if_changed())
+        self.assertEqual(catalog_reload._catalog_fingerprint(), fingerprint)
+        self.assertEqual(self.translated("cs"), "Obnovený překlad")
+        self.assertIsNone(catalog_reload._catalog_state["failed_fingerprint"])
+        self.assertIsNone(catalog_reload._catalog_state["failed_at"])
+
+    def test_persistent_corruption_retries_quietly_once_per_cooldown(self):
+        """Trvale chybný katalog se zkouší po 300 sekundách a varuje jen při prvním selhání."""
+        with open(self.mo_path("cs"), "wb") as target:
+            target.write(b"\x00" * 10)
+        with (
+            patch.object(
+                catalog_reload, "_reload_translation_catalogs", wraps=catalog_reload._reload_translation_catalogs
+            ) as reload_spy,
+            patch.object(catalog_reload.logger, "warning") as warning_mock,
+        ):
+            for now in (100.0, 101.0, 399.0, 400.0, 401.0, 699.0, 700.0):
+                self.clock.return_value = now
+                self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assertEqual(reload_spy.call_count, 3)
+        warning_mock.assert_called_once()
+        self.assertEqual(catalog_reload._catalog_state["failed_at"], 700.0)
+        self.assertEqual(self.translated("cs"), "Původní")
+
+    def test_changed_fingerprint_bypasses_cooldown(self):
+        """Nový otisk opraví předchozí selhání při další kontrole bez čekání na prodlevu."""
+        with open(self.mo_path("cs"), "wb") as target:
+            target.write(b"\x00" * 10)
+        with self.assertLogs("core.translation", level="WARNING"):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        self.write_catalog("cs", {TEST_KEY: "Opravený překlad"})
+        self.clock.return_value = 101.0
+        self.assertTrue(reload_translation_catalogs_if_changed())
+        self.assertEqual(self.translated("cs"), "Opravený překlad")
+        self.assertIsNone(catalog_reload._catalog_state["failed_fingerprint"])
+        self.assertIsNone(catalog_reload._catalog_state["failed_at"])
+
+    def test_failure_before_fingerprinting_uses_same_quiet_cooldown(self):
+        """Chyba bez dostupného otisku má stejnou pevnou prodlevu i potlačení opakovaných varování."""
+        with (
+            patch.object(
+                catalog_reload, "_catalog_fingerprint", side_effect=ValueError("fingerprint failed")
+            ) as fp_mock,
+            patch.object(catalog_reload.logger, "warning") as warning_mock,
+        ):
+            for now in (100.0, 101.0, 399.0, 400.0):
+                self.clock.return_value = now
+                self.assertFalse(reload_translation_catalogs_if_changed())
+        self.assertEqual(fp_mock.call_count, 2)
+        warning_mock.assert_called_once()
+        self.write_catalog("cs", {TEST_KEY: "Obnovený překlad"})
+        self.clock.return_value = 700.0
+        self.assertTrue(reload_translation_catalogs_if_changed())
+        self.assertEqual(self.translated("cs"), "Obnovený překlad")
+
+    @override_settings(TRANSLATION_CATALOG_CHECK_INTERVAL=60)
+    def test_normal_check_interval_can_delay_retry_after_cooldown(self):
+        """I způsobilý opakovaný pokus čeká na běžný interval kontroly požadavků nebo úloh."""
+        self.clock.return_value = 160.0
+        self.write_catalog("cs", {TEST_KEY: "Obnovený překlad"})
+        with (
+            patch.object(trans_real, "translation", side_effect=OSError("temporary read failure")),
+            self.assertLogs("core.translation", level="WARNING"),
+        ):
+            self.assertFalse(reload_translation_catalogs_if_changed())
+        with patch.object(
+            catalog_reload, "_reload_translation_catalogs", wraps=catalog_reload._reload_translation_catalogs
+        ) as reload_spy:
+            for now in (459.0, 460.0):
+                self.clock.return_value = now
+                self.assertFalse(reload_translation_catalogs_if_changed())
+            reload_spy.assert_not_called()
+            self.clock.return_value = 519.0
+            self.assertTrue(reload_translation_catalogs_if_changed())
+        self.assertEqual(self.translated("cs"), "Obnovený překlad")
+
+    def test_missing_catalog_is_rechecked_quietly_after_cooldown(self):
+        """Chybějící soubor se po prodlevě znovu ověří bez sestavení a opakovaného varování."""
+        os.remove(self.mo_path("en"))
+        with (
+            patch.object(catalog_reload, "_reload_translation_catalogs") as reload_mock,
+            patch.object(catalog_reload.logger, "warning") as warning_mock,
+        ):
+            for now in (100.0, 399.0, 400.0):
+                self.clock.return_value = now
+                self.assertFalse(reload_translation_catalogs_if_changed())
+        reload_mock.assert_not_called()
+        warning_mock.assert_called_once()
+        self.assertEqual(catalog_reload._catalog_state["failed_at"], 400.0)
+        self.assertEqual(self.translated("en"), "Original")
+
+    def test_unchanged_successful_catalog_is_not_periodically_reloaded(self):
+        """Prodleva opakovaných pokusů nikdy nespouští načtení nezměněného úspěšného katalogu."""
+        with patch.object(catalog_reload, "_reload_translation_catalogs") as reload_mock:
+            for now in (100.0, 400.0, 1000.0):
+                self.clock.return_value = now
+                self.assertFalse(reload_translation_catalogs_if_changed())
+        reload_mock.assert_not_called()
 
 
 class DjangoTranslationInternalsTest(SimpleTestCase):
@@ -317,6 +590,15 @@ class TranslationCatalogReloadMiddlewareTest(RuntimeCatalogTestMixin, SimpleTest
         self.assertEqual(self.request("en"), "Original")
         self.write_catalogs({TEST_KEY: "Opravený překlad"}, {TEST_KEY: "Corrected translation"})
         self.assertEqual(self.request("en"), "Corrected translation")
+
+    def test_unexpected_check_error_still_renders_response(self):
+        """Chyba skutečné kontroly nevyřadí zpracování požadavku v middleware."""
+        self.assertEqual(self.request("en"), "Original")
+        with (
+            patch.object(catalog_reload, "_catalog_fingerprint", side_effect=ValueError("check failed")),
+            self.assertLogs("core.translation", level="WARNING"),
+        ):
+            self.assertEqual(self.request("en"), "Original")
 
 
 RELOAD_MIDDLEWARE = "core.middleware.TranslationCatalogReloadMiddleware"
@@ -417,8 +699,8 @@ class NotificationEmailFooterReloadTest(RuntimeCatalogTestMixin, SimpleTestCase)
         self.assertIn("Sent from:", html)
 
 
-class AtomicCatalogImportTest(SimpleTestCase):
-    """Testy atomické náhrady runtime katalogu při importu."""
+class CatalogImportTestMixin:
+    """Společné katalogy a kontroly pro oddělené testy importní funkce a pohledu."""
 
     OLD_PO = 'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\n"\n\nmsgid "{key}"\nmsgstr "Původní"\n'
     NEW_PO = 'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\n"\n\nmsgid "{key}"\nmsgstr "Importovaný"\n'
@@ -464,20 +746,6 @@ class AtomicCatalogImportTest(SimpleTestCase):
         with open(self.mo_path, "rb") as source:
             return gettext_module.GNUTranslations(source).gettext(TEST_KEY)
 
-    def test_import_replaces_po_and_mo_and_keeps_backup(self):
-        """Import nahradí ``.po`` i ``.mo``, původní ``.po`` uloží do zálohy a nenechá dočasné soubory."""
-        original_mode = os.stat(self.mo_path).st_mode
-        backup_path = import_translation_catalog(self.po_path, self.uploaded())
-
-        with open(self.po_path, encoding="utf-8") as source:
-            self.assertEqual(source.read(), self.new_po)
-        self.assertEqual(self.mo_text(), "Importovaný")
-        self.assertRegex(os.path.basename(backup_path), r"^django_backup_\d{14}\.po$")
-        with open(backup_path, encoding="utf-8") as source:
-            self.assertIn('msgstr "Původní"', source.read())
-        self.assertEqual(self.temporary_files(), [])
-        self.assertEqual(os.stat(self.mo_path).st_mode, original_mode)
-
     def backup_files(self):
         """
         Vrátí zálohy katalogu v adresáři katalogu.
@@ -493,6 +761,24 @@ class AtomicCatalogImportTest(SimpleTestCase):
         self.assertEqual(self.mo_text(), "Původní")
         self.assertEqual(self.backup_files(), [])
         self.assertEqual(self.temporary_files(), [])
+
+
+class AtomicCatalogImportTest(CatalogImportTestMixin, SimpleTestCase):
+    """Testy produkční importní funkce bez dědění testovacích metod do testů pohledu."""
+
+    def test_import_replaces_po_and_mo_and_keeps_backup(self):
+        """Import nahradí ``.po`` i ``.mo``, původní ``.po`` uloží do zálohy a nenechá dočasné soubory."""
+        original_mode = os.stat(self.mo_path).st_mode
+        backup_path = import_translation_catalog(self.po_path, self.uploaded())
+
+        with open(self.po_path, encoding="utf-8") as source:
+            self.assertEqual(source.read(), self.new_po)
+        self.assertEqual(self.mo_text(), "Importovaný")
+        self.assertRegex(os.path.basename(backup_path), r"^django_backup_\d{14}\.po$")
+        with open(backup_path, encoding="utf-8") as source:
+            self.assertIn('msgstr "Původní"', source.read())
+        self.assertEqual(self.temporary_files(), [])
+        self.assertEqual(os.stat(self.mo_path).st_mode, original_mode)
 
     def test_upload_is_written_once(self):
         """Nahraný soubor se při importu čte a zapisuje jen jednou."""
@@ -519,25 +805,77 @@ class AtomicCatalogImportTest(SimpleTestCase):
         self.assert_catalog_unchanged()
 
     def test_failed_write_keeps_target_and_removes_temporary_file(self):
-        """Chyba při zápisu ponechá původní soubor beze změny a smaže dočasný soubor."""
+        """Výpadek uploadu po první části ponechá katalogy i zálohy beze změny a smaže dočasný soubor."""
 
-        def failing_write(temp_path):
+        def failing_chunks():
             """
-            Zapíše část obsahu a selže, jako by došlo místo na disku.
+            Poskytne část uploadu a vyvolá chybu při čtení další části.
 
-            :param temp_path: Cesta k dočasnému souboru.
+            :return: Iterátor částí nahraného souboru.
             """
-            with open(temp_path, "wb") as target:
-                target.write(b"\x00partial")
-            raise OSError("disk full")
+            yield b"partial upload"
+            raise OSError("upload interrupted")
 
-        with self.assertRaises(OSError):
-            replace_file_atomically(self.mo_path, failing_write)
-        self.assertEqual(self.mo_text(), "Původní")
+        uploaded = self.uploaded()
+        with patch.object(uploaded, "chunks", side_effect=failing_chunks), self.assertRaises(OSError):
+            import_translation_catalog(self.po_path, uploaded)
+        self.assert_catalog_unchanged()
+
+    def assert_failed_replacement(self, failed_step):
+        """
+        Ověří obsah obou katalogů, zálohy a úklid po selhání vybraného přejmenování.
+
+        :param failed_step: Pořadí selhání: ``1`` = záloha, ``2`` = ``.po``, ``3`` = ``.mo``.
+        """
+        with open(self.po_path, "rb") as source:
+            old_po = source.read()
+        with open(self.mo_path, "rb") as source:
+            old_mo = source.read()
+        original_replace = os.replace
+        attempts = 0
+
+        def failing_replace(source, target):
+            """
+            Provede předchozí přejmenování a na zvoleném kroku vyvolá chybu.
+
+            :param source: Dočasný zdrojový soubor.
+            :param target: Cílová cesta katalogu nebo zálohy.
+            """
+            nonlocal attempts
+            attempts += 1
+            if attempts == failed_step:
+                raise OSError("replacement failed")
+            original_replace(source, target)
+
+        with patch.object(catalog_reload.os, "replace", side_effect=failing_replace), self.assertRaises(OSError):
+            import_translation_catalog(self.po_path, self.uploaded())
+
+        self.assertEqual(attempts, failed_step)
+        with open(self.po_path, "rb") as source:
+            self.assertEqual(source.read(), self.new_po.encode("utf-8") if failed_step == 3 else old_po)
+        with open(self.mo_path, "rb") as source:
+            self.assertEqual(source.read(), old_mo)
+        backups = self.backup_files()
+        self.assertEqual(len(backups), int(failed_step > 1))
+        if backups:
+            with open(os.path.join(self.catalog_dir, backups[0]), "rb") as source:
+                self.assertEqual(source.read(), old_po)
         self.assertEqual(self.temporary_files(), [])
 
+    def test_failed_backup_replacement_keeps_all_targets_unchanged(self):
+        """Selhání publikace zálohy ponechá katalogy i seznam záloh beze změny."""
+        self.assert_failed_replacement(1)
 
-class TranslationImportViewTest(AtomicCatalogImportTest):
+    def test_failed_po_replacement_keeps_published_backup(self):
+        """Selhání náhrady ``.po`` ponechá původní katalogy a již publikovanou zálohu."""
+        self.assert_failed_replacement(2)
+
+    def test_failed_mo_replacement_leaves_new_po_and_old_mo(self):
+        """Selhání poslední náhrady ponechá nové ``.po``, původní ``.mo`` a zálohu původního ``.po``."""
+        self.assert_failed_replacement(3)
+
+
+class TranslationImportViewTest(CatalogImportTestMixin, SimpleTestCase):
     """Test pohledu ``TranslationImportView``: atomický import a zachování seznamu záloh."""
 
     def test_view_import_keeps_backup_listed(self):
@@ -603,6 +941,55 @@ class TranslationImportViewTest(AtomicCatalogImportTest):
         self.assertEqual(response.status_code, 302)
         messages_mock.add_message.assert_called_once()
         self.assertIs(messages_mock.add_message.call_args.args[1], messages_mock.ERROR)
+        self.assert_catalog_unchanged()
+
+    def test_view_error_is_translated_without_exception_paths(self):
+        """Česká i anglická hláška použije skutečný překlad; cesty z výjimky zůstanou pouze v logu."""
+        message_id = "core.message_constants.translationUploadError.text"
+        message_locale = tempfile.mkdtemp(prefix="amcr-import-message-")
+        self.addCleanup(shutil.rmtree, message_locale, ignore_errors=True)
+        source_locale = Path(settings.BASE_DIR).parent / "locale"
+        if not source_locale.is_dir():
+            source_locale = Path("/default_locale")
+        translations = {}
+        for language_code in ("cs", "en"):
+            source_path = source_locale / language_code / "LC_MESSAGES" / "django.po"
+            source_catalog = polib.pofile(str(source_path))
+            entry = source_catalog.find(message_id)
+            self.assertIsNotNone(entry)
+            self.assertFalse(entry.fuzzy)
+            self.assertTrue(entry.msgstr)
+            translations[language_code] = entry.msgstr
+            catalog = polib.POFile()
+            catalog.metadata = source_catalog.metadata
+            catalog.append(entry)
+            target = Path(message_locale) / language_code / "LC_MESSAGES" / "django.mo"
+            target.parent.mkdir(parents=True)
+            catalog.save_as_mofile(str(target))
+
+        catalog_path = "/vol/web/locale/cs/LC_MESSAGES/django.po"
+        temporary_path = "/vol/web/locale/cs/LC_MESSAGES/.django.mo.example.tmp"
+        error_text = f"cannot replace {temporary_path} with {catalog_path}"
+        with override_settings(LOCALE_PATHS=[message_locale]):
+            for language_code, expected_message in translations.items():
+                with (
+                    self.subTest(language=language_code),
+                    translation.override(language_code),
+                    patch("core.views.import_translation_catalog", side_effect=OSError(error_text)),
+                    self.assertLogs("core.views", level="ERROR") as captured,
+                ):
+                    response, messages_mock = self.call_view(self.uploaded(), PropertyMock(return_value=self.po_path))
+                    self.assertEqual(response.status_code, 302)
+                    self.assertEqual(response.url, "/translations/")
+                    messages_mock.add_message.assert_called_once()
+                    self.assertIs(messages_mock.add_message.call_args.args[1], messages_mock.ERROR)
+                    user_message = str(messages_mock.add_message.call_args.args[2])
+                    self.assertEqual(user_message, expected_message)
+                    self.assertNotEqual(user_message, message_id)
+                    self.assertNotIn(catalog_path, user_message)
+                    self.assertNotIn(temporary_path, user_message)
+                    self.assertNotIn(error_text, user_message)
+                    self.assertEqual(captured.records[0].error, error_text)
         self.assert_catalog_unchanged()
 
     def test_view_rejects_user_without_language_rights_before_reading_upload(self):

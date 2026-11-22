@@ -39,6 +39,7 @@ from core.message_constants import (
     TRANSLATION_DELETE_CANNOT_MAIN,
     TRANSLATION_DELETE_ERROR,
     TRANSLATION_DELETE_SUCCESS,
+    TRANSLATION_UPLOAD_ERROR,
     TRANSLATION_UPLOAD_SUCCESS,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
@@ -2496,7 +2497,8 @@ class TranslationImportView(RosettaFileLevelMixinWithBackup, FormView):
         Nejdřív vyhodnotí ``po_file_path``, které ověří jazyk a právo uživatele ho překládat
         (jinak vyvolá ``Http404``), a teprve potom předá nahraný soubor funkci
         ``import_translation_catalog`` (záloha, atomická náhrada ``.po`` a ``.mo``). Chybu
-        importu zapíše do logu a zobrazí jako chybovou hlášku; úspěch oznámí hláškou.
+        importu zapíše podrobně do logu a zobrazí pevnou přeloženou hlášku bez textu
+        výjimky a cest k souborům; úspěch oznámí hláškou.
 
         :param form: Validní ``TranslationImportForm``; nahraný soubor je v ``cleaned_data["file"]``.
         :return: Přesměrování na seznam katalogů (``rosetta-file-list``).
@@ -2512,7 +2514,7 @@ class TranslationImportView(RosettaFileLevelMixinWithBackup, FormView):
             import_translation_catalog(po_file_path, new_pofile)
         except Exception as e:
             logger.error("core.views.TranslationImportView.form_valid", extra={"error": str(e)})
-            messages.add_message(self.request, messages.ERROR, str(e))
+            messages.add_message(self.request, messages.ERROR, TRANSLATION_UPLOAD_ERROR)
             return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
         messages.add_message(self.request, messages.SUCCESS, TRANSLATION_UPLOAD_SUCCESS)
         return redirect(reverse("rosetta-file-list", args=[self.po_filter]))

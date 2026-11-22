@@ -4456,6 +4456,10 @@ msgid "core.message_constants.translationUploadSucces.text"
 msgstr "Translation file successfully imported."
 
 #: core/message_constants.py:257
+msgid "core.message_constants.translationUploadError.text"
+msgstr "The translation file could not be imported."
+
+#: core/message_constants.py:257
 msgid "core.message_constants.translationDeleteCannotMain.text"
 msgstr "The authoritative translation file in use cannot be deleted."
 
