@@ -1,0 +1,8 @@
+# Usage: pin-github-actions
+
+- **When:** 2026-11-22
+- **Agent / runtime:** Codex (API tool runtime)
+- **Model / backend:** Exact backend model id not exposed by this runtime.
+- **What:** Prepared the repository-local OpenSpec change `pin-github-actions` from the ready issue [ARUP-CAS/aiscr-webamcr#4394](https://github.com/ARUP-CAS/aiscr-webamcr/issues/4394) on the approved branch `agents/codex/4394-pin-github-actions`, based on `test`. Proposal, design, requirements, and 19 unchecked implementation/acceptance tasks are complete. The operator chose to retain Trivy and the Cosign installer with full SHA pins and documented trust reviews.
+- **Impacted:** `openspec/changes/pin-github-actions/` and this rolling usage entry. The temporary PR body and exact approval view live under `.agents/local_scratch/aiscr-plan-from-issue/2026-11-22-issue-4394/` and are excluded from the proposed commit.
+- **Close-out:** Strict validation and OpenSpec planning-completeness checks pass for this change. Python compilation and all repository pre-commit hooks passed in this session with no generated-file changes. Aggregate OpenSpec validation passes this change but fails the pre-existing local `reload-translation-catalogs-on-change` directory because it has no spec deltas; that unrelated directory was left intact. Current policy was read without mutation (`sha_pinning_required: false`). This entry records local planning acceptance; draft PR delivery is governed by the exact approval payload. Implementation and hosted acceptance remain pending under separate approval. No implementation, workflow dispatch, policy change, or archival has occurred.
