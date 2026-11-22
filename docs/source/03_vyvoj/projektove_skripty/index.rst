@@ -31,7 +31,9 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    test_check_container_image_reference_parity_py
    test_check_static_vendor_manifest_py
    test_deploy_sh
+   test_generate_github_actions_py
    test_generate_js_libraries_py
+   test_pre_commit_actions_trust_py
    test_pre_commit_report_py
    test_pre_commit_workflow_py
    uwsgi_site_ini

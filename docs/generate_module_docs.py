@@ -40,6 +40,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote
 
 import yaml
+from yaml.nodes import MappingNode, ScalarNode, SequenceNode
+from yaml.tokens import ScalarToken
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -3256,6 +3258,172 @@ def insert_generated_block(
     return block + "\n" + content
 
 
+GITHUB_ACTIONS_BEGIN = ".. BEGIN GENERATED GITHUB ACTIONS"
+GITHUB_ACTIONS_END = ".. END GENERATED GITHUB ACTIONS"
+ACTION_PIN = re.compile(r"[\w.-]+/[\w.-]+(?:/[\w.-]+)*@[0-9a-f]{40}\Z", re.ASCII)
+ACTION_VERSION = re.compile(r"#\s*(v\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)(?:\s|$)")
+
+
+@dataclass(frozen=True)
+class WorkflowAction:
+    """Ověřený tvar externího odkazu a jeho umístění ve zdroji workflow."""
+
+    action: str
+    commit: str
+    version: str
+    filename: str
+    line: int
+
+
+def mapping_value(node, key):
+    """Vrátí položku YAML mapy bez převodu klíče ``on`` na boolean.
+
+    :param node: Uzel mapy nebo jiný YAML uzel.
+    :param key: Hledaný název položky.
+    :return: Uzel hodnoty, nebo ``None`` při chybějící položce.
+    """
+    if isinstance(node, MappingNode):
+        return next((value for name, value in node.value if name.value == key), None)
+    return None
+
+
+def action_nodes(document):
+    """Vybere volání akcí a reusable workflows, nikoli text shellu.
+
+    :param document: Kořen parsovaného workflow.
+    :return: Iterátor uzlů ``uses`` na úrovni jobů a jejich kroků.
+    """
+    jobs = mapping_value(document, "jobs")
+    if not isinstance(jobs, MappingNode):
+        return
+    for _, job in jobs.value:
+        reference = mapping_value(job, "uses")
+        if reference is not None:
+            yield reference
+        steps = mapping_value(job, "steps")
+        if isinstance(steps, SequenceNode):
+            for step in steps.value:
+                reference = mapping_value(step, "uses")
+                if reference is not None:
+                    yield reference
+
+
+def parse_workflow_actions(text: str, filename: str = "workflow.yml") -> List[WorkflowAction]:
+    """Načte externí akce s úplným SHA a skutečným komentářem vydání.
+
+    :param text: Úplný zdroj workflow v YAML.
+    :param filename: Název zdroje uváděný v záznamech a diagnostice.
+    :return: Odkazy v pořadí zdroje; lokální volání jsou vynechána.
+    :raises ValueError: Při neplatném YAML, mutabilním odkazu či chybějící verzi.
+    """
+    try:
+        document = yaml.compose(text, Loader=yaml.BaseLoader)
+        scalars = [token for token in yaml.scan(text, Loader=yaml.BaseLoader) if isinstance(token, ScalarToken)]
+    except yaml.YAMLError as exc:
+        mark = getattr(exc, "problem_mark", None)
+        line = mark.line + 1 if mark else 1
+        raise ValueError(f"{filename}:{line}: invalid workflow YAML: {exc}") from exc
+    errors = []
+    references = []
+    for node in action_nodes(document):
+        line = node.start_mark.line + 1
+        location = f"{filename}:{line}"
+        if isinstance(node, ScalarNode) and node.value.startswith("./"):
+            continue
+        if not isinstance(node, ScalarNode) or not ACTION_PIN.fullmatch(node.value):
+            errors.append(f"{location}: external uses must be owner/repository[/path]@<40-character SHA>")
+            continue
+        if node.start_mark.line != node.end_mark.line:
+            errors.append(f"{location}: external uses and its release comment must be on one line")
+            continue
+        # Komentář musí být skutečný YAML komentář, ne část dalšího řetězce.
+        end = text.find("\n", node.end_mark.index)
+        end = len(text) if end < 0 else end
+        comment = ""
+        for match in re.finditer("#", text[node.end_mark.index : end]):
+            position = node.end_mark.index + match.start()
+            if not any(token.start_mark.index <= position < token.end_mark.index for token in scalars):
+                comment = text[position:end]
+                break
+        version = ACTION_VERSION.match(comment)
+        if not version:
+            errors.append(f"{location}: missing same-line release version comment (# vX.Y.Z)")
+            continue
+        action, commit = node.value.rsplit("@", 1)
+        references.append(WorkflowAction(action, commit, version.group(1), filename, line))
+    if errors:
+        raise ValueError("\n".join(errors))
+    return references
+
+
+def action_reference_errors(text: str, filename: str = "workflow.yml") -> List[str]:
+    """Vrátí diagnostiku stejného parseru, který používá inventář.
+
+    :param text: Úplný zdroj workflow v YAML.
+    :param filename: Název uváděný v diagnostice spolu s číslem řádku.
+    :return: Seznam chyb; existenci SHA v upstream repozitáři neověřuje.
+    """
+    try:
+        parse_workflow_actions(text, filename)
+    except ValueError as exc:
+        return str(exc).splitlines()
+    return []
+
+
+def generate_github_actions_rst() -> bool:
+    """Obnoví inventář GitHub Actions ze skutečných YAML odkazů bez síťových volání.
+
+    :return: True po úspěšném zpracování včetně prázdného inventáře.
+    :raises ValueError: Při neplatném workflow nebo odkazu; dokumentaci nepřepíše.
+    """
+    global changes_detected
+    inventory = {}
+    for path in sorted((project_root / ".github/workflows").glob("*")):
+        if path.suffix not in (".yml", ".yaml"):
+            continue
+        filename = path.relative_to(project_root).as_posix()
+        for ref in parse_workflow_actions(path.read_text(encoding="utf-8"), filename):
+            key = (ref.action, ref.commit, ref.version)
+            inventory.setdefault(key, set()).add(f"{ref.filename}:{ref.line}")
+    lines = [
+        GITHUB_ACTIONS_BEGIN,
+        "",
+        ".. list-table:: Aktivní externí GitHub Actions",
+        "   :header-rows: 1",
+        "",
+        "   * - Akce",
+        "     - Vlastník",
+        "     - Vydání",
+        "     - Commit a zdroj",
+        "     - Workflow",
+    ]
+    for (action, commit, version), locations in sorted(inventory.items()):
+        owner, repository, *subpath = action.split("/")
+        upstream = f"https://github.com/{owner}/{repository}"
+        source = f"{upstream}/tree/{commit}" + ("/" + "/".join(subpath) if subpath else "")
+        lines.extend(
+            [
+                f"   * - ``{action}``",
+                f"     - `{owner} <https://github.com/{owner}>`__",
+                f"     - `{version} <{upstream}/releases/tag/{version}>`__",
+                f"     - `{commit} <{source}>`__",
+                "     - " + ", ".join(f"``{location}``" for location in sorted(locations)),
+            ]
+        )
+    if not inventory:
+        # Prázdná list-table bez datových řádků není platná RST tabulka.
+        lines = [GITHUB_ACTIONS_BEGIN, "", "Žádné aktivní externí akce."]
+    block = "\n".join([*lines, "", GITHUB_ACTIONS_END, ""])
+    output_file = docs_dir / "source/12_zavislosti/github_actions.rst"
+    content = output_file.read_text(encoding="utf-8") if output_file.exists() else ""
+    updated = insert_generated_block(content, block, GITHUB_ACTIONS_BEGIN, GITHUB_ACTIONS_END)
+    if check_content_changed(updated, output_file):
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(updated, encoding="utf-8")
+        changes_detected = True
+    return True
+
+
 def generate_js_libraries_rst() -> bool:
     """Vygeneruje tabulku Node.js JavaScript knihoven pro javascript_knihovny.rst.
 
@@ -3397,6 +3565,9 @@ def main() -> None:
 
     # Generate Node.js JavaScript libraries documentation
     generate_js_libraries_rst()
+
+    # Generate the workflow dependency inventory through the same pre-commit hook.
+    generate_github_actions_rst()
 
     # Build documentation if requested
     if args.build:

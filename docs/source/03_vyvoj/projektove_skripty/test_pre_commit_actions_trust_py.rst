@@ -1,0 +1,136 @@
+Skript test_pre_commit_actions_trust.py
+=======================================
+
+Automaticky generovaná dokumentace skriptu ``scripts/test_pre_commit_actions_trust.py``.
+
+Přehled modulu
+--------------
+
+Ověří neměnné odkazy na GitHub Actions a zachování jejich aktualizací.
+
+Třídy
+------
+
+.. py:class:: ActionReferenceTests
+
+   Záměrně poškodí odkazy a ověří odmítnutí i přesnou diagnostiku.
+
+   **Metody:**
+
+   .. py:method:: workflow()
+
+      Sestaví malý workflow s jedním krokem.
+
+      :param reference: Testovaný obsah položky ``uses``.
+      :param comment: Text za odkazem na stejném řádku.
+      :return: Zdroj YAML se známým číslem řádku volání.
+
+   .. py:method:: test_rejects_mutable_or_malformed_references()
+
+      Tagy, větve, zkrácené či nehexadecimální SHA musí selhat.
+
+   .. py:method:: test_requires_full_release_comment()
+
+      Samotné SHA a komentáře bez úplné verze nejsou přijaty.
+
+   .. py:method:: test_accepts_pins_subpaths_quoted_values_and_local_calls()
+
+      Podporuje subpath akcí, uvozovky i lokální reusable workflow.
+
+   .. py:method:: test_ignores_comments_and_shell_uses_text()
+
+      Zakomentované kroky a podobný text v shellu nejsou závislosti.
+
+   .. py:method:: test_reusable_workflow_jobs_are_checked()
+
+      Externí reusable volání nezmizí při kontrole pouze kroků.
+
+   .. py:method:: test_flow_mapping_comment_is_not_a_quoted_string()
+
+      Verze v jiném řetězci nenahradí skutečný komentář vydání.
+
+   .. py:method:: test_repository_action_references()
+
+      Zkontroluje aktivní volání ve všech YAML workflow repozitáře.
+
+   .. py:method:: test_dependabot_update_contract()
+
+      Zachová týdenní aktualizace do test a obě existující skupiny.
+
+   .. py:method:: test_registry_covers_retained_third_party_actions()
+
+      Nová third-party závislost bez záznamu registru neprojde kontrolou.
+
+   .. py:method:: test_retained_scanning_and_signing_calls()
+
+      Převod pinů zachová dvě Trivy volání a instalátor Cosign.
+
+
+.. py:class:: SSHAgentTests
+
+   Spustí skutečný agent a shell workflow s izolovanými SSH/SCP klienty.
+
+   **Metody:**
+
+   .. py:method:: setUp()
+
+      Připraví dočasný klíč a náhrady pouze vzdálených operací.
+
+   .. py:method:: write_tool()
+
+      Vytvoří klienta, který místo síťového připojení ověří identitu agenta.
+
+      :param name: Název příkazu v izolovaném PATH.
+      :param body: Shellové tělo testovací náhrady.
+
+   .. py:method:: run_shell()
+
+      Spustí shell bez zděděného uživatelského agenta a vzdálené sítě.
+
+      :param script: Skutečný blok workflow nebo kontrolní shellový příkaz.
+      :param values: Proměnné předané pouze tomuto testovacímu kroku.
+      :return: Výsledek procesu s odděleným stdout a stderr.
+
+   .. py:method:: release_agent()
+
+      Ukončí pouze testem vytvořený agent i při selhání assertion.
+
+   .. py:method:: agent_environment()
+
+      Načte proměnné, které by GitHub přenesl do samostatného kroku.
+
+      :return: Socket a PID načtené ze skutečného souboru GITHUB_ENV.
+
+   .. py:method:: workflow_script()
+
+      Izoluje known_hosts a nahradí vstupy bez změny řízení SSH kroku.
+
+      :param script: Zdroj shellového kroku se vstupy GitHub Actions.
+      :return: Blok workflow se syntetickým hostem a dočasnou cestou known_hosts.
+
+   .. py:method:: assert_agent_stopped()
+
+      Ověří nedostupnost zaznamenaného socketu po skutečném úklidu.
+
+   .. py:method:: test_identity_survives_ssh_and_scp_steps_then_cleanup()
+
+      Klíč s CRLF funguje pro SSH a obě SCP volání bez opětovného načtení.
+
+   .. py:method:: test_invalid_key_fails_without_persisting_or_logging_it()
+
+      Neplatný klíč zastaví inicializaci a trap odstraní vytvořený agent.
+
+   .. py:method:: test_cleanup_after_remote_or_result_failure()
+
+      Stejný always cleanup ukončí agent po chybě SSH i SCP.
+
+   .. py:method:: test_cleanup_is_safe_when_setup_did_not_run()
+
+      Chyba VPN před inicializací nesmí poškodit cizí agent.
+
+Zdrojový kód
+------------
+
+.. literalinclude:: ../../../../scripts/test_pre_commit_actions_trust.py
+   :language: python
+   :linenos:

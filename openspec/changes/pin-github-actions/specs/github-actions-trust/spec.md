@@ -3,7 +3,7 @@
 ## Purpose
 
 Keep workflow action dependencies immutable and reviewable while preserving SSH
-testing, automated updates, and safely ordered repository policy enforcement.
+testing, automated updates, and a documented path to safe policy activation.
 
 ## ADDED Requirements
 
@@ -44,12 +44,12 @@ using native SSH-agent tooling instead of `webfactory/ssh-agent`. The loaded
 identity SHALL remain available to the subsequent SSH and SCP steps without
 exposing the private key in logs or persisted workflow artifacts.
 
-#### Scenario: DEV execution and result retrieval share the agent
+#### Scenario: Isolated SSH and result-retrieval steps share the agent
 
-- **GIVEN** valid existing VPN, key, and known-host configuration
-- **WHEN** an authorized manual DEV test run reaches SSH authentication
-- **THEN** the remote test command connects successfully
-- **AND** the later SCP steps retrieve the results using the same loaded identity
+- **GIVEN** a disposable valid key and isolated step environments with remote clients replaced by test fixtures
+- **WHEN** the workflow setup, SSH, and result-retrieval shell steps execute
+- **THEN** the SSH and both SCP clients can access the same loaded identity
+- **AND** only the agent socket and PID are persisted between steps
 
 #### Scenario: Key loading fails safely
 
@@ -72,44 +72,126 @@ including when intervening remote execution or result retrieval fails.
 ### Requirement: Dependabot preserves pin maintenance
 
 The repository SHALL retain weekly `github-actions` version updates targeting
-`test`, including the `docker-actions` and `attest` groups. Acceptance SHALL
-include an actual Dependabot PR updating a pinned SHA together with its
-same-line version comment; documentation of support alone is insufficient.
+`test`, including the `docker-actions` and `attest` groups. The existing CI
+test discovery SHALL exercise regression coverage for that configuration and
+the SHA/version-comment reference format.
 
-#### Scenario: A release update changes both SHA and comment
+#### Scenario: Action update configuration remains compatible
 
-- **GIVEN** SHA-pinned action dependencies and a newer upstream release
-- **WHEN** Dependabot opens the corresponding update PR
-- **THEN** its diff updates both the action commit SHA and version comment
-- **AND** the PR targets `test` and preserves applicable update grouping
+- **GIVEN** the repository's action update configuration and pinned workflow references
+- **WHEN** the existing CI test-discovery command runs
+- **THEN** tests verify the weekly schedule, `test` target, and both update groups
+- **AND** tests validate full SHA references with same-line release-version comments
 
 ### Requirement: Retained third-party actions have trust records
 
 Dependency documentation SHALL contain a discoverable registry of every
-retained third-party action, with its upstream owner, maintenance status,
-last review date, review frequency, and trust rationale. The registry SHALL
-record explicit decisions and reasons for Trivy and the Cosign installer.
+retained third-party action, with its upstream owner, exposure, and retention
+rationale. It SHALL record explicit decisions and reasons for Trivy and the
+Cosign installer. Current dependency versions SHALL be derived from workflow
+references rather than a separately maintained version list.
 
 #### Scenario: Inventory and registry agree
 
 - **GIVEN** the implemented workflow inventory
 - **WHEN** a maintainer follows the dependency documentation index
-- **THEN** every retained third-party action has a registry entry with all required fields
+- **THEN** every retained third-party action has an inventory entry and documented owner, exposure, and rationale
 - **AND** the dispositions of `aquasecurity/trivy-action` and `sigstore/cosign-installer` are recorded
 
-### Requirement: Dependency reviews remain actionable
+### Requirement: Dependency inventory follows workflow references
 
-The documented maintenance procedure SHALL cover resolving and verifying
-release SHAs and updating version comments. Trust records SHALL be reviewed
-at least quarterly and on major updates or material security or ownership
-changes.
+The generated Actions inventory SHALL include each active external action
+path, its upstream owner/source, release version, full commit, and workflow
+locations, including GitHub-owned actions. Local references and commented-out
+steps SHALL be excluded. Different releases of the same action SHALL remain
+distinguishable.
 
-#### Scenario: A maintainer adds or updates an action
+#### Scenario: Changed workflow dependencies refresh the inventory
 
-- **GIVEN** a proposed external action dependency or release update
-- **WHEN** a maintainer follows the documented procedure
-- **THEN** the resulting pin is traceable to an upstream release commit
-- **AND** the relevant trust record is reviewed when its review trigger applies
+- **GIVEN** active workflow dependencies have been added, removed, or updated
+- **WHEN** the standard dependency-documentation generator runs
+- **THEN** the generated inventory reflects the resulting workflow references and locations
+- **AND** obsolete entries disappear and differing releases remain distinguishable
+- **AND** local references and commented-out actions produce no inventory entries
+
+### Requirement: Inventory refresh uses the existing documentation process
+
+Actions inventory generation SHALL run through the existing dependency
+documentation and pre-commit process without network access or credentials.
+It SHALL preserve authored rationale and instructions, produce deterministic
+output, and signal changed generated files using the existing process.
+
+#### Scenario: Pre-commit refresh preserves authored documentation
+
+- **GIVEN** workflow references changed and the dependency page contains authored instructions
+- **WHEN** the existing documentation pre-commit hook runs
+- **THEN** the inventory is refreshed and changed files are reported
+- **AND** authored instructions and rationale remain unchanged
+- **AND** another generation run without input changes produces no diff
+
+### Requirement: Action maintenance follows ordinary dependency updates
+
+Actions updates SHALL use the existing Dependabot, human dependency-review,
+and documentation-refresh process. Documentation SHALL add instructions only
+where relevant and SHALL NOT require a separate maintenance workflow,
+scheduled trust reviews, recurring review-date bookkeeping, or special
+approvals for routine dependency updates.
+
+#### Scenario: A routine Dependabot action update is reviewed
+
+- **GIVEN** Dependabot proposes an action SHA and release-comment update
+- **WHEN** the normal dependency review and documentation refresh take place
+- **THEN** the workflow pin and generated inventory reflect the selected release
+- **AND** no additional Actions-only maintenance procedure is required
+
+#### Scenario: Bot changes use existing refresh points
+
+- **GIVEN** the shared documentation CI excludes Dependabot source branches
+- **WHEN** a Dependabot PR is opened
+- **THEN** no Actions-specific privileged bot execution path is required
+- **AND** the inventory is refreshed at the existing pre-commit or dependency-documentation refresh points
+
+### Requirement: Dependency updates preserve compatibility and explain material risk
+
+Action dependency changes SHALL preserve the required runner, input, output,
+and workflow behavior. Material compatibility or security constraints that
+affect the selected release SHALL be explained with the dependency update,
+including relevant trust in nested actions and downloaded tools.
+
+#### Scenario: A selected release has a relevant constraint
+
+- **GIVEN** a release assessment identifies a relevant compatibility limitation or published vulnerability
+- **WHEN** the dependency update is prepared for normal human review
+- **THEN** the chosen release and material constraint or residual risk are explained with source evidence
+- **AND** the assessment distinguishes the action wrapper from its nested dependencies and executable defaults
+
+### Requirement: Dependency checks belong to the existing test suite
+
+Action-reference validation and inventory generation SHALL have regression
+coverage in the existing repository test suite, executed by its existing CI
+test job. The tests SHALL exercise production parsing and generation behavior
+rather than serving as the operational inventory generator.
+
+#### Scenario: The existing test suite exercises inventory maintenance
+
+- **GIVEN** action-reference and inventory-generation regression tests
+- **WHEN** the existing CI test job runs
+- **THEN** it executes those tests alongside the existing workflow and dependency-documentation tests
+- **AND** the coverage detects invalid pins, stale inventory entries, authored-section changes, and non-idempotent generation
+
+### Requirement: Dependency documentation remains durable
+
+The dependency page SHALL describe enduring behavior, rationale, and relevant
+operating instructions. It SHALL NOT contain the completion report of a
+particular PR or require a temporary analysis snapshot as an inventory source
+or supporting document.
+
+#### Scenario: A maintainer reads dependency guidance after delivery
+
+- **GIVEN** the Actions dependency page is reached from the documentation index
+- **WHEN** a maintainer follows its maintenance and operational instructions
+- **THEN** they remain meaningful independently of the originating PR
+- **AND** the page does not depend on `.agents/analysis/github-actions-trust.json`
 
 ### Requirement: Retained scanner and signer integrations
 
@@ -125,23 +207,23 @@ tools SHALL be recorded in the dependency registry.
 - **THEN** both Trivy calls and the Cosign installer remain with verified SHA pins
 - **AND** the existing SBOM, vulnerability-report, and signing behavior is preserved
 
-### Requirement: Repository enforcement follows compatible rollout
+### Requirement: Documented repository enforcement readiness
 
-The repository SHALL enable `sha_pinning_required` only after the pinned
-workflows have reached every ref intended to remain executable. Acceptance
-SHALL include API evidence that the setting is true, a successful pinned
-control, and rejection of a deliberately tag-pinned action in a harmless
-authorized probe.
+The repository SHALL provide a runbook covering compatible rollout to every
+intended execution ref, separately approved policy activation, preservation
+of other Actions settings, positive/negative probes, and recovery. Executing
+the operations SHALL remain subject to their stated readiness and approval
+prerequisites.
 
 #### Scenario: Unprepared refs prevent activation
 
 - **GIVEN** an intended release, default-branch, or manually dispatched workflow ref still uses mutable action references
-- **WHEN** enforcement readiness is assessed
-- **THEN** activation is deferred until that ref is prepared or explicitly retired from execution
+- **WHEN** a maintainer follows the documented readiness procedure
+- **THEN** the runbook requires deferring activation until that ref is prepared or explicitly retired from execution
 
-#### Scenario: The repository rejects a mutable action
+#### Scenario: The runbook defines observable policy verification
 
-- **GIVEN** the compatible rollout is complete and enforcement is enabled with approval
-- **WHEN** a harmless approved workflow probe references an action by tag
-- **THEN** GitHub rejects the workflow for the SHA-pinning policy
-- **AND** a pinned control remains executable and the policy API reports `sha_pinning_required: true`
+- **GIVEN** a maintainer reviews the activation and recovery instructions
+- **WHEN** the policy verification procedure is inspected
+- **THEN** it specifies API readback of `sha_pinning_required: true`, a successful pinned control, and policy-specific rejection of a tag-pinned control
+- **AND** it requires approval and excludes secrets, infrastructure access, publication, and write-token permissions from the probes

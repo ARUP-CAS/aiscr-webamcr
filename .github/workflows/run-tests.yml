@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       
       - name: Install OpenVPN
         run: |
@@ -78,9 +78,21 @@ jobs:
           fi
 
       - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}
+        id: ssh-agent
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}
+        run: |
+          set -euo pipefail
+          agent_environment="$(ssh-agent -s)"
+          eval "$agent_environment" > /dev/null
+          trap 'ssh-agent -k > /dev/null 2>&1 || true' EXIT
+          if ! printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null 2>&1; then
+            echo "::error::Unable to load the DEV SSH key"
+            exit 1
+          fi
+          printf 'SSH_AUTH_SOCK=%s\nSSH_AGENT_PID=%s\n' "$SSH_AUTH_SOCK" "$SSH_AGENT_PID" >> "$GITHUB_ENV"
+          trap - EXIT
 
       - name: SSH deployment a testy
         shell: bash
@@ -152,10 +164,19 @@ jobs:
           } >> $GITHUB_STEP_SUMMARY
 
       - name: Nahrát výsledky testů jako artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: selenium-vysledky
           path: ./results.xlsx
+
+      - name: Stop SSH agent
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${SSH_AGENT_PID:-}" && -n "${SSH_AUTH_SOCK:-}" ]]; then
+            ssh-agent -k > /dev/null 2>&1 || true
+          fi
 
       - name: Disconnect VPN
         if: always()
