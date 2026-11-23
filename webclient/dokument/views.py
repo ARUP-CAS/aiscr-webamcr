@@ -325,6 +325,7 @@ class Model3DListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        sort_params = self.filter_valid_sort_params(qs, sort_params)
         qs = qs.order_by(*sort_params)
         qs = qs.filter(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
         qs = (
@@ -460,6 +461,7 @@ class DokumentListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        sort_params = self.filter_valid_sort_params(qs, sort_params)
         qs = qs.order_by(*sort_params)
         qs = qs.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
         qs = (
@@ -3213,6 +3215,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
         :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``, ``get()``.
 
             :return: Vrací výsledek volání ``HttpResponse()``.
+            :raises Http404: Vyvolá se, pokud záznam (akce nebo projekt) s daným ``ident_cely`` neexistuje.
         """
         if typ_vazby == "arch_z":
             qs = (
@@ -3221,7 +3224,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
                 .prefetch_related("soubory__soubory")
                 .order_by("ident_cely")
             )
-            zaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+            zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
             dokument_odpojit = check_permissions(
                 p.actionChoices.archz_odpojit_dokument, request.user, zaznam.ident_cely
             )
@@ -3231,7 +3234,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
                 .select_related("soubory")
                 .prefetch_related("soubory__soubory")
             ).order_by("ident_cely")
-            zaznam = Projekt.objects.get(ident_cely=ident_cely)
+            zaznam = get_object_or_404(Projekt, ident_cely=ident_cely)
             dokument_odpojit = (
                 check_permissions(p.actionChoices.projekt_dok_odpojit, request.user, zaznam.ident_cely),
             )

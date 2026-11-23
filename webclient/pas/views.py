@@ -892,6 +892,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        sort_params = self.filter_valid_sort_params(qs, sort_params)
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = (
@@ -1169,6 +1170,7 @@ class UzivatelSpolupraceListView(SearchListView):
                 "spolupracovnik__first_name",
                 "spolupracovnik__ident_cely",
             ]
+        sort_params = self.filter_valid_sort_params(qs, sort_params)
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(

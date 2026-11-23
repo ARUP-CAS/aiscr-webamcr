@@ -590,6 +590,7 @@ Třídy
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``, ``get()``.
 
       :return: Vrací výsledek volání ``HttpResponse()``.
+      :raises Http404: Vyvolá se, pokud záznam (akce nebo projekt) s daným ``ident_cely`` neexistuje.
 
 
 Funkce

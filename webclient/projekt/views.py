@@ -851,7 +851,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
         qs = super().get_queryset()
-        qs = qs.order_by(*self._get_sort_params())
+        qs = qs.order_by(*self.filter_valid_sort_params(qs, self._get_sort_params()))
         qs = (
             qs.filter(stav__gt=PROJEKT_STAV_VYTVORENY)
             .select_related(

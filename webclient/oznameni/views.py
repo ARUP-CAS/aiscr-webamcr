@@ -6,7 +6,11 @@ from core.decorators import odstavka_in_progress
 from core.forms import CheckStavNotChangedForm
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import (
+    FedoraTransaction,
+    FedoraTransactionStatus,
+    FedoraUpdatedByAnotherTransactionError,
+)
 from core.utils import SessionIdentifier, get_cadastre_from_point, hodnota_pro_log
 from core.views import check_stav_changed
 from django.conf import settings
@@ -15,6 +19,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
@@ -220,15 +225,29 @@ class OznameniDokumentaceView(OznameniView):
 
             :return: Vrací výsledek volání ``redirect()``.
             :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
+            :raises Http404: Vyvolá se, pokud projekt s ident_cely z formuláře neexistuje.
         """
         if "ident_cely" in request.POST:
             logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
-            projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
+            projekt = get_object_or_404(Projekt, ident_cely=request.POST["ident_cely"])
             fedora_transaction = FedoraTransaction()
             projekt.active_transaction = fedora_transaction
-            projekt.set_oznameny()
-            projekt.close_active_transaction_when_finished = True
-            projekt.save()
+            # try je vně atomic bloku, aby výjimka z Fedory odrolovala i změnu stavu a historie v DB (savepoint).
+            try:
+                with transaction.atomic():
+                    projekt.set_oznameny()
+                    projekt.close_active_transaction_when_finished = True
+                    projekt.save()
+            except FedoraUpdatedByAnotherTransactionError as err:
+                # Projekt ve Fedoře mezitím změnila jiná transakce, např. souběžný upload souboru.
+                logger.info(
+                    "oznameni.views.index.second_part.another_transaction",
+                    extra={"ident_cely": projekt.ident_cely, "error": err, "transaction": fedora_transaction.uid},
+                )
+                if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                    fedora_transaction.rollback_transaction()
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+                return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
             if projekt.ident_cely[2].upper() == OBLAST_CECHY:
                 Mailer.send_eo01(project=projekt)
             else:

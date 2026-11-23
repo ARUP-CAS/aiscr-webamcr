@@ -85,7 +85,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import AsWKT, PointOnSurface
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import FieldError, PermissionDenied, ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
 from django.db import transaction
@@ -94,6 +94,7 @@ from django.http import (
     FileResponse,
     Http404,
     HttpResponse,
+    HttpResponseBadRequest,
     HttpResponseRedirect,
     JsonResponse,
     StreamingHttpResponse,
@@ -1828,8 +1829,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
+            export_suffix_string = self.request.GET.get("export_suffix_string")
+            if not export_suffix_string:
+                logger.warning("core.views.SearchListView.create_export.missing_export_suffix_string")
+                return HttpResponseBadRequest("Missing parameter export_suffix_string")
             r = RedisConnector.get_connection_decode()
-            export_suffix_string = self.request.GET["export_suffix_string"]
             redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}_{export_suffix_string}"
             update_progress_bar(r, redis_variable_name, 0, _("core.templates.core.export_modal.collecting_data"))
             dataset = self.get_table_data()
@@ -1956,6 +1960,33 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         """
         sort_params = self.request.GET.getlist("sort")
         return sort_params
+
+    @staticmethod
+    def filter_valid_sort_params(qs, sort_params):
+        """
+        Odstraní z parametrů řazení pole, která querysetu nelze použít pro ``order_by()``.
+
+        Parametr ``sort`` pochází z URL a uživatel (nebo bot) ho může libovolně změnit. Každá hodnota se
+        ověří sestavením SQL dotazu s řazením (``as_sql()``, bez spuštění dotazu v databázi). Samotné
+        ``order_by()`` odmítne jen neexistující pole modelu, kdežto neplatné pole přes vazbu
+        (např. ``vazba__neexistuje``) selže až při kompilaci dotazu. Neplatná pole se zalogují jako
+        varování a vynechají, takže se seznam zobrazí s ostatním (nebo výchozím) řazením místo HTTP 500.
+
+        :param qs: Queryset, nad kterým se bude řadit.
+        :param sort_params: Seznam názvů polí pro řazení (po případném přejmenování na pole modelu).
+        :return: Seznam polí, která lze použít v ``order_by()``.
+        """
+        valid_params = []
+        for param in sort_params:
+            try:
+                qs.order_by(param).query.get_compiler(using=qs.db).as_sql()
+            except FieldError:
+                logger.warning(
+                    "core.views.SearchListView.filter_valid_sort_params.invalid_field", extra={"sort": param}
+                )
+                continue
+            valid_params.append(param)
+        return valid_params
 
     def get_context_data(self, **kwargs):
         """

@@ -64,6 +64,7 @@ Třídy
 
       :return: Vrací výsledek volání ``redirect()``.
       :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises Http404: Vyvolá se, pokud projekt s ident_cely z formuláře neexistuje.
 
    .. py:method:: get()
 

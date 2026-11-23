@@ -449,6 +449,20 @@ Třídy
 
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: filter_valid_sort_params()
+
+      Odstraní z parametrů řazení pole, která querysetu nelze použít pro ``order_by()``.
+
+      Parametr ``sort`` pochází z URL a uživatel (nebo bot) ho může libovolně změnit. Každá hodnota se
+      ověří sestavením SQL dotazu s řazením (``as_sql()``, bez spuštění dotazu v databázi). Samotné
+      ``order_by()`` odmítne jen neexistující pole modelu, kdežto neplatné pole přes vazbu
+      (např. ``vazba__neexistuje``) selže až při kompilaci dotazu. Neplatná pole se zalogují jako
+      varování a vynechají, takže se seznam zobrazí s ostatním (nebo výchozím) řazením místo HTTP 500.
+
+      :param qs: Queryset, nad kterým se bude řadit.
+      :param sort_params: Seznam názvů polí pro řazení (po případném přejmenování na pole modelu).
+      :return: Seznam polí, která lze použít v ``order_by()``.
+
    .. py:method:: get_context_data()
 
       Vrací context data.
