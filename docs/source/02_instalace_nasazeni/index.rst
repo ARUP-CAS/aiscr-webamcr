@@ -13,4 +13,5 @@ Tato sekce popisuje instalaci a nasazení aplikace WebAMČR.
    nasazeni_databaze
    fedora_repository
    ruian_sync_nasazeni
+   news_feed_settings
 

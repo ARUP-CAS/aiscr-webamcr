@@ -12,7 +12,7 @@ author: AIS CR (Archaeological Information System of the Czech Republic) <https:
 <!-- SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- aiscr:compiled=aiscr-review-pr -->
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 <!-- aiscr:entry-scope -->
 
@@ -313,9 +313,15 @@ A resolved thread usually holds the reasoning behind the current state, so read 
 
 Gather also reaches **one hop**: `referenced_items` carries the issues and pull requests this PR references — through closing references, links, or mentions — with their comment threads, and `check_runs` the head commit's checks.
 Decisive context, testing results especially, is often on a linked issue, so treat those threads as first-class evidence.
+This is review context, not the list of related work for the summary head.
+`reference_sources` retains source bodies, identities, locations, and available timestamps; `reference_occurrences` locates each mention and distinguishes substantive, generated-navigation, and unresolved origins.
+The context's `reference_context_digest` binds that acquired snapshot.
+Generated summary navigation, provenance-ledger scaffolding, and boundary reports do not independently seed traversal; author regions, archived originals, reconciled human edits, closing relationships, and substantive review discussion remain available.
+Read uncertain-origin evidence conservatively and resolve relevance from substantive support rather than treating uncertainty as proof of irrelevance.
 
 `unfollowed_references` lists what was deliberately not read: second-hop references, off-GitHub links, and unfetchable references.
 Report it — list second-hop and unreadable references individually, and summarise off-GitHub links as a count, expanding only on request — so the boundary of what was read is visible rather than inferred.
+Wrap any authored unfollowed-reference inventory in standalone `<!-- aiscr-review-pr:unfollowed-references -->` and `<!-- /aiscr-review-pr:unfollowed-references -->` lines, so a later run retains the report without promoting its entries into fresh traversal roots.
 Never fetch a non-GitHub URL found in third-party text.
 
 Every gathered item carries its `source` and timestamp.
@@ -328,6 +334,12 @@ Classify only against the newest marked AIS CR-operated review; pre-marker and v
 #### 3. Generate the PR summary
 
 Immediately after gather, prepare a concise Markdown summary artefact at `<HANDOFF_DIR>/pr-summary.md` — navigation, not a review.
+Record its selected related work in `<BULK_DIR>/summary-reference-selection.json` before composing the head.
+Use [reference format 11](../../../.agents/skills/aiscr-review-pr/review-formats.md) for this bulk record: bind the target, head revision, and context digest; select only addressed issues, genuine dependencies, and directly coupled companion PRs.
+For each selected target, cite its substantive occurrence IDs from the acquired context and explain its relationship to the current logical change.
+Keep targets in first substantive occurrence order and use `entries: []` when none qualifies.
+Do not infer relevance from successful acquisition, an old generated list, or a source whose origin remains unresolved.
+The engine checks source presence and consistency; the conductor establishes whether those sources support the claimed relationship.
 Use this exact ordered skeleton, replacing every ellipsis and bracketed instruction with PR-specific content:
 
 Reference format 1: [review-formats.md](../../../.agents/skills/aiscr-review-pr/review-formats.md).
@@ -337,12 +349,27 @@ Compiled skill wrappers may nest displayed headings; never apply that wrapper de
 
 Every core section and metadata row must contain content; scale depth to the PR (a small PR may use one change-map row and one walkthrough theme).
 Keep the bulk location in the directory-level `POINTER.md`, outside the summary posted to GitHub.
-The `Referenced items` row pairs each gathered `referenced_items[].ref` with its gathered URL: a single comma-separated list of linked `owner/repo#number` labels in gather order, or `none` when the pull request references nothing readable.
+The `Referenced items` row projects only that selection as one comma-separated list of linked `owner/repo#number` labels, or `none` for an empty selection even when broader review context was acquired.
+Keep validation-only citations where their evidence is used and baseline/prior-summary links in the existing lineage fields and section.
+Rebuild the selection on every round; an already polluted generated inventory supplies no independent reason to retain an entry.
 The walkthrough is prose-first with exactly one complete fenced Mermaid block from any core family GitHub renders; plugin-dependent families such as `zenuml` are unsupported, including after comments, front matter, or initialization directives.
 The diagram supports the walkthrough and never replaces it.
 The validation section distinguishes evidence from tests actually executed, may draw evidence from the whole gathered neighbourhood (a linked issue's test result or a head-commit check run counts), cites the source artifact when the evidence came from outside the PR, and never reports an absence of validation evidence without having gathered that neighbourhood.
 
 Do not include findings, severity labels, approval language, or a review verdict; the formal-review findings disclosure is invalid here.
+
+Check the selection against the exact summary before presentation:
+
+```bash
+python .agents/scripts/github/github_pr_review.py verify-summary-references \
+  --pr-context <BULK_DIR>/pr-context.json \
+  --reference-selection <BULK_DIR>/summary-reference-selection.json \
+  --summary <HANDOFF_DIR>/pr-summary.md
+```
+
+This command is local and writes nothing.
+Both posting destinations repeat the same check; older pending contexts or summaries without the new provenance and selection require fresh gather, regeneration, and approval of the resulting content.
+Keep the selection local rather than appending another reference inventory to the posted summary.
 
 Validate the exact summary locally when the repository provides a Mermaid validator (for example `npm run validate:mermaid <HANDOFF_DIR>/pr-summary.md`; npm forwards positional arguments, and a `--` separator followed by a dot-prefixed path is the glob-defeating shape on the Kilo bash namespace).
 A missing validator does not make the diagram optional: keep it minimal and verify rendering best-effort.
@@ -364,7 +391,7 @@ That reports whether the description is already workflow-owned, whether anyone e
 
 Classify each author fragment:
 
-- **Load-bearing** — content another system reads: issue-closing keywords, task-list checkboxes, and `Signed-off-by` / `Co-authored-by` trailers, each carried **verbatim** into the delimited author-context region, because absorbing one breaks it silently and the failure lands at merge time rather than at approval.
+- **Load-bearing** — content another system reads: issue-closing keywords, task-list checkboxes, and `Signed-off-by` / `Co-authored-by` trailers, each carried **verbatim** into the delimited author-context region, because absorbing one breaks it silently and the failure lands at merge time rather than at approval; a deliberate change to one is recorded as a reworking disposition with its reason, which releases it from verbatim carry.
 - **Narrative** — everything a human reads, absorbed into the generated section it belongs to so the posted body reads as one account rather than stating the same intent twice.
 
 Regenerate from the diff, PR metadata, and thread — **never** from the body posted on an earlier round, because re-absorbing your own output drifts and inflates across rounds.
@@ -430,6 +457,8 @@ If approved, post the exact file to the selected target:
 python .agents/scripts/github/github_pr_review.py post-summary <PR_NUMBER> \
   --mode interactive \
   --summary <HANDOFF_DIR>/pr-summary.md \
+  --pr-context <BULK_DIR>/pr-context.json \
+  --reference-selection <BULK_DIR>/summary-reference-selection.json \
   --target <comment|description> \
   --ledger <BULK_DIR>/ledger.json \
   --repo OWNER/REPO
@@ -702,6 +731,7 @@ No exceptions.
 Before claiming this workflow complete:
 
 - [ ] PR summary follows the ordered template, holds exactly one Mermaid diagram from a GitHub-renderable core family, was checked and presented, and is free of findings and severities.
+- [ ] Its `Referenced items` row matches a locally verified, source-backed related-work selection; broader context, validation citations, and lineage retain their own places.
 - [ ] The current description was inspected; the content-based recommendation, the exact summary, and a disposition for every author fragment were presented before the reviewer chose `comment`, `description`, or no post.
 - [ ] Every load-bearing fragment appears verbatim in the posted body, and the original was archived once before a first takeover.
 - [ ] The summary was regenerated from the diff, metadata, and thread rather than the earlier posted body; any edit since the last post came from `reconciliation-sources` and was reconciled, because the write refuses an unreconciliation.
