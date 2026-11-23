@@ -165,7 +165,7 @@ Do not name the sibling registry or any other hub-only path in the body itself â
 ### Vendor integration vs hub parity
 
 **Each product** loads its **own** config roots: Cursor -> `.cursor/` (rules and project agents), Claude Code -> `.claude/`, Codex -> `.codex/`, Gemini CLI -> `.gemini/` (per documentation for the **runtime you use** â€” local CLI/editor, cloud, or other supported surfaces; the hub does not assume a single host app).
-**GitHub Copilot** uses **`.github/copilot-instructions.md`** (and GitHub's own rules and prompts under `.github/instructions/` and `.github/prompts/`) when that file is **committed** in the repo.
+**GitHub Copilot** uses **`.github/copilot-instructions.md`** (and GitHub's own rules under `.github/instructions/`) when that file is **committed** in the repo.
 
 **Vendor entry-doc digests.**
 The root vendor digests (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`, `.github/copilot-instructions.md`) share one layered generated-block model: a manual Entry-scope preamble, a shared `vendor-digest-core` generated block authored once at the hub, a vendor-specific generated part, and sibling-owned regions preserved when the generated blocks are refreshed.

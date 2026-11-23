@@ -1,6 +1,6 @@
 # PR review formats
 
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 ## Reference format 1
 
@@ -15,7 +15,7 @@
 | --- | --- |
 | Title | … |
 | URL | … |
-| Referenced items | … |
+| Referenced items | [selected related-work references in first substantive occurrence order, or none] |
 | Author | … |
 | Base ← head | … |
 | Head SHA | … |
@@ -271,3 +271,37 @@ Exact body:
 ```
 
 An existing anchor is shown once and reused on retry; a file anchor under the same marker and path is never posted twice.
+
+## Reference format 11: summary related-work selection
+
+Write this record to the prescribed bulk `summary-reference-selection.json`.
+Copy its identity and digest from the current `pr-context.json`; select source IDs from `reference_occurrences`, whose `source_id` resolves to the source body, location, and available timestamp in `reference_sources`.
+For example, a substantive first-line dependency mention at offset 11 in comment 501 yields occurrence ID `comment:501:1:11`.
+
+```json
+{
+  "schema": "aiscr-review-pr-reference-selection-v1",
+  "owner_repo": "org/repo",
+  "pr_number": 42,
+  "head_sha": "abc1234",
+  "context_digest": "<reference_context_digest from pr-context.json>",
+  "entries": [
+    {
+      "ref": "<qualified reference from the occurrence>",
+      "url": "<matching absolute GitHub item URL>",
+      "relationship": "dependency",
+      "occurrence_ids": ["comment:501:1:11"],
+      "rationale": "The changed operation requires the prerequisite supplied by this issue."
+    }
+  ]
+}
+```
+
+Use `addressed-issue`, `dependency`, or `companion-pr` as the relationship.
+An empty selection keeps the same identity fields and uses `"entries": []`; its metadata row reads `| Referenced items | none |`, even if context was gathered for validation or historical comparison.
+Selecting [org/repo#7](https://github.com/org/repo/issues/7) projects the row `| Referenced items | [org/repo#7](https://github.com/org/repo/issues/7) |`.
+Multiple entries follow their first substantive occurrence order and render as one comma-separated list.
+
+An occurrence marked `generated-navigation` or `unresolved` cannot supply the required substantive support by itself.
+The conductor judges the claimed relationship; structural validation establishes only that the cited support exists and the public projection agrees.
+The record remains local and does not replace author-fragment reconciliation in `ledger.json` or finding dispositions in `findings-ledger.json`.

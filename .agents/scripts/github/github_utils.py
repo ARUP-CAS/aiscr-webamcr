@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 # SPDX-License-Identifier: MIT
-# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
+# delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
 
 """Shared GitHub write machinery for posting engines.
 
@@ -752,6 +752,11 @@ class SurfaceVocabulary(NamedTuple):
 # A lossy action must say why; an extraction must say where the content went, because
 # "no content leaves without a trace" is the property that makes moving it out safe.
 REASON_REQUIRED_ACTIONS = frozenset({"superseded", "dropped", "degraded-carry"})
+# A machine-read fragment changes only by decision: a task is ticked, reworded, or retired.
+# A reworking disposition that states why (or, for an extraction, names where the content
+# went) is that decision on record, so it releases the fragments of its segment from
+# verbatim carry. An undeclared change to a load-bearing fragment still fails verification.
+RELEASING_ACTIONS = frozenset({"absorbed", "superseded", "dropped", "extracted"})
 ANCHOR_PATTERNS = (
     re.compile(r"`[^`\n]+`"),
     re.compile(r"https?://[^\s)>\]\"']+"),
@@ -937,16 +942,47 @@ def verify_composition(
     """
     declared = vocabulary or SurfaceVocabulary()
     segments = segment_sources(sources)
-    findings, dispositioned = _check_dispositions(ledger.get("dispositions") or [], segments, declared.sections)
+    dispositions = ledger.get("dispositions") or []
+    findings, dispositioned = _check_dispositions(dispositions, segments, declared.sections)
     findings.extend(_check_completeness(segments, dispositioned))
     findings.extend(_check_anchor_retention(sources, composed, ledger))
     findings.extend(_check_absorption(segments, composed, load_bearing, declared.region))
+    released = _released_fragments(load_bearing or [], segments, dispositions, dispositioned)
     findings.extend(
         {"kind": "load-bearing-dropped", "detail": fragment}
         for fragment in load_bearing or []
-        if fragment not in composed
+        if fragment not in composed and fragment not in released
     )
     return findings
+
+
+def _released_fragments(
+    load_bearing: list[str],
+    segments: list[dict[str, str]],
+    dispositions: list[dict[str, Any]],
+    dispositioned: set[int],
+) -> set[str]:
+    """Return the load-bearing fragments a declared, justified reworking releases from verbatim carry.
+
+    A fragment is released only when every segment holding it carries a valid reworking disposition with its reason
+    (an extraction names its issue instead). A fragment that also sits in an undeclared or merely carried segment stays
+    bound, so one justified entry cannot release a fragment another source still requires.
+    """
+    releasing: set[int] = set()
+    for entry in dispositions:
+        index = entry.get("segment")
+        action = entry.get("action")
+        if index not in dispositioned or action not in RELEASING_ACTIONS:
+            continue
+        if action == "extracted" or str(entry.get("reason") or "").strip():
+            releasing.add(index)
+    released: set[str] = set()
+    for fragment in load_bearing:
+        needle = _rstripped_lines(fragment).strip()
+        holders = [index for index, segment in enumerate(segments) if needle in _rstripped_lines(segment["text"])]
+        if holders and all(index in releasing for index in holders):
+            released.add(fragment)
+    return released
 
 
 def _rstripped_lines(text: str) -> str:
@@ -1096,8 +1132,35 @@ def _check_anchor_retention(
     ]
 
 
-def render_disposition_ledger(ledger: dict[str, Any], marker: str, *, repository: str = "") -> str:
-    """Render the disposition ledger both provenance records carry."""
+_ANCHOR_REFERENCE = re.compile(r"(?:(?P<repo>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#(?P<number>[1-9][0-9]*)")
+
+
+def cite_anchor(anchor: str, repository: str = "") -> str:
+    """Render a recorded GitHub anchor as a qualified link; leave any other anchor as recorded.
+
+    The ledger restates anchors the engine extracted from source text, so it must not emit them as the bare citations
+    the reference check refuses. A short ``#N`` resolves against the repository the source belongs to; without one it
+    stays as recorded rather than guessing.
+    """
+    text = str(anchor)
+    if github_references.reference_target(text):
+        return github_references.reference_link(text)
+    match = _ANCHOR_REFERENCE.fullmatch(text)
+    repo = (match["repo"] or repository) if match else ""
+    if match and repo:
+        return f"[{repo}#{match['number']}](https://github.com/{repo}/issues/{match['number']})"
+    return text
+
+
+def render_disposition_ledger(
+    ledger: dict[str, Any], marker: str, *, repository: str = "", anchor_repository: str | None = None
+) -> str:
+    """Render the disposition ledger both provenance records carry.
+
+    ``anchor_repository`` qualifies short anchor references and defaults to ``repository``; it is separate because the
+    source-repository line is shown only when the original itself cites something.
+    """
+    owner = repository if anchor_repository is None else anchor_repository
     lines = [marker, "", "## Reconciliation ledger (current round)", ""]
     if repository:
         lines.extend([f"Source repository: `{repository}`.", ""])
@@ -1106,17 +1169,17 @@ def render_disposition_ledger(ledger: dict[str, Any], marker: str, *, repository
         lines.append("No dispositions recorded for this round.")
     for entry in dispositions:
         target = f" → {entry['target']}" if entry.get("target") else ""
-        issue = f" → {entry['issue']}" if entry.get("issue") else ""
+        issue = f" → {cite_anchor(entry['issue'], owner)}" if entry.get("issue") else ""
         reason = f" — {entry['reason']}" if entry.get("reason") else ""
         lines.append(f"- segment {entry.get('segment')}: **{entry.get('action')}**{target}{issue}{reason}")
     dropped = ledger.get("dropped_anchors") or []
     if dropped:
         lines.extend(["", "Anchors dropped by declaration:", ""])
-        lines.extend(f"- {item.get('anchor')} — {item.get('reason')}" for item in dropped)
+        lines.extend(f"- {cite_anchor(item.get('anchor'), owner)} — {item.get('reason')}" for item in dropped)
     preserved = ledger.get("preserved_anchors") or []
     if preserved:
         lines.extend(["", "Anchors preserved in this record:", ""])
-        lines.extend(f"- {item.get('anchor')} — {item.get('reason')}" for item in preserved)
+        lines.extend(f"- {cite_anchor(item.get('anchor'), owner)} — {item.get('reason')}" for item in preserved)
     lines.append("")
     return "\n".join(lines)
 
