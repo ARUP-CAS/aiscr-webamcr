@@ -353,15 +353,22 @@ _CONTENT_REQUEST_TYPES = frozenset(
 )
 
 
-def _get_fedora_timeout(content: bool = False) -> tuple[float, float]:
+def _get_fedora_timeout(content: bool = False, read_only: bool = False) -> tuple[float, float]:
     """
     Vrátí timeout ``(connect, read)`` pro požadavek do Fedory.
 
     :param content: ``True`` pro přenos obsahu binárního souboru nebo commit transakce,
-        kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``; jinak ``FEDORA_READ_TIMEOUT``.
+        kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``.
+    :param read_only: ``True`` pro GET mimo transakci (čtení pro zobrazení nebo stažení),
+        kde se použije kratší ``FEDORA_GET_READ_TIMEOUT``. Jinak platí ``FEDORA_READ_TIMEOUT``.
     :return: Dvojice ``(connect, read)`` v sekundách pro parametr ``timeout`` knihovny ``requests``.
     """
-    read_timeout = settings.FEDORA_CONTENT_READ_TIMEOUT if content else settings.FEDORA_READ_TIMEOUT
+    if content:
+        read_timeout = settings.FEDORA_CONTENT_READ_TIMEOUT
+    elif read_only:
+        read_timeout = settings.FEDORA_GET_READ_TIMEOUT
+    else:
+        read_timeout = settings.FEDORA_READ_TIMEOUT
     return settings.FEDORA_CONNECT_TIMEOUT, read_timeout
 
 
@@ -929,6 +936,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_DISTRIBUTION_METADATA,
             FedoraRequestType.GET_DISTRIBUTION_HISTORIE,
         ):
+            if not self.transaction_uid:
+                # Mimo transakci jde o čtení pro zobrazení nebo stažení. Kratší timeout brání tomu, aby
+                # zaseknutá Fedora držela workery po dobu FEDORA_READ_TIMEOUT za každý náhled na stránce
+                # (#4454). V transakci GET čeká na zámky stejně jako zápis, proto tam platí delší timeout.
+                timeout = _get_fedora_timeout(read_only=True)
             try:
                 response = session.get(url, headers=headers, auth=auth, verify=False, timeout=timeout)
             except requests.exceptions.RequestException as exc:
