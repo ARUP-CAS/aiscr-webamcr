@@ -2480,8 +2480,13 @@ class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
         return path
 
 
-class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
-    """Třída pohledu pro import překladových souborů."""
+class TranslationImportView(RosettaFileLevelMixinWithBackup, FormView):
+    """
+    Třída pohledu pro import překladových souborů.
+
+    Mixin Rosetty musí být první, aby se uplatnily jeho dekorátory na ``dispatch``
+    (``user_passes_test`` a ``never_cache``).
+    """
 
     template_name = "rosetta/import_form.html"
     form_class = TranslationImportForm
@@ -2494,6 +2499,8 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
 
             :return: Vrací výsledek volání ``redirect()``.
         """
+        # Vyhodnotí oprávnění k jazyku (404) dřív, než se nahraný soubor zkopíruje a naparsuje.
+        current_po_path = Path(self.po_file_path)
         new_pofile = form.cleaned_data["file"]
         tmp_path = None
         try:
@@ -2520,7 +2527,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             logger.error("core.views.TranslationImportView.form_valid", extra={"error": str(e)})
             messages.add_message(self.request, messages.ERROR, str(e))
             return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
-        p = Path(self.po_file_path)
+        p = current_po_path
         date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M%S")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
         self.handle_uploaded_file(new_pofile)
