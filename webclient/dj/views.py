@@ -379,7 +379,8 @@ def smazat(request, ident_cely):
             dj.active_transaction = fedora_transaction
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
-            if resp:
+            # ``delete()`` vrací dvojici (počet smazaných řádků, detail); neprázdná dvojice je vždy pravdivá.
+            if resp[0]:
                 transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
                 logger.debug("dj.views.detail.smazat.deleted", extra={"value": resp})
                 return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})

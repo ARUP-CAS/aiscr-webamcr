@@ -163,7 +163,8 @@ def smazat_vb(request, ident_cely):
             redirect_url = safe_redirect
         else:
             redirect_url = safe_redirect
-        if resp:
+        # ``delete()`` vrací dvojici (počet smazaných řádků, detail); neprázdná dvojice je vždy pravdivá.
+        if resp[0]:
             logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"value": str(resp)})
             transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
             response = JsonResponse({"redirect": redirect_url})

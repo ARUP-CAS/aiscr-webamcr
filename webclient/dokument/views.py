@@ -2362,7 +2362,8 @@ def smazat(request, ident_cely):
                     item.active_transaction = fedora_transaction
                     item.delete()
                 resp1 = dokument.delete()
-                if resp1:
+                # ``delete()`` vrací dvojici (počet smazaných řádků, detail); neprázdná dvojice je vždy pravdivá.
+                if resp1[0]:
                     logger.debug("dokument.views.smazat.deleted", extra={"value": resp1})
                     transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
                     if "3D" in ident_cely:
