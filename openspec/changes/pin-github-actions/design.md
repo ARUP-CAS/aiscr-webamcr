@@ -17,13 +17,12 @@ Historical baseline evidence gathered before implementation on 2026-11-22:
 | Inferred risk | Mutable references can introduce upstream changes into privileged jobs. Neither this plan nor the issue establishes that a compromise has occurred. |
 
 The issue's 2026-11-21 inventory and the baseline above are dated observations.
-The first local implementation pins 32 retained external calls across 16
-distinct action paths, replaces the SSH-agent action, and adds tests and a
-manual dependency page. Exploration found that it lacks inventory generation,
-still carries PR-specific prose and a temporary evidence snapshot, and imposes
-unnecessary periodic reviews. The revised tasks reopen those areas and the
-latest-release/security assessment; earlier completion is not acceptance of
-this revised design.
+The first local implementation pinned 32 retained external calls across 16
+distinct action paths, replaced the SSH-agent action, and added tests and a
+manual dependency page. Exploration found missing inventory generation,
+PR-specific prose, a temporary evidence snapshot, and unnecessary periodic
+reviews. Those areas and the release/security assessment were subsequently
+revised; the review remediation below was completed in `62146241c`.
 
 No DEV workflow, image publication, Dependabot update, or policy rejection
 has been exercised for this change. Those hosted observations remain
@@ -31,7 +30,7 @@ follow-up to the driving issue.
 
 ## Review remediation (2026-11-23)
 
-The agreed capture extends this same change to all nine items from the
+The first review remediation covered all nine items from the
 review of [ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544)
 at `0735cb560a223d2fac0822358359a4521e4e4322`, compared with
 `d327f2caff9cb0e6ffadb8325defcd948bbaa13f`. The identifiers below preserve the
@@ -61,9 +60,30 @@ they retain advisory `fix-in-pr` disposition and do not contribute to its verdic
 F2 establishes a local validator gap. The inspected GitHub runner
 `TemplateReader` explicitly reports duplicate keys, supporting fail-closed
 behavior; hosted parser behavior was not exercised. Do not describe this as
-a verified bypass of GitHub enforcement. The earlier successful tests and
-verification do not cover these newly reproduced edge cases or accept the
-expanded scope. Affected tasks are reopened below.
+a verified bypass of GitHub enforcement. Tests preceding that remediation
+did not cover the reproduced edge cases. The capture reopened affected tasks;
+the approved implementation completed them in `62146241c`.
+
+## Second review remediation (2026-11-23)
+
+The second review of [ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544)
+at `62146241c98d877985751550d10a6f34dfed5ebe` confirmed the first round's nine
+items addressed and identified the following bounded additions. The user
+explicitly requested their capture and application together. The task
+checkboxes record current implementation progress; dated earlier completion
+records remain historical evidence.
+
+| Item | Evidence and repair | Tasks |
+| --- | --- | --- |
+| R2-F1 | The task preamble, proposal boundary, and design repeated capture-only wording after implementation. Use past tense for completed phases and the checklist for current status. | 5.1 |
+| R2-O1 | `.github/workflows/run-tests.yml:199` sources the downloaded `test_summary.env` while the agent and VPN remain active. Replace execution with strict data parsing and regressions. | 5.2 |
+
+Source comparison confirmed the result-retrieval body unchanged from the
+base `d327f2caff9cb0e6ffadb8325defcd948bbaa13f`. The producer at
+`webclient/run_tests.py:153` writes two integer assignments. An in-memory Bash
+control demonstrated that sourcing such data also executes appended commands;
+no live workflow or real credentials were used. R2-O1 retains advisory
+`fix-in-pr` status because it predates this change.
 
 ## Goals / Non-Goals
 
@@ -189,6 +209,31 @@ newlines, and literal references, plus the valid all/failed/numbered test
 paths. Invalid values must prevent remote work and never execute a canary.
 Adapt the existing SSH fixtures to supply valid inputs instead of replacing
 every expression with the same generic string. No live dispatch is needed.
+
+### Parse the downloaded result summary without evaluating it
+
+Keep the current two SCP downloads and the producer's two-key text format.
+Use the result step's existing Bash tooling to read `test_summary.env` as
+data, never with `source` or `eval`. Require exactly one `PASSED` and one
+`FAILED` assignment containing ASCII decimal digits; reject duplicate or
+unknown keys, missing values, executable text, empty records, and NUL bytes.
+Support LF/CRLF records and a final record without a terminating newline.
+Normalize leading zeros by string operations to canonical decimal outputs;
+avoid arithmetic evaluation and overflow while parsing downloaded values.
+
+Finish validating the entire file before appending either output or the
+human-readable summary. Preserve their names and Markdown layout, the
+spreadsheet artifact, and the numeric failure check. The existing `always()`
+cleanup handles a parse failure after the SCP clients used the agent.
+
+Extend the existing disposable-key result-step fixtures to deliver arbitrary
+summary bytes. Exercise the real shell with valid/zero/failed counts, record
+order and line-ending controls, and malformed, duplicate, missing, unknown,
+binary, and command-substitution payloads. Invalid input must execute no
+canary, leave outputs and summary untouched, fail the step, and still permit
+agent cleanup. Document this result-data boundary on the dependency page.
+No producer change, JSON migration, new workflow, or added runtime dependency
+is needed for this bounded repair.
 
 ### Retain the SHA-pinned scanner and signer integrations
 
@@ -366,12 +411,13 @@ code behavior through isolated workflow tests, configuration checks, source
 comparison, and documentation builds. These are the tracked implementation
 and verification tasks in this change.
 
-Include the bounded parser, inventory-test, documentation, deployment-key,
-agent-cleanup, and input-transport remediations above. Preserve the review's
-pre-existing-observation classification. The 2026-11-23 capture authorizes
-planning-artifact and usage-record edits only; implementation continues from
-the reopened tasks after a separate explicit apply instruction. Validation
-of this capture does not establish that those repairs have been implemented.
+The bounded parser, inventory-test, documentation, deployment-key,
+agent-cleanup, and input-transport remediations were implemented in
+`62146241c`. Preserve the review's pre-existing-observation classification
+when incorporating the second-round result-summary repair. The user approved
+capture and application of that additional scope on 2026-11-23. Current task
+progress is recorded in the checklist; local implementation and validation
+do not establish the hosted outcomes below.
 
 ### Post-merge follow-up outside this change
 

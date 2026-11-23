@@ -144,6 +144,47 @@ Třídy
       Chyba VPN před inicializací nesmí poškodit cizí agent.
 
 
+.. py:class:: SummaryResultTests
+
+   Ověří skutečné zpracování vzdáleného souhrnu bez spuštění jeho obsahu.
+
+   **Metody:**
+
+   .. py:method:: setUp()
+
+      Připraví agenta a SCP, které kopíruje přesné bajty testovacího souhrnu.
+
+   .. py:method:: execute_result()
+
+      Stáhne souhrn a spustí nezměněné tělo výsledkového kroku.
+
+      :param content: Bajty simulovaného vzdáleného souboru.
+      :return: Výsledek skutečného shellu s izolovanými SCP operacemi.
+
+   .. py:method:: assert_summary_rejected()
+
+      Ověří neúspěch bez spuštění canary a bez částečně zapsaného výsledku.
+
+      :param content: Neplatné bajty souhrnu předané skutečnému kroku.
+      :return: Neúspěšný výsledek shellu pro následnou kontrolu úklidu.
+
+   .. py:method:: test_valid_counts_preserve_reporting_and_normalize_decimal_outputs()
+
+      Pořadí, konce řádků i úvodní nuly zachovají číselné výsledky a tabulku.
+
+   .. py:method:: test_malformed_or_binary_summaries_leave_existing_results_untouched()
+
+      Chybějící, duplicitní, neznámé a nečíselné záznamy selžou celé.
+
+   .. py:method:: test_commands_and_substitutions_cannot_run_or_publish_partial_counts()
+
+      Příkazy připojené k platným počtům ani substituce nespustí canary.
+
+   .. py:method:: test_summary_rejection_still_allows_unconditional_agent_cleanup()
+
+      Neúspěšné čtení výsledků ponechá always úklidu možnost ukončit agenta.
+
+
 .. py:class:: DeploymentAgentTests
 
    Ověří omezení klíče a celý životní cyklus agenta v jediném deployment kroku.

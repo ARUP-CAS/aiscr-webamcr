@@ -196,7 +196,32 @@ jobs:
           scp amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
           scp amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/test_summary.env ./test_summary.env
           
-          source ./test_summary.env
+          invalid_summary() {
+            echo "::error::Invalid test summary; expected PASSED and FAILED decimal counts"
+            exit 1
+          }
+          # Bash read normally discards NUL bytes; reject them before reading records.
+          if IFS= read -r -d '' summary_bytes < ./test_summary.env; then
+            invalid_summary
+          fi
+          PASSED=
+          FAILED=
+          while IFS= read -r summary_line || [[ -n "$summary_line" ]]; do
+            summary_line="${summary_line%$'\r'}"
+            if [[ ! "$summary_line" =~ ^(PASSED|FAILED)=([0-9]+)$ ]]; then
+              invalid_summary
+            fi
+            summary_key="${BASH_REMATCH[1]}"
+            summary_value="${BASH_REMATCH[2]}"
+            # Normalize decimal strings without evaluating them as shell arithmetic.
+            summary_value="${summary_value#"${summary_value%%[!0]*}"}"
+            summary_value="${summary_value:-0}"
+            case "$summary_key" in
+              PASSED) [[ -z "$PASSED" ]] || invalid_summary; PASSED="$summary_value" ;;
+              FAILED) [[ -z "$FAILED" ]] || invalid_summary; FAILED="$summary_value" ;;
+            esac
+          done < ./test_summary.env
+          [[ -n "$PASSED" && -n "$FAILED" ]] || invalid_summary
           echo "PASSED=$PASSED" >> $GITHUB_OUTPUT
           echo "FAILED=$FAILED" >> $GITHUB_OUTPUT
 

@@ -7,13 +7,14 @@ Approach and rollout: [design.md](design.md).
 Tracked tasks cover implementation and verification deliverable in this PR.
 Hosted rollout and observations that require merging or later operational
 approval are listed under Workflow follow-up, outside this change's completion.
-The 2026-11-23 capture includes F1/F2/F4/F5/F6 and advisory pre-existing
+The first 2026-11-23 remediation covered F1/F2/F4/F5/F6 and advisory pre-existing
 O1/O2/O3/N1 from the review of [ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544).
 The item-to-task mapping and evidence are in [design.md](design.md#review-remediation-2026-11-23).
-Seven affected tasks are reopened and three bounded tasks are added; ten
-unaffected tasks remain complete. The prior 17/17 result describes the earlier
-scope, not completion of this revision. Capture authorizes planning only;
-implementation requires a separate explicit apply instruction.
+That remediation was implemented in `62146241c`, completing the first twenty
+tasks. The second review added R2-F1 (status consistency) and advisory
+pre-existing R2-O1 (result-summary execution), captured in group 5 below with
+explicit approval to apply them. The checkboxes record current progress;
+prior completion counts describe their dated scopes.
 
 ## 1. Immutable action references and update compatibility
 
@@ -50,6 +51,12 @@ identifiers are retained for review traceability.
 - [x] 4.1 Run the focused workflow suite, existing workflow/report regressions, and dependency-generation tests after all nine remediations; verify pins, parser failures, exact inventory coverage, generator/pre-commit integration, idempotency, both agent lifecycles, and input transport through tests and full diff inspection. Preserve triggers, permissions, valid workflow behavior, required scanning/signing outputs, and the local reusable call; allow only the explicitly planned key-scope, cleanup, input-validation, and transport changes in the affected SSH workflows.
 - [x] 4.2 Validate the revised implementation's OpenSpec artifacts with `npm run openspec:validate` and `node node_modules/@fission-ai/openspec/bin/openspec.js validate pin-github-actions --strict`; record per-change results separately from unrelated repository failures, then run the contribution-required compilation/pre-commit checks and inspect generated diffs. A planning-only validation does not complete this renewed implementation check.
 - [x] 4.3 Update the rolling entry for the current remediation change set with runtime/backend metadata, all nine item dispositions, actual task/validation results, and separately identified hosted follow-up; preserve the earlier committed usage record as historical evidence and verify only approved repository-owned files changed. Keep prior 14/14 and 17/17 milestones distinct from this revision's completion. If generated assistant assets need changes, stop for separate hub scope and require a dry-run sync check before any later approved sync apply.
+
+## 5. Second review remediation
+
+- [x] 5.1 Correct R2-F1 in the task preamble, proposal, and design: describe completed capture/apply phases in past tense and use the checklist for current progress. Verify the first round remains recorded as completed in `62146241c`, no stale prose claims it still awaits implementation, and second-round tasks and hosted follow-up are distinguished.
+- [x] 5.2 Repair advisory R2-O1 in the existing result step: replace `source ./test_summary.env` with non-evaluating validation of exactly one numeric `PASSED` and `FAILED` record, normalizing decimal outputs only after the entire file passes. Add real-shell result-step regressions for valid/zero/failed counts, either order, LF/CRLF and missing final newline, leading zeros, missing/duplicate/unknown keys, malformed/binary content, and command canaries; verify invalid input leaves outputs/report untouched and agent cleanup still runs. Update the dependency page's result-data guidance and verify the producer format, SCP downloads, artifact, and failure check remain compatible.
+- [x] 5.3 Run the existing workflow/report and dependency-generation suites, required compilation/pre-commit checks, strict and aggregate OpenSpec validation, the dependency-page build, and focused diff inspection; verify both round-two items, unchanged pins/triggers/permissions and producer, and clean generator idempotency. Close the same new rolling usage entry with runtime/backend metadata, actual task and validation results, and explicit hosted limitations; preserve prior committed records and review scratch. Any hub asset change or sync apply still needs separate scope and a dry-run before apply.
 
 ## Workflow follow-up
 

@@ -43,6 +43,10 @@ the agreed scope includes all nine items in this same change.
   use and keeping the remote test script static.
 - Correct the SSH lifecycle description and align CONTRIBUTING's local test
   command with CI's existing dependency-generation discovery.
+- Read the downloaded test summary strictly as data: require one numeric
+  `PASSED` and one numeric `FAILED` value, reject other content before writing
+  outputs, and preserve cleanup after validation failure. Retain the existing
+  producer format, downloads, and result reporting.
 - Keep relevant trust rationale and pin-resolution, rollout, and recovery
   instructions on the linked dependency page. Remove PR-specific completion
   wording, special review-date bookkeeping, and the temporary
@@ -60,7 +64,7 @@ behavior and data contracts are unaffected. Container image pinning, replacing
 ### New Capabilities
 
 - `github-actions-trust`: Immutable workflow action dependencies, native SSH
-  access and key scope in both SSH workflows, safe workflow-input handling,
+  access and key scope in both SSH workflows, safe workflow-input/result handling,
   generated dependency inventory, retained-action rationale, normal dependency
   maintenance, update compatibility, and documented policy readiness.
 
@@ -101,11 +105,16 @@ interpolation) predate the reviewed commit and retain their advisory
 to this PR or changing the review verdict. Evidence and task mapping live
 in [design.md](design.md#review-remediation-2026-11-23).
 
+The first review's nine repairs were implemented in commit `62146241c`.
+The second review identified R2-F1 (stale capture-phase status prose) and
+advisory pre-existing R2-O1 (execution of a downloaded result summary).
+Their capture and application were explicitly requested together. Keep
+historical milestones separate from current task progress in [tasks.md](tasks.md).
+
 Preserve valid workflow inputs, defaults, triggers, permissions, deployment
 selection, and test modes. Reject unsafe values before they can become shell
 code. These bounded repairs do not authorize a deployment, workflow dispatch,
-review post, or broader infrastructure refactor. Capture updates planning
-only; implementation requires a separate apply instruction.
+review post, or broader infrastructure refactor.
 
 ## Follow-up outside this change
 

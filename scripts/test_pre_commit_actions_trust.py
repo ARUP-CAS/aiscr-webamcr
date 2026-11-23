@@ -349,6 +349,136 @@ class SSHAgentTests(SSHTestCase):
         self.assertEqual(cleanup.returncode, 0, cleanup.stderr)
 
 
+class SummaryResultTests(SSHTestCase):
+    """Ověří skutečné zpracování vzdáleného souhrnu bez spuštění jeho obsahu."""
+
+    def setUp(self):
+        """Připraví agenta a SCP, které kopíruje přesné bajty testovacího souhrnu."""
+        super().setUp()
+        self.write_tool(
+            "scp",
+            'ssh-add -l >> "$FINGERPRINTS" || exit $?\n'
+            'printf "scp\\n" >> "$CLIENT_TRACE"\n'
+            'case "$2" in\n'
+            '  ./results.xlsx) printf "test-result" > "$2";;\n'
+            '  ./test_summary.env) cat "$SUMMARY_FIXTURE" > "$2";;\n'
+            "  *) exit 9;;\nesac\n",
+        )
+        setup = self.run_shell(self.setup["run"], SSH_PRIVATE_KEY=self.private_key)
+        self.assertEqual(setup.returncode, 0, setup.stderr)
+        self.agent_state = self.agent_environment()
+        self.output = self.root / "outputs"
+        self.summary = self.root / "summary"
+        self.canary = self.root / "summary-canary"
+
+    def execute_result(self, content):
+        """Stáhne souhrn a spustí nezměněné tělo výsledkového kroku.
+
+        :param content: Bajty simulovaného vzdáleného souboru.
+        :return: Výsledek skutečného shellu s izolovanými SCP operacemi.
+        """
+        fixture = self.root / "remote-summary"
+        fixture.write_bytes(content)
+        self.canary.unlink(missing_ok=True)
+        self.output.write_text("existing-output\n", encoding="utf-8")
+        self.summary.write_text("existing-summary\n", encoding="utf-8")
+        return self.run_shell(
+            self.workflow_script(self.results),
+            SUMMARY_FIXTURE=fixture.as_posix(),
+            CANARY_PATH=self.canary.as_posix(),
+            **self.agent_state,
+        )
+
+    def assert_summary_rejected(self, content):
+        """Ověří neúspěch bez spuštění canary a bez částečně zapsaného výsledku.
+
+        :param content: Neplatné bajty souhrnu předané skutečnému kroku.
+        :return: Neúspěšný výsledek shellu pro následnou kontrolu úklidu.
+        """
+        result = self.execute_result(content)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("SUMMARY_CANARY", result.stdout + result.stderr)
+        self.assertFalse(self.canary.exists())
+        self.assertEqual(self.output.read_text(encoding="utf-8"), "existing-output\n")
+        self.assertEqual(self.summary.read_text(encoding="utf-8"), "existing-summary\n")
+        return result
+
+    def test_valid_counts_preserve_reporting_and_normalize_decimal_outputs(self):
+        """Pořadí, konce řádků i úvodní nuly zachovají číselné výsledky a tabulku."""
+        for content, passed, failed in (
+            (b"PASSED=1\nFAILED=0\n", "1", "0"),
+            (b"FAILED=2\nPASSED=0\n", "0", "2"),
+            (b"PASSED=0\nFAILED=0\n", "0", "0"),
+            (b"PASSED=12\r\nFAILED=3\r\n", "12", "3"),
+            (b"FAILED=0\r\nPASSED=4", "4", "0"),
+            (b"PASSED=7\nFAILED=1", "7", "1"),
+            (b"PASSED=0008\nFAILED=0000\n", "8", "0"),
+            (b"FAILED=0009\nPASSED=000\n", "0", "9"),
+            (b"PASSED=" + b"9" * 40 + b"\nFAILED=1\n", "9" * 40, "1"),
+        ):
+            with self.subTest(content=content):
+                result = self.execute_result(content)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(
+                    self.output.read_text(encoding="utf-8"), f"existing-output\nPASSED={passed}\nFAILED={failed}\n"
+                )
+                report = self.summary.read_text(encoding="utf-8")
+                self.assertTrue(report.startswith("existing-summary\n## 🧪 Výsledky testů\n"))
+                self.assertIn(f"| ✅ Prošlo | {passed} |", report)
+                self.assertIn(f"| ❌ Selhalo | {failed} |", report)
+                self.assertEqual((self.root / "results.xlsx").read_bytes(), b"test-result")
+        clients = (self.root / "clients").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(clients, ["scp"] * 18)
+
+    def test_malformed_or_binary_summaries_leave_existing_results_untouched(self):
+        """Chybějící, duplicitní, neznámé a nečíselné záznamy selžou celé."""
+        for content in (
+            b"",
+            b"PASSED=1\n",
+            b"FAILED=0\n",
+            b"PASSED=1\nPASSED=2\nFAILED=0\n",
+            b"PASSED=1\nFAILED=0\nFAILED=1\n",
+            b"PASSED=1\nFAILED=0\nOTHER=2\n",
+            b"PASSED=1\nFAILED=0\n\n",
+            b"\nPASSED=1\nFAILED=0\n",
+            b"PASSED=\nFAILED=0\n",
+            b"PASSED=1\nFAILED=-1\n",
+            b"PASSED=1.5\nFAILED=0\n",
+            b"PASSED=0x10\nFAILED=0\n",
+            b"PASSED=1e2\nFAILED=0\n",
+            b" PASSED=1\nFAILED=0\n",
+            b"PASSED=1 \nFAILED=0\n",
+            b'PASSED="1"\nFAILED=0\n',
+            b"PASSED=1 # count\nFAILED=0\n",
+            b"export PASSED=1\nFAILED=0\n",
+            b"passed=1\nFAILED=0\n",
+            b"PASSED=1\x00\nFAILED=0\n",
+            b"PASSED=1\nFAILED=0\n\x00",
+            b"PASSED=1\nFAILED=\xff\n",
+        ):
+            with self.subTest(content=content):
+                self.assert_summary_rejected(content)
+
+    def test_commands_and_substitutions_cannot_run_or_publish_partial_counts(self):
+        """Příkazy připojené k platným počtům ani substituce nespustí canary."""
+        for content in (
+            b'PASSED=1\nFAILED=0\nprintf SUMMARY_CANARY >&2\ntouch "$CANARY_PATH"\n',
+            b'PASSED=$(printf SUMMARY_CANARY >&2; touch "$CANARY_PATH"; printf 1)\nFAILED=0\n',
+            b'PASSED=1\nFAILED=`printf SUMMARY_CANARY >&2; touch "$CANARY_PATH"; printf 0`\n',
+            b'PASSED=1; printf SUMMARY_CANARY >&2; touch "$CANARY_PATH"\nFAILED=0\n',
+        ):
+            with self.subTest(content=content):
+                self.assert_summary_rejected(content)
+
+    def test_summary_rejection_still_allows_unconditional_agent_cleanup(self):
+        """Neúspěšné čtení výsledků ponechá always úklidu možnost ukončit agenta."""
+        failed = self.assert_summary_rejected(b"PASSED=1\nFAILED=0\nUNKNOWN=1\n")
+        cleanup = self.run_shell(self.cleanup["run"], **self.agent_state)
+        self.assertEqual(cleanup.returncode, 0, cleanup.stderr)
+        self.assert_agent_stopped()
+        self.assertNotEqual(failed.returncode, 0)
+
+
 class DeploymentAgentTests(SSHTestCase):
     """Ověří omezení klíče a celý životní cyklus agenta v jediném deployment kroku."""
 

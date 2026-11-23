@@ -66,7 +66,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.2 <https://github.com/actions/upload-artifact/releases/tag/v7.0.2>`__
      - `cf430e030ddbb5b0abf93d22962f4752f3646cd9 <https://github.com/actions/upload-artifact/tree/cf430e030ddbb5b0abf93d22962f4752f3646cd9>`__
-     - ``.github/workflows/run-tests.yml:212``
+     - ``.github/workflows/run-tests.yml:237``
    * - ``aquasecurity/trivy-action``
      - `aquasecurity <https://github.com/aquasecurity>`__
      - `v0.36.0 <https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0>`__
@@ -185,6 +185,14 @@ i kroku pro získání výsledků se dvěma voláními SCP. Neúspěšná inicia
 uklidí agenta ihned; krok s ``always()`` zajišťuje úklid po použití agenta
 i po chybě SSH/SCP. Následuje odpojení VPN a kontrola výsledku testů.
 Ověření hostitele přes existující ``known_hosts`` a VPN se nemění.
+
+Stažený ``test_summary.env`` se čte pouze jako data: musí obsahovat právě
+jeden záznam ``PASSED`` a jeden ``FAILED`` s nezáporným celočíselným počtem.
+Chybějící, duplicitní, neznámé či neplatné záznamy a binární obsah způsobí
+neúspěch před zápisem výstupů a souhrnné tabulky. Obsah souboru se nespouští
+jako shell. Konce řádků LF i CRLF a chybějící poslední nový řádek jsou
+podporované; úvodní nuly se odstraní před předáním čísel do dalších kroků.
+Úklid agenta proběhne i při odmítnutí souhrnu.
 
 Workflow nasazení předává privátní klíč pouze svému kroku SSH. Agent se v něm
 načte, použije a ukončí pomocí EXIT trapu při úspěchu i chybě načtení klíče

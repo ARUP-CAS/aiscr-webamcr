@@ -174,6 +174,41 @@ deployment-source selection, and test modes SHALL retain their behavior.
 - **WHEN** the manual test workflow validates its inputs
 - **THEN** it fails before VPN connection or SSH execution
 
+### Requirement: Remote test summaries are read as data
+
+The DEV result step SHALL read downloaded summaries without executing their
+contents. It SHALL require exactly one `PASSED` and one `FAILED` assignment
+with nonnegative decimal counts, emit canonical numeric outputs, and reject
+other content. It SHALL validate the complete file before publishing either
+outputs or the report, fail on invalid input, and preserve agent cleanup.
+
+#### Scenario: Valid result summaries preserve reporting
+
+- **GIVEN** the producer's `PASSED` and `FAILED` records with decimal counts, including zero or leading zeros
+- **WHEN** the result step reads either record order using LF/CRLF or a final record without a newline
+- **THEN** it emits canonical decimal outputs and the existing report without executing the file
+- **AND** positive failed counts remain visible to the existing workflow failure check
+
+#### Scenario: Incomplete or malformed summaries publish no results
+
+- **GIVEN** an empty summary, duplicate/missing/unknown keys, malformed values, empty records, or NUL bytes
+- **WHEN** the result step validates the downloaded file
+- **THEN** it fails and leaves the outputs and human-readable summary unchanged
+
+#### Scenario: Summary contents cannot execute shell commands
+
+- **GIVEN** a downloaded summary contains appended shell commands or command substitution in a value
+- **WHEN** the result step reads the summary
+- **THEN** it rejects the content without executing an embedded command or canary
+- **AND** it publishes no partial results
+
+#### Scenario: Summary validation failure still releases the agent
+
+- **GIVEN** the result SCP clients use the loaded identity and the downloaded summary is invalid
+- **WHEN** validation fails
+- **THEN** the unconditional cleanup step still stops the agent
+- **AND** the result step remains failed
+
 ### Requirement: Dependabot preserves pin maintenance
 
 The repository SHALL retain weekly `github-actions` version updates targeting
