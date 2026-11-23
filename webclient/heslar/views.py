@@ -365,14 +365,16 @@ class ContinueKatastrProcessing(UserPassesTestMixin, AdminRecordProcessingView):
         :param kwargs: Klíčové argumenty z URL.
         :return: Doplněný slovník ``result``.
         """
-        from django.utils.translation import gettext as _t
+        # Alias musí být ``_``: ``makemessages`` jiné názvy (dřív ``_t``)
+        # nepozná a klíče do katalogu nevytáhne.
+        from django.utils.translation import gettext as _
         from heslar.ruian_sync import reassign as reassign_mod
 
         changed = self._process(record, reassign_mod)
         result["result"] = (
-            _t("heslar.views.ContinueKatastrProcessing.changed")
+            _("heslar.views.ContinueKatastrProcessing.changed")
             if changed
-            else _t("heslar.views.ContinueKatastrProcessing.no_change")
+            else _("heslar.views.ContinueKatastrProcessing.no_change")
         )
         return result
 
@@ -381,14 +383,18 @@ class ContinueKatastrProcessing(UserPassesTestMixin, AdminRecordProcessingView):
         """
         Vyvolá příslušnou ``reassign_*`` funkci podle typu záznamu.
 
-        Záznam se zapíše pouze pokud došlo ke změně oproti původnímu stavu
-        (porovnává se ``hlavni_katastr_id`` resp. ``katastr_id``).
+        Záznam se zapíše pouze pokud došlo ke změně oproti původnímu stavu.
+        U projektu a samostatného nálezu se porovnává ``hlavni_katastr_id``
+        resp. ``katastr_id``; u archeologického záznamu se za změnu počítá
+        i změna jen ostatních katastrů (M2M ``katastry``), když hlavní katastr
+        zůstal stejný.
 
         :param record: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
         :param reassign_mod: Modul ``heslar.ruian_sync.reassign`` (předáno
             kvůli lazy importu).
 
-            :return: ``True`` pokud reassign vrátil katastr odlišný od původního.
+            :return: ``True`` pokud se změnil hlavní katastr, u archeologického
+                záznamu i když se změnily jen ostatní katastry.
         """
         from arch_z.models import ArcheologickyZaznam
         from pas.models import SamostatnyNalez
@@ -399,12 +405,7 @@ class ContinueKatastrProcessing(UserPassesTestMixin, AdminRecordProcessingView):
             new_kat = reassign_mod.reassign_projekt(record)
             return new_kat is not None and new_kat.pk != old_id
         if isinstance(record, ArcheologickyZaznam):
-            old_main = record.hlavni_katastr_id
-            old_set = set(record.katastry.values_list("id", flat=True))
-            reassign_mod.reassign_az(record)
-            record.refresh_from_db()
-            new_set = set(record.katastry.values_list("id", flat=True))
-            return record.hlavni_katastr_id != old_main or new_set != old_set
+            return reassign_mod.reassign_az_se_zmenou(record)[1]
         if isinstance(record, SamostatnyNalez):
             old_id = record.katastr_id
             new_kat = reassign_mod.reassign_sn(record)

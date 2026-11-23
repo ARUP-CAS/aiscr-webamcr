@@ -89,29 +89,53 @@ Hodnota ``--valid-to``
 ----------------------
 
 ``--valid-to`` se ukládá jako kotva ``RuianSyncRun.data_valid_to`` a cron od ní
-pokračuje následujícím dnem. Uvádí se **poslední den, jehož změny SHP
-snapshot obsahuje** – typicky den před stažením ``1.zip``.
+pokračuje následujícím dnem. Je to **poslední den, jehož změny SHP snapshot
+jistě obsahuje** – den před vygenerováním ``1.zip``.
 
-Příkaz tuto hodnotu **nedokáže ověřit**, protože ji ze vstupů nejde odvodit:
+U ``1.zip`` staženého přímo od ČÚZK se ``--valid-to`` **nezadává**: příkaz
+ho odvodí sám a vypíše (``kotva bude …``). Odvození věří časům souborů
+v archivu – **archiv přebalený nebo získaný odjinud** může nést pozdější časy,
+než odpovídá jeho obsahu, a kotva by pak přeskočila dny, které neobsahuje.
+``--valid-to`` proto zadejte ručně:
 
-* ``1.zip`` s polygony je nedatovaný – stejná URL vždy vrací aktuální stav;
-* ``YYYYMMDD_ST_UZSZ.xml.zip`` dodává jen definiční body a vychází řidčeji,
-  takže je běžně starší než SHP. ÚZSZ z 31. 7. spolu s ``--valid-to``
-  2026-08-13 je správná kombinace, ne chyba.
+* u přebaleného archivu nebo archivu neznámého původu;
+* u rozbaleného adresáře (tam je povinné);
+* když chcete kotvu záměrně dřívější.
 
-Kontroluje se jen to, co ověřit jde:
+``1.zip`` má stálou URL a nedatovaný název, datum vygenerování ale nesou časy
+souborů uvnitř archivu (např. ``1/OKRESY_P.shp`` 2026-11-10 20:27). ČÚZK
+archiv generuje večer, ale změny ze změnového souboru téhož dne v něm ještě
+nejsou (ověřeno na archivu z 12. 10. 2026: obsahoval změny z 1.–10. 10.,
+změny z ``20261012_ST_ZKSH`` ne), proto platí den předtím. Archiv vygenerovaný 13. 8. tedy připouští
+``--valid-to`` nejvýš 2026-08-12. ``YYYYMMDD_ST_UZSZ.xml.zip`` dodává jen
+definiční body a vychází řidčeji, takže je běžně starší než SHP – ÚZSZ
+z 31. 7. spolu s ``--valid-to`` 2026-08-12 je správná kombinace.
 
-* ``--valid-to`` v budoucnosti příkaz **odmítne**;
+Příkaz kontroluje:
+
+* ``--valid-to`` v budoucnosti **odmítne**;
+* ``--valid-to`` pozdější než den před vygenerováním ``1.zip`` **odmítne**.
+  U rozbaleného adresáře datum zjistit nejde (časy souborů určilo rozbalení),
+  příkaz u zadané hodnoty jen upozorní a bez ní skončí chybou;
+* kotvu, po které by denní sync navazoval změnovým souborem starším než
+  retence ČÚZK (92 dnů), **odmítne** – zadanou ručně, odvozenou i u
+  rozbaleného adresáře. Takový soubor už na serveru není a kotva by se nikdy
+  neposunula; hlídač stáří dat v cronu by to nezachytil, protože sleduje
+  nejnovější kotvu;
 * ÚZSZ novější než ``--valid-to`` vypíše varování – definiční body by
   pocházely z pozdějšího stavu, než jaký se ukládá jako kotva;
 * ÚZSZ starší o víc než 60 dnů vypíše varování – katastrům vzniklým mezitím
   mohou chybět definiční body a dopočítají se z centroidu hranice.
 
-Hodnota pozdější, než jaký stav ``1.zip`` skutečně obsahuje, proto **projde
-bez varování** a kotva přeskočí denní změny za rozdílové dny. Hlídač stáří
-dat se neozve, protože kotva vypadá čerstvě. Když si nejste jistí, zadejte
-raději dřívější datum: cron pak jen zopakuje dny, které už v datech jsou, což
-je neškodné.
+Proč na tom záleží: kotva pozdější, než jaký stav ``1.zip`` obsahuje,
+přeskočí denní změny za rozdílové dny a hlídač stáří dat se neozve. Na testu
+plný sync s ``1.zip`` vygenerovaným 12. 10. 2026 a kotvou 12. 10. vynechal
+změnový soubor z 12. 10.; Luhačovice zůstaly ve starém stavu, zatímco
+sousední Ludkovice a Biskupice dostaly novou hranici o dva dny později, a
+katastry se překrývaly. Dřívější datum je naopak neškodné – cron jen zopakuje dny,
+které už v datech jsou – ale **jen v rámci retence** změnových souborů ČÚZK
+(92 dnů). Dny starší cron už nestáhne a kotva se neposune; kotvu mimo
+retenci proto příkaz odmítne.
 
 Cron během plného synchu
 ------------------------
@@ -172,6 +196,97 @@ má tři textová pole:
 
 Úspěšný běh s ⚠ tedy proběhl celý, ale některá kontrola něco našla.
 
+Katastr bez hranice ve změnovém souboru
+---------------------------------------
+
+Při slučování katastrálních území pošle ČÚZK nástupci novou hranici, která
+zahrnuje celé území rušeného katastru, a rušený katastr ještě **bez hranice**;
+formální zánik (``ZaniklePrvky``) přijde až později. Tak to proběhlo 4. 11. 2026
+u Nových Petrovic sloučených do Okříšek.
+
+Denní sync takový katastr smaže hned, pokud jeho dosavadní území z alespoň
+95 % pokryjí ostatní katastry v databázi – včetně hranic uložených ze
+zpracovávaného souboru, takže nevadí, když nástupce dostal novou hranici
+v souboru jiného dne. Navázané záznamy se přitom přepočítají na nástupce. Katastr tak z výběrů v AMČR zmizí
+dřív, než úředně zanikne, a pozdější zánik už nic nenajde. Do ``warnings`` se
+zapíše řádek „… bere se jako zrušený a maže se“.
+
+Když pokrytí nestačí, hranice se ponechá a ve ``warnings`` je řádek „… hranice
+ponechána, zkontrolujte“ – může jít o vadný export a je třeba ho prověřit.
+Katastr bez hranice, který v databázi není, se nezakládá (hranice je povinná).
+Totéž platí pro nový katastr, jehož hranici sync nedokázal načíst (nepodporovaný
+GML, neplatná geometrie) – ve ``warnings`` je řádek „… hranici se nepodařilo
+načíst – nezaložen“.
+
+Kontrola pokrytí po zrušení nepočítá jako díru tu část území, kterou pokrývají
+sousedé – i když nástupce dostal novou hranici v souboru dřívějšího dne.
+Ohlásí se jen zbytek, který nepokrývá žádný katastr.
+
+**Návrat na starší verzi.** Mazání neprobíhá v jedné transakci: když den
+selže až po smazání takového katastru (typicky jiný katastr nejde smazat kvůli
+navázaným záznamům, ``RuianNesmazatelnyKatastrError``), smazání zůstane
+zapsané a cron den zopakuje. Taková chyba se ale opakuje při každém pokusu,
+dokud se **neopraví záznamy, které smazání blokují** – teprve pak den doběhne.
+Verze bez této logiky (před PR #4508) by při opakování smazaný katastr bez
+hranice zakládala znovu a selhala na povinné hranici; nic by přitom nezapsala,
+jen by další dny neprošly. Po takovém selhání proto den **dokončete touto
+verzí** (po opravě blokujících záznamů), než se vrátíte ke starší nebo pustíte
+souběžně staré workery. Když už starší verze běží, stačí nasadit tuto a nechat
+cron den zopakovat; ruční oprava dat je potřeba, jen když den touto verzí
+dokončit nejde.
+
+**Den sloučení zpracovaný starší verzí.** Pravidlo 95 % se uplatní jen při
+zpracování dne. Den, který před nasazením této verze **úspěšně** uzavřela
+starší verze, se znovu nevyhodnotí: cron pokračuje až po kotvě a rušenému
+katastru zůstala stará hranice, která se překrývá s nástupcem (tak to vypadá
+po 4. 11. 2026 u Nových Petrovic a Okříšek, pokud den zpracovala starší verze).
+Po nasazení ověřte dotazem, které katastry z větší části překrývá jiný::
+
+    SELECT a.kod, a.nazev, b.kod AS kod_prekryva, b.nazev AS nazev_prekryva,
+           round((ST_Area(ST_Intersection(a.hranice, b.hranice)) / ST_Area(a.hranice) * 100)::numeric, 1) AS pct
+    FROM ruian_katastr a
+    JOIN ruian_katastr b ON a.id <> b.id AND ST_Intersects(a.hranice, b.hranice)
+    WHERE ST_Area(ST_Intersection(a.hranice, b.hranice)) > 0.5 * ST_Area(a.hranice)
+    ORDER BY pct DESC;
+
+V čistém stavu nevrátí nic. Nalezený katastr se dořeší jednou z cest:
+
+* **počkat na formální zánik** – ``ZaniklePrvky`` v pozdějším změnovém souboru
+  katastr smaže běžnou cestou a navázané záznamy přepočítá; do té doby
+  zůstává překryv;
+* **plný sync** z čerstvého ``1.zip`` – SHP katastr bez hranice neobsahuje,
+  takže ho plný sync smaže jako chybějící ve snapshotu. Plný sync ale
+  nevyhodnocuje pokrytí: ověřte předem, že katastr v ``KATUZE_P`` opravdu
+  chybí, jinak se nic nezmění.
+
+**Chybně zrušený katastr.** Pravidlo 95 % smaže katastr ještě před formálním
+zánikem a jeho navázané záznamy (projekty, AZ, SN, neidentifikované akce)
+přepočítá na sousedy a zapíše jim historii. Kdyby se ukázalo, že šlo o vadný
+export a katastr dál existuje:
+
+* **jak se to pozná** – ve ``warnings`` běhu je řádek „… bere se jako
+  zrušený a maže se“ (v logu událost
+  ``heslar.ruian_sync.syncer._vyhodnot_katastry_bez_hranice.zrusen``), ale
+  katastr se později znovu objeví ve změnovém souboru nebo ho dál obsahuje
+  ``KATUZE_P`` v aktuálním ``1.zip``;
+* **opakování dne nepomůže** – katastr už v databázi není, takže sync jen
+  zapíše varování „… v databázi není – nezaložen“ a nic neobnoví;
+* **obnova:** ověřte, že kód katastru je v ``KATUZE_P`` čerstvého ``1.zip``,
+  a spusťte plný sync – katastr se založí znovu. Navázané záznamy se tím
+  nevrátí: v Django shellu spusťte ``reassign_all()`` z
+  ``heslar.ruian_sync.reassign``. Ten přepočítá hlavní katastr projektů
+  s ``geom``, katastr SN s ``geom`` a u AZ s první DJ jinou než celokatastr
+  hlavní katastr i M2M ``katastry``; změněným záznamům aktualizuje metadata
+  ve Fedoře. ``reassign_all()`` nepřepočítá záznamy bez vlastní geometrie
+  (projekty bez ``geom``, AZ, jejichž DJ nemají PIAN), AZ, jejichž první DJ
+  je typu celokatastr, ani M2M ``katastry`` projektů (při mazání se v nich
+  katastr nahradil nástupcem); neidentifikované akce neřeší vůbec. Všechny
+  tyto záznamy dohledejte podle historie změny katastru z data chybného
+  běhu a opravte ručně.
+
+Před prvním denním syncem po nasazení této verze je rozumné mít čerstvou
+zálohu databáze – obnova z ní je nejkratší cesta zpět.
+
 Když plný sync selže
 --------------------
 
@@ -199,5 +314,7 @@ Retence zdrojových dat
 
 ČÚZK drží denní změnové soubory jen **3 měsíce zpět** (změřeno 8. 9. 2026:
 ``-92 dní`` HTTP 200, ``-93 dní`` 404). Delší výpadek denního synchu se proto
-nedá dohnat stahováním – hlásí ho ``ERROR`` ``mimo_retenci_zdroje`` a jedinou
-cestou zpět je plný sync ze SHP.
+nedá dohnat stahováním – jakmile první zameškaný den (kotva + 1) vypadne
+z retence, hlásí to ``ERROR`` ``mimo_retenci_zdroje`` a jedinou cestou zpět je
+plný sync ze SHP. Stejné pravidlo (``kotva_mimo_retenci``) kontroluje i
+``--valid-to`` plného synchu.
