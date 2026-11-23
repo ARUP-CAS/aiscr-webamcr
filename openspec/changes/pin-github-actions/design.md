@@ -29,13 +29,52 @@ No DEV workflow, image publication, Dependabot update, or policy rejection
 has been exercised for this change. Those hosted observations remain
 follow-up to the driving issue.
 
+## Review remediation (2026-11-23)
+
+The agreed capture extends this same change to all nine items from the
+review of [ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544)
+at `0735cb560a223d2fac0822358359a4521e4e4322`, compared with
+`d327f2caff9cb0e6ffadb8325defcd948bbaa13f`. The identifiers below preserve the
+review's finding/observation distinction; they are not new severity judgments.
+
+| Item | Evidence and bounded repair | Tasks |
+| --- | --- | --- |
+| F1 | `docs/generate_module_docs.py:3340` accepts one trailing release comment for multiple flow-style calls. Reject ambiguous comment ownership. | 1.3 |
+| F2 | `docs/generate_module_docs.py:3278` returns the first duplicate mapping key. Reject duplicate keys before extracting calls. | 1.3 |
+| F4 | `docs/source/12_zavislosti/github_actions.rst:183` describes separate SCP steps and final cleanup; the workflow has one result step with two SCP calls and later VPN/result steps. Correct the wording. | 2.3 |
+| F5 | `scripts/test_generate_github_actions.py:195` builds only a step-level expected subset. Add independent exact inventory expectations including external reusable jobs. | 3.2 |
+| F6 | `CONTRIBUTING.md:272` still names only the JavaScript suite. Match CI's `test_generate_*.py` discovery. | 3.2 |
+| O1 | `.github/workflows/deployment.yml:104` starts an agent without stopping it. Add single-step EXIT cleanup. | 2.4 |
+| O2 | `.github/workflows/deployment.yml:44` exposes the private key at job level. Scope it to the loading step. | 2.4 |
+| O3 | `.github/workflows/run-tests.yml:111` substitutes manual input into the remote shell body. Validate and transport values as arguments to a static script. | 2.5, 2.6 |
+| N1 | `.github/workflows/deployment.yml:53` substitutes the tag before validation. Read it from step environment and validate without evaluation. | 2.5, 2.6 |
+
+Exploration reproduced F1 and F2 with in-memory parser fixtures. The F5
+fixture confirmed that the current test's expected subset omits a job-level
+external reusable call. Harmless local Bash probes reproduced command
+substitution in the actual tag-normalization body and in the DEV script's
+assignment prefix. They used synthetic values, discarded normalization
+outputs, replaced sudo with a local function, and performed no SSH or live
+operation. Base/head source comparison confirms O1/O2/O3/N1 predate this PR;
+they retain advisory `fix-in-pr` disposition and do not contribute to its verdict.
+
+F2 establishes a local validator gap. The inspected GitHub runner
+`TemplateReader` explicitly reports duplicate keys, supporting fail-closed
+behavior; hosted parser behavior was not exercised. Do not describe this as
+a verified bypass of GitHub enforcement. The earlier successful tests and
+verification do not cover these newly reproduced edge cases or accept the
+expanded scope. Affected tasks are reopened below.
+
 ## Goals / Non-Goals
 
 Use the contracts in [github-actions-trust](specs/github-actions-trust/spec.md).
-Preserve workflow inputs, triggers, job permissions, publishing behavior, and
-the existing local reusable-workflow relationship while changing dependency
-selection and SSH-agent setup. Pinning does not make downloaded binaries,
-vulnerability databases, or action owners inherently trustworthy.
+Preserve valid workflow inputs and defaults, triggers, job permissions,
+publishing behavior, and the existing local reusable-workflow relationship
+while changing dependency
+selection, SSH-agent setup, and unsafe input handling. Tighten validation
+without changing input names/types, valid deployment selection, or test modes.
+Pinning does not make downloaded binaries, vulnerability databases, or action
+owners inherently trustworthy.
 
 The change's completion boundary is the implementation, documentation, and
 verification deliverable in this PR. The post-merge operations below are
@@ -91,11 +130,20 @@ mutable references, malformed hashes, and missing version comments with a
 file/line diagnostic. Fixture mutation tests must prove those failures;
 format checks alone cannot prove upstream commit provenance.
 
-### Keep SSH-agent state across steps
+Reject duplicate YAML mapping keys before traversing action references,
+including duplicate structural keys that would hide jobs or steps. Report
+the source file and duplicate location, and leave the inventory untouched
+on failure. Retain unambiguous single-action flow mappings, quoted values,
+local calls, and commented-step handling. Reject lines where multiple
+external calls would claim one trailing release comment. Requiring block
+style everywhere would unnecessarily remove syntax already covered by tests.
+These checks harden the existing parser rather than add a general YAML linter.
+
+### Match agent lifetime and private-key scope to each SSH workflow
 
 Use native `ssh-agent` and `ssh-add` with fail-fast Bash and CRLF-normalized key
-input from a step environment variable. Persist only `SSH_AUTH_SOCK` and
-`SSH_AGENT_PID` through `GITHUB_ENV` for the later SSH and SCP steps. Never
+input from a step environment variable. In `run-tests.yml`, persist only
+`SSH_AUTH_SOCK` and `SSH_AGENT_PID` through `GITHUB_ENV` for the later SSH and SCP steps. Never
 persist the private key or enable shell tracing around it. Add unconditional
 cleanup that safely handles initialization failure and stops a created agent.
 
@@ -104,6 +152,43 @@ Preserve known-host verification and the VPN setup. Simply copying
 step. Verify the cross-step lifecycle and key-loading failure with isolated
 shell execution and a disposable test key; live DEV access remains a
 separate post-merge follow-up check.
+
+In `deployment.yml`, move `SSH_PRIVATE_KEY` from job environment to the
+existing SSH connection step and consume it as a quoted shell variable.
+Capture and evaluate the native agent's environment, then install an EXIT
+trap immediately before loading the key. The entire agent lifetime fits
+within this step, so a trap handles success and failures without exporting
+agent state or adding a separate cleanup step. Cleanup is best-effort and
+must preserve the original failure status. Exercise the real setup/cleanup
+with a disposable key and stubbed remote operations.
+
+### Keep workflow values out of local and remote script source
+
+Pass manual inputs and workflow reference values through step environment
+variables, following GitHub's intermediate-variable guidance. Read the tag
+from that environment before applying the existing tag pattern; retain its
+Git/image normalization and supported prerelease suffix. Validate test modes
+against `vsechny`, `neuspesne`, and `konkretni`, deployment booleans against
+`true`/`false`, and every nonempty test number as decimal digits; require a
+number for `konkretni`. Complete validation before VPN connection or SSH.
+
+Keep the DEV remote script in a quoted static heredoc, invoked with
+`sudo bash -s --` and positional arguments. Construct the remote command
+using POSIX shell quoting for each argument, including reference names and
+paths, then quote their expansions within the receiving script. Local
+double quotes alone do not survive SSH's reconstruction of a remote command;
+Bash-only argument escaping also assumes the remote login shell understands
+it. POSIX quoting avoids adding that assumption or a new runtime dependency.
+Do not evaluate input, concatenate it into the script body, or rely on the
+downstream test script's numeric check after assignment has already executed.
+
+Keep input names, types/defaults, test modes, deployment-source/environment
+selection, and valid reference handling. Isolated shell regressions must
+exercise both interpretation boundaries with harmless canaries, quotes,
+newlines, and literal references, plus the valid all/failed/numbered test
+paths. Invalid values must prevent remote work and never execute a canary.
+Adapt the existing SSH fixtures to supply valid inputs instead of replacing
+every expression with the same generic string. No live dispatch is needed.
 
 ### Retain the SHA-pinned scanner and signer integrations
 
@@ -169,6 +254,19 @@ test job. Test changed workflow inventories, invalid references, authored
 section preservation, and idempotency with isolated fixtures. Existing
 workflow/SSH tests stay in the same test suite. A separate maintenance workflow
 or a pre-commit hook whose only purpose is running this test suite is unnecessary.
+
+Define complete expected rows independently in isolated fixtures containing
+both step actions and job-level external reusable workflows, as well as local
+and commented calls. Compare exact rows, including versions, commits, and
+locations, so omitted and unexpected entries fail. Reusing the production
+traversal to derive expectations would allow the same omission on both sides.
+Keep the real-repository stale-inventory refresh check compatible with CI's
+existing test-before-generation order.
+
+Update CONTRIBUTING's local discovery to `test_generate_*.py`, matching CI.
+Describe the DEV result-retrieval step as one step containing two SCP calls,
+and cleanup as the unconditional step after agent use, followed by VPN/result
+steps. Do not impose an inaccurate final-step guarantee.
 
 ### Use normal dependency maintenance and refresh points
 
@@ -247,6 +345,11 @@ manual tool-pin maintenance process is introduced.
   initial diff until that normal refresh occurs.
 - Missing SSH-agent environment can remain undetected until a later SSH or
   SCP step. Exercise setup, later-client access, failure, and cleanup.
+- Shell quoting must cover SSH's remote parsing as well as the local shell.
+  Exercise the actual argument transport with malicious-looking data and
+  valid reference names; validation alone cannot replace safe transport.
+- Duplicate-key hardening does not establish a GitHub policy bypass. Keep
+  the hosted-parser uncertainty distinct from the reproduced local gap.
 - Hosted checks need privileges and infrastructure access. Keep their
   follow-up evidence distinct from the PR's implementation and verification
   results; local completion does not establish live outcomes.
@@ -262,6 +365,13 @@ Verify the
 code behavior through isolated workflow tests, configuration checks, source
 comparison, and documentation builds. These are the tracked implementation
 and verification tasks in this change.
+
+Include the bounded parser, inventory-test, documentation, deployment-key,
+agent-cleanup, and input-transport remediations above. Preserve the review's
+pre-existing-observation classification. The 2026-11-23 capture authorizes
+planning-artifact and usage-record edits only; implementation continues from
+the reopened tasks after a separate explicit apply instruction. Validation
+of this capture does not establish that those repairs have been implemented.
 
 ### Post-merge follow-up outside this change
 
@@ -315,3 +425,5 @@ workflow.
 - [Trivy plugin-manager path-traversal advisory](https://github.com/advisories/GHSA-8rc5-4fr6-64pw)
 - [Trivy Helm decompression advisory](https://github.com/advisories/GHSA-q3fv-x8vg-qqm4)
 - [Dependabot Actions parser](https://github.com/dependabot/dependabot-core/blob/main/github_actions/lib/dependabot/github_actions/file_parser.rb)
+- [GitHub: use an intermediate environment variable](https://docs.github.com/en/actions/reference/security/secure-use#use-an-intermediate-environment-variable)
+- [GitHub runner duplicate-key handling, inspected during exploration](https://github.com/actions/runner/blob/main/src/Sdk/DTObjectTemplating/ObjectTemplating/TemplateReader.cs#L213-L219)

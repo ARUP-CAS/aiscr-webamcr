@@ -269,7 +269,7 @@ Cílené regresní testy lze spustit bez Dockeru a GitHub přístupu:
 
 ```bash
 python -m unittest discover -s scripts -p 'test_pre_commit*.py' -v
-python -m unittest discover -s scripts -p 'test_generate_js_libraries.py' -v
+python -m unittest discover -s scripts -p 'test_generate_*.py' -v
 ```
 
 ---

@@ -9,6 +9,9 @@ registry credentials, and image-signing permissions. Following the removal of
 an action in [ARUP-CAS/aiscr-webamcr#4375](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4375),
 the remaining action dependencies need immutable references and documented trust
 decisions before repository-wide SHA enforcement can be enabled safely.
+Review of [ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544)
+also exposed parser/test gaps and bounded existing SSH/input-handling defects;
+the agreed scope includes all nine items in this same change.
 
 ## What Changes
 
@@ -31,6 +34,15 @@ decisions before repository-wide SHA enforcement can be enabled safely.
   dependency-documentation generator and pre-commit hook. Keep production
   parsing outside test modules and cover validation and generation in the
   existing test suite.
+- Reject ambiguous shared release comments and duplicate YAML keys, while
+  retaining unambiguous single-action flow syntax. Add independent complete
+  inventory expectations covering job-level external reusable workflows.
+- Scope the deployment SSH key to its SSH step and stop its native agent on
+  every exit. Treat manual workflow inputs and reference names as data across
+  both local and remote shell boundaries, validating accepted inputs before
+  use and keeping the remote test script static.
+- Correct the SSH lifecycle description and align CONTRIBUTING's local test
+  command with CI's existing dependency-generation discovery.
 - Keep relevant trust rationale and pin-resolution, rollout, and recovery
   instructions on the linked dependency page. Remove PR-specific completion
   wording, special review-date bookkeeping, and the temporary
@@ -48,8 +60,9 @@ behavior and data contracts are unaffected. Container image pinning, replacing
 ### New Capabilities
 
 - `github-actions-trust`: Immutable workflow action dependencies, native SSH
-  access, generated dependency inventory, retained-action rationale, normal
-  dependency maintenance, update compatibility, and documented policy readiness.
+  access and key scope in both SSH workflows, safe workflow-input handling,
+  generated dependency inventory, retained-action rationale, normal dependency
+  maintenance, update compatibility, and documented policy readiness.
 
 ### Modified Capabilities
 
@@ -64,6 +77,7 @@ None. The repository currently has no durable capability specs.
   regression tests under `scripts/`, run by the existing CI test job;
   the existing `generate-module-docs` pre-commit integration;
   `docs/source/12_zavislosti/github_actions.rst` and its `index.rst` entry;
+  the local test instructions in `CONTRIBUTING.md`;
   generator-produced script documentation and indexes; cleanup of the temporary
   JSON snapshot and references, including the rolling usage entry. No separate
   workflow or privileged execution path for Dependabot is added.
@@ -75,6 +89,23 @@ None. The repository currently has no durable capability specs.
   `.agents/sync/repos.toml` enrollment and
   `.agents/canonical_configs/asset_manifest.toml`. This change requires no hub
   delivery, sync apply, or governance bootstrap.
+
+## Review remediation boundary
+
+The five new findings are F1 (shared release comment), F2 (duplicate YAML
+keys), F4 (SSH lifecycle wording), F5 (incomplete inventory expectations),
+and F6 (local test guidance). O1 (deployment agent cleanup), O2 (deployment
+key scope), O3 (DEV test input interpolation), and N1 (deployment tag
+interpolation) predate the reviewed commit and retain their advisory
+`fix-in-pr` disposition. Their repair is included without attributing them
+to this PR or changing the review verdict. Evidence and task mapping live
+in [design.md](design.md#review-remediation-2026-11-23).
+
+Preserve valid workflow inputs, defaults, triggers, permissions, deployment
+selection, and test modes. Reject unsafe values before they can become shell
+code. These bounded repairs do not authorize a deployment, workflow dispatch,
+review post, or broader infrastructure refactor. Capture updates planning
+only; implementation requires a separate apply instruction.
 
 ## Follow-up outside this change
 

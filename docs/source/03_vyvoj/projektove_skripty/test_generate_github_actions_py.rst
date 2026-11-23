@@ -41,6 +41,17 @@ Třídy
 
       Sdruží stejné vydání a zachová rozdílné verze i podadresáře akcí.
 
+   .. py:method:: inventory_rows()
+
+      Přečte úplné řádky výstupu nezávisle na produkčním průchodu workflow.
+
+      :param text: Vygenerovaná stránka obsahující označený inventář.
+      :return: Akce, vlastníci, verze, commity a umístění v pořadí tabulky.
+
+   .. py:method:: test_exact_inventory_includes_external_reusable_jobs_and_excludes_local_calls()
+
+      Pevná očekávání odhalí chybějící reusable volání, neočekávané i duplicitní řádky.
+
    .. py:method:: test_additions_removals_and_updates_replace_stale_rows()
 
       Nové i odstraněné workflow změní seznam a nezachovají staré piny.
@@ -64,6 +75,10 @@ Třídy
    .. py:method:: test_malformed_yaml_reports_its_source()
 
       Chyba YAML obsahuje soubor a nevytváří nový inventář.
+
+   .. py:method:: test_ambiguous_comments_and_duplicate_keys_preserve_existing_inventory()
+
+      Chybné komentáře ani duplicitní struktura nepřepíší poslední platnou stránku.
 
    .. py:method:: test_non_scalar_and_multiline_uses_are_rejected()
 

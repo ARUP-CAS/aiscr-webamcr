@@ -2,6 +2,7 @@
 
 import io
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -69,6 +70,51 @@ class GitHubActionsInventoryTests(unittest.TestCase):
         self.assertIn("https://github.com/owner/action/releases/tag/v2.0.0", text)
         self.assertIn("https://github.com/owner>", text)
         self.assertIn("``.github/workflows/a.yaml:4``, ``.github/workflows/z.yml:4``", text)
+
+    def inventory_rows(self, text):
+        """Přečte úplné řádky výstupu nezávisle na produkčním průchodu workflow.
+
+        :param text: Vygenerovaná stránka obsahující označený inventář.
+        :return: Akce, vlastníci, verze, commity a umístění v pořadí tabulky.
+        """
+        block = text.split(generator.GITHUB_ACTIONS_BEGIN, 1)[1].split(generator.GITHUB_ACTIONS_END, 1)[0]
+        rows = []
+        for row in block.split("   * - ")[2:]:
+            columns = row.strip().split("\n     - ")
+            self.assertEqual(len(columns), 5)
+            rows.append(
+                (
+                    columns[0].strip("`"),
+                    re.match(r"`([^ ]+) <", columns[1])[1],
+                    re.match(r"`([^ ]+) <", columns[2])[1],
+                    re.match(r"`([0-9a-f]{40}) <", columns[3])[1],
+                    tuple(re.findall(r"``([^`]+)``", columns[4])),
+                )
+            )
+        return rows
+
+    def test_exact_inventory_includes_external_reusable_jobs_and_excludes_local_calls(self):
+        """Pevná očekávání odhalí chybějící reusable volání, neočekávané i duplicitní řádky."""
+        self.write_workflow("step.yml", action="owner/step", commit="a" * 40, version="v1.2.3")
+        (self.workflows / "reuse.yml").write_text(
+            "jobs:\n  external:\n    uses: owner/shared/.github/workflows/build.yml@" + "b" * 40 + " # v2.3.4\n"
+            "  local:\n    uses: ./.github/workflows/build.yml\n"
+            "  ignored:\n    steps:\n      # - uses: ignored/action@main\n      - run: echo fixture\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(
+            self.inventory_rows(self.generate()),
+            [
+                (
+                    "owner/shared/.github/workflows/build.yml",
+                    "owner",
+                    "v2.3.4",
+                    "b" * 40,
+                    (".github/workflows/reuse.yml:3",),
+                ),
+                ("owner/step", "owner", "v1.2.3", "a" * 40, (".github/workflows/step.yml:4",)),
+            ],
+        )
 
     def test_additions_removals_and_updates_replace_stale_rows(self):
         """Nové i odstraněné workflow změní seznam a nezachovají staré piny."""
@@ -143,6 +189,22 @@ class GitHubActionsInventoryTests(unittest.TestCase):
             self.generate()
         self.assertEqual(self.output.read_bytes(), original)
 
+    def test_ambiguous_comments_and_duplicate_keys_preserve_existing_inventory(self):
+        """Chybné komentáře ani duplicitní struktura nepřepíší poslední platnou stránku."""
+        self.write_workflow()
+        original = self.generate()
+        one, two = "owner/one@" + "a" * 40, "owner/two@" + "b" * 40
+        for source in (
+            f"jobs: {{test: {{steps: [{{uses: {one}}}, {{uses: {two}}}]}}}} # v1.2.3\n",
+            f"jobs:\n  test:\n    steps:\n      - uses: {one} # v1.2.3\n        uses: owner/bad@main\n",
+            "jobs: {}\njobs: {bad: {uses: owner/bad@main}}\n",
+        ):
+            with self.subTest(source=source):
+                (self.workflows / "invalid.yml").write_text(source, encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, r"invalid.yml:\d+:"):
+                    self.generate()
+                self.assertEqual(self.output.read_text(encoding="utf-8"), original)
+
     def test_non_scalar_and_multiline_uses_are_rejected(self):
         """Seznam ani víceřádkový scalar neobchází kontrolu pinu a komentáře."""
         for value in ("[owner/action@main]", ">-\n          owner/action@" + "a" * 40):
@@ -198,9 +260,9 @@ class GitHubActionsInventoryTests(unittest.TestCase):
                 shutil.copyfile(path, self.workflows / path.name)
                 document = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
                 for job in document["jobs"].values():
-                    for step in job.get("steps", []):
-                        if "uses" in step and not step["uses"].startswith("./"):
-                            expected.add(step["uses"])
+                    for call in [job, *job.get("steps", [])]:
+                        if "uses" in call and not call["uses"].startswith("./"):
+                            expected.add(tuple(call["uses"].rsplit("@", 1)))
         shutil.copyfile(ROOT / "docs/source/12_zavislosti/github_actions.rst", self.output)
         text = self.output.read_text(encoding="utf-8")
         self.output.write_text(
@@ -213,10 +275,7 @@ class GitHubActionsInventoryTests(unittest.TestCase):
         self.assertNotIn("Obsolete inventory.", refreshed)
         self.assertTrue(generator.changes_detected)
         self.assertTrue(expected)
-        for reference in expected:
-            action, commit = reference.rsplit("@", 1)
-            self.assertIn(f"``{action}``", refreshed)
-            self.assertIn(commit, refreshed)
+        self.assertEqual({(row[0], row[3]) for row in self.inventory_rows(refreshed)}, expected)
 
 
 if __name__ == "__main__":

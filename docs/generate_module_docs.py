@@ -3324,8 +3324,33 @@ def parse_workflow_actions(text: str, filename: str = "workflow.yml") -> List[Wo
         line = mark.line + 1 if mark else 1
         raise ValueError(f"{filename}:{line}: invalid workflow YAML: {exc}") from exc
     errors = []
+    pending = [document]
+    visited = set()
+    while pending:
+        node = pending.pop()
+        if id(node) in visited:
+            continue
+        visited.add(id(node))
+        if isinstance(node, MappingNode):
+            keys = set()
+            for key, value in node.value:
+                if isinstance(key, ScalarNode):
+                    if key.value in keys:
+                        errors.append(f"{filename}:{key.start_mark.line + 1}: duplicate YAML key {key.value!r}")
+                    keys.add(key.value)
+                pending.append(value)
+        elif isinstance(node, SequenceNode):
+            pending.extend(node.value)
+    if errors:
+        raise ValueError("\n".join(errors))
+
+    nodes = list(action_nodes(document))
+    external_by_line = {}
+    for node in nodes:
+        if isinstance(node, ScalarNode) and not node.value.startswith("./"):
+            external_by_line.setdefault(node.end_mark.line, set()).add(id(node))
     references = []
-    for node in action_nodes(document):
+    for node in nodes:
         line = node.start_mark.line + 1
         location = f"{filename}:{line}"
         if isinstance(node, ScalarNode) and node.value.startswith("./"):
@@ -3335,6 +3360,9 @@ def parse_workflow_actions(text: str, filename: str = "workflow.yml") -> List[Wo
             continue
         if node.start_mark.line != node.end_mark.line:
             errors.append(f"{location}: external uses and its release comment must be on one line")
+            continue
+        if len(external_by_line.get(node.end_mark.line, ())) > 1:
+            errors.append(f"{location}: ambiguous release comment shared by multiple external uses on one line")
             continue
         # Komentář musí být skutečný YAML komentář, ne část dalšího řetězce.
         end = text.find("\n", node.end_mark.index)

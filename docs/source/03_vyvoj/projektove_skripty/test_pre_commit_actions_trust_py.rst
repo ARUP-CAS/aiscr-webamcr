@@ -53,6 +53,14 @@ Třídy
 
       Zkontroluje aktivní volání ve všech YAML workflow repozitáře.
 
+   .. py:method:: test_shared_flow_comment_is_rejected_for_steps_and_reusable_jobs()
+
+      Jeden komentář nesmí označit verzi dvou odlišných volání na řádku.
+
+   .. py:method:: test_duplicate_mapping_keys_fail_before_reference_traversal()
+
+      Duplicitní uses, jobs ani steps nesmí skrýt druhou závislost.
+
    .. py:method:: test_dependabot_update_contract()
 
       Zachová týdenní aktualizace do test a obě existující skupiny.
@@ -66,9 +74,9 @@ Třídy
       Převod pinů zachová dvě Trivy volání a instalátor Cosign.
 
 
-.. py:class:: SSHAgentTests
+.. py:class:: SSHTestCase
 
-   Spustí skutečný agent a shell workflow s izolovanými SSH/SCP klienty.
+   Připraví izolované prostředí pro skutečný agent a náhrady síťových operací.
 
    **Metody:**
 
@@ -112,6 +120,13 @@ Třídy
 
       Ověří nedostupnost zaznamenaného socketu po skutečném úklidu.
 
+
+.. py:class:: SSHAgentTests
+
+   Spustí skutečný agent a shell workflow s izolovanými SSH/SCP klienty.
+
+   **Metody:**
+
    .. py:method:: test_identity_survives_ssh_and_scp_steps_then_cleanup()
 
       Klíč s CRLF funguje pro SSH a obě SCP volání bez opětovného načtení.
@@ -127,6 +142,58 @@ Třídy
    .. py:method:: test_cleanup_is_safe_when_setup_did_not_run()
 
       Chyba VPN před inicializací nesmí poškodit cizí agent.
+
+
+.. py:class:: DeploymentAgentTests
+
+   Ověří omezení klíče a celý životní cyklus agenta v jediném deployment kroku.
+
+   **Metody:**
+
+   .. py:method:: test_deployment_key_is_step_scoped_and_agent_stops_on_every_exit()
+
+      Úspěch, chyba SSH i neplatný klíč zachovají výsledek a uvolní agent.
+
+
+.. py:class:: WorkflowInputTests
+
+   Spustí validaci a dvě shellové interpretace transportu bez připojení k serveru.
+
+   **Metody:**
+
+   .. py:method:: setUp()
+
+      Nahradí vzdálený host lokálním POSIX shellem a zaznamená argumenty příkazů.
+
+   .. py:method:: operations()
+
+      Načte záznamy s NUL oddělovači, které zachovávají i uvozovky a nové řádky.
+
+      :return: Dvojice názvu operace a původních argumentů v pořadí volání.
+
+   .. py:method:: test_validation_precedes_connection_and_uses_the_same_input_environment()
+
+      Konfigurace nepředá neveřejné vstupy do zdroje shellu a validuje před VPN.
+
+   .. py:method:: test_tag_normalization_preserves_valid_releases_and_rejects_shell_syntax()
+
+      Tagy se normalizují jako data a škodlivý obsah se nevykoná před kontrolou.
+
+   .. py:method:: test_invalid_test_inputs_stop_before_remote_execution()
+
+      Neplatné režimy, boolean a čísla ukončí workflow před spuštěním SSH.
+
+   .. py:method:: test_all_modes_and_optional_deployment_keep_their_remote_arguments()
+
+      Skutečný vzdálený skript obdrží všechny argumenty a zachová tři režimy testů.
+
+   .. py:method:: test_reference_names_are_literal_through_both_shells()
+
+      Uvozovky a substituce ve validním názvu reference zůstanou jediným argumentem.
+
+   .. py:method:: test_deployment_transport_preserves_source_and_tag_arguments()
+
+      Deployment předá normalizovaný tag a oba zdroje beze změny přes vzdálený shell.
 
 Zdrojový kód
 ------------

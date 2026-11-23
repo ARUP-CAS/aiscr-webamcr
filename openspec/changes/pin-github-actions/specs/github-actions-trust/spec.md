@@ -3,7 +3,8 @@
 ## Purpose
 
 Keep workflow action dependencies immutable and reviewable while preserving SSH
-testing, automated updates, and a documented path to safe policy activation.
+testing, scoped credentials, safe workflow-input handling, automated updates,
+and a documented path to safe policy activation.
 
 ## ADDED Requirements
 
@@ -12,6 +13,7 @@ testing, automated updates, and a documented path to safe policy activation.
 Every active external `uses:` reference in repository workflow files SHALL use
 a full 40-character commit SHA and a same-line comment naming its associated
 release version. This applies to GitHub-owned and third-party actions alike.
+A release comment SHALL belong unambiguously to one external call.
 
 #### Scenario: External actions have verified release pins
 
@@ -25,6 +27,32 @@ release version. This applies to GitHub-owned and third-party actions alike.
 - **GIVEN** an active external action uses a tag, branch, shortened SHA, or missing version comment
 - **WHEN** workflow dependencies are validated
 - **THEN** validation reports the offending workflow location and fails
+
+#### Scenario: Multiple calls cannot share an ambiguous release comment
+
+- **GIVEN** a flow-style YAML line contains multiple external calls and one trailing release comment
+- **WHEN** workflow dependencies are validated or inventoried
+- **THEN** processing fails with the workflow location instead of assigning that comment to every call
+
+#### Scenario: Unambiguous flow syntax remains supported
+
+- **GIVEN** a flow-style mapping contains one full-SHA external call with its release comment
+- **WHEN** workflow dependencies are validated
+- **THEN** the call is accepted without requiring conversion to block style
+- **AND** version-like text inside another quoted value does not substitute for a real comment
+
+### Requirement: Duplicate workflow mapping keys are rejected
+
+Workflow dependency validation SHALL reject duplicate keys in YAML mappings
+with file and line diagnostics before extracting or inventorying action
+references.
+
+#### Scenario: A duplicate key cannot hide an action reference
+
+- **GIVEN** a workflow mapping repeats a key, including a pinned first `uses` followed by a mutable second `uses`
+- **WHEN** workflow dependencies are validated or inventoried
+- **THEN** processing fails at the duplicate key's location
+- **AND** no partial inventory replaces the existing documentation
 
 ### Requirement: Local workflow references remain local
 
@@ -60,14 +88,91 @@ exposing the private key in logs or persisted workflow artifacts.
 
 ### Requirement: SSH-agent cleanup
 
-The DEV test workflow SHALL stop its native SSH agent after its final use,
-including when intervening remote execution or result retrieval fails.
+The DEV test and deployment workflows SHALL stop their native SSH agents
+after their final use, including when key loading, remote execution, or
+result retrieval fails. Cleanup SHALL preserve the original operation's
+failure result.
 
 #### Scenario: Failure still releases the agent
 
 - **GIVEN** native SSH-agent initialization succeeded
 - **WHEN** a subsequent SSH or SCP step fails
 - **THEN** the workflow attempts agent cleanup through an unconditional cleanup step
+
+#### Scenario: Deployment releases its single-step agent on every exit
+
+- **GIVEN** deployment creates an SSH agent within its SSH connection step
+- **WHEN** key loading or remote execution fails, or remote execution completes
+- **THEN** the step attempts to stop the agent before exiting
+- **AND** cleanup does not turn a failed operation into success
+
+### Requirement: SSH private keys have step-scoped exposure
+
+The DEV test and deployment workflows SHALL expose their private keys only
+to the steps that load them. Keys SHALL be consumed from step environment
+variables without shell tracing, and SHALL NOT be placed in job-wide
+environment variables, cross-step state, logs, or artifacts.
+
+#### Scenario: Other deployment steps do not receive the private key
+
+- **GIVEN** a deployment job includes tag normalization, checkout, VPN, and SSH steps
+- **WHEN** its private-key environment is configured
+- **THEN** the key is scoped to the SSH connection step that loads it
+- **AND** the other steps do not inherit a job-level private-key variable
+
+### Requirement: Workflow values remain data across shell boundaries
+
+Manual deployment/test inputs and reference names SHALL be consumed as data
+without becoming local or remote shell script text. Remote test execution
+SHALL use a static script body and argument transport that preserves values
+through both shell boundaries.
+
+#### Scenario: Deployment tag content cannot execute before validation
+
+- **GIVEN** a supplied deployment tag contains command substitution, quotes, or a newline
+- **WHEN** tag normalization processes that value
+- **THEN** no command embedded in the value executes
+- **AND** an invalid tag is rejected before deployment
+
+#### Scenario: DEV test input cannot become a remote command
+
+- **GIVEN** a supplied test number contains shell syntax instead of digits
+- **WHEN** the test workflow prepares or transports its inputs
+- **THEN** the value is rejected without executing its contents locally or remotely
+- **AND** no remote deployment or test command is invoked
+
+#### Scenario: Reference names survive remote argument transport literally
+
+- **GIVEN** a valid workflow reference name contains characters meaningful to a shell
+- **WHEN** that reference is passed to the remote deployment command
+- **THEN** the receiving script obtains the original value as a single argument
+- **AND** the reference's characters are not interpreted as commands
+
+### Requirement: Manual workflow inputs are validated before remote work
+
+Deployment/test workflows SHALL validate deployment tags and test selection
+inputs before connecting VPN or executing SSH. Invalid input SHALL fail
+without deployment or test execution. Existing valid inputs, defaults,
+deployment-source selection, and test modes SHALL retain their behavior.
+
+#### Scenario: Valid deployment tags preserve normalization
+
+- **GIVEN** an accepted numeric release tag with or without a leading `v` and an optional supported prerelease suffix
+- **WHEN** deployment inputs are validated
+- **THEN** the Git tag retains the `v` prefix and the image tag omits it
+- **AND** the selected environment and image source retain their existing behavior
+
+#### Scenario: Valid test modes preserve their commands
+
+- **GIVEN** `test_mod` is `vsechny`, `neuspesne`, or `konkretni`, `nasadit_verzi` is a boolean, and every supplied test number is decimal digits
+- **WHEN** inputs are validated with a nonempty test number required for `konkretni`
+- **THEN** all-tests, failed-tests, or numbered-test execution keeps its existing command and optional deployment behavior
+
+#### Scenario: Invalid test selections fail before connection
+
+- **GIVEN** an unknown test mode, a nonnumeric supplied test number, a missing number for `konkretni`, or an invalid deployment boolean
+- **WHEN** the manual test workflow validates its inputs
+- **THEN** it fails before VPN connection or SSH execution
 
 ### Requirement: Dependabot preserves pin maintenance
 
@@ -113,6 +218,13 @@ distinguishable.
 - **THEN** the generated inventory reflects the resulting workflow references and locations
 - **AND** obsolete entries disappear and differing releases remain distinguishable
 - **AND** local references and commented-out actions produce no inventory entries
+
+#### Scenario: External reusable workflow calls appear in the inventory
+
+- **GIVEN** a workflow contains a job-level external reusable call and a step-level action, each with a full SHA and release comment
+- **WHEN** the standard inventory generator runs
+- **THEN** both calls appear with their own action path, release, commit, and workflow location
+- **AND** a job-level local reusable call remains excluded
 
 ### Requirement: Inventory refresh uses the existing documentation process
 
@@ -179,12 +291,21 @@ rather than serving as the operational inventory generator.
 - **THEN** it executes those tests alongside the existing workflow and dependency-documentation tests
 - **AND** the coverage detects invalid pins, stale inventory entries, authored-section changes, and non-idempotent generation
 
+#### Scenario: Inventory expectations detect missing and unexpected rows
+
+- **GIVEN** an isolated fixture with external step calls, external reusable calls, and local/commented calls
+- **WHEN** inventory regression coverage compares output with independently defined expected rows
+- **THEN** a missing external reusable row or an unexpected row causes the test to fail
+- **AND** the expected rows are not computed by the production reference traversal
+
 ### Requirement: Dependency documentation remains durable
 
 The dependency page SHALL describe enduring behavior, rationale, and relevant
 operating instructions. It SHALL NOT contain the completion report of a
 particular PR or require a temporary analysis snapshot as an inventory source
 or supporting document.
+Local test instructions SHALL name the dependency-generation discovery
+pattern used by CI, and SSH lifecycle descriptions SHALL match the workflow.
 
 #### Scenario: A maintainer reads dependency guidance after delivery
 
@@ -192,6 +313,19 @@ or supporting document.
 - **WHEN** a maintainer follows its maintenance and operational instructions
 - **THEN** they remain meaningful independently of the originating PR
 - **AND** the page does not depend on `.agents/analysis/github-actions-trust.json`
+
+#### Scenario: Local test instructions include both generation suites
+
+- **GIVEN** CI discovers dependency tests with `test_generate_*.py`
+- **WHEN** a developer follows CONTRIBUTING's local regression commands
+- **THEN** the same discovery pattern runs both Actions and JavaScript generation tests
+
+#### Scenario: SSH documentation describes the actual step arrangement
+
+- **GIVEN** the DEV workflow has one result-retrieval step containing two SCP calls and an unconditional cleanup step followed by VPN disconnection and the result check
+- **WHEN** the dependency page describes the agent lifecycle
+- **THEN** it accurately describes the shared identity and cleanup after SSH/SCP use
+- **AND** it does not describe multiple separate SCP steps or cleanup as the workflow's final step
 
 ### Requirement: Retained scanner and signer integrations
 

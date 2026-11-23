@@ -46,7 +46,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.1 <https://github.com/actions/checkout/releases/tag/v7.0.1>`__
      - `3d3c42e5aac5ba805825da76410c181273ba90b1 <https://github.com/actions/checkout/tree/3d3c42e5aac5ba805825da76410c181273ba90b1>`__
-     - ``.github/workflows/deployment.yml:65``, ``.github/workflows/new-version.yml:211``, ``.github/workflows/new-version.yml:70``, ``.github/workflows/pre_commit.yml:111``, ``.github/workflows/publish_images.yml:68``, ``.github/workflows/run-tests.yml:48``
+     - ``.github/workflows/deployment.yml:66``, ``.github/workflows/new-version.yml:211``, ``.github/workflows/new-version.yml:70``, ``.github/workflows/pre_commit.yml:111``, ``.github/workflows/publish_images.yml:68``, ``.github/workflows/run-tests.yml:74``
    * - ``actions/create-github-app-token``
      - `actions <https://github.com/actions>`__
      - `v3.4.0 <https://github.com/actions/create-github-app-token/releases/tag/v3.4.0>`__
@@ -66,7 +66,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.2 <https://github.com/actions/upload-artifact/releases/tag/v7.0.2>`__
      - `cf430e030ddbb5b0abf93d22962f4752f3646cd9 <https://github.com/actions/upload-artifact/tree/cf430e030ddbb5b0abf93d22962f4752f3646cd9>`__
-     - ``.github/workflows/run-tests.yml:167``
+     - ``.github/workflows/run-tests.yml:212``
    * - ``aquasecurity/trivy-action``
      - `aquasecurity <https://github.com/aquasecurity>`__
      - `v0.36.0 <https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0>`__
@@ -181,9 +181,22 @@ Nativní SSH agent pro testy na DEV
 Klíč je předán proměnnou prostředí pouze inicializačnímu kroku, bez shellového
 trasování a bez zápisu do artefaktů. Mezi kroky se přes ``GITHUB_ENV`` přenášejí
 jen ``SSH_AUTH_SOCK`` a ``SSH_AGENT_PID``. Proto agent slouží pozdějšímu SSH
-i samostatným SCP krokům. Neúspěšná inicializace uklidí agenta ihned;
-závěrečný krok s ``always()`` zajišťuje úklid po dokončení i po chybě SSH/SCP.
+i kroku pro získání výsledků se dvěma voláními SCP. Neúspěšná inicializace
+uklidí agenta ihned; krok s ``always()`` zajišťuje úklid po použití agenta
+i po chybě SSH/SCP. Následuje odpojení VPN a kontrola výsledku testů.
 Ověření hostitele přes existující ``known_hosts`` a VPN se nemění.
+
+Workflow nasazení předává privátní klíč pouze svému kroku SSH. Agent se v něm
+načte, použije a ukončí pomocí EXIT trapu při úspěchu i chybě načtení klíče
+nebo vzdáleného příkazu. Jeho stav se nepřenáší do dalších kroků a úklid
+nezmění původní neúspěšný výsledek na úspěch.
+
+Tag nasazení a vstupy testů se načítají z proměnných prostředí kroku.
+Před připojením VPN se ověří formát tagu, režim testů, boolean nasazení
+a číselný obsah každého zadaného ``test_cislo``; režim ``konkretni`` číslo
+vyžaduje. Vstupy i názvy referencí se předávají jako argumenty se samostatným
+uvozením pro vzdálený shell. Tělo vzdáleného testovacího skriptu zůstává
+statické; lokální uvozovky samy neřeší další interpretaci příkazu přes SSH.
 
 Lokální testy používají dočasný testovací klíč a izolované procesy, nikoli
 produkční secrets nebo DEV připojení. Skutečný kontrolní běh potřebuje

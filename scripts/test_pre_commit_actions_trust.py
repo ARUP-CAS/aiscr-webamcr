@@ -85,6 +85,32 @@ class ActionReferenceTests(unittest.TestCase):
         ]
         self.assertEqual(errors, [])
 
+    def test_shared_flow_comment_is_rejected_for_steps_and_reusable_jobs(self):
+        """Jeden komentář nesmí označit verzi dvou odlišných volání na řádku."""
+        one, two = "owner/one@" + "a" * 40, "owner/two@" + "b" * 40
+        for text in (
+            f"jobs: {{test: {{steps: [{{uses: {one}}}, {{uses: {two}}}]}}}} # v1.2.3\n",
+            f"jobs: {{one: {{uses: {one}}}, two: {{uses: {two}}}}} # v1.2.3\n",
+        ):
+            with self.subTest(text=text):
+                errors = action_reference_errors(text, "flow.yml")
+                self.assertTrue(errors)
+                self.assertTrue(
+                    all("flow.yml:1:" in error and "ambiguous release comment" in error for error in errors)
+                )
+
+    def test_duplicate_mapping_keys_fail_before_reference_traversal(self):
+        """Duplicitní uses, jobs ani steps nesmí skrýt druhou závislost."""
+        for text, line in (
+            (self.workflow("owner/good@" + "a" * 40) + "        uses: owner/bad@main\n", 5),
+            ("jobs: {}\njobs: {bad: {uses: owner/bad@main}}\n", 2),
+            ("jobs:\n  test:\n    steps: []\n    steps: [{uses: owner/bad@main}]\n", 4),
+        ):
+            with self.subTest(text=text):
+                errors = action_reference_errors(text, "duplicate.yml")
+                self.assertEqual(len(errors), 1)
+                self.assertIn(f"duplicate.yml:{line}: duplicate YAML key", errors[0])
+
     def test_dependabot_update_contract(self):
         """Zachová týdenní aktualizace do test a obě existující skupiny."""
         config = yaml.load((ROOT / ".github/dependabot.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
@@ -125,8 +151,8 @@ class ActionReferenceTests(unittest.TestCase):
         self.assertEqual(calls.count("sigstore/cosign-installer"), 1)
 
 
-class SSHAgentTests(unittest.TestCase):
-    """Spustí skutečný agent a shell workflow s izolovanými SSH/SCP klienty."""
+class SSHTestCase(unittest.TestCase):
+    """Připraví izolované prostředí pro skutečný agent a náhrady síťových operací."""
 
     def setUp(self):
         """Připraví dočasný klíč a náhrady pouze vzdálených operací."""
@@ -211,6 +237,20 @@ class SSHAgentTests(unittest.TestCase):
             CLIENT_TRACE=(self.root / "clients").as_posix(),
             FINGERPRINTS=(self.root / "fingerprints").as_posix(),
             REAL_SSH_AGENT=getattr(self, "agent_executable", ""),
+            NASADIT="false",
+            TEST_MOD="konkretni",
+            TEST_CISLO="42",
+            REF_NAME="agents/codex/test-fixture",
+            REF_TYPE="branch",
+            SERVER_ROOT=self.root.as_posix(),
+            DEP_SCRIPT="deploy fixture.sh",
+            TEST_SCRIPT="test fixture.sh",
+            DEPLOYMENT_SERVER="test-fixture",
+            SSH_KNOWN_HOST="test-fixture-known-host",
+            GIT_TAG="v1.2.3",
+            IMAGE_TAG="1.2.3",
+            DEPLOYMENT_SOURCE="GitHub",
+            OPERATIONS=(self.root / "operations").as_posix(),
         )
         environment.update(values)
         prefix = (
@@ -247,12 +287,17 @@ class SSHAgentTests(unittest.TestCase):
         :return: Blok workflow se syntetickým hostem a dočasnou cestou known_hosts.
         """
         script = script.replace("~/.ssh", '"$TEST_SSH_DIR"')
-        return re.sub(r"\$\{\{.*?\}\}", "test-fixture", script)
+        context = {"secrets.DEPLOYMENT_SERVER_DEV": "test-fixture"}
+        return re.sub(r"\$\{\{\s*(.*?)\s*\}\}", lambda match: context[match.group(1)], script)
 
     def assert_agent_stopped(self):
         """Ověří nedostupnost zaznamenaného socketu po skutečném úklidu."""
         status = self.run_shell('eval "$(cat "$AGENT_TRACE")" > /dev/null\nssh-add -l')
         self.assertEqual(status.returncode, 2, status.stdout + status.stderr)
+
+
+class SSHAgentTests(SSHTestCase):
+    """Spustí skutečný agent a shell workflow s izolovanými SSH/SCP klienty."""
 
     def test_identity_survives_ssh_and_scp_steps_then_cleanup(self):
         """Klíč s CRLF funguje pro SSH a obě SCP volání bez opětovného načtení."""
@@ -302,6 +347,212 @@ class SSHAgentTests(unittest.TestCase):
         """Chyba VPN před inicializací nesmí poškodit cizí agent."""
         cleanup = self.run_shell(self.cleanup["run"])
         self.assertEqual(cleanup.returncode, 0, cleanup.stderr)
+
+
+class DeploymentAgentTests(SSHTestCase):
+    """Ověří omezení klíče a celý životní cyklus agenta v jediném deployment kroku."""
+
+    def test_deployment_key_is_step_scoped_and_agent_stops_on_every_exit(self):
+        """Úspěch, chyba SSH i neplatný klíč zachovají výsledek a uvolní agent."""
+        workflow = yaml.load(
+            (ROOT / ".github/workflows/deployment.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader
+        )
+        job = workflow["jobs"]["deployment"]
+        self.assertNotIn("SSH_PRIVATE_KEY", job["env"])
+        connection = next(step for step in job["steps"] if step.get("name") == "SSH connection")
+        for step in job["steps"]:
+            self.assertEqual("SSH_PRIVATE_KEY" in step.get("env", {}), step == connection)
+        self.assertIn("secrets.SSH_PRIVATE_KEY_SERVER_DEV", connection["env"]["SSH_PRIVATE_KEY"])
+        self.assertIn("secrets.SSH_PRIVATE_KEY_SERVER_TEST", connection["env"]["SSH_PRIVATE_KEY"])
+        self.write_tool("ping", "exit 0\n")
+        for key, client_exit, expected in (
+            (self.private_key, "0", 0),
+            (self.private_key, "7", 7),
+            ("invalid-key", "0", 1),
+        ):
+            with self.subTest(client_exit=client_exit, valid_key=key == self.private_key):
+                clients = self.root / "clients"
+                clients.unlink(missing_ok=True)
+                result = self.run_shell(
+                    self.workflow_script(connection["run"]), SSH_PRIVATE_KEY=key, CLIENT_EXIT=client_exit
+                )
+                self.assertEqual(result.returncode, expected, result.stderr)
+                self.assertEqual(clients.exists(), key == self.private_key)
+                self.assertNotIn(key, result.stdout + result.stderr + self.state.read_text(encoding="utf-8"))
+                self.assertNotIn("SSH_AUTH_SOCK", self.state.read_text(encoding="utf-8"))
+                self.assert_agent_stopped()
+
+
+class WorkflowInputTests(SSHTestCase):
+    """Spustí validaci a dvě shellové interpretace transportu bez připojení k serveru."""
+
+    def setUp(self):
+        """Nahradí vzdálený host lokálním POSIX shellem a zaznamená argumenty příkazů."""
+        super().setUp()
+        workflows = {
+            name: yaml.load(
+                (ROOT / f".github/workflows/{name}.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader
+            )
+            for name in ("deployment", "run-tests")
+        }
+        self.steps = workflows["run-tests"]["jobs"]["deployment"]["steps"]
+        self.validation = next(step for step in self.steps if step.get("id") == "validate-inputs")
+        deployment_steps = workflows["deployment"]["jobs"]["deployment"]["steps"]
+        self.normalize = next(step for step in deployment_steps if step.get("id") == "normalize-tag")
+        self.deploy = next(step for step in deployment_steps if step.get("name") == "SSH connection")
+        self.write_tool(
+            "ssh",
+            'printf "ssh\\n" >> "$CLIENT_TRACE"\n' "shift\n" 'exec /bin/sh -c "$*"\n',
+        )
+        self.write_tool("sudo", 'exec "$@"\n')
+        self.write_tool("ping", "exit 0\n")
+        self.write_tool("git", 'printf "%s\\0" git "$#" "$@" >> "$OPERATIONS"\n')
+        for name, operation in (("deploy fixture.sh", "deploy"), ("test fixture.sh", "test")):
+            path = self.root / name
+            path.write_text(
+                f'#!/usr/bin/env bash\nprintf "%s\\0" {operation} "$#" "$@" >> "$OPERATIONS"\n',
+                encoding="utf-8",
+                newline="\n",
+            )
+            path.chmod(0o755)
+
+    def operations(self):
+        """Načte záznamy s NUL oddělovači, které zachovávají i uvozovky a nové řádky.
+
+        :return: Dvojice názvu operace a původních argumentů v pořadí volání.
+        """
+        path = self.root / "operations"
+        fields = path.read_text(encoding="utf-8").split("\0")[:-1] if path.exists() else []
+        records = []
+        while fields:
+            name, count = fields[:2]
+            count = int(count)
+            records.append((name, fields[2 : 2 + count]))
+            fields = fields[2 + count :]
+        return records
+
+    def test_validation_precedes_connection_and_uses_the_same_input_environment(self):
+        """Konfigurace nepředá neveřejné vstupy do zdroje shellu a validuje před VPN."""
+        validation_index = self.steps.index(self.validation)
+        remote = next(step for step in self.steps if step.get("name") == "SSH deployment a testy")
+        for step in self.steps:
+            if step.get("name") in ("Connect VPN", "Setup SSH agent", "SSH deployment a testy"):
+                self.assertLess(validation_index, self.steps.index(step))
+        self.assertEqual(
+            self.validation["env"],
+            {
+                "NASADIT": "${{ inputs.nasadit_verzi }}",
+                "TEST_MOD": "${{ inputs.test_mod }}",
+                "TEST_CISLO": "${{ inputs.test_cislo }}",
+            },
+        )
+        for key, expression in self.validation["env"].items():
+            self.assertEqual(remote["env"][key], expression)
+        self.assertEqual(remote["env"]["REF_NAME"], "${{ github.ref_name }}")
+        self.assertEqual(remote["env"]["REF_TYPE"], "${{ github.ref_type }}")
+        self.assertEqual(self.normalize["env"]["RAW_TAG"], "${{ inputs.tag }}")
+        for step in (self.validation, remote, self.normalize, self.deploy):
+            self.assertNotIn("${{", step["run"])
+
+    def test_tag_normalization_preserves_valid_releases_and_rejects_shell_syntax(self):
+        """Tagy se normalizují jako data a škodlivý obsah se nevykoná před kontrolou."""
+        output = self.root / "outputs"
+        for raw_tag in ("1.2.3", "v1.2.3", "v1.2.3-rc.1"):
+            with self.subTest(raw_tag=raw_tag):
+                output.write_text("", encoding="utf-8")
+                result = self.run_shell(self.normalize["run"], RAW_TAG=raw_tag)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                image = raw_tag.removeprefix("v")
+                self.assertEqual(
+                    output.read_text(encoding="utf-8").splitlines(), [f"git_tag=v{image}", f"image_tag={image}"]
+                )
+        for raw_tag in (
+            "",
+            "main",
+            "1.2",
+            "$(printf INJECTION_CANARY >&2)1.2.3",
+            '1.2.3"; printf INJECTION_CANARY >&2; #',
+            "1.2.3\nprintf INJECTION_CANARY >&2",
+        ):
+            with self.subTest(raw_tag=raw_tag):
+                output.write_text("", encoding="utf-8")
+                result = self.run_shell(self.normalize["run"], RAW_TAG=raw_tag)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotIn("INJECTION_CANARY", result.stderr)
+                self.assertEqual(output.read_text(encoding="utf-8"), "")
+                self.assertFalse((self.root / "clients").exists())
+
+    def test_invalid_test_inputs_stop_before_remote_execution(self):
+        """Neplatné režimy, boolean a čísla ukončí workflow před spuštěním SSH."""
+        cases = [
+            {"TEST_MOD": "unknown"},
+            {"NASADIT": "yes"},
+            {"TEST_CISLO": ""},
+            {"TEST_CISLO": "-1"},
+            *(
+                {"TEST_CISLO": value}
+                for value in ("$(printf INJECTION_CANARY >&2)", "'", '"', "42\nprintf INJECTION_CANARY >&2")
+            ),
+            {"TEST_MOD": "vsechny", "TEST_CISLO": "not-a-number"},
+        ]
+        for values in cases:
+            with self.subTest(values=values):
+                result = self.run_shell(self.validation["run"] + "\n" + self.workflow_script(self.remote), **values)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotIn("INJECTION_CANARY", result.stdout + result.stderr)
+                self.assertFalse((self.root / "clients").exists())
+                self.assertEqual(self.operations(), [])
+
+    def test_all_modes_and_optional_deployment_keep_their_remote_arguments(self):
+        """Skutečný vzdálený skript obdrží všechny argumenty a zachová tři režimy testů."""
+        for mode, number, arguments in (
+            ("vsechny", "", []),
+            ("neuspesne", "", ["-f"]),
+            ("konkretni", "42", ["-t", "42"]),
+        ):
+            for deploy in ("false", "true"):
+                with self.subTest(mode=mode, deploy=deploy):
+                    (self.root / "operations").unlink(missing_ok=True)
+                    result = self.run_shell(
+                        self.validation["run"] + "\n" + self.workflow_script(self.remote),
+                        TEST_MOD=mode,
+                        TEST_CISLO=number,
+                        NASADIT=deploy,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    expected = [("test", arguments)]
+                    if deploy == "true":
+                        expected.insert(0, ("deploy", [self.root.as_posix(), "agents/codex/test-fixture", "branch"]))
+                    self.assertEqual(self.operations(), expected)
+
+    def test_reference_names_are_literal_through_both_shells(self):
+        """Uvozovky a substituce ve validním názvu reference zůstanou jediným argumentem."""
+        reference = "agents/codex/x'\"$(printf${IFS}INJECTION_CANARY>&2)"
+        for ref_type in ("branch", "tag"):
+            with self.subTest(ref_type=ref_type):
+                (self.root / "operations").unlink(missing_ok=True)
+                result = self.run_shell(
+                    self.validation["run"] + "\n" + self.workflow_script(self.remote),
+                    NASADIT="true",
+                    REF_NAME=reference,
+                    REF_TYPE=ref_type,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertNotIn("INJECTION_CANARY", result.stdout + result.stderr)
+                self.assertEqual(self.operations()[0], ("deploy", [self.root.as_posix(), reference, ref_type]))
+
+    def test_deployment_transport_preserves_source_and_tag_arguments(self):
+        """Deployment předá normalizovaný tag a oba zdroje beze změny přes vzdálený shell."""
+        for source in ("GitHub", "DockerHub"):
+            with self.subTest(source=source):
+                (self.root / "operations").unlink(missing_ok=True)
+                result = self.run_shell(
+                    self.workflow_script(self.deploy["run"]), SSH_PRIVATE_KEY=self.private_key, DEPLOYMENT_SOURCE=source
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(self.operations()[-1], ("deploy", ["1.2.3", self.root.as_posix(), source]))
+                self.assertIn(("git", ["checkout", "-f", "refs/tags/v1.2.3"]), self.operations())
+                self.assert_agent_stopped()
 
 
 if __name__ == "__main__":

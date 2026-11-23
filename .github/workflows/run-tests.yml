@@ -44,6 +44,32 @@ jobs:
     timeout-minutes: 180
 
     steps:
+      - name: Validate test inputs
+        id: validate-inputs
+        shell: bash
+        env:
+          NASADIT: ${{ inputs.nasadit_verzi }}
+          TEST_MOD: ${{ inputs.test_mod }}
+          TEST_CISLO: ${{ inputs.test_cislo }}
+        run: |
+          set -euo pipefail
+          case "$TEST_MOD" in
+            vsechny|neuspesne|konkretni) ;;
+            *) echo "::error::Invalid test mode"; exit 1 ;;
+          esac
+          case "$NASADIT" in
+            true|false) ;;
+            *) echo "::error::Invalid deployment boolean"; exit 1 ;;
+          esac
+          if [[ -n "$TEST_CISLO" && ! "$TEST_CISLO" =~ ^[0-9]+$ ]]; then
+            echo "::error::Test number must contain decimal digits"
+            exit 1
+          fi
+          if [[ "$TEST_MOD" == konkretni && -z "$TEST_CISLO" ]]; then
+            echo "::error::Missing test number"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       
@@ -96,28 +122,48 @@ jobs:
 
       - name: SSH deployment a testy
         shell: bash
+        env:
+          NASADIT: ${{ inputs.nasadit_verzi }}
+          TEST_MOD: ${{ inputs.test_mod }}
+          TEST_CISLO: ${{ inputs.test_cislo }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          SERVER_ROOT: ${{ env.server_deploy_root }}
+          DEP_SCRIPT: ${{ env.dep_script }}
+          TEST_SCRIPT: ${{ env.test_script }}
+          DEPLOYMENT_SERVER: ${{ secrets.DEPLOYMENT_SERVER_DEV }}
+          SSH_KNOWN_HOST: ${{ secrets.SSH_KNOWN_HOST_DEV }}
         run: |
           set -euo pipefail
           # Pre-fill known_hosts once
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KNOWN_HOST" >> ~/.ssh/known_hosts
           
-          # Pass variables explicitly to the SSH session
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}  <<'EOF'
-             sudo bash -c '
+          # Quote arguments for the remote login shell; keep the script itself static.
+          shell_quote() {
+            local value="$1"
+            local quote="'"
+            local escaped_quote="'\\''"
+            printf "'%s'" "${value//"$quote"/"$escaped_quote"}"
+          }
+          remote_command="sudo bash -s --"
+          for value in "$NASADIT" "$TEST_MOD" "$TEST_CISLO" "$REF_NAME" "$REF_TYPE" "$SERVER_ROOT" "$DEP_SCRIPT" "$TEST_SCRIPT"; do
+            remote_command+=" $(shell_quote "$value")"
+          done
+          ssh "amcr@$DEPLOYMENT_SERVER" "$remote_command" <<'EOF'
               set -euo pipefail
-              NASADIT="${{ inputs.nasadit_verzi }}"
-              TEST_MOD="${{ inputs.test_mod }}" 
-              TEST_CISLO="${{ inputs.test_cislo }}" 
-              REF_NAME="${{ github.ref_name }}"
-              REF_TYPE="${{ github.ref_type }}"
-              SERVER_ROOT="${{ env.server_deploy_root }}"
-              DEP_SCRIPT="${{ env.dep_script }}"
-              TEST_SCRIPT="${{ env.test_script }}"
-              cd $SERVER_ROOT
-              chmod +x $DEP_SCRIPT $TEST_SCRIPT
-              if [ $NASADIT = true ]; then
-                ./$DEP_SCRIPT $SERVER_ROOT $REF_NAME $REF_TYPE
+              NASADIT="$1"
+              TEST_MOD="$2"
+              TEST_CISLO="$3"
+              REF_NAME="$4"
+              REF_TYPE="$5"
+              SERVER_ROOT="$6"
+              DEP_SCRIPT="$7"
+              TEST_SCRIPT="$8"
+              cd "$SERVER_ROOT"
+              chmod +x "$DEP_SCRIPT" "$TEST_SCRIPT"
+              if [ "$NASADIT" = true ]; then
+                "./$DEP_SCRIPT" "$SERVER_ROOT" "$REF_NAME" "$REF_TYPE"
               fi
               echo "Spouštím testy v režimu: $TEST_MOD"              
               if [ "$TEST_MOD" = "konkretni" ] && [ -z "$TEST_CISLO" ]; then
@@ -127,18 +173,17 @@ jobs:
               case $TEST_MOD in
                 vsechny)
                 echo "Testuji vše"
-                ./$TEST_SCRIPT
+                "./$TEST_SCRIPT"
                 ;;
                 neuspesne)
                 echo "Testuji pouze neúspěšné"
-                ./$TEST_SCRIPT -f
+                "./$TEST_SCRIPT" -f
                 ;;
                 konkretni)
                 echo "Testuji test č. $TEST_CISLO"
-                ./$TEST_SCRIPT -t $TEST_CISLO ;;
+                "./$TEST_SCRIPT" -t "$TEST_CISLO" ;;
                 *) exit 1 ;;
               esac
-            '
           EOF
           
 
