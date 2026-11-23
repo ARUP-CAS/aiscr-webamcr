@@ -139,7 +139,10 @@ sekcí ``texty`` nebo ``geometrie`` – a to po celou dobu běhu, ne jen během
 přesunu poloh a mazání poznámek změn katastru.
 Denní ``sync_ruian_changes`` se mezitím přeskočí se stejným ``ERROR``
 ``lock_not_acquired``; vynechaný den dožene příští běh, protože pokračuje od
-kotvy posledního úspěšného synchu (``RuianSyncRun``).
+kotvy posledního úspěšného synchu (``RuianSyncRun``). Plný sync
+``aktualizuj_ruian_shp`` spuštěný během anonymizace skončí ``CommandError``
+a je potřeba ho pustit znovu až po jejím dokončení. Opačně anonymizace
+spuštěná během synchu skončí ``CommandError`` dřív, než cokoli zapíše.
 
 Doporučený postup je ``celery_beat`` na dobu plného synchu **zastavit** a pustit
 ho až po jeho dokončení; zámek je pojistka proti omylu, ne náhrada plánování.

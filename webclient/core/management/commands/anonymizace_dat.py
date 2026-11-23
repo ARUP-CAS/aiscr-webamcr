@@ -1168,7 +1168,7 @@ class Command(BaseCommand):
             return
 
         celkem = sum(len(identy) for identy in problemy.values())
-        self.stdout.write(f"Předběžná kontrola našla problémy, kvůli kterým nejde pokračovat: {celkem}")
+        self.stdout.write(f"Předběžná kontrola našla problémy: {celkem}")
         for duvod, identy in sorted(problemy.items(), key=lambda polozka: -len(polozka[1])):
             self.stdout.write(f"  {len(identy)}× {POPISY_DUVODU.get(duvod, duvod)}")
             self._vypis_identy(identy)

@@ -2157,29 +2157,35 @@ class TestSekceGeometrie(TestCase):
 
     def test_jen_texty_bezi_pod_zamkem_ruian(self):
         """
-        Běh jen se sekcí ``texty`` drží zámek RÚIAN po celou dobu sekce.
+        Běh jen se sekcí ``texty`` drží zámek RÚIAN i při mazání poznámek změn katastru.
 
         Sekce maže poznámky změn katastru, které zapisuje sync RÚIAN; bez zámku
         by souběžný sync mohl po výběru zapsat novou poznámku se skutečnými katastry.
+        Běží skutečná sekce, sleduje se až samotné mazání poznámek.
         """
         from unittest import mock
 
         from django.test import override_settings
 
         prikaz = _OmezenyPrikaz.vytvor({})
+        puvodni = prikaz._poznamky_zmen_katastru
         stav = {}
 
-        def texty(_volby):
-            stav["texty"] = self._drzi_zamek_ruian()
+        def poznamky(volby):
+            stav["pri_mazani"] = self._drzi_zamek_ruian()
+            puvodni(volby)
+            stav["po_mazani"] = self._drzi_zamek_ruian()
 
         with (
             override_settings(TEST_ENV=True),
-            mock.patch.object(prikaz, "_sekce_texty", side_effect=texty),
+            mock.patch.object(prikaz, "_poznamky_zmen_katastru", side_effect=poznamky),
             mock.patch("cacheops.invalidate_all"),
         ):
+            # Dry-run: mazání poznámek se volá i v něm. Ostrý běh by tu zastavila
+            # předběžná kontrola, protože obecná fixture zakládá heslo přístupnosti bez řazení.
             prikaz.handle(**_volby_prikazu(dry_run=True, jen="texty"))
 
-        self.assertEqual(stav, {"texty": True})
+        self.assertEqual(stav, {"pri_mazani": True, "po_mazani": True})
         self.assertFalse(self._drzi_zamek_ruian())
 
     def test_bezici_sync_ruian_zastavi_beh_pred_kontrolou(self):
