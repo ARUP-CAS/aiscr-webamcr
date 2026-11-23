@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 # SPDX-License-Identifier: MIT
-# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
+# delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
 
 """Copy user-level workspace-safety config from repo templates to the current user's home.
 
@@ -47,7 +47,8 @@ contributions and operator-authored entries look the same without a machine-loca
 and removes the reported entries only on a run the operator has reviewed through ``--prune --dry-run``. Read-only
 inspection without invoking the port uses ``report_workstation_safety_posture.py``. Run from repo venv when in
 aiscr-management (see .agents/scripts/README.md). Missing ``jsonschema`` / ``tomli_w`` are installed automatically from
-pinned lines in ``requirements-ci.txt`` when needed (see requirements_subset_install.py).
+pins in the bundled ``.agents/scripts/lib/workstation_safety_requirements.txt`` file when needed (see
+requirements_subset_install.py).
 
 Contract: agent/workspace-safety-config
 Class: script
@@ -112,12 +113,12 @@ def get_repo_root() -> Path:
 
 
 def _ensure_port_script_dependencies() -> None:
-    """Install jsonschema/tomli-w from requirements-ci.txt before importing them (current interpreter)."""
+    """Install jsonschema/tomli-w from the bundled requirements file before importing them."""
     # pylint: disable-next=import-outside-toplevel
     from lib.requirements_subset_install import ensure_imports_from_requirements
 
     ensure_imports_from_requirements(
-        get_repo_root() / "requirements-ci.txt",
+        get_repo_root() / ".agents/scripts/lib/workstation_safety_requirements.txt",
         (("jsonschema", "jsonschema"), ("tomli-w", "tomli_w")),
     )
 

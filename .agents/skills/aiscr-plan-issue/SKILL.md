@@ -11,7 +11,7 @@ author: AIS CR (Archaeological Information System of the Czech Republic) <https:
 <!-- SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- aiscr:compiled=aiscr-plan-issue -->
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 <!-- aiscr:entry-scope -->
 
@@ -191,6 +191,7 @@ Classify every fragment from that emitted list and from the thread:
 
 - **Load-bearing** — content another system reads: issue-closing keywords, task-list checkboxes, trailers.
   Carry each **verbatim** into the delimited reporter region; absorbing one into prose drops the token with no diagnostic.
+  When the work deliberately ticks, rewords, or retires a task item, write the new form where it belongs and record the segment holding the old one as `absorbed` or `superseded` **with its reason**; that declaration releases it from verbatim carry, and the approval view shows it.
 - **Narrative** — everything a human reads.
   Absorb it into the section of the shape it belongs to; leaving it as a separate unreconciled block defeats the point.
 

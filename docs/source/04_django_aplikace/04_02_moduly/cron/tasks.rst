@@ -596,13 +596,18 @@ Funkce
 
    Načte a uloží novinkový kanál do cache.
 
-   Tato úloha je volána při startu aplikace a periodicky v intervalu
-   definovaném v settings (cache_ttl - 60 sekund).
+   Úloha se spouští při startu aplikace, po změně konfigurace a podle plánu
+   Celery Beat. Spravovaný interval vychází z cache_ttl - 60 sekund, vlastní
+   plán může mít přednost. Před načítáním se pokusí sladit plán; chyba sladění
+   nezabrání samotnému načítání.
 
+   HTTP přesměrování se nenásledují a odpovědi 3xx jsou považovány za chybu.
    Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
 
    :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
        použije se seznam z nastavení aplikace.
+   :return: ``True``, pokud zpracování skončilo bez vyžádání opakování úlohy;
+       výsledek nepotvrzuje zveřejnění dat vyřazených kvůli změně konfigurace.
 
 .. py:function:: run_news_feed_warmup()
 

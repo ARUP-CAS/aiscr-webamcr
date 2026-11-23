@@ -56,7 +56,7 @@ per record per run (see `Write plan`_).
        F --> O["orig"]
        F --> T["thumb · thumb-large"]
        F --> OF["orig-format"]
-       F --> AT["atr/json · atr/alto-xml · atr/teitok-xml"]
+       F --> AT["atr/docproc-json · atr/teitok-xml"]
        F --> CV["cva/coco-json · cva/wadm"]
        F --> DJ["atrium/document-json"]
        F --> P["paradata/orig · paradata/{distribution}"]
@@ -141,20 +141,18 @@ Distribution catalogue
      - `aiscr-webamcr#4038 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/4038>`__
    * - ``atrium/document-json``
      - ``application/json``
-     - every processing run
-     - `aiscr-webamcr#2590 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/2590>`__
-   * - ``atr/json``
+     - the record level: built from ``atr/docproc-json`` by ocr-postprocess, then enriched by the
+       later steps of the same run
+     - `aiscr-webamcr#2590 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/2590>`__,
+       `atrium-project#84 <https://github.com/ufal/atrium-project/issues/84>`__
+   * - ``atr/docproc-json``
      - ``application/json``
-     - the ATR service, its main output going forward (name for now); a source's other format is
-       converted into it, and the one-off HPC run delivers it for bulk import
-     - `aiscr-atr#1 <https://github.com/ARUP-CAS/aiscr-atr/issues/1>`__,
-       `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__
-   * - ``atr/alto-xml``
-     - ``application/xml``
-     - the ATR service, derived from ``atr/json`` and kept as the standard output for
-       compatibility (content parity with ``atr/json`` enforced later), or the existing
-       mass-OCR ALTO imported in bulk
-     - `aiscr-atr#1 <https://github.com/ARUP-CAS/aiscr-atr/issues/1>`__,
+     - the layout level, one per document: digital-convert's when no page needs ATR, otherwise
+       the ATR's, run on the whole document; for the existing mass OCR, a one-off converter of its
+       ALTO, replaced later by the HPC ATR run
+     - `aiscr-docs-pipeline#17 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/17>`__
+       (schema), `aiscr-atr#2 <https://github.com/ARUP-CAS/aiscr-atr/issues/2>`__,
+       `aiscr-docs-pipeline#19 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/19>`__,
        `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__
    * - ``atr/teitok-xml``
      - ``application/xml``
@@ -171,23 +169,35 @@ Distribution catalogue
      - AMČR, converted from ``cva/coco-json`` (family kept open)
      - `aiscr-webamcr#3583 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3583>`__
 
+**Two levels** (Agreed, 11–17 November 2026). ``atr/docproc-json`` is the layout: the route of
+every page of the original, and the blocks of each page with their type, position, reading order
+and text. Digital-convert and the ATR write it in the same format, to one versioned schema kept
+in ``aiscr-docs-pipeline`` under an ARUP-CAS identifier. ``atrium/document-json`` is built from it:
+the text in lines, each linked to its block and stating its text source (text layer, ATR or
+legacy OCR) and how precise its box is (measured, derived or absent), every page with its content
+status, and the enrichment. The record carries no run data and no copy of the layout. All boxes,
+in both, are on the displayed page: the CropBox after ``/Rotate``, origin at the top left, in
+points × ``UserUnit``.
+
+**No ALTO** (Agreed). ``atr/alto-xml`` is neither produced nor stored. The ATR recognises by
+blocks and does not measure lines, so its ALTO would claim a precision it does not have. An ALTO
+export can be built from ``atr/docproc-json`` if a consumer ever needs one.
+
 Kept only in the record, with no file of their own:
 
 - **page classification** (``page_categories``, ``pages[].category*``). Its results are already
   persisted in the record, and the Digital Archive reads them from there
   (`aiscr-digiarchiv-2#710 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/710>`__);
-- **keywords**, in two kinds, both from keyword-extractor: *controlled* keywords from the
+- **keywords**, in two kinds, both from keyword-extract: *controlled* keywords from the
   vocabularies (the ``enrichment`` block, with concept identifiers), and *uncontrolled*
-  statistical keywords with method and score (a ``keywords`` block, requested from the tool
-  maintainers). The two kinds are never merged: every keyword states the method that produced
+  statistical keywords with method and score (the ``keywords`` block). The two kinds are never merged: every keyword states the method that produced
   it. The default statistical method is KeyBERT; YAKE and the legacy KER method stay selectable.
   Consumers decide how to use them: free keywords, schema.org ``keywords``, an
   evaluation baseline, candidates for new vocabulary terms;
 - **line quality** (``lines[]`` with categories and scores, and the page summaries in
   ``pages[]``). No consumer reads a per-line table: the Digital Archive indexes page and file
   aggregates from the record, and the pipeline builds nlp-enrich's input table from the record
-  in memory;
-- **born-digital text lines**, whose persistent source is the original itself.
+  in memory.
 
 **Discovery reads the record** (Agreed). The Digital Archive indexes page classes, lemmas,
 entities, both keyword kinds and quality from the record, which carries the same blocks for every
@@ -213,16 +223,17 @@ Inputs
 **Agreed** as rules; the routing is built with the orchestration (Open).
 
 - **Every accepted type.** Every file type AMČR accepts for upload is processed by the reader for
-  its kind: born-digital documents by the born-digital converter, scans and images through OCR,
-  existing ALTO directly. A type that no reader handles yet is listed as pending in the job
-  report, with the reason; it is never forced through another route. The routing table lives
-  with the orchestration in
+  its kind: born-digital documents by the born-digital converter, scans and images by the ATR,
+  the existing mass-OCR ALTO through a one-off conversion into ``atr/docproc-json``. A type that
+  no reader handles yet is listed as pending in the job report, with the reason; it is never
+  forced through another route. The routing table lives with the orchestration in
   `ARUP-CAS/aiscr-docs-pipeline <https://github.com/ARUP-CAS/aiscr-docs-pipeline>`__.
 - **OCR text layers are not trusted.** A text layer left in a PDF by an earlier OCR run is not
   reused: such documents are recognised again, so the text has a known origin. The layer stays in
   ``orig`` and can serve as a comparison.
-- **Mixed documents.** Pages of a born-digital document without a usable text layer go to OCR, and
-  their lines join the same record.
+- **Mixed documents.** Digital-convert gives every page a verdict. If any page needs ATR, the
+  whole document goes through the ATR with those pages forced, and the record builder keeps the
+  text-layer lines of the other pages, linked to the ATR's blocks. No page is dropped or sampled.
 - **Signals, not gates.** Page classes and quality do not decide what is processed (see
   `Text quality`_).
 
@@ -264,17 +275,22 @@ published in the Digital Archive, so nothing that is published lacks it.
 
 - **Built** from AMČR's own English labels for every vocabulary-backed field (``heslo_en`` and
   ``popis_en`` in the vocabularies, ``nazev_en`` for RÚIAN units). Only the free-text fields go to
-  the translator
-  (`aiscr-webamcr#3570 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3570>`__), selected by
-  its XPath definitions and translated in place.
+  the translator, translated in place. AMČR owns the list of fields to translate and sends it
+  with each request; the translator has no default list
+  (`aiscr-webamcr#3570 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3570>`__). The list used
+  is recorded in the paradata, without any field text.
 - **Generated** asynchronously after archiving, in its own transaction. That adds one version per
   archiving event. Existing archived records get it in one planned bulk pass.
 - **Stored** at ``rest/AMCR/record/{ident_cely}/metadata-en`` (``application/xml``), a sibling of
   ``metadata``. Its paradata is at ``rest/AMCR/record/{ident_cely}/paradata/metadata-en`` and
   records, among other things, the SHA-512 of the ``metadata`` it was built from.
 - **History:** ``DIST01``/``DIST11`` with the note ``metadata-en``, in the record's history.
-- **Licence:** the licence of the machine translation is stated in its paradata and shown with the
-  English metadata.
+- **Access:** exactly the rules of ``metadata``, wherever it is served. Fields that are not
+  translated are copied unchanged, so protected fields (``chranene_udaje``) are present: the
+  Digital Archive indexes ``metadata-en`` through the same models and protection as ``metadata``,
+  and ``oai_amcr_en``, the English interface and the ``/id`` redirect filter it alike.
+- **Licence:** no licence is computed; see `Licences`_. The translation's components and their
+  terms are in its paradata.
 - **Consumed** by
   `aiscr-digiarchiv-2#496 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/496>`__.
 - **Pilot scope:** the pilot translates ``metadata-en`` only, in the translator's ``replace`` mode;
@@ -299,18 +315,24 @@ Paradata
 
 - ``instrument``: the ``SoftwareApplication`` with its ``version`` (required by RO-Crate 1.2), and
   for services the ``ContainerImage`` with its digest;
-- ``object``: the inputs, named by distribution;
-- ``result``: the output distribution;
+- ``object``: the inputs, named by distribution and SHA-512, with the record version read; an
+  input that is not stored (for example digital-convert's layout of a mixed document) is named by
+  its SHA-512 and marked as not stored;
+- ``result``: the outputs, named by distribution and SHA-512; for the record, the blocks and
+  fields the step wrote;
 - ``agent``: who ran it (``Organization`` or ``Person``);
-- ``startTime``, ``endTime`` and ``actionStatus`` (``CompletedActionStatus`` or
-  ``FailedActionStatus``);
-- tool-specific data (the ATRIUM paradata: configuration, statistics, licence derivation) as
-  properties of the action.
+- ``startTime``, ``endTime`` and ``actionStatus``. What AMČR stores is always
+  ``CompletedActionStatus``, because a failed job writes nothing; ``FailedActionStatus`` serves
+  development and tests, which use the same frame;
+- tool-specific data as properties of the action: only the parameters that shaped the output
+  (model revision, thresholds, forced pages, the translator's field list), sampling and splitting
+  notes, and each component with its version and terms, as facts, never combined into a licence.
 
-The tool services are asked to return their paradata in this shape. Until they do, the
-orchestration composes it from the service response and the job metadata. The profile pairs with
-the RO-Crate direction of ATRIUM, so paradata can become part of an exported crate without
-conversion.
+The record has paradata of its own, ``paradata/atrium/document-json``: one action for each step
+that wrote it. The ATRIUM services return their paradata in this shape; the orchestration adds the
+job data. The profile pairs with the RO-Crate direction of ATRIUM, so paradata can become part of
+an exported crate without conversion. Each paradata file describes the run that produced the
+current version of its distribution; earlier runs are in the OCFL history.
 
 Mappings, documented from the start:
 
@@ -350,7 +372,7 @@ Mappings, documented from the start:
      - ``eventDetailInformation``
 
 *Considered and rejected:* a custom paradata format; the record as the only carrier of paradata;
-serving paradata as plain ``application/json``.
+serving paradata as plain ``application/json``; run data or block stamps inside the record.
 
 
 Paradata of the original (``paradata/orig``)
@@ -388,14 +410,50 @@ It does not describe the technical format (``orig-format``), fixity (the Fedora 
        O -. "orig bytes change" .-> F["orig-format regenerated"]
 
 
+Licences
+--------
+
+**Agreed.** No licence is computed anywhere: a component's licence is not the licence of an
+output. Each output states its licence context in three layers.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 42 36
+
+   * - Layer
+     - What it says
+     - Where the user finds it
+   * - 1. Rights in the content
+     - the document's own licence, otherwise AMČR's default CC BY-NC 4.0; derived distributions
+       inherit it
+     - the record crate (``license``), the File API (``Link rel="license"``), the Digital Archive,
+       OAI and ARIADNE
+   * - 2. Produced with
+     - each step's components and their terms, listed, never merged into one licence
+     - the distribution's paradata, shown beside the download
+   * - 3. AMČR conditions
+     - a condition of reuse AMČR decides to honour, stated with its reason
+     - AMČR's policy, shown with layer 1
+
+Outputs produced through LINDAT services (the linguistic layer, entities, ``atr/teitok-xml`` and
+the machine-translated fields of ``metadata-en``) reach the production release only once their
+terms are covered in writing
+(`atrium-project#78 <https://github.com/ufal/atrium-project/issues/78>`__); the pilot proceeds
+on ÚFAL's answer.
+
+*Considered and rejected:* a licence calculated from the components and stored in the record or
+the paradata, which asserts rights that no one decided.
+
+
 The enrichment record (``atrium/document-json``)
 ------------------------------------------------
 
 Schema and identity
 ~~~~~~~~~~~~~~~~~~~
 
-**Agreed.** The record follows the ``atrium_document`` schema 1.0 of the ATRIUM tools. AMČR
-creates the first version of each record itself, and it uses SHA-512 throughout.
+**Agreed.** The record follows ``doc-schema-v2`` of the ATRIUM tools (record 2.0, released after
+the pilot run on the cluster; ``doc-schema-v1`` stays as published). AMČR creates the first
+version of each record itself, and it uses SHA-512 throughout.
 
 - **Seeded by AMČR.** When a file is first processed, AMČR creates the baseline record and passes
   it to the first service:
@@ -405,19 +463,18 @@ creates the first version of each record itself, and it uses SHA-512 throughout.
   - ``source.sha512`` (the Fedora digest of ``orig``);
   - the required keys.
 
-  ``source.origin`` is left unset: the tool that reads the document sets it, because the origin
-  decides which tool writes the page and line data.
+  The record builder in ocr-postprocess writes the rest of ``source``; ``source.origin`` only
+  describes where the text came from.
 
-  Every later stage inherits the baseline's ``doc_id``, and the first writer of each ``source``
-  field wins. So identity does not depend on filenames.
+  Every later stage inherits the baseline's ``doc_id``, so identity does not depend on filenames.
 - **SHA-512 throughout.** The Fedora digest, the OCFL inventory, DROID's hash in ``orig-format``
   and ``source.sha512`` are one and the same value. Pairing them is a comparison with no extra
   hashing, and a mismatch stops processing for that file. ``source.sha512`` is an additive field,
   which the schema allows without a version change.
-- **References.** ``derived_from`` names stored outputs by their distribution name (for example
-  ``"teitok": "atr/teitok-xml"``); ``regenerable`` holds recipes only.
-- **Licence.** The record's accumulated licence (``provenance.license``) is shown with the record
-  and its enrichments.
+- **No run data.** The record carries no provenance, block stamps, references to tool-local
+  files or calculated licence; each step that wrote it is described in
+  ``paradata/atrium/document-json``.
+- **Licence.** No licence is computed; see `Licences`_.
 - The tool services are asked to accept an AMČR-seeded baseline on their first call, and to pass
   ``source.sha512`` through.
 
@@ -434,33 +491,29 @@ that no tool reads does not need to appear in the record.
 How the record is populated
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Agreed.** The record changes only through processing and through each tool's record-only mode.
+**Agreed.** The record changes only through a processing run, and in the pilot every run goes
+through the whole chain.
 
-1. **An input arrives** (a new or replaced ``orig``, an imported ALTO, a curator's corrected ALTO,
-   any future input): the stages that consume it can run, and they update the record.
-2. **An output arrives without its tool running** (an imported TEITOK, COCO, or any future
-   distribution a tool would produce): the owning tool runs in a *record-only mode*. It reads its
-   own stored output and returns only its record block, with no compute. Block ownership stays
-   with the tool.
-3. **The schema or a tool's record hook changes:** the affected tools run in record-only mode over
-   the stored outputs.
-
-Imports cannot be predicted, so the mechanism stays generic: any distribution with an owning tool
-can be reflected in the record. The record-only mode is requested from the tool maintainers.
+1. **An input arrives** (a new or replaced ``orig``, the converted mass OCR, the HPC ATR run): the
+   layout level is produced or imported as ``atr/docproc-json``, and the record is built from it
+   and enriched by the later steps.
+2. **The schema or a tool changes:** the affected documents are run again, in the next planned
+   bulk pass.
+3. **A rerun changes nothing in a distribution:** a distribution whose SHA-512 is unchanged is
+   kept, together with its paradata, which still describe it truthfully.
 
 .. mermaid::
    :align: center
 
    flowchart LR
-       IN["input arrives<br/>orig, imported or corrected ALTO"] --> ST["consuming stages run"]
-       OUT["output arrives without its tool<br/>imported TEITOK, COCO"] --> RO["owning tool in record-only mode"]
-       MIG["schema or record hook changes"] --> RO
-       ST --> R["record updated"]
-       RO --> R
-       R --> W["one transaction per record"]
+       IN["input arrives<br/>orig, converted mass OCR, HPC ATR run"] --> L["atr/docproc-json"]
+       L --> B["record built<br/>(ocr-postprocess)"]
+       B --> E["record enriched<br/>(later steps)"]
+       E --> W["one transaction per record"]
 
 *Considered and rejected:* a separate assembler service, which would duplicate tool logic and write
-blocks that other tools own.
+blocks that other tools own; a record-only mode for each tool (withdrawn on 13 October 2026), which
+added a second way to change the record.
 
 When processing runs
 ~~~~~~~~~~~~~~~~~~~~
@@ -468,8 +521,7 @@ When processing runs
 **Agreed.** Processing runs on explicit invocation. An automatic trigger is optional.
 
 - **Explicit invocation:** an admin page takes a CSV of identifiers (records or files) and the
-  operation (the stages to run, or a record-only rebuild), and dispatches the jobs to the
-  orchestration. It follows the existing admin operations on ``FedoraCustomAdminSite``
+  operation to run, and dispatches the jobs to the orchestration. It follows the existing admin operations on ``FedoraCustomAdminSite``
   (``update_doi``, ``update_metadata_file_upload``).
 - **Optional automatic trigger,** switchable per task. When enabled, it fires on archiving, not on
   upload: only archived records are published, and the bytes of an archived record's ``orig`` do
@@ -513,7 +565,7 @@ the web.
   supports them; a version change rides along the next planned bulk pass rather than getting one of
   its own. Tests name the validator profile explicitly.
 - **On disk:** Fedora keeps each binary at its record-relative path inside the record's OCFL
-  object (``metadata``, ``file/{file_id}/orig``, ``file/{file_id}/atr/alto-xml``). OCFL stores the
+  object (``metadata``, ``file/{file_id}/orig``, ``file/{file_id}/atr/docproc-json``). OCFL stores the
   content under ``vN/content/`` per version, so the crate root is the object's head version as OCFL
   materialises it (for example an OCFL export), not the raw object directory. That state, with the
   metadata file at its root, is an *Attached* RO-Crate that can be read without Fedora or AMČR.
@@ -585,17 +637,25 @@ Write plan
    intermediate record and outputs. At the end of a run, AMČR writes everything in one transaction:
    the distributions, their paradata, the record and its paradata, ``orig-format`` if it changed,
    the record crate if it changed, and the ``DISTxx`` history.
-2. **Only changed resources are written.** An output identical to the stored one (same digest) is
+2. **One hand-over per job.** A run hands AMČR one list of results per file job: each distribution
+   with its SHA-512, media type and paradata. A file job always carries the full set
+   (``atr/docproc-json``, ``atrium/document-json``, ``atr/teitok-xml`` and their paradata).
+   ``metadata-en`` is a record-level job of its own, run when the record is archived. The pipeline
+   validates before handing over; AMČR validates and writes all of it in one transaction, or
+   nothing. A failed job writes nothing
+   (`aiscr-docs-pipeline#13 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/13>`__).
+3. **Only changed resources are written.** An output identical to the stored one (same digest) is
    not rewritten.
-3. **Few, planned bulk passes:**
+4. **Few, planned bulk passes:**
 
-   - the import of the existing mass-OCR ALTO with its paradata;
+   - the import of the existing mass OCR, converted once into ``atr/docproc-json``, with its
+     paradata;
    - the full processing chain on the corpus, after a pilot and after the tool versions are pinned;
    - the ``metadata-en`` backfill over archived records;
    - the record-crate backfill over archived records.
 
    A tool change that alters results corpus-wide waits for the next planned pass.
-4. **Large inputs** are split and merged by the orchestration. Stored distributions are always
+5. **Large inputs** are split and merged by the orchestration. Stored distributions are always
    whole files.
 
 *Considered and rejected:* storing the record after every stage, which multiplies the versions of
@@ -605,25 +665,14 @@ every record by the number of stages.
 Open points
 -----------
 
-- **Requests to the ATRIUM tool maintainers,** posted on 26 September 2026 as proposals for the
-  meeting of 30 September:
-
-  - `atrium-project#67 <https://github.com/ufal/atrium-project/issues/67>`__: accept a seeded
-    baseline and pass ``source.sha512`` through; return paradata as a Process Run Crate
-    ``CreateAction``; provide a record-only mode; align ``atrium_rocrate.py`` with the record crate
-    (RO-Crate 1.2 with Process Run Crate 0.5, ``version`` on each tool, stable run and tool
-    identifiers, tool authors on each ``SoftwareApplication``, an embeddable fragment); a
-    ``keywords`` block for the uncontrolled keywords of nlp-enrich; an optional document-level
-    quality summary; the tool architecture cleanup;
-  - `atrium-llm-enrich#10 <https://github.com/ufal/atrium-llm-enrich/issues/10>`__: the
-    born-digital path as a service of its own, for every born-digital type AMČR accepts, with the
-    OCR hand-off into the same record;
-  - `atrium-project#40 <https://github.com/ufal/atrium-project/issues/40>`__: immutable releases and
-    reusable workflows referenced by commit;
-  - `atrium-project#53 <https://github.com/ufal/atrium-project/issues/53>`__: configurable limits,
-    no silent truncation, and the limits reported in ``/info``;
-  - `atrium-project#6 <https://github.com/ufal/atrium-project/issues/6>`__: the licence
-    declarations.
+- **The normative layout schema**
+  (`aiscr-docs-pipeline#17 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/17>`__): a
+  required block identifier, tables, the links between blocks, and one vocabulary of block types
+  and field names for both producers.
+- **LINDAT terms in writing** before the production release
+  (`atrium-project#78 <https://github.com/ufal/atrium-project/issues/78>`__).
+- **The first stored pilot batch:** the converted mass OCR, or the ATR re-run where it has landed
+  (`aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__).
 
 
 Where each part is implemented
@@ -643,6 +692,7 @@ Where each part is implemented
    * - Distribution catalogue: producers
      - `aiscr-docs-pipeline#1 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/1>`__ and its stage issues,
        `aiscr-atr#1 <https://github.com/ARUP-CAS/aiscr-atr/issues/1>`__,
+       `aiscr-atr#2 <https://github.com/ARUP-CAS/aiscr-atr/issues/2>`__,
        `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__,
        `aiscr-webamcr#3583 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3583>`__,
        `aiscr-webamcr#4038 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/4038>`__
@@ -665,12 +715,14 @@ Where each part is implemented
      - `aiscr-digiarchiv-2#140 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/140>`__
    * - DROID pairing
      - `aiscr-webamcr#4038 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/4038>`__
-   * - Orchestration: route step, Temporal workflows, trust gate
-     - `ARUP-CAS/aiscr-docs-pipeline <https://github.com/ARUP-CAS/aiscr-docs-pipeline>`__ (issues to
-       follow)
-   * - Requests to the ATRIUM tools
-     - `atrium-project#67 <https://github.com/ufal/atrium-project/issues/67>`__ and the threads it
-       links
+   * - Layout schema (``atr/docproc-json``)
+     - `aiscr-docs-pipeline#17 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/17>`__
+   * - Orchestration: route step, Temporal workflows, hand-over to AMČR
+     - `aiscr-docs-pipeline#11 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/11>`__ to
+       `aiscr-docs-pipeline#16 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/16>`__
+   * - Record schema and the ATRIUM tools
+     - `atrium-project#84 <https://github.com/ufal/atrium-project/issues/84>`__
+       (``doc-schema-v2``)
    * - Published contract (selection)
      - `aiscr-api-home#29 <https://github.com/ARUP-CAS/aiscr-api-home/issues/29>`__ (File API
        page), and the AMČR help where fitting
