@@ -111,3 +111,115 @@ class VratitNavrhZruseniLockTest(SimpleTestCase):
         self.assertEqual(response.status_code, 403)
         self.locked.create_transaction.assert_not_called()
         self.assertIs(self.mocks["messages"].add_message.call_args.args[2], PROJEKT_NEKDO_ZMENIL_STAV)
+
+
+class OtherProjektViewsLockTest(SimpleTestCase):
+    """Testy bezčekového zámku řádku v dalších view, které mění projekt a otevírají Fedora transakci."""
+
+    def setUp(self):
+        """Nahradí načtení projektu, kontrolu stavu, formulář, zprávy a model ``Projekt`` mocky."""
+        self.projekt = MagicMock(name="projekt")
+        self.projekt.pk = 5
+        self.projekt.stav = PROJEKT_STAV_ZAPSANY + 1
+        self.projekt.typ_projektu.id = views.TYP_PROJEKTU_ZACHRANNY_ID
+        self.locked = MagicMock(name="locked_projekt")
+        self.locked.stav = self.projekt.stav
+        self.projekt_model = MagicMock(name="Projekt")
+        self.manager = self.projekt_model.objects.select_for_update.return_value
+        self.manager.get.return_value = self.locked
+        form = MagicMock()
+        form.is_valid.return_value = True
+        form.cleaned_data = {"reason": "důvod"}
+        patchers = {
+            "get_object_or_404": patch.object(views, "get_object_or_404", return_value=self.projekt),
+            "check_stav_changed": patch.object(views, "check_stav_changed", return_value=False),
+            "form": patch.object(views, "VratitForm", return_value=form),
+            "messages": patch.object(views, "messages"),
+            "projekt_model": patch.object(views, "Projekt", self.projekt_model),
+        }
+        self.mocks = {name: patcher.start() for name, patcher in patchers.items()}
+        for patcher in patchers.values():
+            self.addCleanup(patcher.stop)
+
+    def _post(self, view):
+        """Zavolá nezabalenou view s POST požadavkem."""
+        request = RequestFactory().post("/", {"reason": "důvod"})
+        request.user = MagicMock()
+        return inspect.unwrap(view)(request, IDENT)
+
+    def _locked_by_cron(self):
+        """Nastaví zámek řádku jako držený jinou transakcí."""
+        self.manager.get.side_effect = _operational_error(PG_LOCK_NOT_AVAILABLE)
+
+    def test_smazat_locks_row_before_fedora_transaction(self):
+        """``smazat`` zamyká s ``nowait`` a smaže zamčený projekt."""
+        with patch.object(views, "reverse", return_value="/"):
+            self._post(views.smazat)
+
+        self.projekt_model.objects.select_for_update.assert_called_once_with(nowait=True)
+        self.locked.create_transaction.assert_called_once()
+        self.locked.delete.assert_called_once_with()
+        self.projekt.create_transaction.assert_not_called()
+
+    def test_smazat_locked_by_cron_does_not_open_fedora_transaction(self):
+        """``smazat`` při držené zámku vrátí 403 a nezačne Fedora transakci ani nemaže."""
+        self._locked_by_cron()
+
+        response = self._post(views.smazat)
+
+        self.assertEqual(response.status_code, 403)
+        self.locked.create_transaction.assert_not_called()
+        self.locked.delete.assert_not_called()
+        self.assertIs(self.mocks["messages"].add_message.call_args.args[2], PROJEKT_NEKDO_ZMENIL_STAV)
+
+    def test_vratit_locked_by_cron_does_not_open_fedora_transaction(self):
+        """``vratit`` při drženém zámku vrátí 403 a nezačne Fedora transakci."""
+        self._locked_by_cron()
+
+        response = self._post(views.vratit)
+
+        self.assertEqual(response.status_code, 403)
+        self.locked.create_transaction.assert_not_called()
+        self.locked.set_vracen.assert_not_called()
+
+    def test_vratit_changes_locked_project(self):
+        """``vratit`` po získání zámku mění zamčený projekt, ne dříve načtenou instanci."""
+        self._post(views.vratit)
+
+        self.projekt_model.objects.select_for_update.assert_called_once_with(nowait=True)
+        self.locked.set_vracen.assert_called_once()
+        self.locked.save.assert_called_once_with()
+        self.projekt.set_vracen.assert_not_called()
+
+    def test_vratit_rejects_state_changed_while_waiting_for_lock(self):
+        """``vratit`` zamítne projekt, jehož stav se pod zámkem liší od dříve načteného."""
+        self.locked.stav = self.projekt.stav + 1
+
+        response = self._post(views.vratit)
+
+        self.assertEqual(response.status_code, 403)
+        self.locked.create_transaction.assert_not_called()
+
+    def test_generovat_oznameni_locked_by_cron_redirects_without_fedora_transaction(self):
+        """``generovat_oznameni`` při drženém zámku přesměruje s chybou a nezačne Fedora transakci."""
+        self._locked_by_cron()
+        self.projekt.get_absolute_url.return_value = "/projekt/detail/x"
+
+        response = self._post(views.generovat_oznameni)
+
+        self.assertEqual(response.status_code, 302)
+        self.locked.create_transaction.assert_not_called()
+        self.projekt.create_transaction.assert_not_called()
+        self.assertIs(self.mocks["messages"].add_message.call_args.args[2], PROJEKT_NEKDO_ZMENIL_STAV)
+
+    def test_generovat_oznameni_uses_locked_project_without_stav_check(self):
+        """``generovat_oznameni`` pracuje se zamčenou instancí a neřeší změnu stavu."""
+        self.locked.stav = self.projekt.stav + 3
+        self.locked.get_absolute_url.return_value = "/projekt/detail/x"
+
+        response = self._post(views.generovat_oznameni)
+
+        self.assertEqual(response.status_code, 302)
+        self.locked.create_transaction.assert_called_once()
+        self.locked.save.assert_called_once_with()
+        self.projekt.create_transaction.assert_not_called()

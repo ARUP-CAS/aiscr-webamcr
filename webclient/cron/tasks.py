@@ -86,7 +86,7 @@ from cron.zamek import (
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
-from django.db import OperationalError, connection, transaction
+from django.db import InterfaceError, OperationalError, connection, transaction
 from django.db.models import F, Min, Model, Q
 from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
@@ -500,6 +500,9 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
     Snapshot projektu v Redis se po commitu obnoví znovu, protože úloha zařazená signálem při
     ``item.save()`` mohla číst ještě nepotvrzený stav.
 
+    Ztráta spojení s DB ukončí celý běh (výjimka se nechá propadnout): se spojením zaniká i advisory zámek
+    úlohy a pokračování bez zámku by umožnilo souběh dvou běhů.
+
     Při HTTP 409 (záznam mění jiná transakce) se projekt načte znovu a zkusí se až
     ``FEDORA_CONFLICT_MAX_ATTEMPTS`` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
     takže se nepřeruší zpracování dalších projektů.
@@ -561,6 +564,10 @@ def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes
             return False
         except Exception as err:
             _rollback_fedora_transaction_quietly(fedora_transaction)
+            if isinstance(err, (OperationalError, InterfaceError)) and not connection.is_usable():
+                # Se spojením zaniká i session advisory zámek úlohy, takže v běhu bez zámku se nepokračuje.
+                logger.error(f"{log_prefix}.do.project.connection_lost", extra={"projekt_pk": projekt_pk})
+                raise
             logger.error(
                 f"{log_prefix}.do.project.error",
                 extra={
@@ -702,6 +709,10 @@ def delete_reporter_data_ten_years():
                 .values_list("pk", flat=True)
             )
 
+            def is_pending(item: Projekt) -> bool:
+                """Ověří, že projekt je stále záchranný a oznamovatele ještě nemá smazaného."""
+                return item.typ_projektu_id == TYP_PROJEKTU_ZACHRANNY_ID and item.has_oznamovatel()
+
             def apply_changes(item: Projekt):
                 """Smaže oznamovatele a odstraní projektovou dokumentaci."""
                 item.oznamovatel.delete()
@@ -709,7 +720,7 @@ def delete_reporter_data_ten_years():
                 item.oznamovatel = None
 
             for projekt_pk in project_pks:
-                _process_project_in_fedora_transaction(projekt_pk, Projekt.has_oznamovatel, apply_changes, log_prefix)
+                _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix)
             logger.debug(f"{log_prefix}.do.end")
     except Exception as err:
         logger.error(f"{log_prefix}.do.error", extra={"error": str(err), "traceback": traceback.format_exc()})

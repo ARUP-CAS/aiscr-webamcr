@@ -36,6 +36,11 @@ Třídy
       :return: Vrací výsledek volání ``JsonResponse()``.
 
 
+.. py:class:: _ProjektNedostupnyError
+
+   Projekt právě mění jiná transakce nebo mu mezitím jiný uživatel či cron změnil stav.
+
+
 .. py:class:: ProjektPermissionFilterMixin
 
    Implementuje komponentu ``ProjektPermissionFilterMixin`` v rámci aplikace.
@@ -369,6 +374,27 @@ Funkce
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
 
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+
+.. py:function:: _lock_projekt_nowait(projekt, check_stav)
+
+   Načte projekt znovu se zámkem řádku, na který se nečeká.
+
+   Cron úlohy (např. anonymizace zrušených projektů) drží zámek řádku projektu po dobu volání do Fedory.
+   Čekání by skončilo po ``statement_timeout`` a Fedora transakce otevřená před zápisem by zůstala viset,
+   proto se zámek bere před vytvořením Fedora transakce a bez čekání.
+
+   :param projekt: Projekt načtený dříve v požadavku; z něj se použije ``pk``, ``ident_cely`` a ``stav``.
+   :param check_stav: Pokud je ``True``, ověří se, že stav projektu pod zámkem odpovídá stavu načtenému dříve.
+   :return: Čerstvě načtený projekt zamčený do konce transakce požadavku.
+   :raises _ProjektNedostupnyError: Pokud řádek drží jiná transakce nebo se stav mezitím změnil.
+
+.. py:function:: _projekt_nedostupny_response(request, ident_cely)
+
+   Vytvoří odpověď pro projekt, který je právě zpracováván nebo změnil stav.
+
+   :param request: Požadavek, do jehož zpráv se přidá chybová hláška.
+   :param ident_cely: Identifikátor projektu pro přesměrování na detail.
+   :return: ``JsonResponse`` se stavem 403 a adresou detailu projektu.
 
 .. py:function:: smazat(request, ident_cely)
 

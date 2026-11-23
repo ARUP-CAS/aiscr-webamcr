@@ -42,5 +42,13 @@ def cron_task_lock(key: int):
         yield ziskan
     finally:
         if ziskan:
-            with db_connection.cursor() as cursor:
-                cursor.execute("SELECT pg_advisory_unlock(%s)", [key])
+            try:
+                with db_connection.cursor() as cursor:
+                    cursor.execute("SELECT pg_advisory_unlock(%s)", [key])
+                    uvolnen = bool(cursor.fetchone()[0])
+            except Exception as err:
+                logger.warning("cron.zamek.cron_task_lock.unlock_failed", extra={"key": key, "error": str(err)})
+            else:
+                if not uvolnen:
+                    # Zámek zanikl dřív, typicky se ztrátou spojení; jiná instance mohla úlohu mezitím spustit.
+                    logger.warning("cron.zamek.cron_task_lock.unlock_not_held", extra={"key": key})

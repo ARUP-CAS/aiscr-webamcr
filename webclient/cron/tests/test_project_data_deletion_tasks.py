@@ -14,7 +14,7 @@ from cron.zamek import (
     LOCK_DELETE_UNSUBMITED_PROJECTS,
     cron_task_lock,
 )
-from django.db import OperationalError
+from django.db import InterfaceError, OperationalError
 from django.db.models import QuerySet
 from django.test import SimpleTestCase
 from historie.models import HistorieVazby
@@ -270,6 +270,38 @@ class ProcessProjectInFedoraTransactionTest(SimpleTestCase):
         self.transactions[0].rollback_transaction.assert_called_once_with()
         self.transactions[0].mark_transaction_as_closed.assert_not_called()
 
+    def test_lost_database_connection_ends_the_run(self):
+        """Ztráta spojení s DB (a s ním advisory zámku) se nepolkne a ukončí celý běh."""
+        apply_changes = MagicMock(side_effect=OperationalError("server closed the connection"))
+
+        with patch.object(tasks, "connection") as connection, self.assertLogs(tasks.logger, level="ERROR") as logs:
+            connection.is_usable.return_value = False
+            with self.assertRaises(OperationalError):
+                self._run(apply_changes=apply_changes)
+
+        self.assertTrue(any("do.project.connection_lost" in line for line in logs.output))
+        self.mocks["sleep"].assert_not_called()
+
+    def test_interface_error_with_unusable_connection_ends_the_run(self):
+        """Také ``InterfaceError`` na nepoužitelném spojení propadne ven."""
+        apply_changes = MagicMock(side_effect=InterfaceError("connection already closed"))
+
+        with patch.object(tasks, "connection") as connection, self.assertLogs(tasks.logger, level="ERROR"):
+            connection.is_usable.return_value = False
+            with self.assertRaises(InterfaceError):
+                self._run(apply_changes=apply_changes)
+
+    def test_operational_error_on_usable_connection_only_skips_the_project(self):
+        """Chyba DB na funkčním spojení (např. timeout dotazu) přeskočí jen projekt a běh pokračuje."""
+        apply_changes = MagicMock(side_effect=OperationalError("canceling statement due to statement timeout"))
+
+        with patch.object(tasks, "connection") as connection, self.assertLogs(tasks.logger, level="ERROR") as logs:
+            connection.is_usable.return_value = True
+            self.assertFalse(self._run(apply_changes=apply_changes))
+
+        self.assertTrue(any(f"{LOG_PREFIX}.do.project.error" in line for line in logs.output))
+        self.assertFalse(any("connection_lost" in line for line in logs.output))
+
     def test_failed_rollback_does_not_hide_original_error(self):
         """Chyba při vracení Fedora transakce zpět se jen zaloguje a zpracování skončí řízeně."""
         apply_changes = MagicMock(side_effect=RuntimeError("boom"))
@@ -331,6 +363,42 @@ class CronTaskLockTest(SimpleTestCase):
         self.assertEqual(cursor.execute.call_args_list[-1].args, ("SELECT pg_advisory_unlock(%s)", [7]))
 
 
+class CronTaskLockUnlockTest(SimpleTestCase):
+    """Testy chování zámku při uvolnění po ztrátě spojení."""
+
+    def _run_lock(self, unlock_result=True, unlock_error=None):
+        """Získá zámek a vrátí kurzor; uvolnění vrátí ``unlock_result`` nebo selže chybou ``unlock_error``."""
+        cursor = MagicMock()
+        results = [(True,), (unlock_result,)]
+        cursor.fetchone.side_effect = lambda: results.pop(0)
+
+        def _execute(sql, params):
+            if "pg_advisory_unlock" in sql and unlock_error is not None:
+                raise unlock_error
+
+        cursor.execute.side_effect = _execute
+        connection = MagicMock()
+        connection.cursor.return_value.__enter__.return_value = cursor
+        with patch("django.db.connection", connection):
+            with cron_task_lock(5):
+                pass
+        return cursor
+
+    def test_unlock_of_lost_lock_is_logged(self):
+        """Když ``pg_advisory_unlock`` vrátí ``False`` (zámek už nebyl držen), zaloguje se varování."""
+        with self.assertLogs("cron.zamek", level="WARNING") as logs:
+            self._run_lock(unlock_result=False)
+
+        self.assertTrue(any("unlock_not_held" in line for line in logs.output))
+
+    def test_unlock_failure_does_not_raise_over_task_result(self):
+        """Selhání uvolnění na mrtvém spojení se jen zaloguje a nepřebije výsledek úlohy."""
+        with self.assertLogs("cron.zamek", level="WARNING") as logs:
+            self._run_lock(unlock_error=OperationalError("connection lost"))
+
+        self.assertTrue(any("unlock_failed" in line for line in logs.output))
+
+
 class DeleteProjectDataTasksTest(SimpleTestCase):
     """Testy chování úloh :func:`cron.tasks.delete_personal_data_canceled_projects` a ``delete_reporter_data_ten_years``."""
 
@@ -383,6 +451,32 @@ class DeleteProjectDataTasksTest(SimpleTestCase):
             tasks.delete_personal_data_canceled_projects()
 
         self.assertEqual([c.args[0] for c in self.process.call_args_list], [1, 2, 3])
+
+    def test_personal_data_task_stops_on_lost_connection(self):
+        """Ztráta spojení uprostřed dávky ukončí běh: další projekty se nezpracují."""
+        self.process.side_effect = OperationalError("server closed the connection")
+
+        with patch.object(tasks, "cron_task_lock", self._lock(True)), self.assertLogs(tasks.logger, level="ERROR"):
+            tasks.delete_personal_data_canceled_projects()
+
+        self.assertEqual(self.process.call_count, 1)
+
+    def test_reporter_task_recognises_project_whose_type_changed(self):
+        """Projekt, který mezitím přestal být záchranný, úloha mazající oznamovatele nepovažuje za čekající."""
+        with patch.object(tasks, "cron_task_lock", self._lock(True)):
+            tasks.delete_reporter_data_ten_years()
+        is_pending = self.process.call_args_list[0].args[1]
+
+        rescue = MagicMock(typ_projektu_id=tasks.TYP_PROJEKTU_ZACHRANNY_ID)
+        rescue.has_oznamovatel.return_value = True
+        survey = MagicMock(typ_projektu_id=tasks.TYP_PROJEKTU_ZACHRANNY_ID + 1)
+        survey.has_oznamovatel.return_value = True
+        without_reporter = MagicMock(typ_projektu_id=tasks.TYP_PROJEKTU_ZACHRANNY_ID)
+        without_reporter.has_oznamovatel.return_value = False
+
+        self.assertTrue(is_pending(rescue))
+        self.assertFalse(is_pending(survey))
+        self.assertFalse(is_pending(without_reporter))
 
     def test_reporter_data_task_continues_after_failed_project(self):
         """Selhání jednoho projektu nezastaví zpracování dalších ani u úlohy po deseti letech."""

@@ -162,6 +162,9 @@ Funkce
    Snapshot projektu v Redis se po commitu obnoví znovu, protože úloha zařazená signálem při
    ``item.save()`` mohla číst ještě nepotvrzený stav.
 
+   Ztráta spojení s DB ukončí celý běh (výjimka se nechá propadnout): se spojením zaniká i advisory zámek
+   úlohy a pokračování bez zámku by umožnilo souběh dvou běhů.
+
    Při HTTP 409 (záznam mění jiná transakce) se projekt načte znovu a zkusí se až
    ``FEDORA_CONFLICT_MAX_ATTEMPTS`` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
    takže se nepřeruší zpracování dalších projektů.

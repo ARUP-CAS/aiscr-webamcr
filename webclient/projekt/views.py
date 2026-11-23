@@ -642,6 +642,51 @@ def edit(request, ident_cely):
     )
 
 
+class _ProjektNedostupnyError(Exception):
+    """Projekt právě mění jiná transakce nebo mu mezitím jiný uživatel či cron změnil stav."""
+
+
+def _lock_projekt_nowait(projekt: Projekt, check_stav: bool = True) -> Projekt:
+    """
+    Načte projekt znovu se zámkem řádku, na který se nečeká.
+
+    Cron úlohy (např. anonymizace zrušených projektů) drží zámek řádku projektu po dobu volání do Fedory.
+    Čekání by skončilo po ``statement_timeout`` a Fedora transakce otevřená před zápisem by zůstala viset,
+    proto se zámek bere před vytvořením Fedora transakce a bez čekání.
+
+    :param projekt: Projekt načtený dříve v požadavku; z něj se použije ``pk``, ``ident_cely`` a ``stav``.
+    :param check_stav: Pokud je ``True``, ověří se, že stav projektu pod zámkem odpovídá stavu načtenému dříve.
+    :return: Čerstvě načtený projekt zamčený do konce transakce požadavku.
+    :raises _ProjektNedostupnyError: Pokud řádek drží jiná transakce nebo se stav mezitím změnil.
+    """
+    try:
+        locked = Projekt.objects.select_for_update(nowait=True).get(pk=projekt.pk)
+    except OperationalError as err:
+        if not is_lock_not_available(err):
+            raise
+        logger.info("projekt.views.lock_projekt_nowait.locked", extra={"ident_cely": projekt.ident_cely})
+        raise _ProjektNedostupnyError from err
+    if check_stav and locked.stav != projekt.stav:
+        logger.info("projekt.views.lock_projekt_nowait.stav_changed", extra={"ident_cely": projekt.ident_cely})
+        raise _ProjektNedostupnyError
+    return locked
+
+
+def _projekt_nedostupny_response(request, ident_cely):
+    """
+    Vytvoří odpověď pro projekt, který je právě zpracováván nebo změnil stav.
+
+    :param request: Požadavek, do jehož zpráv se přidá chybová hláška.
+    :param ident_cely: Identifikátor projektu pro přesměrování na detail.
+    :return: ``JsonResponse`` se stavem 403 a adresou detailu projektu.
+    """
+    messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+    return JsonResponse(
+        {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+        status=403,
+    )
+
+
 @login_required
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @handle_fedora_error
@@ -662,6 +707,10 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        try:
+            projekt = _lock_projekt_nowait(projekt)
+        except _ProjektNedostupnyError:
+            return _projekt_nedostupny_response(request, ident_cely)
         projekt.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         projekt.initial_dokumenty = list(projekt.casti_dokumentu.all().values_list("dokument__id", flat=True))
         projekt.close_active_transaction_when_finished = True
@@ -1499,6 +1548,10 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            try:
+                projekt = _lock_projekt_nowait(projekt)
+            except _ProjektNedostupnyError:
+                return _projekt_nedostupny_response(request, ident_cely)
             projekt.create_transaction(request.user, PROJEKT_USPESNE_VRACEN)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.close_active_transaction_when_finished = True
@@ -1550,26 +1603,10 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            # Řádek projektu může držet cron (anonymizace po zrušení) po dobu volání do Fedory. Čekání by skončilo
-            # po ``statement_timeout`` a otevřená Fedora transakce by zůstala viset, proto se zámek bere bez čekání
-            # a před vytvořením Fedora transakce.
             try:
-                projekt = Projekt.objects.select_for_update(nowait=True).get(pk=projekt.pk)
-            except OperationalError as err:
-                if not is_lock_not_available(err):
-                    raise
-                logger.info("projekt.views.vratit_navrh_zruseni.locked", extra={"ident_cely": ident_cely})
-                messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
-                return JsonResponse(
-                    {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
-                    status=403,
-                )
-            if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_ZRUSENY]:
-                messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
-                return JsonResponse(
-                    {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
-                    status=403,
-                )
+                projekt = _lock_projekt_nowait(projekt)
+            except _ProjektNedostupnyError:
+                return _projekt_nedostupny_response(request, ident_cely)
             projekt.create_transaction(request.user, PROJEKT_USPESNE_VRACEN)
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
@@ -1663,6 +1700,11 @@ def generovat_oznameni(request, ident_cely):
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
         logger.debug("projekt.views.generovat_oznameni.wrong_project_tpye")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
+        return redirect(projekt.get_absolute_url())
+    try:
+        projekt = _lock_projekt_nowait(projekt, check_stav=False)
+    except _ProjektNedostupnyError:
+        messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
         return redirect(projekt.get_absolute_url())
     fedora_transaction = projekt.create_transaction(request.user)
     fedora_transaction.success_message = _("projekt.views.generovat_oznameni.success")
