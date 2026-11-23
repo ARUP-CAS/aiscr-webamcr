@@ -1,6 +1,6 @@
 # Cursor vendor surface
 
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 This `.cursor/` directory is the delivered Cursor surface for this repository, kept in sync from the `aiscr-management` hub. It carries the assets selected for this repository (rules, skills, agents, and settings as applicable).
 

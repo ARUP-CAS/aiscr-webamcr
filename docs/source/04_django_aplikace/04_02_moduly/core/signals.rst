@@ -6,6 +6,39 @@ Definice signálů.
 Funkce
 ------
 
+.. py:function:: news_feed_settings_capture_previous_identity(sender, instance, raw)
+
+   Zachová původní identitu nastavení před jeho uložením.
+
+   :param sender: Model, který vyslal signál.
+   :param instance: Ukládaná instance nastavení.
+   :param raw: Příznak načítání surových dat, při kterém se změna ignoruje.
+   :param kwargs: Další argumenty signálu.
+
+.. py:function:: _apply_news_feed_setting_change(previous, current)
+
+   Zneplatní cache a naplánuje obnovu novinek po potvrzení změny nastavení.
+
+   :param previous: Původní skupina, identifikátor a hodnota nastavení; při vytvoření chybí.
+   :param current: Uložená skupina, identifikátor a hodnota nastavení; při smazání chybí.
+
+.. py:function:: news_feed_settings_saved(sender, instance, raw)
+
+   Naplánuje reakci na uložené nastavení zpráv po potvrzení transakce.
+
+   :param sender: Model, který vyslal signál.
+   :param instance: Uložená instance nastavení.
+   :param raw: Příznak načítání surových dat, při kterém se změna ignoruje.
+   :param kwargs: Další argumenty signálu.
+
+.. py:function:: news_feed_settings_deleted(sender, instance)
+
+   Naplánuje reakci na smazání nastavení zpráv po potvrzení transakce.
+
+   :param sender: Model, který vyslal signál.
+   :param instance: Smazaná instance nastavení.
+   :param kwargs: Další argumenty signálu.
+
 .. py:function:: soubor_get_rozsah(sender, instance)
 
    Určí počet stran/snímků souboru (PDF, TIF) a uloží jej do ``rozsah``.

@@ -29,7 +29,7 @@
     "vanilla-cookieconsent": "3.3.0"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "1.16.1"
+    "@fission-ai/openspec": "2.1.1"
   },
   "overrides": {
     "bootstrap-select": {
