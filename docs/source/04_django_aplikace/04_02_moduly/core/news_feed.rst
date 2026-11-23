@@ -33,14 +33,12 @@ Funkce
 
 .. py:function:: _log_warning_rate_limited(slug, message)
 
-   Logs a warning only once per hour for the same slug.
+   Omezí opakování varování pro stejnou položku na nastavený interval.
 
-.. py:function:: get_news_feed_cache_keys(language)
+   Varování bez identifikátoru položky zapisuje bez časového omezení.
 
-   Vrátí klíče čerstvé a zastaralé kopie kanálu pro daný jazyk.
-
-   :param language: Jazykový kód novinkového kanálu.
-   :return: Dvojice klíčů cache pro čerstvou a zastaralou kopii kanálu.
+   :param slug: Identifikátor položky novinek používaný pro omezení opakovaných varování.
+   :param message: Varování o chybě zpracování položky kanálu.
 
 .. py:function:: _parse_item(item_data)
 

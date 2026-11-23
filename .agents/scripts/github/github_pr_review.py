@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 # SPDX-License-Identifier: MIT
-# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
+# delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
 
 """Gather, render, and post governed GitHub PR reviews.
 
@@ -12,6 +12,8 @@ approval file before any GitHub write. ``repair`` posts standalone inline roots 
 its own approval digest. Normal reviews and body repairs validate structured advisory observations and their one
 rendered section; legacy pending records require regeneration and renewed approval. ``post-summary`` posts the exact
 approved PR summary file to the explicitly selected surface.
+``gather`` retains reference provenance independently of public related-work selection. ``verify-summary-references``
+checks that local selection and its summary row; both summary destinations repeat the check before writing.
 ``cleanup`` removes only the prescribed artifacts from one bounded review run directory in each root after the workflow
 reaches a terminal outcome. ``prepare-run`` creates the directories and sidecar pointer before body authoring.
 
@@ -140,6 +142,11 @@ PROVENANCE_ORIGINAL_CLOSE = "<!-- /aiscr-review-pr:original -->"
 # The posted marker carries a digest of the body as approved, so a later round can
 # tell "nobody touched this since we posted it" from "the author edited it".
 SUMMARY_MARKER_PATTERN = re.compile(r"<!-- aiscr-review-pr:summary(?: digest=([0-9a-f]{64}))? -->")
+REFERENCE_CONTEXT_SCHEMA = "aiscr-review-pr-reference-context-v1"
+REFERENCE_SELECTION_SCHEMA = "aiscr-review-pr-reference-selection-v1"
+REFERENCE_RELATIONSHIPS = frozenset({"addressed-issue", "dependency", "companion-pr"})
+UNFOLLOWED_OPEN = "<!-- aiscr-review-pr:unfollowed-references -->"
+UNFOLLOWED_CLOSE = "<!-- /aiscr-review-pr:unfollowed-references -->"
 # Reference extraction, one-hop traversal, and the load-bearing set are shared with the
 # issue engine: both reconcile GitHub bodies, so the mechanism has one home.
 LOAD_BEARING_PATTERNS = github_utils.LOAD_BEARING_PATTERNS
@@ -149,6 +156,7 @@ LOAD_BEARING_PATTERNS = github_utils.LOAD_BEARING_PATTERNS
 BULK_RUN_ARTIFACTS = frozenset(
     {
         "pr-context.json",
+        "summary-reference-selection.json",
         "review-payload.json",
         "review-replies.json",
         "review-bundle.json",
@@ -2089,12 +2097,343 @@ def _fetch_conversation(owner_repo: str, pr_number: int) -> dict[str, Any]:
     return {"discussion_comments": discussion, "review_threads": threads}
 
 
-def _conversation_text(conversation: dict[str, Any]) -> list[str]:
-    """Every comment body in the conversation, for reference extraction."""
-    bodies = [comment["body"] for comment in conversation["discussion_comments"]]
-    for thread in conversation["review_threads"]:
-        bodies.extend(comment["body"] for comment in thread["comments"])
-    return bodies
+def _reference_source_records(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+    owner_repo: str,
+    pr_number: int,
+    description: str,
+    conversation: dict[str, Any],
+    issue_comments: list[dict[str, Any]],
+    closing: list[str],
+    lineage: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Keep source identity before deriving the one-hop acquisition projection."""
+    location = f"https://github.com/{owner_repo}/pull/{pr_number}"
+    records: list[dict[str, Any]] = []
+
+    def add(
+        identity: str, kind: str, body: str, url: str = location, timestamp: Any = None, origin: str = "substantive"
+    ) -> None:
+        records.append(
+            {"id": identity, "kind": kind, "body": body, "location": url, "created_at": timestamp, "origin": origin}
+        )
+
+    add("description", "description", description)
+    comments = [("comment", c) for c in conversation["discussion_comments"]]
+    comments.extend(("thread-comment", c) for t in conversation["review_threads"] for c in t["comments"])
+    for index, (kind, comment) in enumerate(comments):
+        add(
+            f"{kind}:{comment.get('id') or index}",
+            kind,
+            comment.get("body") or "",
+            comment.get("url") or location,
+            comment.get("created_at"),
+        )
+    # The REST archive is also available when the conversation surface is incomplete.
+    bodies = {record["body"] for record in records}
+    for comment in issue_comments:
+        body = str(comment.get("body") or "")
+        if DESCRIPTION_ARCHIVE_MARKER in body and body not in bodies:
+            add(
+                f"archive:{comment['id']}",
+                "archive",
+                body,
+                comment.get("html_url") or location,
+                comment.get("created_at"),
+            )
+            bodies.add(body)
+    state = _description_state(description)
+    if state["edited_since_post"] is True:
+        sources, degraded = _reconciliation_sources(description, state, owner_repo, pr_number)
+        for index, (label, body) in enumerate(sources):
+            if label != github_utils.CARRIED_REGION_SOURCE:
+                add(
+                    f"description-edit:{index}",
+                    "description-edit",
+                    body,
+                    origin="unresolved" if degraded or label.endswith("(delete)") else "substantive",
+                )
+    if lineage.get("last_review_body"):
+        add(f"review:{lineage['last_review_id']}", "review", lineage["last_review_body"])
+    for review in lineage.get("auxiliary_reviews", []):
+        add(
+            f"review:{review['id']}",
+            "review",
+            review.get("body") or "",
+            review.get("html_url") or location,
+            review.get("submitted_at"),
+        )
+    for ref in dict.fromkeys(closing):
+        add(f"closing:{ref}", "closing-relationship", ref)
+    return records
+
+
+def _summary_reference_origins(lines: list[str], source_origin: str) -> dict[int, str]:
+    """Bound each summary separately, including snapshots quoted inside discussion.
+
+    The disclosure ends a complete snapshot; a later marker bounds an incomplete
+    one. Missing comparison history leaves edit prose unresolved, even when that
+    prose shares a hunk with a recognizable generated metadata table.
+    """
+    starts = [index for index, line in enumerate(lines) if SUMMARY_MARKER_PATTERN.fullmatch(line)]
+    origins: dict[int, str] = {}
+    for position, start in enumerate(starts):
+        stop = starts[position + 1] if position + 1 < len(starts) else len(lines)
+        footer = next((i for i in range(start, stop) if lines[i] == INTERACTIVE_SUMMARY_DISCLOSURE), None)
+        end = footer + 1 if footer is not None else stop
+        metadata = next((i for i in range(start, end) if re.match(r"^\|\s*Referenced items\s*\|", lines[i])), None)
+        metadata_end = next(
+            (i for i in range(start, end) if lines[i].startswith("## ")),
+            metadata + 1 if metadata is not None else start,
+        )
+        complete = footer is not None and metadata is not None and source_origin != "unresolved"
+        for index in range(start, end):
+            navigation = metadata is not None and index < metadata_end
+            origins[index + 1] = "generated-navigation" if complete or navigation else "unresolved"
+    return origins
+
+
+def _reference_lines(source: dict[str, Any]):
+    """Classify regions, never authors; unknown legacy shapes remain readable.
+
+    Summary recognition affects its bounded snapshot, not surrounding discussion.
+    Original/author regions retain their own content; the archive's generated
+    ledger does not seed refs.
+    """
+    body = source["body"]
+    lines = body.splitlines()
+    structural_lines = [re.sub(r"^(?:[ \t]*>[ \t]?)+", "", line).strip() for line in lines]
+    summary_origins = _summary_reference_origins(structural_lines, source["origin"])
+    archive = DESCRIPTION_ARCHIVE_MARKER in body
+    recognized = archive and PROVENANCE_ORIGINAL_OPEN in body and PROVENANCE_ORIGINAL_CLOSE in body
+    default = "generated-navigation" if recognized else source["origin"]
+    if archive and not recognized:
+        default = "unresolved"
+    carried = False
+    boundary = False
+    for number, (line, structural_line) in enumerate(zip(lines, structural_lines), 1):
+        if structural_line in (AUTHOR_CONTEXT_OPEN, PROVENANCE_ORIGINAL_OPEN):
+            carried = True
+        elif structural_line in (AUTHOR_CONTEXT_CLOSE, PROVENANCE_ORIGINAL_CLOSE):
+            carried = False
+        if structural_line == UNFOLLOWED_OPEN:
+            boundary = True
+        elif structural_line == UNFOLLOWED_CLOSE:
+            boundary = False
+        elif REVIEW_MARKER in body and re.match(r"^##\s+", structural_line):
+            boundary = structural_line == "## Unfollowed references"
+        origin = (
+            "generated-navigation" if boundary else "substantive" if carried else summary_origins.get(number, default)
+        )
+        yield number, line, origin
+
+
+def _gather_reference_context(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    owner_repo: str,
+    pr_number: int,
+    description: str,
+    conversation: dict[str, Any],
+    issue_comments: list[dict[str, Any]],
+    closing: list[str],
+    lineage: dict[str, Any],
+) -> dict[str, Any]:
+    """Acquire substantive one-hop context without recycling generated inventories."""
+    sources = _reference_source_records(
+        owner_repo, pr_number, description, conversation, issue_comments, closing, lineage
+    )
+    occurrences, texts = _reference_projection(owner_repo, sources)
+    return {
+        **_gather_neighbourhood(owner_repo, pr_number, texts, closing),
+        "reference_context_schema": REFERENCE_CONTEXT_SCHEMA,
+        "reference_sources": sources,
+        "reference_occurrences": occurrences,
+    }
+
+
+def _reference_projection(owner_repo: str, sources: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
+    """Derive occurrences and acquisition text from the same source-region policy."""
+    occurrences: list[dict[str, Any]] = []
+    texts: list[str] = []
+    for source in sources:
+        for number, line, origin in _reference_lines(source):
+            if origin != "generated-navigation":
+                texts.append(line)
+            matches = [
+                m
+                for pattern in (github_utils.GITHUB_URL_REF_PATTERN, github_utils.GITHUB_SHORT_REF_PATTERN)
+                for m in pattern.finditer(line)
+            ]
+            for match in sorted(matches, key=lambda m: m.start()):
+                refs, _ = _extract_references(owner_repo, [match.group(0)])
+                occurrences.append(
+                    {
+                        "id": f"{source['id']}:{number}:{match.start()}",
+                        "source_id": source["id"],
+                        "ref": refs[0],
+                        "origin": origin,
+                        "line": number,
+                        "column": match.start() + 1,
+                    }
+                )
+    return occurrences, texts
+
+
+def _reference_snapshot_digest(context: dict[str, Any]) -> str:
+    """Bind the whole acquired snapshot without hashing its own receipt."""
+    return _bundle_digest({key: value for key, value in context.items() if key != "reference_context_digest"})
+
+
+def _checked_reference_snapshot(context: Any) -> dict[str, dict[str, Any]]:
+    """Refuse legacy or inconsistent provenance rather than guessing its meaning."""
+    if not isinstance(context, dict) or context.get("reference_context_schema") != REFERENCE_CONTEXT_SCHEMA:
+        _abort(
+            "summary references require a fresh gather with reference provenance; regenerate and approve the summary."
+        )
+    number = context.get("pr_number")
+    valid_number = isinstance(number, int) and not isinstance(number, bool) and number > 0
+    if not valid_number or any(
+        not isinstance(context.get(key), str) or not context[key] for key in ("owner_repo", "head_sha")
+    ):
+        _abort("reference context requires a repository, positive PR number, and head revision.")
+    sources = context.get("reference_sources")
+    if not isinstance(sources, list):
+        _abort("reference context requires its source records.")
+    identities: set[str] = set()
+    for source in sources:
+        if (
+            not isinstance(source, dict)
+            or any(not isinstance(source.get(key), str) for key in ("id", "kind", "body", "location", "origin"))
+            or not source["id"]
+            or source["id"] in identities
+            or source["origin"] not in {"substantive", "unresolved"}
+        ):
+            _abort("reference context has malformed or duplicate source records; gather again.")
+        identities.add(source["id"])
+    occurrences, _ = _reference_projection(context["owner_repo"], sources)
+    if context.get("reference_occurrences") != occurrences:
+        _abort("reference occurrences disagree with their acquired sources; gather again.")
+    if context.get("reference_context_digest") != _reference_snapshot_digest(context):
+        _abort("reference context digest changed; gather again and regenerate the selection.")
+    items = context.get("referenced_items")
+    if not isinstance(items, list) or any(
+        not isinstance(item, dict)
+        or not isinstance(item.get("ref"), str)
+        or (item.get("url") is not None and not isinstance(item["url"], str))
+        for item in items
+    ):
+        _abort("reference context has malformed acquired items; gather again.")
+    return {occurrence["id"]: occurrence for occurrence in occurrences}
+
+
+def _checked_reference_entry(
+    entry: Any,
+    occurrences: dict[str, dict[str, Any]],
+    known_urls: dict[str, str],
+) -> str:
+    """Check source presence and shape; the conductor establishes relevance."""
+    keys = {"ref", "url", "relationship", "occurrence_ids", "rationale"}
+    if not isinstance(entry, dict) or set(entry) != keys:
+        _abort("selected reference requires ref, url, relationship, occurrence_ids, and rationale.")
+    if any(
+        not isinstance(entry[key], str) or not entry[key].strip() for key in ("ref", "url", "relationship", "rationale")
+    ):
+        _abort("selected reference text fields must be non-empty strings.")
+    target = github_references.reference_target(entry["url"])
+    if target is None or entry["ref"] != "#".join(target):
+        _abort("selected reference URL does not identify its repository-qualified reference.")
+    if entry["ref"] in known_urls and entry["url"] != known_urls[entry["ref"]]:
+        _abort("selected reference URL differs from the acquired item URL.")
+    if entry["relationship"] not in REFERENCE_RELATIONSHIPS:
+        _abort("selected reference relationship must be addressed-issue, dependency, or companion-pr.")
+    sources = entry["occurrence_ids"]
+    if (
+        not isinstance(sources, list)
+        or not sources
+        or any(not isinstance(identity, str) for identity in sources)
+        or len(set(sources)) != len(sources)
+    ):
+        _abort("selected reference requires unique supporting occurrence_ids.")
+    supporting = [occurrences.get(identity, {}) for identity in sources]
+    if any(occurrence.get("ref") != entry["ref"] for occurrence in supporting):
+        _abort("selected reference has missing or mismatched supporting occurrences.")
+    if not any(occurrence["origin"] == "substantive" for occurrence in supporting):
+        _abort(
+            "selected reference needs substantive support independent of generated navigation and unresolved origin."
+        )
+    return github_references.reference_link(entry["url"])
+
+
+def _summary_metadata_value(summary: str, field: str) -> str:
+    values = re.findall(rf"^\|\s*{re.escape(field)}\s*\|\s*(.*?)\s*\|\s*$", summary, re.MULTILINE)
+    if len(values) != 1:
+        _abort(f"summary requires exactly one '{field}' metadata row.")
+    return values[0]
+
+
+def _validate_summary_reference_selection(  # pylint: disable=too-many-locals
+    context: Any,
+    selection: Any,
+    summary: str,
+) -> None:
+    """Validate the run-local selection and its exact public projection."""
+    occurrences = _checked_reference_snapshot(context)
+    fields = {"schema", "owner_repo", "pr_number", "head_sha", "context_digest", "entries"}
+    if not isinstance(selection, dict) or set(selection) != fields or selection["schema"] != REFERENCE_SELECTION_SCHEMA:
+        _abort("summary requires a current explicit reference selection; regenerate and approve its content.")
+    if (
+        any(selection[key] != context[key] for key in ("owner_repo", "pr_number", "head_sha"))
+        or not isinstance(selection["pr_number"], int)
+        or isinstance(selection["pr_number"], bool)
+        or selection["context_digest"] != context["reference_context_digest"]
+    ):
+        _abort("summary reference selection does not match the acquired PR, revision, or context digest.")
+    entries = selection["entries"]
+    if not isinstance(entries, list):
+        _abort("summary reference selection entries must be an explicit array, including [] for none.")
+    known_urls = {item["ref"]: item["url"] for item in context.get("referenced_items", []) if item.get("url")}
+    rendered = [_checked_reference_entry(entry, occurrences, known_urls) for entry in entries]
+    refs = [entry["ref"] for entry in entries]
+    if len(set(ref.casefold() for ref in refs)) != len(refs):
+        _abort("summary reference selection contains duplicate targets.")
+    self_ref = f"{context['owner_repo']}#{context['pr_number']}"
+    if self_ref.casefold() in {ref.casefold() for ref in refs}:
+        _abort("the reviewed PR is identity metadata, not its own related work.")
+    order: dict[str, int] = {}
+    for index, occurrence in enumerate(occurrences.values()):
+        if occurrence["origin"] == "substantive":
+            order.setdefault(occurrence["ref"], index)
+    if refs != sorted(refs, key=order.__getitem__):
+        _abort("selected references must follow their first substantive occurrence order.")
+    if _summary_metadata_value(summary, "Referenced items") != (", ".join(rendered) or "none"):
+        _abort("summary Referenced items row disagrees with its explicit selection.")
+    if _summary_metadata_value(summary, "Head SHA").strip("`") != context["head_sha"]:
+        _abort("summary head revision disagrees with the reference context.")
+    title = next((line for line in summary.splitlines() if SUMMARY_TITLE_PATTERN.fullmatch(line.strip())), "")
+    title_refs, _ = _extract_references(context["owner_repo"], [title])
+    url = re.search(r"https://[^)\s]+", _summary_metadata_value(summary, "URL"))
+    url_target = github_references.reference_target(url[0]) if url else None
+    if title_refs != [self_ref] or url_target != (context["owner_repo"], str(context["pr_number"])):
+        _abort("summary PR identity disagrees with its reference context.")
+
+
+def _check_summary_reference_files(
+    summary: str,
+    context_path: str | None,
+    selection_path: str | None,
+) -> dict[str, Any]:
+    if not context_path or not selection_path:
+        _abort("summary requires --pr-context and --reference-selection; gather, regenerate, and approve the summary.")
+    context = _load_json(context_path, "PR context")
+    selection = _load_json(selection_path, "summary reference selection")
+    _validate_summary_reference_selection(context, selection, summary)
+    return context
+
+
+def cmd_verify_summary_references(summary_path: str, context_path: str, selection_path: str) -> None:
+    """Check a summary's related-work projection locally without writes or network."""
+    summary = _load_summary(summary_path)
+    _validate_summary(summary)
+    _check_summary_reference_files(summary, context_path, selection_path)
+    print("Summary reference selection and public row agree; semantic relevance remains a reviewer judgment.")
 
 
 def _fetch_closing_references(owner_repo: str, pr_number: int) -> list[str]:
@@ -2281,11 +2620,14 @@ def cmd_gather(  # pylint: disable=too-many-locals
     lineage = _fetch_review_lineage(owner_repo, pr_number)
     issue_comments = _fetch_issue_comments(owner_repo, pr_number)
     conversation = _fetch_conversation(owner_repo, pr_number)
-    neighbourhood = _gather_neighbourhood(
+    neighbourhood = _gather_reference_context(
         owner_repo,
         pr_number,
-        [pr_description, *_conversation_text(conversation)],
+        pr_description,
+        conversation,
+        issue_comments,
         _fetch_closing_references(owner_repo, pr_number),
+        lineage,
     )
     existing_threads = _thread_roots_from_conversation(conversation)
     outstanding = _enumerate_outstanding_findings(conversation, lineage)
@@ -2318,6 +2660,7 @@ def cmd_gather(  # pylint: disable=too-many-locals
         "outstanding_findings": outstanding,
         "review_only_body_findings": REVIEW_ONLY_BODY_FINDINGS,
     }
+    output["reference_context_digest"] = _reference_snapshot_digest(output)
     _emit_json(output, output_path)
 
 
@@ -3468,6 +3811,8 @@ def cmd_post_summary(  # pylint: disable=too-many-arguments,too-many-positional-
     target: str,
     repo: str | None,
     ledger_path: str | None = None,
+    pr_context_path: str | None = None,
+    reference_selection_path: str | None = None,
 ) -> None:
     """Post the marked PR summary to the explicitly selected surface.
 
@@ -3482,6 +3827,9 @@ def cmd_post_summary(  # pylint: disable=too-many-arguments,too-many-positional-
     _validate_write_environment(mode, "post-summary")
 
     owner_repo = _resolve_repo(repo)
+    context = _check_summary_reference_files(summary, pr_context_path, reference_selection_path)
+    if (context["owner_repo"], context["pr_number"]) != (owner_repo, pr_number):
+        _abort("summary reference context does not identify the requested PR.")
     if target == "description":
         ledger = _load_json(ledger_path, "disposition ledger") if ledger_path else {}
         prepared = _prepare_description_takeover(owner_repo, pr_number, summary, ledger)
@@ -3728,6 +4076,14 @@ def build_parser() -> argparse.ArgumentParser:  # pylint: disable=too-many-local
         help="Write JSON to this UTF-8 file instead of stdout, so a shell redirect cannot re-encode it.",
     )
 
+    verify_references = subparsers.add_parser(
+        "verify-summary-references",
+        help="Check the summary reference selection and projection (local only).",
+    )
+    verify_references.add_argument("--summary", required=True, metavar="FILE")
+    verify_references.add_argument("--pr-context", required=True, metavar="FILE")
+    verify_references.add_argument("--reference-selection", required=True, metavar="FILE")
+
     post_summary = subparsers.add_parser(
         "post-summary",
         help="Post the exact marked PR summary file to an explicitly selected surface.",
@@ -3738,6 +4094,8 @@ def build_parser() -> argparse.ArgumentParser:  # pylint: disable=too-many-local
     post_summary.add_argument("--target", required=True, choices=SUMMARY_TARGETS)
     post_summary.add_argument("--repo", metavar="OWNER/REPO")
     post_summary.add_argument("--ledger", metavar="FILE")
+    post_summary.add_argument("--pr-context", required=True, metavar="FILE")
+    post_summary.add_argument("--reference-selection", required=True, metavar="FILE")
 
     repair = subparsers.add_parser(
         "repair",
@@ -3875,8 +4233,19 @@ def main() -> None:  # pylint: disable=too-many-branches
         cmd_archive_description(args.pr_number, args.mode, args.repo, args.ledger)
     elif args.subcommand == "verify-composition":
         cmd_verify_composition(args.sources, args.summary, args.ledger, args.output_path)
+    elif args.subcommand == "verify-summary-references":
+        cmd_verify_summary_references(args.summary, args.pr_context, args.reference_selection)
     elif args.subcommand == "post-summary":
-        cmd_post_summary(args.pr_number, args.mode, args.summary, args.target, args.repo, args.ledger)
+        cmd_post_summary(
+            args.pr_number,
+            args.mode,
+            args.summary,
+            args.target,
+            args.repo,
+            args.ledger,
+            args.pr_context,
+            args.reference_selection,
+        )
     else:
         cmd_cleanup(args.work_dir, args.approve)
 

@@ -1,0 +1,2 @@
+jsonschema==4.26.0
+tomli-w==1.2.0

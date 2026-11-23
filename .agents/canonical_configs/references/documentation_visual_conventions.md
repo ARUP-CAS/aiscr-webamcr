@@ -1,6 +1,6 @@
 # Documentation visual conventions
 
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 This reference is the authoring convention for Mermaid diagrams in AIS CR documentation.
 It is the source an author consults when deciding whether a diagram belongs in a durable document, how the diagram coexists with prose, and which Mermaid families GitHub actually renders.

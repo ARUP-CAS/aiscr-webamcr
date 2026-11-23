@@ -1,6 +1,6 @@
 # AIS CR ecosystem map
 
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 Canonical human-readable list of the AIS CR repositories managed by sync policy: which owns which subject area, and what each is built on.
 
@@ -34,6 +34,8 @@ The `sync registry` column records whether a repository is a delivery target of 
 | aiscr-aonline | webapp | Archeologie online, Java / Solr | yes | [aiscr-aonline](https://github.com/ARUP-CAS/aiscr-aonline) |
 | aiscr-atr | service | Automatic text recognition (OCR/HTR) service | yes | [aiscr-atr](https://github.com/ARUP-CAS/aiscr-atr) |
 | aiscr-detect-artefact | service | Artefact detection in photos (computer vision) service | yes | [aiscr-detect-artefact](https://github.com/ARUP-CAS/aiscr-detect-artefact) |
+| aiscr-classify-artefact | service | Identification of archaeological finds from a photo (type, material, culture, period, dating, site) with calibrated confidence; concept stage | yes | [aiscr-classify-artefact](https://github.com/ARUP-CAS/aiscr-classify-artefact) |
+| aiscr-infra | infra | AIS CR Kubernetes cluster on the Brno and Prague servers (private) | yes | [aiscr-infra](https://github.com/ARUP-CAS/aiscr-infra) |
 
 ## Type definitions
 
