@@ -169,9 +169,9 @@ class Command(BaseCommand):
         with ruian_sync_lock() as ziskan_zamek:
             if not ziskan_zamek:
                 raise CommandError(
-                    "Synchronizace RÚIAN už běží (drží advisory lock). Počkejte na její "
-                    "dokončení, nebo zastavte běžící úlohu. Souběh plného synchu a denní "
-                    "delty by nenávratně zahodil změny zpracované mezitím."
+                    "Zámek synchronizace RÚIAN drží jiný proces (denní sync RÚIAN nebo "
+                    "anonymizace_dat). Počkejte na jeho dokončení, nebo zastavte běžící úlohu. "
+                    "Souběh plného synchu a denní delty by nenávratně zahodil změny zpracované mezitím."
                 )
             self._proved_sync(source, shp_path, uzsz_path, valid_to)
 
