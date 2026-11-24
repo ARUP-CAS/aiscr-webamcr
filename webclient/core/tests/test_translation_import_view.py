@@ -1,5 +1,7 @@
 """Testy kontroly přihlášení a oprávnění u importu překladového katalogu v Rosettě (issue #4542)."""
 
+import tempfile
+from pathlib import Path
 from unittest import mock
 
 from core.views import TranslationImportView
@@ -77,7 +79,14 @@ class TranslationImportViewAccessTest(SimpleTestCase):
     def test_prekladatel_projde_a_odpoved_ma_no_cache_hlavicky(self):
         """Překladatel dostane formulář a odpověď zakazuje cache."""
         user = mock.Mock(is_authenticated=True)
-        with mock.patch(ACCESS, return_value=lambda u: True):
-            response = TranslationImportView.as_view()(self._request("get", user), **KWARGS)
+        # Katalog se dodá z dočasného adresáře, aby test nezávisel na lokálním svazku s překlady.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            po_path = Path(tmpdir, "locale", "cs", "LC_MESSAGES", "django.po")
+            po_path.parent.mkdir(parents=True)
+            po_path.write_text('msgid ""\nmsgstr ""\n', encoding="utf-8")
+            with mock.patch(ACCESS, return_value=lambda u: True), mock.patch(
+                "core.views.find_pos_with_backup", return_value=[str(po_path)]
+            ):
+                response = TranslationImportView.as_view()(self._request("get", user), **KWARGS)
         self.assertEqual(response.status_code, 200)
         self.assertIn("no-cache", response["Cache-Control"])
