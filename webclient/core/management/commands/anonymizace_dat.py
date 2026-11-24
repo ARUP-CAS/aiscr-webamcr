@@ -153,6 +153,7 @@ class Command(BaseCommand):
       chráněný); veřejné záznamy si skutečné texty ponechají,
     - poznámky historie typu ``KAT`` (změna katastru) chráněných archeologických
       záznamů, projektů a samostatných nálezů,
+    - poznámky historie změn údajů (``ZUU``/``ZUA``) anonymizovaných účtů,
     - polohy záznamů s přístupností vyšší než A,
     - uložené hodnoty ``doi`` a ``igsn`` na prefix cílové instance.
 
