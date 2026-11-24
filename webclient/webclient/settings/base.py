@@ -708,8 +708,12 @@ FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
 # přijetí souboru počítá digest a při commitu přesouvá obsah do OCFL (na produkci nejvýš ~8 s).
 # Přenos souboru od klienta se do timeoutu nepočítá, tělo požadavku bufferuje nginx dřív, než
 # požadavek převezme Django.
+# GET mimo transakci (náhledy, stažení, historie) má 60 s: na produkci mají GETy p99 0,07 s a dlouhé
+# GETy (až ~98 s) se vyskytují jen v zápisových transakcích, kde čekají na zámek. Při zaseknuté Fedoře
+# by jinak každý náhled na stránce blokoval worker 300 s, náhled se záložním stažením originálu 600 s.
 FEDORA_CONNECT_TIMEOUT = float(get_secret("FEDORA_CONNECT_TIMEOUT", 10))
 FEDORA_READ_TIMEOUT = float(get_secret("FEDORA_READ_TIMEOUT", 300))
+FEDORA_GET_READ_TIMEOUT = float(get_secret("FEDORA_GET_READ_TIMEOUT", 60))
 FEDORA_CONTENT_READ_TIMEOUT = float(get_secret("FEDORA_CONTENT_READ_TIMEOUT", 600))
 
 DATACITE_URL = get_secret("DATACITE_URL", "")

@@ -65,6 +65,8 @@ Jsou definovány následující secrets:
      - Nepovinné. Timeout navázání spojení s Fedorou v sekundách (výchozí 10)
    * - ``FEDORA_READ_TIMEOUT``
      - Nepovinné. Maximální čekání na další data od Fedory v sekundách (výchozí 300); omezuje čekání na zámek ve Fedoře
+   * - ``FEDORA_GET_READ_TIMEOUT``
+     - Nepovinné. Read timeout pro čtení z Fedory mimo transakci (náhledy, stažení souborů, historie) v sekundách (výchozí 60); omezuje, jak dlouho zaseknutá Fedora drží worker při zobrazení stránky
    * - ``FEDORA_CONTENT_READ_TIMEOUT``
      - Nepovinné. Read timeout pro zápis obsahu souborů, náhledů a distribucí a pro commit transakce v sekundách (výchozí 600). Nemá být vyšší než ``uwsgi_read_timeout`` v ``proxy/default.conf``, jinak nginx vrátí 504, zatímco zápis doběhne
    * - ``DIGIARCHIV_SERVER_URL``
