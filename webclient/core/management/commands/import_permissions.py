@@ -1,10 +1,10 @@
 import logging
 
-from core.exceptions import WrongCSVError
+from core.permission_validation import PermissionPolicyError
 from core.services import PermissionService
 from core.utils import hodnota_pro_log
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
@@ -22,8 +22,8 @@ class Command(BaseCommand):
 
     Poznámka:
     - CSV soubor musí být umístěn v adresáři ``core/resources/``
-    - Při chybě ve formátu CSV se import přeruší a zobrazí se chybová hláška
-    - Úspěšný import zobrazí počet importovaných oprávnění a případné chybějící hodnoty
+    - Neplatná matice přeruší import s chybovou hláškou a nenulovým stavem příkazu
+    - Při neúspěšném zápisu zůstávají předchozí oprávnění zachována
 
     Příklady použití::
 
@@ -48,12 +48,12 @@ class Command(BaseCommand):
             )
         try:
             sheet, missing = PermissionService().run(permission_file)
-        except WrongCSVError as err:
+        except PermissionPolicyError as err:
             logger.error(
-                "core.management.commands.import_permissions.WrongCSVError",
+                "core.management.commands.import_permissions.invalid_policy",
                 extra={"error": err},
             )
-            self.stdout.write(self.style.WARNING(_("core.management.commands.import_permissions.finished_error")))
+            raise CommandError(str(err)) from err
         else:
             logger.info(
                 "core.management.commands.import_permissions.results",

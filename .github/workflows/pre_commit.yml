@@ -145,6 +145,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Install native libraries for permission validation
+        id: native-libraries
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgdal-dev libgeos-dev libmagic1
+
       # Refresh i docs čtou stejné .txt; přímé autorské piny v .in se nemění.
       - name: Compile or refresh Python requirements
         id: compile
@@ -172,6 +179,7 @@ jobs:
         run: |
           python -m unittest discover -s scripts -p 'test_pre_commit*.py' -v
           python -m unittest discover -s scripts -p 'test_generate_js_libraries.py' -v
+          python -m unittest discover -s scripts -p 'test_deploy_readiness.py' -v
 
       - name: Run convert_to_rst.py
         id: docs

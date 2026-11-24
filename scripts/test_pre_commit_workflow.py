@@ -188,6 +188,15 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(tail[1], "hook line 22")
         self.assertEqual(tail[-2], "Final hook failure")
 
+    def test_permission_check_has_native_libraries_before_hooks(self):
+        """CI připraví nativní knihovny před instalací závislostí a spuštěním všech hooků."""
+        steps = [step.get("id", step["name"]) for step in JOB["steps"]]
+        self.assertLess(steps.index("native-libraries"), steps.index("install"))
+        self.assertLess(steps.index("install"), steps.index("hooks"))
+        for package in ("libgdal-dev", "libgeos-dev", "libmagic1"):
+            self.assertIn(package, STEPS["native-libraries"]["run"])
+        self.assertIn("pre-commit run --all-files", STEPS["hooks"]["run"])
+
     def publication_fixture(self, existing="", fail="0", base="test", is_pr="true"):
         """Shellové funkce zajistí, že publikace neprovede skutečný zápis do Gitu či GitHubu.
 
