@@ -1,12 +1,13 @@
+{% if d.je_model_3d %}{% firstof "model3d" as typ_vazby %}{% else %}{% firstof "dokument" as typ_vazby %}{% endif %}
 <tr id="{{prefix}}{{d.id}}">
   <td>
   {% if d.thumbnail_image %}
-      <img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled" data-bs-toggle="modal" data-bs-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'dokument' d.ident_cely d.thumbnail_image %}" loading="lazy" style="opacity:0" onload="this.style.opacity=100">
+      <img src="{% url 'core:download_thumbnail' typ_vazby d.ident_cely d.thumbnail_image %}" class="image-nahled" data-bs-toggle="modal" data-bs-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' typ_vazby d.ident_cely d.thumbnail_image %}" loading="lazy" style="opacity:0" onload="this.style.opacity=100">
     {% endif %}
   </td>
     <td class="app-ident-cely">
       {% if d.ident_cely %}
-        <a href="{% url 'dokument:detail' d.ident_cely %}">
+        <a href="{% if d.je_model_3d %}{% url 'dokument:detail-model-3D' d.ident_cely %}{% else %}{% url 'dokument:detail' d.ident_cely %}{% endif %}">
           <span class="material-icons">description</span>
           {{ d.ident_cely }}
         </a>
