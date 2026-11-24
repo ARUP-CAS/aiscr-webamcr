@@ -41,8 +41,9 @@ class DjSmazatDeletedCountTests(SimpleTestCase):
         dj.archeologicky_zaznam.get_absolute_url.return_value = "/zaznam"
         fedora_transaction = dj.archeologicky_zaznam.create_transaction.return_value
         transaction = _transaction_mock()
+        self.update_katastr = mock.Mock()
         with mock.patch.object(dj_views, "get_object_or_404", return_value=dj), mock.patch.object(
-            dj_views, "update_all_katastr_within_akce_or_lokalita"
+            dj_views, "update_all_katastr_within_akce_or_lokalita", self.update_katastr
         ), mock.patch.object(dj_views, "transaction", transaction):
             response = dj_views.smazat(_post_request(), "DJ-TEST")
         return response, fedora_transaction, transaction
@@ -52,7 +53,9 @@ class DjSmazatDeletedCountTests(SimpleTestCase):
         response, fedora_transaction, transaction = self._run(1)
         self.assertEqual(response.status_code, 200)
         transaction.on_commit.assert_called_once_with(fedora_transaction.mark_transaction_as_closed)
+        fedora_transaction.mark_transaction_as_closed.assert_not_called()
         fedora_transaction.rollback_transaction.assert_not_called()
+        self.update_katastr.assert_called_once()
 
     def test_nothing_deleted_rolls_back(self):
         """Nula smazaných řádků: odvolá se Fedora transakce, odpověď 403, commit se neplánuje."""
@@ -60,6 +63,8 @@ class DjSmazatDeletedCountTests(SimpleTestCase):
         self.assertEqual(response.status_code, 403)
         fedora_transaction.rollback_transaction.assert_called_once()
         transaction.on_commit.assert_not_called()
+        # Přepočet katastrů zapisuje do DB i Fedory, při nule smazaných řádků se nesmí provést.
+        self.update_katastr.assert_not_called()
 
 
 class DokumentSmazatDeletedCountTests(SimpleTestCase):
@@ -84,6 +89,7 @@ class DokumentSmazatDeletedCountTests(SimpleTestCase):
         response, fedora_transaction, transaction = self._run(1)
         self.assertEqual(response.status_code, 200)
         transaction.on_commit.assert_called_once_with(fedora_transaction.mark_transaction_as_closed)
+        fedora_transaction.mark_transaction_as_closed.assert_not_called()
         transaction.set_rollback.assert_not_called()
 
     def test_nothing_deleted_rolls_back(self):
@@ -115,6 +121,7 @@ class AdbSmazatVbDeletedCountTests(SimpleTestCase):
         response, fedora_transaction, transaction = self._run(1)
         self.assertEqual(response.status_code, 200)
         transaction.on_commit.assert_called_once_with(fedora_transaction.mark_transaction_as_closed)
+        fedora_transaction.mark_transaction_as_closed.assert_not_called()
         fedora_transaction.rollback_transaction.assert_not_called()
 
     def test_nothing_deleted_rolls_back(self):
