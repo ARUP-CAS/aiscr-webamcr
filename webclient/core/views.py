@@ -1956,10 +1956,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         """
         Vrací sort params.
 
-        :return: Načtená data odpovídající zadaným vstupům.
+        Hodnoty ``sort`` pochází z URL, proto se duplicity zahodí a počet termínů se omezí na
+        ``max_sort_params``; další hodnoty se ignorují. Tím je omezená i práce, kterou
+        ``filter_valid_sort_params`` vynaloží na ověření řazení.
+
+        :return: Seznam unikátních názvů polí pro řazení, nejvýše ``max_sort_params``.
         """
-        sort_params = self.request.GET.getlist("sort")
-        return sort_params
+        sort_params = list(dict.fromkeys(self.request.GET.getlist("sort")))
+        return sort_params[: self.max_sort_params]
+
+    #: Nejvyšší počet termínů ``sort`` z URL, které seznam zohlední (viz ``_get_sort_params``).
+    max_sort_params = 8
 
     @staticmethod
     def filter_valid_sort_params(qs, sort_params):

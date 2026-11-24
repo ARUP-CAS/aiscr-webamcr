@@ -224,12 +224,26 @@ class OznameniDokumentaceView(OznameniView):
         :param request: Parametr ``request`` předává se do volání ``debug()``, ``get()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek.
 
             :return: Vrací výsledek volání ``redirect()``.
-            :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
+            :raises PermissionDenied: Vyvolá se, pokud ident_cely z formuláře neodpovídá URL nebo projektu v session,
+                nebo pokud projekt není ve stavu ``PROJEKT_STAV_VYTVORENY``.
             :raises Http404: Vyvolá se, pokud projekt s ident_cely z formuláře neexistuje.
         """
         if "ident_cely" in request.POST:
             logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
+            # Stejně jako GET: projekt musí odpovídat URL i projektu rozepsanému v této session.
+            if request.POST["ident_cely"] != self.ident_cely or self.session_identifier.get_ident() != self.ident_cely:
+                logger.debug(
+                    "oznameni.views.index.second_part.permission_denied",
+                    extra={"ident_cely": request.POST["ident_cely"], "url_ident_cely": self.ident_cely},
+                )
+                raise PermissionDenied
             projekt = get_object_or_404(Projekt, ident_cely=request.POST["ident_cely"])
+            if projekt.stav != PROJEKT_STAV_VYTVORENY:
+                logger.debug(
+                    "oznameni.views.index.second_part.wrong_state",
+                    extra={"ident_cely": projekt.ident_cely, "stav": projekt.stav},
+                )
+                raise PermissionDenied
             fedora_transaction = FedoraTransaction()
             projekt.active_transaction = fedora_transaction
             # try je vně atomic bloku, aby výjimka z Fedory odrolovala i změnu stavu a historie v DB (savepoint).

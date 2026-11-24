@@ -447,7 +447,11 @@ Třídy
 
       Vrací sort params.
 
-      :return: Načtená data odpovídající zadaným vstupům.
+      Hodnoty ``sort`` pochází z URL, proto se duplicity zahodí a počet termínů se omezí na
+      ``max_sort_params``; další hodnoty se ignorují. Tím je omezená i práce, kterou
+      ``filter_valid_sort_params`` vynaloží na ověření řazení.
+
+      :return: Seznam unikátních názvů polí pro řazení, nejvýše ``max_sort_params``.
 
    .. py:method:: filter_valid_sort_params()
 

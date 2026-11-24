@@ -63,7 +63,8 @@ Třídy
       :param request: Parametr ``request`` předává se do volání ``debug()``, ``get()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek.
 
       :return: Vrací výsledek volání ``redirect()``.
-      :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises PermissionDenied: Vyvolá se, pokud ident_cely z formuláře neodpovídá URL nebo projektu v session,
+              nebo pokud projekt není ve stavu ``PROJEKT_STAV_VYTVORENY``.
       :raises Http404: Vyvolá se, pokud projekt s ident_cely z formuláře neexistuje.
 
    .. py:method:: get()

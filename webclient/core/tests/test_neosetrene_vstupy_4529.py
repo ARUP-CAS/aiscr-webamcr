@@ -2,8 +2,10 @@
 
 from unittest import mock
 
+from core.constants import PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_VYTVORENY
 from core.repository_connector import FedoraUpdatedByAnotherTransactionError
 from core.views import SearchListView
+from django.core.exceptions import PermissionDenied
 from django.db.models.query import QuerySet
 from django.http import Http404
 from django.test import RequestFactory, SimpleTestCase
@@ -26,6 +28,15 @@ class FilterValidSortParamsTest(SimpleTestCase):
         qs = Projekt.objects.all()
         vysledek = SearchListView.filter_valid_sort_params(qs, ["hlavni_katastr__nazev", "hlavni_katastr__neexistuje"])
         self.assertEqual(vysledek, ["hlavni_katastr__nazev"])
+
+    def test_get_sort_params_omezi_pocet_a_zahodi_duplicity(self):
+        """Z URL se zohlední nejvýše ``max_sort_params`` unikátních termínů v původním pořadí."""
+        view = SearchListView()
+        hodnoty = ["a", "b", "a"] + [f"pole{i}" for i in range(20)]
+        view.request = RequestFactory().get("/", {"sort": hodnoty})
+        vysledek = view._get_sort_params()
+        self.assertEqual(SearchListView.max_sort_params, 8)
+        self.assertEqual(vysledek, ["a", "b"] + [f"pole{i}" for i in range(6)])
 
     def test_prazdny_seznam(self):
         """Bez parametru ``sort`` se vrací prázdný seznam."""
@@ -95,9 +106,46 @@ class OznameniDokumentacePostTest(SimpleTestCase):
         """
         view = OznameniDokumentaceView()
         view.session_identifier = mock.MagicMock()
+        view.session_identifier.get_ident.return_value = "X-C-000027078"
         view.ident_cely = "X-C-000027078"
         request = RequestFactory().post("/", {"ident_cely": "X-C-000027078"})
         return view, request
+
+    def test_ident_z_formulare_neodpovida_url(self):
+        """Ident v těle POST jiný než v URL se odmítne ještě před načtením projektu."""
+        view, request = self._post()
+        view.ident_cely = "X-C-000000001"
+        view.session_identifier.get_ident.return_value = "X-C-000000001"
+        with mock.patch("oznameni.views.get_object_or_404") as get_projekt:
+            with self.assertRaises(PermissionDenied):
+                view.post(request)
+        get_projekt.assert_not_called()
+
+    def test_ident_neodpovida_projektu_v_session(self):
+        """Projekt, který uživatel v této session nerozepsal, nelze oznámit."""
+        view, request = self._post()
+        view.session_identifier.get_ident.return_value = None
+        with mock.patch("oznameni.views.get_object_or_404") as get_projekt:
+            with self.assertRaises(PermissionDenied):
+                view.post(request)
+        get_projekt.assert_not_called()
+
+    @mock.patch("oznameni.views.Mailer")
+    @mock.patch("oznameni.views.get_object_or_404")
+    def test_projekt_ve_spatnem_stavu(self, get_projekt, mailer):
+        """Projekt, který už není ve stavu vytvořený, se znovu neoznamuje a nespouští e-maily.
+
+        :param get_projekt: Mock ``get_object_or_404``, vrací už oznámený projekt.
+        :param mailer: Mock ``Mailer``, nesmí se zavolat.
+        """
+        projekt = get_projekt.return_value
+        projekt.stav = PROJEKT_STAV_OZNAMENY
+        view, request = self._post()
+        with self.assertRaises(PermissionDenied):
+            view.post(request)
+        projekt.set_oznameny.assert_not_called()
+        mailer.send_eo01.assert_not_called()
+        mailer.send_eo02.assert_not_called()
 
     def test_neexistujici_projekt(self):
         """Projekt z formuláře, který neexistuje, vrací 404 místo ``DoesNotExist`` a 500."""
@@ -123,6 +171,7 @@ class OznameniDokumentacePostTest(SimpleTestCase):
         """
         projekt = get_projekt.return_value
         projekt.ident_cely = "X-M-000027426"
+        projekt.stav = PROJEKT_STAV_VYTVORENY
         projekt.set_oznameny.side_effect = FedoraUpdatedByAnotherTransactionError(
             "url", "conflict", 409, {}, fedora_transaction.return_value
         )
