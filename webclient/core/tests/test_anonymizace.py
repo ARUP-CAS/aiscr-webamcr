@@ -1282,6 +1282,41 @@ class TestSekceNadDatabazi(TestCase):
         _spust_sekci("uzivatele", omezeni)
         self.assertEqual([stav(uzivatel) for uzivatel in vsichni], po_prvnim)
 
+    def test_poznamky_zmen_udaju_anonymizovanych_uctu_se_vynuluji(self):
+        """
+        Poznámky historie změn údajů anonymizovaného účtu se vynulují, u vyloučeného účtu zůstanou.
+
+        Poznámka ``ZUU``/``ZUA`` obsahuje změněná pole i s hodnotami; jiné typy
+        záznamů historie se nemění.
+        """
+        from core.constants import UZIVATEL_RELATION_TYPE, ZMENA_UDAJU_ADMIN, ZMENA_UDAJU_UZIVATEL
+        from historie.models import Historie, HistorieVazby
+        from uzivatel.models import User
+
+        d = self.d
+        zapisy = {}
+        for uzivatel in (d.bezny, d.admin):
+            vazba = HistorieVazby.objects.create(typ_vazby=UZIVATEL_RELATION_TYPE)
+            User.objects.filter(pk=uzivatel.pk).update(history_vazba=vazba)
+            zapisy[uzivatel.pk] = [
+                Historie.objects.create(vazba=vazba, typ_zmeny=typ, poznamka=poznamka, uzivatel=d.admin)
+                for typ, poznamka in (
+                    (ZMENA_UDAJU_UZIVATEL, "telefon: +420 777 000 002, orcid: 0000-0002-1825-0097"),
+                    (ZMENA_UDAJU_ADMIN, "last_name: Skutečná"),
+                    ("HR", "jiný záznam"),
+                )
+            ]
+        _spust_sekci("uzivatele", {User: [d.bezny.pk, d.admin.pk]})
+
+        def poznamky(pk):
+            return [Historie.objects.get(pk=zaznam.pk).poznamka for zaznam in zapisy[pk]]
+
+        self.assertEqual(poznamky(d.bezny.pk), [None, None, "jiný záznam"])
+        self.assertEqual(
+            poznamky(d.admin.pk),
+            ["telefon: +420 777 000 002, orcid: 0000-0002-1825-0097", "last_name: Skutečná", "jiný záznam"],
+        )
+
     def test_projekt_bez_snapshotu_pristupnosti_se_bere_jako_chraneny(self):
         """
         Projekt s ``pristupnost_snapshot = NULL`` se anonymizuje jako chráněný.

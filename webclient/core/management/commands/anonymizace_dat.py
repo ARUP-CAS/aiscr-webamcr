@@ -2,7 +2,13 @@ import contextlib
 import logging
 import random
 
-from core.constants import PRISTUPNOST_MIN_RAZENI, ROLE_ADMIN_ID, ZMENA_KATASTRU
+from core.constants import (
+    PRISTUPNOST_MIN_RAZENI,
+    ROLE_ADMIN_ID,
+    ZMENA_KATASTRU,
+    ZMENA_UDAJU_ADMIN,
+    ZMENA_UDAJU_UZIVATEL,
+)
 from core.coordTransform import transform_geom_to_wgs84
 from core.management.commands.utils import anonymizace
 from core.management.commands.utils.anonymizace_geometrie import (
@@ -557,7 +563,9 @@ class Command(BaseCommand):
         Když taková osoba v databázi chybí (typicky lokální kopie), vypíše se
         varování a vyloučení zůstanou jen administrátoři. Anonymizované účty
         přijdou o napojení na osobu i o ORCID, aby se k nim skutečná identita
-        nedala dohledat přes záznam osoby; samotné osoby se nemění. Zápis jde jedním
+        nedala dohledat přes záznam osoby; samotné osoby se nemění. Vynulují se
+        i poznámky historie změn údajů (:meth:`_poznamky_zmen_udaju`), které
+        skutečné údaje uchovávají. Zápis jde jedním
         ``UPDATE``, protože ``User.save()`` normalizuje e-mail a zakládá vazbu
         do historie.
 
@@ -598,8 +606,10 @@ class Command(BaseCommand):
             identy = ", ".join(kolize.values_list("ident_cely", flat=True)[:10])
             raise CommandError(f"Vyloučené účty už mají zástupnou adresu, hrozí kolize unikátního e-mailu: {identy}")
 
-        # Kraje před návratem dry-runu, aby je náhled započítal; zapisuje se jen v ostrém běhu.
+        # Kraje a historie před návratem dry-runu, aby je náhled započítal; zapisuje se jen
+        # v ostrém běhu. Historie se vybírá podle týchž účtů, dokud je výběr ještě platný.
         self._anonymizuj_kraje(options)
+        self._poznamky_zmen_udaju(k_anonymizaci, options)
         if options["dry_run"]:
             return
 
@@ -625,6 +635,32 @@ class Command(BaseCommand):
         )
         self._zapocti("uzivatele", zmeneno=zmeneno)
         self.stdout.write(f"Anonymizováno uživatelů: {zmeneno}")
+
+    def _poznamky_zmen_udaju(self, uzivatele, options):
+        """
+        Vynuluje poznámky historie změn údajů u anonymizovaných účtů.
+
+        Úprava účtu uživatelem (``ZUU``) i administrátorem (``ZUA``) zapisuje do
+        poznámky změněná pole i s hodnotami, např. ``telefon: …, orcid: …``. Bez
+        vynulování by skutečné jméno, e-mail, telefon nebo ORCID přežily v historii,
+        i když sám účet už nese zástupné údaje. Ostatní typy záznamů historie se nemění.
+
+        :param uzivatele: Queryset anonymizovaných účtů.
+        :param options: Pojmenované argumenty z příkazového řádku.
+        """
+        from historie.models import Historie
+
+        k_anonymizaci = Historie.objects.filter(
+            vazba__in=uzivatele.values("history_vazba"),
+            typ_zmeny__in=(ZMENA_UDAJU_UZIVATEL, ZMENA_UDAJU_ADMIN),
+            poznamka__isnull=False,
+        )
+        pocet = k_anonymizaci.count()
+        self._zapocti("uzivatele", zpracovano=pocet)
+        self.stdout.write(f"Poznámek historie změn údajů k anonymizaci: {pocet}")
+        if options["dry_run"] or not pocet:
+            return
+        self._zapocti("uzivatele", zmeneno=k_anonymizaci.update(poznamka=None))
 
     def _anonymizuj_kraje(self, options):
         """
