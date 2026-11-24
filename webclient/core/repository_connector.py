@@ -894,8 +894,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
             :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
             :raises FedoraNoResponseError: Vyvolá se, pokud se požadavek nepodaří odeslat
-                nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, u obsahu souborů
-                ``FEDORA_CONTENT_READ_TIMEOUT``).
+                nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, mimo transakci
+                u GET ``FEDORA_GET_READ_TIMEOUT``, u obsahu souborů ``FEDORA_CONTENT_READ_TIMEOUT``).
         """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
