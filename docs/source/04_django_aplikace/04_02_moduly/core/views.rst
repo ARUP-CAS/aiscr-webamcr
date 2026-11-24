@@ -1024,6 +1024,17 @@ Funkce
 
    :return: Vrací výsledek volání ``JsonResponse()``.
 
+.. py:function:: typ_vazby_odpovida_dokumentu(dokument, typ_vazby)
+
+   Zjistí, zda ``typ_vazby`` odpovídá skutečnému typu dokumentu.
+
+   Hodnoty ``model3d`` a ``dokument`` se k oprávněním i whitelistům MIME typů vážou odlišně, proto
+   smí ``model3d`` patřit jen 3D modelu a ``dokument`` jen běžnému dokumentu.
+
+   :param dokument: Dokument, ke kterému se soubor váže.
+   :param typ_vazby: Typ vazby z URL (``model3d`` nebo ``dokument``).
+   :return: ``True``, pokud typ vazby odpovídá typu dokumentu.
+
 .. py:function:: check_soubor_vazba(typ_vazby, ident, id_zaznamu)
 
    Ověří soubor vazba.

@@ -766,12 +766,16 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
         if self.typ_vazby == "pas":
             self.info_tooltip = _("core.upload_file_PAS.tooltip")
             return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
-        elif self.typ_vazby == "dokument":
-            self.info_tooltip = _("core.upload_file_dokument.tooltip")
-            return get_object_or_404(Dokument, ident_cely=self.ident)
-        elif self.typ_vazby == "model3d":
-            self.info_tooltip = _("core.upload_file_model3d.tooltip")
-            return get_object_or_404(Dokument, ident_cely=self.ident)
+        elif self.typ_vazby in ("dokument", "model3d"):
+            self.info_tooltip = (
+                _("core.upload_file_model3d.tooltip")
+                if self.typ_vazby == "model3d"
+                else _("core.upload_file_dokument.tooltip")
+            )
+            dokument = get_object_or_404(Dokument, ident_cely=self.ident)
+            if not typ_vazby_odpovida_dokumentu(dokument, self.typ_vazby):
+                raise Http404
+            return dokument
         else:
             self.info_tooltip = _("core.upload_file_projekt.tooltip")
             return get_object_or_404(Projekt, ident_cely=self.ident)
@@ -871,7 +875,8 @@ class BasePostUploadView(View):
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``_unknown_error_response()``, výsledek volání ``JsonResponse()``, výsledek volání ``handle_upload()``.
         """
-        self.source_url = request.POST.get("source-url", "")
+        # Whitelist MIME typů se volí podle trasy, ne podle hodnoty ``source-url`` zaslané klientem.
+        self.source_url = f"soubor/nahrat/{kwargs.get('typ_vazby', '')}/"
         self.fedora_transaction = FedoraTransaction()
         soubor: TemporaryUploadedFile = request.FILES.get("file")
         if not soubor:
@@ -1137,6 +1142,13 @@ class NewFileUploadView(BasePostUploadView):
                 new_name = get_projekt_soubor_name(objekt, filename)
         elif typ_vazby in ("dokument", "model3d"):
             dokument = Dokument.objects.filter(ident_cely=ident_cely).first()
+            if dokument and not typ_vazby_odpovida_dokumentu(dokument, typ_vazby):
+                self.fedora_transaction.rollback_transaction()
+                logger.warning(
+                    "core.views.post_upload.error.typ_vazby_type_mismatch",
+                    extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby},
+                )
+                return JsonResponse({"error": str(SPATNY_ZAZNAM_SOUBOR_VAZBA)}, status=400)
             if dokument:
                 objekt = dokument
                 new_name = get_next_soubor_name(objekt, filename)
@@ -2350,6 +2362,20 @@ def post_ajax_get_list_map_data(request, layer):
     return JsonResponse({"heat": back, "algorithm": "heat", "count": len(back)}, status=200)
 
 
+def typ_vazby_odpovida_dokumentu(dokument, typ_vazby):
+    """
+    Zjistí, zda ``typ_vazby`` odpovídá skutečnému typu dokumentu.
+
+    Hodnoty ``model3d`` a ``dokument`` se k oprávněním i whitelistům MIME typů vážou odlišně, proto
+    smí ``model3d`` patřit jen 3D modelu a ``dokument`` jen běžnému dokumentu.
+
+    :param dokument: Dokument, ke kterému se soubor váže.
+    :param typ_vazby: Typ vazby z URL (``model3d`` nebo ``dokument``).
+    :return: ``True``, pokud typ vazby odpovídá typu dokumentu.
+    """
+    return dokument.je_model_3d == (typ_vazby == "model3d")
+
+
 def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
     """
     Ověří soubor vazba.
@@ -2368,7 +2394,7 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
     """
     if typ_vazby == "model3d" or typ_vazby == "dokument":
         dokument = get_object_or_404(Dokument, ident_cely=ident)
-        if dokument.je_model_3d != (typ_vazby == "model3d"):
+        if not typ_vazby_odpovida_dokumentu(dokument, typ_vazby):
             raise ZaznamSouborNotmatching
         soubor = dokument.soubory.soubory.filter(pk=id_zaznamu)
     elif typ_vazby == "pas":

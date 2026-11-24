@@ -3232,9 +3232,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
                 .prefetch_related("soubory__soubory")
             ).order_by("ident_cely")
             zaznam = Projekt.objects.get(ident_cely=ident_cely)
-            dokument_odpojit = (
-                check_permissions(p.actionChoices.projekt_dok_odpojit, request.user, zaznam.ident_cely),
-            )
+            dokument_odpojit = check_permissions(p.actionChoices.projekt_dok_odpojit, request.user, zaznam.ident_cely)
         context = {
             "dokumenty": qs,
             "show": {"dokument_odpojit": dokument_odpojit},
