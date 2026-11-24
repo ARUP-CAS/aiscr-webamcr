@@ -1,0 +1,70 @@
+Skript test_pre_commit_deployment_execution.py
+==============================================
+
+Automaticky generovaná dokumentace skriptu ``scripts/test_pre_commit_deployment_execution.py``.
+
+Přehled modulu
+--------------
+
+Regrese skutečných nasazovacích skriptů s úplnou náhradou provozních příkazů.
+
+Třídy
+------
+
+.. py:class:: DeploymentExecutionTests
+
+   Ověří statusy a bookkeeping bez skutečného Dockeru, Git změn či serveru.
+
+   **Metody:**
+
+   .. py:method:: setUp()
+
+      Zkopíruje skripty do dočasné kořenové složky a nahradí provozní nástroje.
+
+   .. py:method:: tool()
+
+      Zapíše pouze lokální náhradu příkazu do izolovaného PATH.
+
+      :param name: Název nástroje.
+      :param body: Bezpečné tělo náhrady.
+
+   .. py:method:: execute()
+
+      Spustí reálný zkopírovaný skript v bezpečném prostředí.
+
+      :param script: Cesta skriptu pod scripts.
+      :param args: Jeho argumenty.
+      :param previous_tag: Připravit existující záznam předchozího nasazení.
+      :param values: Stav simulovaných příkazů.
+      :return: Výsledek procesu.
+
+   .. py:method:: test_required_build_pull_removal_and_deployment_failures_propagate()
+
+      Neúspěch nelze přepsat zprávou o dokončení ani koncovým exit 0.
+
+   .. py:method:: test_ci_wrappers_preserve_failure_and_previous_tag()
+
+      Při chybě nasazení se nepustí readiness ani nezmění poslední úspěšný tag.
+
+   .. py:method:: test_ci_wrappers_create_logs_on_first_deployment()
+
+      První nasazení vytvoří logy před jejich úklidem i bez předchozího tagu.
+
+   .. py:method:: test_clone_and_readiness_failure_preserve_previous_tag()
+
+      Klonování a konečná kontrola jsou povinné, jejich chyby zůstanou chybami.
+
+   .. py:method:: test_absent_stack_cleanup_and_optional_compaction_remain_valid()
+
+      Chybějící starý stack a chyba volitelné kompakce nefalšují povinné chyby.
+
+   .. py:method:: test_test_wrapper_propagates_identity_modes_and_child_failure()
+
+      Předání identity a script --return zachovají selhání všech režimů.
+
+Zdrojový kód
+------------
+
+.. literalinclude:: ../../../../scripts/test_pre_commit_deployment_execution.py
+   :language: python
+   :linenos:

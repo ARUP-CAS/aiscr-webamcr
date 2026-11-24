@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 print_d1 () {
     echo "----------------"
@@ -34,11 +35,10 @@ scriptpath="${deployment_root}/scripts"
 logfile="deployment_${d_stamp}.log"
 logfilepath="${logpath}/${logfile}"
 path_last_tag="${logpath}/last_deployment_tag.txt"
-last_deployment_tag=$(cat ${path_last_tag})
+last_deployment_tag=$(cat "${path_last_tag}" 2>/dev/null || true)
 
+mkdir -p "$logpath"
 find "$logpath" -name "$logfile" -type f -mtime +5 -exec rm -f {} \;
-
-mkdir -p ${logpath}
 
 print_d1 "Update repository..."
 
@@ -72,53 +72,21 @@ print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
 
 #Docker deployement
 chmod +x ${scriptpath}/test_deploy.sh
-${scriptpath}/test_deploy.sh -x
-${scriptpath}/test_deploy.sh -q
+"${scriptpath}/test_deploy.sh" -x < /dev/null || exit $?
+"${scriptpath}/test_deploy.sh" -q < /dev/null || exit $?
 
 #Status check
 print_d1 "STATUS CHECK"
-timeout=600         # max čas čekání v sekundách (10 minut)
-interval=20          # čas mezi kontrolami
-elapsed=0
-while true; do
-    # Získat seznam kontejnerů se stavem "health: starting"
-    unhealthy=$(sudo docker ps --filter "health=starting" --format '{{.ID}}')
-    # Služby stacku, které ještě nemají spuštěné všechny repliky (např. se stahuje image
-    # a kontejner zatím neexistuje, takže ho filtr health=starting nevidí). Filtr podle štítku
-    # stacku je přesný (name= je substring). Služby škálované na 0 mají 0/0, dokončené
-    # jednorázové joby ("0/1 (1/1 completed)") se přeskakují.
-    not_running=$(sudo docker service ls --filter "label=com.docker.stack.namespace=${stack_name}" \
-        --format '{{.Name}} {{.Replicas}}' \
-        | awk '!/completed/ {split($2, r, "/"); if (r[1] != r[2]) print $1 " (" $2 ")"}')
-
-    if [ -z "$unhealthy" ] && [ -z "$not_running" ]; then
-        print_d1 "ALL CONTAINERS ARE HEALTHY"
-        break
-    fi
-
-    if [ "$elapsed" -ge "$timeout" ]; then
-        print_d1 "TIMEOUT Some containers are still not healthy!"
-        docker ps --filter "health=starting"
-        echo "${not_running}"
-        exit 1
-    fi
-
-    print_d1 "Waiting... still unhealthy containers:"
-    docker ps --filter "health=starting" --format '→ {{.Names}} ({{.Status}})'
-    if [ -n "$not_running" ]; then
-        echo "${not_running}" | sed 's/^/→ not running: /'
-    fi
-
-    sleep "$interval"
-    elapsed=$((elapsed + interval))
-done
+python3 "$scriptpath/check_stack_ready.py" "$stack_name" --compose-file docker-compose-test.yml < /dev/null || exit $?
 
 #IN CASE of ERROR reverts
 #TBD
 
 #FINAL
 print_d1 "Cloning test database"
-docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 /scripts/db/clone_test_db.py"
+web_container="$(docker ps -q -f label=com.docker.swarm.service.name=swarm_webamcr_web)"
+[[ -n "$web_container" && "$web_container" != *$'\n'* ]] || exit 1
+docker exec "$web_container" script -e -q -c "python3 /scripts/db/clone_test_db.py" < /dev/null || exit $?
 
 # Kompakce paměti před testy. Build image a start stacku rozdrobí volnou paměť; bez souvislých
 # bloků pak kswapd při testech vyhazuje page cache i při několika GB volné RAM a testy se

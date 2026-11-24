@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 print_d1 () {
     echo "----------------"
@@ -21,11 +22,10 @@ scriptpath="${deployment_root}/scripts"
 logfile="deployment_${d_stamp}.log"
 logfilepath="${logpath}/${logfile}"
 path_last_tag="${logpath}/last_deployment_tag.txt"
-last_deployment_tag=$(cat ${path_last_tag})
+last_deployment_tag=$(cat "${path_last_tag}" 2>/dev/null || true)
 
+mkdir -p "$logpath"
 find "$logpath" -name "$logfile" -type f -mtime +5 -exec rm -f {} \;
-
-mkdir -p ${logpath}
 
 #Repo update
 git stash push -m "CI_autostash_${current_deployment_tag}_${d_stamp}"
@@ -39,19 +39,12 @@ print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
 #Docker deployement
 print_d1 "DOCKER ROLLING OUT FROM ${image_source} - TAG ${current_deployment_tag}"
 chmod +x ${scriptpath}/prod_deploy.sh
-${scriptpath}/prod_deploy.sh -x
-${scriptpath}/prod_deploy.sh ${image_source} -t ${current_deployment_tag}
+"${scriptpath}/prod_deploy.sh" -x < /dev/null || exit $?
+"${scriptpath}/prod_deploy.sh" "${image_source}" -t "${current_deployment_tag}" < /dev/null || exit $?
 
 #Status check
 print_d1 "STATUS CHECK"
-test $(sudo docker stack ps --filter "desired-state=running" ${stack_name} | wc -l) -eq 5 && true || false
-check_state="$?"
-
-if [ ${check_state} -eq 0 ]; then
-    print_d1 "CHECK OK"
-else
-    print_d1 "CHECK NOK - ERROR"
-fi
+python3 "$scriptpath/check_stack_ready.py" "$stack_name" --compose-file docker-compose-proxy.yml --compose-file docker-compose.yml < /dev/null || exit $?
 
 #IN CASE of ERROR reverts
 #TBD

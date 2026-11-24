@@ -1,0 +1,210 @@
+"""Regrese skutečných nasazovacích skriptů s úplnou náhradou provozních příkazů."""
+
+import os
+import shutil
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class DeploymentExecutionTests(unittest.TestCase):
+    """Ověří statusy a bookkeeping bez skutečného Dockeru, Git změn či serveru."""
+
+    def setUp(self):
+        """Zkopíruje skripty do dočasné kořenové složky a nahradí provozní nástroje."""
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory(dir=os.environ.get("TEST_TEMP_ROOT")))).resolve()
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        self.bash = r"C:\Program Files\Git\bin\bash.exe" if os.name == "nt" else shutil.which("bash")
+        self.trace = self.root / "trace"
+        for name in (
+            "test_deploy.sh",
+            "prod_deploy.sh",
+            "start_selenium_tests.sh",
+            "ci_deployment/deploy_test_server.sh",
+            "ci_deployment/deploy_server.sh",
+        ):
+            target = self.root / "scripts" / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            source = (ROOT / "scripts" / name).read_text(encoding="utf-8")
+            source = source.replace("$HOME/translations_backup", "$FIXTURE_HOME/translations_backup")
+            target.write_text(source, encoding="utf-8", newline="\n")
+            target.chmod(0o755)
+        (self.root / "logs").mkdir()
+        self.tag = self.root / "logs/last_deployment_tag.txt"
+        self.tool("git", 'if [[ "$1" == rev-parse ]]; then printf abc12345; fi\n')
+        self.tool("sleep", "exit 0\n")
+        self.tool("grep", "printf 'Node Normal fixture\\n'\n")
+        self.tool("python3", 'printf "READY\\n" >> "$TRACE"\nexit "${READINESS_EXIT:-0}"\n')
+        self.tool("sudo", 'if [[ "$1" == tee ]]; then cat > /dev/null; exit "${COMPACTION_EXIT:-0}"; fi\nexec "$@"\n')
+        self.tool(
+            "docker",
+            r"""
+printf '%s\n' "$*" >> "$TRACE"
+if [[ -n "${FAIL_DOCKER:-}" && "$*" == *"$FAIL_DOCKER"* ]]; then exit 7; fi
+case "$*" in
+  "network inspect"*) exit "${NETWORK_PRESENT:-0}" ;;
+  "stack ps"*) exit "${STACK_ABSENT:-0}" ;;
+  "stack ls"*)
+    [[ "${STACK_INSPECTION_EXIT:-0}" == 0 ]] || exit 7
+    if [[ "${STACK_ABSENT:-0}" == 0 ]]; then printf 'swarm_webamcr\n'; fi
+    exit 0 ;;
+  "ps -q"*) printf '%s\n' "${CONTAINER_ID-web-container}"; exit 0 ;;
+  "exec "*)
+    [[ "$*" == *"script -e -q -c"* ]] || exit 88
+    exit "${CHILD_EXIT:-0}" ;;
+esac
+exit 0
+""",
+        )
+
+    def tool(self, name, body):
+        """Zapíše pouze lokální náhradu příkazu do izolovaného PATH.
+
+        :param name: Název nástroje.
+        :param body: Bezpečné tělo náhrady.
+        """
+        path = self.bin / name
+        path.write_text("#!/usr/bin/env bash\n" + body, encoding="utf-8", newline="\n")
+        path.chmod(0o755)
+
+    def execute(self, script, args=(), previous_tag=True, **values):
+        """Spustí reálný zkopírovaný skript v bezpečném prostředí.
+
+        :param script: Cesta skriptu pod scripts.
+        :param args: Jeho argumenty.
+        :param previous_tag: Připravit existující záznam předchozího nasazení.
+        :param values: Stav simulovaných příkazů.
+        :return: Výsledek procesu.
+        """
+        self.trace.write_text("", encoding="utf-8")
+        if previous_tag:
+            self.tag.write_text("previous\n", encoding="utf-8")
+        env = dict(
+            os.environ,
+            TEST_BIN=self.bin.as_posix(),
+            TRACE=self.trace.as_posix(),
+            FIXTURE_HOME=self.root.as_posix(),
+            AMCR_TEST_ATTEMPT_ID="123-1",
+        )
+        env.update(values)
+        prefix = 'bin="$TEST_BIN"; if command -v cygpath >/dev/null 2>&1; then bin="$(cygpath -u "$bin")"; fi\nexport PATH="$bin:$PATH"\nexec "$@"'
+        return subprocess.run(
+            [
+                self.bash,
+                "--noprofile",
+                "--norc",
+                "-c",
+                prefix,
+                "fixture",
+                (self.root / "scripts" / script).as_posix(),
+                *args,
+            ],
+            cwd=self.root,
+            env=env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=15,
+        )
+
+    def test_required_build_pull_removal_and_deployment_failures_propagate(self):
+        """Neúspěch nelze přepsat zprávou o dokončení ani koncovým exit 0."""
+        for script, args, failure in (
+            ("test_deploy.sh", ["-q"], "build -t test_web"),
+            ("test_deploy.sh", ["-q"], "build -t test_proxy"),
+            ("test_deploy.sh", ["-q"], "build -t test_redis"),
+            ("test_deploy.sh", ["-q"], "stack deploy"),
+            ("test_deploy.sh", ["-x"], "stack rm"),
+            ("prod_deploy.sh", ["GitHub", "-t", "1.2.3"], "pull "),
+            ("prod_deploy.sh", ["GitHub", "-t", "1.2.3"], "stack deploy"),
+            ("prod_deploy.sh", ["-x"], "stack rm"),
+        ):
+            with self.subTest(script=script, failure=failure):
+                result = self.execute(script, args, FAIL_DOCKER=failure)
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                if failure.startswith(("build", "pull")):
+                    self.assertNotIn("stack deploy", self.trace.read_text(encoding="utf-8"))
+
+    def test_ci_wrappers_preserve_failure_and_previous_tag(self):
+        """Při chybě nasazení se nepustí readiness ani nezmění poslední úspěšný tag."""
+        for script, args in (
+            ("ci_deployment/deploy_test_server.sh", [self.root.as_posix(), "test", "branch"]),
+            ("ci_deployment/deploy_server.sh", ["1.2.3", self.root.as_posix(), "GitHub"]),
+        ):
+            with self.subTest(script=script):
+                result = self.execute(script, args, FAIL_DOCKER="stack deploy")
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertNotIn("READY", self.trace.read_text(encoding="utf-8"))
+                self.assertEqual(self.tag.read_text(encoding="utf-8"), "previous\n")
+
+    def test_ci_wrappers_create_logs_on_first_deployment(self):
+        """První nasazení vytvoří logy před jejich úklidem i bez předchozího tagu."""
+        for script, expected in (
+            ("ci_deployment/deploy_test_server.sh", "test"),
+            ("ci_deployment/deploy_server.sh", "1.2.3"),
+        ):
+            with self.subTest(script=script):
+                fixture = DeploymentExecutionTests()
+                fixture.setUp()
+                self.addCleanup(fixture.doCleanups)
+                fixture.tag.parent.rmdir()
+                args = (
+                    [fixture.root.as_posix(), "test", "branch"]
+                    if expected == "test"
+                    else [expected, fixture.root.as_posix(), "GitHub"]
+                )
+                result = fixture.execute(script, args, previous_tag=False)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(fixture.tag.read_text(encoding="utf-8"), expected + "\n")
+
+    def test_clone_and_readiness_failure_preserve_previous_tag(self):
+        """Klonování a konečná kontrola jsou povinné, jejich chyby zůstanou chybami."""
+        for values in ({"CHILD_EXIT": "9"}, {"READINESS_EXIT": "8"}):
+            result = self.execute(
+                "ci_deployment/deploy_test_server.sh", [self.root.as_posix(), "test", "branch"], **values
+            )
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(self.tag.read_text(encoding="utf-8"), "previous\n")
+        result = self.execute(
+            "ci_deployment/deploy_server.sh", ["1.2.3", self.root.as_posix(), "GitHub"], READINESS_EXIT="8"
+        )
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.tag.read_text(encoding="utf-8"), "previous\n")
+
+    def test_absent_stack_cleanup_and_optional_compaction_remain_valid(self):
+        """Chybějící starý stack a chyba volitelné kompakce nefalšují povinné chyby."""
+        for script in ("test_deploy.sh", "prod_deploy.sh"):
+            result = self.execute(script, ["-x"], STACK_ABSENT="1")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result = self.execute(script, ["-x"], STACK_INSPECTION_EXIT="7")
+            self.assertNotEqual(result.returncode, 0)
+        result = self.execute(
+            "ci_deployment/deploy_test_server.sh", [self.root.as_posix(), "test", "branch"], COMPACTION_EXIT="7"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("WARNING: memory compaction failed", result.stdout)
+        self.assertEqual(self.tag.read_text(encoding="utf-8"), "test\n")
+
+    def test_test_wrapper_propagates_identity_modes_and_child_failure(self):
+        """Předání identity a script --return zachovají selhání všech režimů."""
+        for args, fragment in (
+            ([], "python3 run_tests.py"),
+            (["-f"], "run_tests.py -f"),
+            (["-t", "42"], "run_tests.py -t 42"),
+        ):
+            result = self.execute("start_selenium_tests.sh", args, CHILD_EXIT="5")
+            self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
+            trace = self.trace.read_text(encoding="utf-8")
+            self.assertIn("AMCR_TEST_ATTEMPT_ID=123-1", trace)
+            self.assertIn(fragment, trace)
+            self.assertNotIn("exec -i", trace)
+        result = self.execute("start_selenium_tests.sh", [], CONTAINER_ID="")
+        self.assertNotEqual(result.returncode, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

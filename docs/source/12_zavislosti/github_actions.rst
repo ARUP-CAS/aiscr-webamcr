@@ -46,7 +46,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.1 <https://github.com/actions/checkout/releases/tag/v7.0.1>`__
      - `3d3c42e5aac5ba805825da76410c181273ba90b1 <https://github.com/actions/checkout/tree/3d3c42e5aac5ba805825da76410c181273ba90b1>`__
-     - ``.github/workflows/deployment.yml:66``, ``.github/workflows/new-version.yml:211``, ``.github/workflows/new-version.yml:70``, ``.github/workflows/pre_commit.yml:111``, ``.github/workflows/publish_images.yml:68``, ``.github/workflows/run-tests.yml:74``
+     - ``.github/workflows/deployment.yml:66``, ``.github/workflows/new-version.yml:211``, ``.github/workflows/new-version.yml:70``, ``.github/workflows/pre_commit.yml:111``, ``.github/workflows/publish_images.yml:68``, ``.github/workflows/run-tests.yml:75``
    * - ``actions/create-github-app-token``
      - `actions <https://github.com/actions>`__
      - `v3.4.0 <https://github.com/actions/create-github-app-token/releases/tag/v3.4.0>`__
@@ -66,7 +66,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.2 <https://github.com/actions/upload-artifact/releases/tag/v7.0.2>`__
      - `cf430e030ddbb5b0abf93d22962f4752f3646cd9 <https://github.com/actions/upload-artifact/tree/cf430e030ddbb5b0abf93d22962f4752f3646cd9>`__
-     - ``.github/workflows/run-tests.yml:237``
+     - ``.github/workflows/run-tests.yml:221``
    * - ``aquasecurity/trivy-action``
      - `aquasecurity <https://github.com/aquasecurity>`__
      - `v0.36.0 <https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0>`__
@@ -181,7 +181,7 @@ Nativní SSH agent pro testy na DEV
 Klíč je předán proměnnou prostředí pouze inicializačnímu kroku, bez shellového
 trasování a bez zápisu do artefaktů. Mezi kroky se přes ``GITHUB_ENV`` přenášejí
 jen ``SSH_AUTH_SOCK`` a ``SSH_AGENT_PID``. Proto agent slouží pozdějšímu SSH
-i kroku pro získání výsledků se dvěma voláními SCP. Neúspěšná inicializace
+i kroku pro získání výsledků aktuálního pokusu. Neúspěšná inicializace
 uklidí agenta ihned; krok s ``always()`` zajišťuje úklid po použití agenta
 i po chybě SSH/SCP. Následuje odpojení VPN a kontrola výsledku testů.
 Ověření hostitele přes existující ``known_hosts`` a VPN se nemění.
@@ -205,6 +205,52 @@ a číselný obsah každého zadaného ``test_cislo``; režim ``konkretni`` čí
 vyžaduje. Vstupy i názvy referencí se předávají jako argumenty se samostatným
 uvozením pro vzdálený shell. Tělo vzdáleného testovacího skriptu zůstává
 statické; lokální uvozovky samy neřeší další interpretaci příkazu přes SSH.
+
+Neinteraktivní příkazy nasazení a testování mají uzavřený standardní vstup.
+Nemohou tak přečíst zbytek skriptu předávaného vzdálenému Bash přes stdin.
+Regresní test používá náhradu nasazení, která stdin skutečně spotřebuje,
+a kontroluje následné spuštění všech režimů i zastavení po chybě nasazení.
+
+Runner ověřuje návratový kód migrace i testovacího procesu a před vyhodnocením
+dočte oba výstupní proudy. Chybějící či rozporný souhrn, chyba startu a nulový
+běžný běh znamenají chybu. Jen režim neúspěšných testů s platným předchozím
+vstupem a prázdným výběrem smí skončit jako výslovné ``no-tests``. Chybějící
+tabulka nebo nenalezené číslo testu jsou chyby, nikoli úspěšné prázdné běhy.
+
+Každý pokus má identitu ``<github.run_id>-<github.run_attempt>`` a vlastní
+adresář ``runs/<pokus>/`` ve stávajícím svazku výsledků. Samostatné spuštění
+vygeneruje lokální identitu. Runner předá adresář testovacímu nastavení přes
+``AMCR_TEST_OUTPUT_DIR``; souhrn, nové tabulky a výstup tak patří jedinému
+pokusu. Předchozí ``results.xlsx`` zůstává vstupem výběru. Po dokončení se
+kompatibilní vstup pro příští výběr obnoví; selektivní běh neztratí ostatní
+známé testy. Záznam ``outcome.json`` s identitou, režimem, stavem a otisky
+souborů se atomicky zveřejní poslední. Neúplný adresář není hotovým výsledkem.
+
+Workflow stáhne záznam očekávaného pokusu, ověří jeho schéma a teprve potom
+stahuje přesně pojmenované soubory. Před zveřejněním počtů ověří jejich otisky
+a vzájemný soulad. Staré soubory bez identity, jiné pokusy a chybějící či
+smíšené artefakty jsou odmítnuty. Výsledkový krok běží i po chybě testů,
+aby uchoval aktuální diagnostiku; neúspěch tím nezmění na úspěch. Artefakt
+obsahuje jen ověřený aktuální balík, u ``no-tests`` žádnou starou tabulku.
+
+Povinné operace sestavení, stažení image, odstranění existujícího stacku,
+nasazení a klonování databáze propagují neúspěch přes všechny obaly až do
+workflow. PTY obal používá ``script --return`` a nepředává procesu zbytek
+vzdáleného skriptu na stdin. Ověřená absence starého stacku je při úklidu
+přípustná; chyba jeho inspekce není totéž. Chyba volitelné kompakce paměti
+zůstává varováním. Záznam posledního úspěšně nasazeného tagu se změní až po
+úspěchu povinné přípravy a kontroly připravenosti. Automatický rollback se
+tím nezavádí.
+
+Oba CI nasazovací skripty používají společnou kontrolu připravenosti přes
+Python 3 a jeho standardní knihovnu na nasazovacím hostiteli. Očekávané služby
+odvodí z Compose konfigurace sloučené Docker CLI. Kontrolují jen cílový stack,
+počty a stav požadovaných úloh, probíhající či neúspěšný rollout a skutečné
+zdraví dostupných kontejnerů. ``starting`` ani ``unhealthy`` není připravenost.
+Chybějící služby, neúplná či chybující inspekce a vypršení desetiminutového
+limitu znamenají neúspěch. Záměrně nulové repliky, očekávané dokončené úlohy
+a služby bez healthchecku mají výslovné výjimky; cizí kontejnery hostitele
+výsledek neovlivňují.
 
 Lokální testy používají dočasný testovací klíč a izolované procesy, nikoli
 produkční secrets nebo DEV připojení. Skutečný kontrolní běh potřebuje

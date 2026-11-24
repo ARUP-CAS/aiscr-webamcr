@@ -84,6 +84,17 @@ Třídy
 
       Připraví dočasný klíč a náhrady pouze vzdálených operací.
 
+   .. py:method:: result_fixture()
+
+      Připraví nezávisle sestavený vzdálený balík s kontrolními otisky.
+
+      :param content: Bajty číselného souhrnu.
+      :param identity: Identita pokusu.
+      :param state: Stav výsledku.
+      :param code: Návratový kód testů.
+      :param mode: Režim výběru.
+      :param number: Číslo testu.
+
    .. py:method:: write_tool()
 
       Vytvoří klienta, který místo síťového připojení ověří identitu agenta.
@@ -129,7 +140,7 @@ Třídy
 
    .. py:method:: test_identity_survives_ssh_and_scp_steps_then_cleanup()
 
-      Klíč s CRLF funguje pro SSH a obě SCP volání bez opětovného načtení.
+      Klíč s CRLF funguje pro SSH a výsledková SCP bez opětovného načtení.
 
    .. py:method:: test_invalid_key_fails_without_persisting_or_logging_it()
 
@@ -146,43 +157,51 @@ Třídy
 
 .. py:class:: SummaryResultTests
 
-   Ověří skutečné zpracování vzdáleného souhrnu bez spuštění jeho obsahu.
+   Ověří skutečný výsledkový krok, aktuální identitu a publikaci až po ověření.
 
    **Metody:**
 
    .. py:method:: setUp()
 
-      Připraví agenta a SCP, které kopíruje přesné bajty testovacího souhrnu.
+      Připraví skutečný jednorázový agent a izolované klienty.
 
    .. py:method:: execute_result()
 
-      Stáhne souhrn a spustí nezměněné tělo výsledkového kroku.
+      Spustí nezměněný krok s jedním samostatným výsledkem.
 
-      :param content: Bajty simulovaného vzdáleného souboru.
-      :return: Výsledek skutečného shellu s izolovanými SCP operacemi.
+      :param content: Souhrn simulovaného vzdáleného pokusu.
+      :param state: Stav pokusu.
+      :param code: Návratový kód testů.
+      :param edit: Volitelná mutace vzdáleného balíku.
+      :return: Výsledek skutečného shellového kroku.
 
-   .. py:method:: assert_summary_rejected()
+   .. py:method:: assert_rejected()
 
-      Ověří neúspěch bez spuštění canary a bez částečně zapsaného výsledku.
+      Ověří neúspěch bez publikovaných částečných výstupů.
 
-      :param content: Neplatné bajty souhrnu předané skutečnému kroku.
-      :return: Neúspěšný výsledek shellu pro následnou kontrolu úklidu.
+      :param content: Neplatný souhrn.
+      :param edit: Mutace balíku.
+      :return: Neúspěšný výsledek kroku.
 
-   .. py:method:: test_valid_counts_preserve_reporting_and_normalize_decimal_outputs()
+   .. py:method:: test_valid_counts_preserve_reporting_and_failure_status()
 
-      Pořadí, konce řádků i úvodní nuly zachovají číselné výsledky a tabulku.
+      Pořadí, CRLF, poslední řádek a úvodní nuly zachovají výsledek.
 
-   .. py:method:: test_malformed_or_binary_summaries_leave_existing_results_untouched()
+   .. py:method:: test_noop_and_error_are_explicit_and_cannot_reuse_spreadsheet()
 
-      Chybějící, duplicitní, neznámé a nečíselné záznamy selžou celé.
+      No-op nemá starý artefakt; chyba nikdy nemá úspěšné nulové počty.
 
-   .. py:method:: test_commands_and_substitutions_cannot_run_or_publish_partial_counts()
+   .. py:method:: test_malformed_binary_and_command_summaries_publish_nothing()
 
-      Příkazy připojené k platným počtům ani substituce nespustí canary.
+      Celé neplatné souhrny i příkazové canary jsou data a nezveřejní nic.
+
+   .. py:method:: test_old_only_missing_mixed_and_malicious_outcomes_are_rejected()
+
+      Identita, chybějící soubory a nebezpečné cesty selžou před publikací.
 
    .. py:method:: test_summary_rejection_still_allows_unconditional_agent_cleanup()
 
-      Neúspěšné čtení výsledků ponechá always úklidu možnost ukončit agenta.
+      Chyba validace ponechá always úklidu možnost ukončit agent.
 
 
 .. py:class:: DeploymentAgentTests
@@ -231,6 +250,10 @@ Třídy
    .. py:method:: test_reference_names_are_literal_through_both_shells()
 
       Uvozovky a substituce ve validním názvu reference zůstanou jediným argumentem.
+
+   .. py:method:: test_consuming_deployment_reproduces_old_transport_and_stops_on_failure()
+
+      Čtení stdin reprodukuje původní přeskočení testů; chyba nasazení testy zastaví.
 
    .. py:method:: test_deployment_transport_preserves_source_and_tag_arguments()
 

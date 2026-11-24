@@ -11,7 +11,9 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    celery_exporter_entrypoint_sh
    check_container_image_reference_parity_py
    check_npm_vendor_package_names_py
+   check_stack_ready_py
    check_static_vendor_manifest_py
+   collect_test_results_py
    compile_requirements_sh
    copy_custom_html_py
    crontab_txt
@@ -34,6 +36,10 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    test_generate_github_actions_py
    test_generate_js_libraries_py
    test_pre_commit_actions_trust_py
+   test_pre_commit_deployment_execution_py
+   test_pre_commit_execution_pipeline_py
+   test_pre_commit_execution_py
    test_pre_commit_report_py
+   test_pre_commit_stack_ready_py
    test_pre_commit_workflow_py
    uwsgi_site_ini

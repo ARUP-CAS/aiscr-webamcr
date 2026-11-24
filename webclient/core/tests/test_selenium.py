@@ -1010,6 +1010,7 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
                 "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.to_excel_error",
                 extra={"error": exc},
             )
+            raise
 
         try:
             WebDriverWait(self.driver, 5).until(

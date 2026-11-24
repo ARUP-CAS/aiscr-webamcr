@@ -209,6 +209,177 @@ outputs or the report, fail on invalid input, and preserve agent cleanup.
 - **THEN** the unconditional cleanup step still stops the agent
 - **AND** the result step remains failed
 
+### Requirement: Deployment cannot consume subsequent test commands
+
+Non-interactive deployment and test operations SHALL NOT consume the command
+stream of the remote shell that invokes them. A successful optional deployment
+SHALL be followed by the requested test mode. A required deployment failure
+SHALL fail the operation before test execution.
+
+#### Scenario: A deployment child reads standard input
+
+- **GIVEN** deployment is enabled and a nested deployment command attempts to consume stdin
+- **WHEN** the remote workflow runs each supported test mode
+- **THEN** successful deployment is followed by exactly the requested test invocation and its original arguments
+- **AND** none of the remaining remote script is supplied to the deployment child as input
+
+#### Scenario: Deployment is disabled or fails
+
+- **GIVEN** valid all-tests, failed-only, or numbered-test input
+- **WHEN** deployment is disabled or a required enabled deployment operation fails
+- **THEN** the disabled case reaches test selection, while the failed-deployment case exits unsuccessfully without starting tests
+
+### Requirement: Published results belong to the current execution attempt
+
+The workflow SHALL accept counts and artifacts only when their execution
+identity and explicit outcome match the current attempt and selected mode.
+Missing, incomplete, mismatched, or older results SHALL NOT establish success.
+Publication SHALL distinguish completed tests, an allowed no-op, and an
+execution error without evaluating downloaded data.
+
+#### Scenario: A current attempt completes
+
+- **GIVEN** a completed current attempt with matching identity, selection, summary, and any required spreadsheet
+- **WHEN** the workflow validates and publishes its results
+- **THEN** counts and artifacts refer to that attempt and their reported execution outcome is explicit
+- **AND** the existing numeric summary remains subject to complete non-evaluating validation
+
+#### Scenario: A run is skipped or interrupted while older results exist
+
+- **GIVEN** an earlier passing result exists and the current attempt never starts or stops before publishing a complete outcome
+- **WHEN** result retrieval or validation runs
+- **THEN** the workflow fails without accepting the earlier counts or artifact as current
+
+#### Scenario: Downloaded results disagree about their attempt
+
+- **GIVEN** the retrieved outcome, summary, selection, or required spreadsheet is missing or belongs to a different attempt
+- **WHEN** the result bundle is validated
+- **THEN** it is rejected before successful results are reported or an artifact is presented as current
+
+#### Scenario: Completed tests fail
+
+- **GIVEN** the current attempt completes with a nonzero test result
+- **WHEN** its matching diagnostic results are available
+- **THEN** the workflow can retain those results while remaining failed
+- **AND** result retrieval and unconditional cleanup cannot turn that failure into success
+
+### Requirement: Previous results remain selection input
+
+Failed-only and numbered-test selection SHALL retain access to the previous
+spreadsheet independently of current-attempt output. Failed-only selection
+with no remaining failures SHALL produce an explicit current-attempt no-op.
+Missing or unreadable selection input and an unknown numbered test SHALL fail
+without reusing earlier output as a successful new result.
+
+#### Scenario: Previous results select a new run
+
+- **GIVEN** a readable previous spreadsheet and a valid failed-only or numbered selection
+- **WHEN** a new execution attempt is prepared and run
+- **THEN** selection is resolved from the previous spreadsheet and current output is attributed independently
+- **AND** preparing current output does not destroy the input needed for selection
+
+#### Scenario: There are no failed tests to rerun
+
+- **GIVEN** failed-only mode reads valid previous results containing no failed tests
+- **WHEN** selection completes
+- **THEN** the attempt reports an explicit successful no-op with no tests executed
+- **AND** it does not present the previous spreadsheet as newly executed test output
+
+#### Scenario: Selection cannot identify the requested tests
+
+- **GIVEN** missing or unreadable selection input, or a requested numbered test absent from that input
+- **WHEN** selection is attempted
+- **THEN** the attempt fails with a diagnostic outcome and cannot report a successful no-op or stale results
+
+### Requirement: Required operation failures reach the workflow
+
+Required build, deployment, database-clone, and test failures SHALL propagate
+through nested commands and wrappers as unsuccessful workflow outcomes.
+Dependent operations SHALL stop after a prerequisite fails. A failed
+deployment or readiness check SHALL NOT update the recorded successfully
+deployed version. Explicitly optional operations SHALL retain their documented
+warning behavior.
+
+#### Scenario: A nested deployment operation fails
+
+- **GIVEN** a required image build, pull, stack removal, or deployment command fails
+- **WHEN** its containing scripts return to the workflow
+- **THEN** failure remains nonzero, dependent operations stop, and later logging cannot replace it with success
+
+#### Scenario: Database cloning or a wrapped child fails
+
+- **GIVEN** a required database clone or test child exits unsuccessfully inside a terminal or container wrapper
+- **WHEN** the wrapper and caller finish
+- **THEN** failure reaches the workflow and tests cannot proceed after a failed clone
+
+#### Scenario: Deployment fails a final check
+
+- **GIVEN** a deployment or its required readiness check fails
+- **WHEN** deployment bookkeeping is reached
+- **THEN** the operation fails and the previous successfully deployed version record is preserved
+
+#### Scenario: An optional maintenance operation fails
+
+- **GIVEN** only an explicitly optional operation such as memory compaction fails
+- **WHEN** all required deployment checks succeed
+- **THEN** the documented warning remains visible without falsely failing or masking a required operation
+
+### Requirement: Test runner outcomes reflect actual execution
+
+The runner SHALL check migration and test subprocess results and consume
+their complete output before determining an outcome. Startup errors, missing
+or inconsistent test summaries, and incomplete execution SHALL fail rather
+than produce a passing zero-count result. An ordinary test execution SHALL
+require actual tests to run; the separately defined failed-only no-op is the
+only successful zero-execution outcome.
+
+#### Scenario: Migration fails
+
+- **GIVEN** test database migration exits unsuccessfully
+- **WHEN** the runner handles its result
+- **THEN** it fails before starting tests and does not publish a completed passing result
+
+#### Scenario: Tests crash before their summary
+
+- **GIVEN** test startup fails or output lacks a complete consistent execution summary
+- **WHEN** the runner derives its outcome
+- **THEN** it reports failure instead of inferring success from missing failure counts
+
+#### Scenario: Output capture completes in either logging mode
+
+- **GIVEN** a test process completes while console or file-output readers still have buffered data
+- **WHEN** the runner determines counts and publishes its outcome
+- **THEN** its counts and outcome reflect both fully captured streams, the complete summary, and the actual process result
+- **AND** a failing process remains unsuccessful even if parsed failure counts are zero
+
+### Requirement: Readiness verifies the required target stack
+
+Deployment readiness SHALL verify required services, running tasks, and
+applicable health checks within the target stack. Missing required services,
+unhealthy or non-running required tasks, and failed inspection commands SHALL
+NOT establish readiness. Waiting SHALL have a bounded deadline and failure
+SHALL propagate to the caller.
+
+#### Scenario: A required task is already unhealthy
+
+- **GIVEN** required replica counts match but a required target-stack task is unhealthy
+- **WHEN** readiness is checked
+- **THEN** the stack is not declared healthy and cannot complete deployment successfully while that state persists
+
+#### Scenario: Required services are missing or inspection fails
+
+- **GIVEN** a required service or stack is absent, required replicas are missing, or a required inspection command fails
+- **WHEN** readiness is evaluated
+- **THEN** empty or incomplete inspection output cannot establish success
+- **AND** persistent unready states fail by the configured deadline
+
+#### Scenario: Expected inactive and unrelated services exist
+
+- **GIVEN** unrelated unhealthy containers, intentionally zero-scaled services, or expected completed one-shot jobs coexist with a ready target stack
+- **WHEN** readiness is evaluated
+- **THEN** unrelated containers do not affect the result and declared inactive or completed jobs do not create false failures
+- **AND** required active target-stack services still satisfy their own task and health checks
+
 ### Requirement: Dependabot preserves pin maintenance
 
 The repository SHALL retain weekly `github-actions` version updates targeting
@@ -357,7 +528,7 @@ pattern used by CI, and SSH lifecycle descriptions SHALL match the workflow.
 
 #### Scenario: SSH documentation describes the actual step arrangement
 
-- **GIVEN** the DEV workflow has one result-retrieval step containing two SCP calls and an unconditional cleanup step followed by VPN disconnection and the result check
+- **GIVEN** the DEV workflow retrieves the current attempt's outcome and result files and has unconditional agent cleanup followed by VPN disconnection and result checking
 - **WHEN** the dependency page describes the agent lifecycle
 - **THEN** it accurately describes the shared identity and cleanup after SSH/SCP use
 - **AND** it does not describe multiple separate SCP steps or cleanup as the workflow's final step

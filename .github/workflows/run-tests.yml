@@ -36,6 +36,7 @@ env:
   server_deploy_root: /home/amcr/aiscr-webamcr
   dep_script: scripts/ci_deployment/deploy_test_server.sh
   test_script: scripts/start_selenium_tests.sh
+  test_attempt: ${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   deployment:
@@ -131,6 +132,7 @@ jobs:
           SERVER_ROOT: ${{ env.server_deploy_root }}
           DEP_SCRIPT: ${{ env.dep_script }}
           TEST_SCRIPT: ${{ env.test_script }}
+          ATTEMPT_ID: ${{ env.test_attempt }}
           DEPLOYMENT_SERVER: ${{ secrets.DEPLOYMENT_SERVER_DEV }}
           SSH_KNOWN_HOST: ${{ secrets.SSH_KNOWN_HOST_DEV }}
         run: |
@@ -147,7 +149,7 @@ jobs:
             printf "'%s'" "${value//"$quote"/"$escaped_quote"}"
           }
           remote_command="sudo bash -s --"
-          for value in "$NASADIT" "$TEST_MOD" "$TEST_CISLO" "$REF_NAME" "$REF_TYPE" "$SERVER_ROOT" "$DEP_SCRIPT" "$TEST_SCRIPT"; do
+          for value in "$NASADIT" "$TEST_MOD" "$TEST_CISLO" "$REF_NAME" "$REF_TYPE" "$SERVER_ROOT" "$DEP_SCRIPT" "$TEST_SCRIPT" "$ATTEMPT_ID"; do
             remote_command+=" $(shell_quote "$value")"
           done
           ssh "amcr@$DEPLOYMENT_SERVER" "$remote_command" <<'EOF'
@@ -160,10 +162,12 @@ jobs:
               SERVER_ROOT="$6"
               DEP_SCRIPT="$7"
               TEST_SCRIPT="$8"
+              export AMCR_TEST_ATTEMPT_ID="$9"
+              [[ "$AMCR_TEST_ATTEMPT_ID" =~ ^[0-9]+-[0-9]+$ ]] || exit 1
               cd "$SERVER_ROOT"
               chmod +x "$DEP_SCRIPT" "$TEST_SCRIPT"
               if [ "$NASADIT" = true ]; then
-                "./$DEP_SCRIPT" "$SERVER_ROOT" "$REF_NAME" "$REF_TYPE"
+                "./$DEP_SCRIPT" "$SERVER_ROOT" "$REF_NAME" "$REF_TYPE" < /dev/null
               fi
               echo "Spouštím testy v režimu: $TEST_MOD"              
               if [ "$TEST_MOD" = "konkretni" ] && [ -z "$TEST_CISLO" ]; then
@@ -173,15 +177,15 @@ jobs:
               case $TEST_MOD in
                 vsechny)
                 echo "Testuji vše"
-                "./$TEST_SCRIPT"
+                "./$TEST_SCRIPT" < /dev/null
                 ;;
                 neuspesne)
                 echo "Testuji pouze neúspěšné"
-                "./$TEST_SCRIPT" -f
+                "./$TEST_SCRIPT" -f < /dev/null
                 ;;
                 konkretni)
                 echo "Testuji test č. $TEST_CISLO"
-                "./$TEST_SCRIPT" -t "$TEST_CISLO" ;;
+                "./$TEST_SCRIPT" -t "$TEST_CISLO" < /dev/null ;;
                 *) exit 1 ;;
               esac
           EOF
@@ -189,55 +193,35 @@ jobs:
 
       - name: Stáhnout a zobrazit výsledky testů
         id: test-result
+        if: ${{ always() && !cancelled() && steps.ssh-agent.outcome == 'success' }}
         shell: bash
+        env:
+          ATTEMPT_ID: ${{ env.test_attempt }}
+          TEST_MOD: ${{ inputs.test_mod }}
+          TEST_CISLO: ${{ inputs.test_cislo }}
+          DEPLOYMENT_SERVER: ${{ secrets.DEPLOYMENT_SERVER_DEV }}
         run: |
           set -euo pipefail
-          # scp uses the same agent/known_hosts          
-          scp amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
-          scp amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/test_summary.env ./test_summary.env
-          
-          invalid_summary() {
-            echo "::error::Invalid test summary; expected PASSED and FAILED decimal counts"
-            exit 1
-          }
-          # Bash read normally discards NUL bytes; reject them before reading records.
-          if IFS= read -r -d '' summary_bytes < ./test_summary.env; then
-            invalid_summary
-          fi
-          PASSED=
-          FAILED=
-          while IFS= read -r summary_line || [[ -n "$summary_line" ]]; do
-            summary_line="${summary_line%$'\r'}"
-            if [[ ! "$summary_line" =~ ^(PASSED|FAILED)=([0-9]+)$ ]]; then
-              invalid_summary
-            fi
-            summary_key="${BASH_REMATCH[1]}"
-            summary_value="${BASH_REMATCH[2]}"
-            # Normalize decimal strings without evaluating them as shell arithmetic.
-            summary_value="${summary_value#"${summary_value%%[!0]*}"}"
-            summary_value="${summary_value:-0}"
-            case "$summary_key" in
-              PASSED) [[ -z "$PASSED" ]] || invalid_summary; PASSED="$summary_value" ;;
-              FAILED) [[ -z "$FAILED" ]] || invalid_summary; FAILED="$summary_value" ;;
-            esac
-          done < ./test_summary.env
-          [[ -n "$PASSED" && -n "$FAILED" ]] || invalid_summary
-          echo "PASSED=$PASSED" >> $GITHUB_OUTPUT
-          echo "FAILED=$FAILED" >> $GITHUB_OUTPUT
-
-          {
-            echo "## 🧪 Výsledky testů"
-            echo "| Stav | Počet |"
-            echo "|------|-------|"
-            echo "| ✅ Prošlo | $PASSED |"
-            echo "| ❌ Selhalo | $FAILED |"
-          } >> $GITHUB_STEP_SUMMARY
+          [[ "$ATTEMPT_ID" =~ ^[0-9]+-[0-9]+$ ]] || exit 1
+          result_dir="./test-results/$ATTEMPT_ID"
+          remote_dir="/opt/selenium_test/runs/$ATTEMPT_ID"
+          mkdir -p ./test-results
+          mkdir "$result_dir"
+          scp "amcr@$DEPLOYMENT_SERVER:$remote_dir/outcome.json" "$result_dir/outcome.json"
+          python3 "$GITHUB_WORKSPACE/scripts/collect_test_results.py" plan "$result_dir" \
+            --attempt-id "$ATTEMPT_ID" --mode "$TEST_MOD" --number "$TEST_CISLO" > "$result_dir/download-files"
+          while IFS= read -r result_file; do
+            scp "amcr@$DEPLOYMENT_SERVER:$remote_dir/$result_file" "$result_dir/$result_file"
+          done < "$result_dir/download-files"
+          python3 "$GITHUB_WORKSPACE/scripts/collect_test_results.py" report "$result_dir" \
+            --attempt-id "$ATTEMPT_ID" --mode "$TEST_MOD" --number "$TEST_CISLO"
 
       - name: Nahrát výsledky testů jako artifact
+        if: ${{ always() && steps.test-result.outputs.ARTIFACTS == 'true' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: selenium-vysledky
-          path: ./results.xlsx
+          path: ./test-results/${{ env.test_attempt }}/
 
       - name: Stop SSH agent
         if: always()

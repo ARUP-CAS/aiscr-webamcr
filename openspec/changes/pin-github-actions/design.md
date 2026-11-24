@@ -85,6 +85,48 @@ control demonstrated that sourcing such data also executes appended commands;
 no live workflow or real credentials were used. R2-O1 retains advisory
 `fix-in-pr` status because it predates this change.
 
+## Execution reliability remediation (2026-11-24)
+
+The user approved capture of the following five repairs after investigating
+[ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544)
+at `65b0f6a8e43298360f323fe61aad71966f1e75c1`, against base
+`d327f2caff9cb0e6ffadb8325defcd948bbaa13f`. The subsequent explicit apply
+invocation authorized implementation after capture; group 6 records progress.
+Earlier completed task groups and usage records remain historical evidence.
+
+| Item | Provenance, evidence at the reviewed head, and repair boundary | Tasks |
+| --- | --- | --- |
+| REMOTE-STDIN | Introduced in `62146241c`: `run-tests.yml:149-186` changes remote execution from `bash -c` to `bash -s`. The unchanged `deploy_test_server.sh:121` passes inherited stdin into `docker exec -i` and consumes the remaining test commands. Isolate dependency stdin and verify actual dispatch. | 6.1 |
+| RESULT-FRESHNESS | Pre-existing: fixed result downloads at `run-tests.yml:196-197` have no attempt identity; early selection exits in `run_tests.py:26-60` can leave old output available. Preserve previous selection input and publish an explicit current-attempt outcome with matching files. | 6.2-6.4 |
+| DEPLOY-FAILURES | Pre-existing: `deploy_server.sh:42-63`, `deploy_test_server.sh:74-76,120-139`, and nested deployment helpers can mask failed required operations or update the last successful tag after failure. Preserve child failure statuses through every layer. | 6.5 |
+| RUNNER-OUTCOME | Pre-existing: `run_tests.py:117-161` ignores migration/test return codes and infers zero failures from absent output matches. Check process outcomes and complete output, including selection and file-logging paths. | 6.2 |
+| STACK-READINESS | Pre-existing: `deploy_test_server.sh:85-95` checks `health=starting` and replica counts, allowing already-unhealthy tasks to pass. Scope checks to required target-stack services and verify actual health and inspection success. | 6.6 |
+
+The last four items retain advisory `fix-in-pr` attribution. Comparing their
+source files with the base confirmed they predate the PR; capture does not
+reclassify them as introduced findings. The stdin regression remains a
+separate introduced defect. No automatic rollback, deployment topology
+redesign, production Django feature, database migration, or hub asset change
+is included.
+
+Observed evidence is separated from planned verification:
+
+- The linked [DEV job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45288367885/job/138090470675)
+  completed green after displaying the unexecuted test-dispatch source during
+  database cloning and retrieving existing result files. It is evidence of
+  the defect, not acceptance of a repair.
+- In-memory probes using the actual remote body reproduced skipped tests in
+  all three modes with a stdin-consuming deployment fixture. Deployment-off,
+  command-string, and detached-stdin controls reached the test invocation.
+- Twelve reference tests, 25 parser probes, 12 argument/status probes, guarded
+  inventory regeneration, and upstream pin readback found no additional
+  introduced defect in their examined scope. They did not execute live
+  deployment or the unchanged child scripts against real services.
+- Extracting the existing runner's parsing/outcome statements and supplying a
+  startup traceback reproduced `PASSED=0`, `FAILED=0`, and exit status 0.
+  Readiness evidence comes from source and Docker's distinct `starting` and
+  `unhealthy` states; the expanded repair still needs fixture verification.
+
 ## Goals / Non-Goals
 
 Use the contracts in [github-actions-trust](specs/github-actions-trust/spec.md).
@@ -201,6 +243,11 @@ Bash-only argument escaping also assumes the remote login shell understands
 it. POSIX quoting avoids adding that assumption or a new runtime dependency.
 Do not evaluate input, concatenate it into the script body, or rely on the
 downstream test script's numeric check after assignment has already executed.
+Isolate non-interactive deployment and test invocations from the shell's
+script input, using explicit stdin redirection at their call boundaries.
+Do not restore interpolation into remote script source. A consuming child
+fixture must prove that all later test dispatch still executes; an argument
+recorder alone is insufficient.
 
 Keep input names, types/defaults, test modes, deployment-source/environment
 selection, and valid reference handling. Isolated shell regressions must
@@ -212,7 +259,9 @@ every expression with the same generic string. No live dispatch is needed.
 
 ### Parse the downloaded result summary without evaluating it
 
-Keep the current two SCP downloads and the producer's two-key text format.
+Keep the producer's two-key numeric summary format. The original two-file
+retrieval is extended by the current-attempt protocol below; a fixed legacy
+file by itself can no longer establish the current run's result.
 Use the result step's existing Bash tooling to read `test_summary.env` as
 data, never with `source` or `eval`. Require exactly one `PASSED` and one
 `FAILED` assignment containing ASCII decimal digits; reject duplicate or
@@ -232,8 +281,107 @@ order and line-ending controls, and malformed, duplicate, missing, unknown,
 binary, and command-substitution payloads. Invalid input must execute no
 canary, leave outputs and summary untouched, fail the step, and still permit
 agent cleanup. Document this result-data boundary on the dependency page.
-No producer change, JSON migration, new workflow, or added runtime dependency
-is needed for this bounded repair.
+The earlier result-parsing repair needed no producer change. The approved
+execution-reliability extension now changes the producer and retrieval
+protocol as described below, retaining this numeric parser and adding no
+runtime dependency or new workflow.
+
+### Separate current-attempt output from previous selection input
+
+Use a validated execution identity containing the GitHub run ID and run
+attempt, transported as quoted data through SSH, the container wrapper, and
+the runner. A standalone invocation generates a fresh local identity through
+the Python standard library. Reruns receive distinct identities. Give each
+attempt its own output directory under the existing test-results volume;
+never select a result by an unqualified latest-file glob or timestamp alone.
+
+Keep the previous `results.xlsx` available for failed-only and numbered
+selection before preparing new output. Pass the attempt output path through
+the test-only output setting so current test output is written separately.
+Preserve ordinary standalone defaults and CLI modes. Do not delete the prior
+spreadsheet to manufacture freshness, or label its unchanged contents as
+newly executed test output. A compatibility copy used by subsequent selection
+can be refreshed only from validated completed results.
+
+Retain `test_summary.env` with exactly the two existing count fields. Add a
+small, versioned JSON outcome record beside it, using the standard library.
+Its schema binds the attempt identity and requested mode/number to the
+execution state, subprocess status, and names of the files belonging to that
+attempt. Validate expected fields and types, mode/number agreement, allowed
+states, and fixed contained artifact paths without evaluating any content.
+Only `completed` tests and the intentional failed-only `no-tests` state can
+support a successful job; an `error` outcome or nonzero required process
+result cannot be overridden by zero counts.
+
+Publish the outcome record last with an atomic replacement after required
+outputs have been written and validated. A completed attempt's required
+spreadsheet must exist in that attempt's directory; a failed workbook write
+cannot publish a successful bundle. A legitimate no-op explicitly records
+that it produced no new spreadsheet. Readers never combine a new summary
+with an older spreadsheet or accept a partial directory as complete. An
+execution error may retain its own diagnostic outcome without presenting a
+successful completion or invented passing counts.
+
+Update producer and consumer together. Retrieve the expected attempt's
+outcome and named files, validate the bundle before publishing results, and
+retain matching diagnostics when tests complete unsuccessfully. Arrange the
+retrieval/artifact conditions so an earlier failed test step does not hide
+its current diagnostics; preserve the original failure and always cleanup.
+Missing outcome/files, legacy-only data, identity mismatch, or an interrupted
+publication fails closed rather than falling back to old files.
+
+### Derive runner outcomes from complete execution
+
+Check migration status before starting tests. Retain reader thread objects,
+drain both streams, and join the readers before interpreting results in both
+console and file-logging modes. Use subprocess status together with a complete
+consistent test summary; missing output, a startup traceback, capture failure,
+or disagreement cannot become a passing zero-count result. A normal execution
+must run tests. Completed failing tests can publish current diagnostic results
+while preserving their nonzero outcome.
+
+Resolve failed-only and numbered selection explicitly. Missing, unreadable,
+or malformed selection input and an unknown number fail with a current
+diagnostic outcome. A readable failed-only selection with no failures is the
+sole intentional zero-execution success and publishes a new `no-tests` outcome.
+This preserves the useful no-op without confusing it with a crash or skipped
+invocation. The previous numeric summary remains a count format, not proof
+that an execution completed.
+
+### Propagate required failures through the deployment chain
+
+Handle required command statuses in `test_deploy.sh`, `prod_deploy.sh`, and
+their CI wrappers. An `er` helper returning nonzero is ineffective if its
+caller ignores it or later unconditionally exits zero. Guard required build,
+pull, removal, rollout, and database-clone operations explicitly and stop their
+dependents. Do not rely solely on a parent workflow's `set -e`: child scripts
+and conditional command lists can lose the original status.
+
+Preserve the child exit result through container and terminal wrappers,
+including `script --return` when retaining the PTY wrapper, and detach their
+stdin. Keep expected absent-stack cleanup and explicitly optional maintenance
+as named successful/warning cases. A required readiness failure returns
+nonzero; write the last-successful-deployment record only after required
+deployment checks and preparation succeed. A test failure does not erase a
+successful deployment record, and reporting/cleanup must not hide either
+operation's actual outcome. This does not implement automatic rollback.
+
+### Verify actual target-stack readiness
+
+Inspect the required services and active tasks of `swarm_webamcr`, using the
+existing compose/stack definitions for the expected service inventory rather
+than assuming that an empty service listing is ready. Check required replica
+counts and applicable container health states; both `starting` and `unhealthy`
+are unready. Inspect command failures explicitly, including failures inside
+pipelines and command substitutions. Do not infer readiness from a formatted
+line count or from absence of `health=starting` output.
+
+Keep the existing bounded wait, with unsuccessful completion at its deadline
+and diagnostics scoped to the target stack. Intentionally zero-scaled services
+and expected completed one-shot jobs are explicit exceptions, not missing
+required active services. Unrelated containers on the host must not block
+this deployment. Apply the same required-readiness contract to both CI
+deployment wrappers; no new deployment service or polling daemon is needed.
 
 ### Retain the SHA-pinned scanner and signer integrations
 
@@ -309,7 +457,7 @@ Keep the real-repository stale-inventory refresh check compatible with CI's
 existing test-before-generation order.
 
 Update CONTRIBUTING's local discovery to `test_generate_*.py`, matching CI.
-Describe the DEV result-retrieval step as one step containing two SCP calls,
+Describe the DEV result-retrieval step and its current-attempt files,
 and cleanup as the unconditional step after agent use, followed by VPN/result
 steps. Do not impose an inaccurate final-step guarantee.
 
@@ -398,6 +546,13 @@ manual tool-pin maintenance process is introduced.
 - Hosted checks need privileges and infrastructure access. Keep their
   follow-up evidence distinct from the PR's implementation and verification
   results; local completion does not establish live outcomes.
+- A fresh count file alone still accepts a runner crash as zero failures.
+  Validate process outcome, complete output, and attempt identity together.
+- Deleting the old spreadsheet breaks selective modes. Separate immutable
+  selection input from the new attempt's output, and publish completion last.
+- Producer and consumer revisions can differ during rollout. Reject legacy or
+  mismatched outcomes explicitly; deliver compatible code together and record
+  the revision actually exercised by any separately approved live check.
 
 ## Migration Plan
 
@@ -419,6 +574,13 @@ capture and application of that additional scope on 2026-11-23. Current task
 progress is recorded in the checklist; local implementation and validation
 do not establish the hosted outcomes below.
 
+The 2026-11-24 extension has separate implementation approval. Its group 6
+tasks define the renewed implementation and verification scope; the earlier
+23/23 milestone does not complete it. Deliver the runner, test-only output
+handling, shell wrappers, result consumer, tests, and documentation together.
+Refresh documentation through its existing generators rather than editing
+generated blocks. No delivered hub surface changes or sync apply are planned.
+
 ### Post-merge follow-up outside this change
 
 The runbook preserves the following operational sequence. These steps remain
@@ -427,7 +589,11 @@ follow-up in [tasks.md](tasks.md#workflow-follow-up), outside the PR's scope.
 1. Review the complete workflow diff and merge into `test` through human
    review. Record an approved manual `Run tests` execution against DEV with
    `nasadit_verzi: false` and an agreed valid test selection. A deployment
-   requires its own explicit authorization.
+   requires its own explicit authorization. The run already supplied for this
+   investigation demonstrates the defect, not repair acceptance. A separately
+   authorized deployment-enabled control is also needed to establish hosted
+   acceptance of the repaired stdin, preparation, and readiness path; keep that
+   evidence distinct from the no-deployment control.
 2. Observe the real Dependabot pin/comment update PR. Arrange human promotion
    of the pinned workflows to `main`; identify every other intended execution
    ref and either prepare it or explicitly exclude it from future runs.
@@ -473,3 +639,5 @@ workflow.
 - [Dependabot Actions parser](https://github.com/dependabot/dependabot-core/blob/main/github_actions/lib/dependabot/github_actions/file_parser.rb)
 - [GitHub: use an intermediate environment variable](https://docs.github.com/en/actions/reference/security/secure-use#use-an-intermediate-environment-variable)
 - [GitHub runner duplicate-key handling, inspected during exploration](https://github.com/actions/runner/blob/main/src/Sdk/DTObjectTemplating/ObjectTemplating/TemplateReader.cs#L213-L219)
+- [util-linux script: child exit-status forwarding and stdin caveats](https://github.com/util-linux/util-linux/blob/master/term-utils/script.1.adoc)
+- [Docker: container health filtering](https://docs.docker.com/reference/cli/docker/container/ls/#filtering---filter)

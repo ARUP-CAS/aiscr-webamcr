@@ -1,5 +1,7 @@
 """Ověří neměnné odkazy na GitHub Actions a zachování jejich aktualizací."""
 
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -194,15 +196,46 @@ class SSHTestCase(unittest.TestCase):
             'ssh-add -l >> "$FINGERPRINTS" || exit $?\n'
             'printf "scp\\n" >> "$CLIENT_TRACE"\n'
             'if [[ "${CLIENT_EXIT:-0}" != "0" ]]; then exit "$CLIENT_EXIT"; fi\n'
-            'case "$2" in\n'
-            '  ./results.xlsx) printf "test-result" > "$2";;\n'
-            '  ./test_summary.env) printf "PASSED=1\\nFAILED=0\\n" > "$2";;\n'
-            "  *) exit 9;;\nesac\n",
+            'name="${1##*/}"\ncp "$REMOTE_RESULTS/$name" "$2"\n',
         )
+        self.write_tool("python3", 'exec "$PYTHON_TEST_EXE" "$@"\n')
+        self.remote_results = self.root / "remote-results"
+        self.remote_results.mkdir()
+        self.result_fixture(b"PASSED=1\nFAILED=0\n")
         self.addCleanup(self.release_agent)
         key = self.run_shell('ssh-keygen -q -t ed25519 -N "" -C actions-trust-test -f "$KEY_PATH"')
         self.assertEqual(key.returncode, 0, key.stderr)
         self.private_key = (self.root / "identity").read_text(encoding="utf-8")
+
+    def result_fixture(self, content, identity="123-1", state="completed", code=0, mode="konkretni", number="42"):
+        """Připraví nezávisle sestavený vzdálený balík s kontrolními otisky.
+
+        :param content: Bajty číselného souhrnu.
+        :param identity: Identita pokusu.
+        :param state: Stav výsledku.
+        :param code: Návratový kód testů.
+        :param mode: Režim výběru.
+        :param number: Číslo testu.
+        """
+        files = {}
+        if state != "error":
+            files["test_summary.env"] = content
+        if state == "completed":
+            files["results.xlsx"] = b"test-result"
+        for name, value in files.items():
+            (self.remote_results / name).write_bytes(value)
+        record = dict(
+            version=1,
+            attempt_id=identity,
+            mode=mode,
+            number=number,
+            state=state,
+            exit_code=code,
+            spreadsheet_required=state == "completed",
+            message="fixture",
+            files={name: hashlib.sha256(value).hexdigest() for name, value in files.items()},
+        )
+        (self.remote_results / "outcome.json").write_text(json.dumps(record), encoding="utf-8")
 
     def write_tool(self, name, body):
         """Vytvoří klienta, který místo síťového připojení ověří identitu agenta.
@@ -232,6 +265,9 @@ class SSHTestCase(unittest.TestCase):
             GITHUB_STEP_SUMMARY=(self.root / "summary").as_posix(),
             TEST_BIN=self.bin.as_posix(),
             TEST_SSH_DIR=(self.root / "ssh").as_posix(),
+            GITHUB_WORKSPACE=ROOT.as_posix(),
+            PYTHON_TEST_EXE=Path(sys.executable).as_posix(),
+            REMOTE_RESULTS=(self.root / "remote-results").as_posix(),
             KEY_PATH=(self.root / "identity").as_posix(),
             AGENT_TRACE=(self.root / "agent-start").as_posix(),
             CLIENT_TRACE=(self.root / "clients").as_posix(),
@@ -245,6 +281,7 @@ class SSHTestCase(unittest.TestCase):
             SERVER_ROOT=self.root.as_posix(),
             DEP_SCRIPT="deploy fixture.sh",
             TEST_SCRIPT="test fixture.sh",
+            ATTEMPT_ID="123-1",
             DEPLOYMENT_SERVER="test-fixture",
             SSH_KNOWN_HOST="test-fixture-known-host",
             GIT_TAG="v1.2.3",
@@ -300,7 +337,7 @@ class SSHAgentTests(SSHTestCase):
     """Spustí skutečný agent a shell workflow s izolovanými SSH/SCP klienty."""
 
     def test_identity_survives_ssh_and_scp_steps_then_cleanup(self):
-        """Klíč s CRLF funguje pro SSH a obě SCP volání bez opětovného načtení."""
+        """Klíč s CRLF funguje pro SSH a výsledková SCP bez opětovného načtení."""
         setup = self.run_shell(self.setup["run"], SSH_PRIVATE_KEY=self.private_key.replace("\n", "\r\n"))
         self.assertEqual(setup.returncode, 0, setup.stderr)
         state = self.agent_environment()
@@ -310,9 +347,9 @@ class SSHAgentTests(SSHTestCase):
         self.assertEqual(remote.returncode, 0, remote.stderr)
         results = self.run_shell(self.workflow_script(self.results), **state)
         self.assertEqual(results.returncode, 0, results.stderr)
-        self.assertEqual((self.root / "clients").read_text(encoding="utf-8").splitlines(), ["ssh", "scp", "scp"])
+        self.assertEqual((self.root / "clients").read_text(encoding="utf-8").splitlines(), ["ssh", "scp", "scp", "scp"])
         fingerprints = (self.root / "fingerprints").read_text(encoding="utf-8").splitlines()
-        self.assertEqual(len(fingerprints), 3)
+        self.assertEqual(len(fingerprints), 4)
         self.assertEqual(len(set(fingerprints)), 1)
         self.assertIn("PASSED=1", (self.root / "outputs").read_text(encoding="utf-8"))
         cleanup = self.run_shell(self.cleanup["run"], **state)
@@ -350,65 +387,62 @@ class SSHAgentTests(SSHTestCase):
 
 
 class SummaryResultTests(SSHTestCase):
-    """Ověří skutečné zpracování vzdáleného souhrnu bez spuštění jeho obsahu."""
+    """Ověří skutečný výsledkový krok, aktuální identitu a publikaci až po ověření."""
 
     def setUp(self):
-        """Připraví agenta a SCP, které kopíruje přesné bajty testovacího souhrnu."""
+        """Připraví skutečný jednorázový agent a izolované klienty."""
         super().setUp()
-        self.write_tool(
-            "scp",
-            'ssh-add -l >> "$FINGERPRINTS" || exit $?\n'
-            'printf "scp\\n" >> "$CLIENT_TRACE"\n'
-            'case "$2" in\n'
-            '  ./results.xlsx) printf "test-result" > "$2";;\n'
-            '  ./test_summary.env) cat "$SUMMARY_FIXTURE" > "$2";;\n'
-            "  *) exit 9;;\nesac\n",
-        )
         setup = self.run_shell(self.setup["run"], SSH_PRIVATE_KEY=self.private_key)
         self.assertEqual(setup.returncode, 0, setup.stderr)
         self.agent_state = self.agent_environment()
         self.output = self.root / "outputs"
         self.summary = self.root / "summary"
-        self.canary = self.root / "summary-canary"
+        self.invocations = 0
 
-    def execute_result(self, content):
-        """Stáhne souhrn a spustí nezměněné tělo výsledkového kroku.
+    def execute_result(self, content, *, state="completed", code=0, edit=None):
+        """Spustí nezměněný krok s jedním samostatným výsledkem.
 
-        :param content: Bajty simulovaného vzdáleného souboru.
-        :return: Výsledek skutečného shellu s izolovanými SCP operacemi.
+        :param content: Souhrn simulovaného vzdáleného pokusu.
+        :param state: Stav pokusu.
+        :param code: Návratový kód testů.
+        :param edit: Volitelná mutace vzdáleného balíku.
+        :return: Výsledek skutečného shellového kroku.
         """
-        fixture = self.root / "remote-summary"
-        fixture.write_bytes(content)
-        self.canary.unlink(missing_ok=True)
+        self.invocations += 1
+        identity = f"123-{self.invocations}"
+        mode, number = ("neuspesne", "") if state == "no-tests" else ("konkretni", "42")
+        self.result_fixture(content, identity, state, code, mode, number)
+        if edit:
+            edit()
         self.output.write_text("existing-output\n", encoding="utf-8")
         self.summary.write_text("existing-summary\n", encoding="utf-8")
         return self.run_shell(
             self.workflow_script(self.results),
-            SUMMARY_FIXTURE=fixture.as_posix(),
-            CANARY_PATH=self.canary.as_posix(),
+            ATTEMPT_ID=identity,
+            TEST_MOD=mode,
+            TEST_CISLO=number,
             **self.agent_state,
         )
 
-    def assert_summary_rejected(self, content):
-        """Ověří neúspěch bez spuštění canary a bez částečně zapsaného výsledku.
+    def assert_rejected(self, content, edit=None):
+        """Ověří neúspěch bez publikovaných částečných výstupů.
 
-        :param content: Neplatné bajty souhrnu předané skutečnému kroku.
-        :return: Neúspěšný výsledek shellu pro následnou kontrolu úklidu.
+        :param content: Neplatný souhrn.
+        :param edit: Mutace balíku.
+        :return: Neúspěšný výsledek kroku.
         """
-        result = self.execute_result(content)
+        result = self.execute_result(content, edit=edit)
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("SUMMARY_CANARY", result.stdout + result.stderr)
-        self.assertFalse(self.canary.exists())
         self.assertEqual(self.output.read_text(encoding="utf-8"), "existing-output\n")
         self.assertEqual(self.summary.read_text(encoding="utf-8"), "existing-summary\n")
         return result
 
-    def test_valid_counts_preserve_reporting_and_normalize_decimal_outputs(self):
-        """Pořadí, konce řádků i úvodní nuly zachovají číselné výsledky a tabulku."""
+    def test_valid_counts_preserve_reporting_and_failure_status(self):
+        """Pořadí, CRLF, poslední řádek a úvodní nuly zachovají výsledek."""
         for content, passed, failed in (
             (b"PASSED=1\nFAILED=0\n", "1", "0"),
             (b"FAILED=2\nPASSED=0\n", "0", "2"),
-            (b"PASSED=0\nFAILED=0\n", "0", "0"),
             (b"PASSED=12\r\nFAILED=3\r\n", "12", "3"),
             (b"FAILED=0\r\nPASSED=4", "4", "0"),
             (b"PASSED=7\nFAILED=1", "7", "1"),
@@ -417,21 +451,32 @@ class SummaryResultTests(SSHTestCase):
             (b"PASSED=" + b"9" * 40 + b"\nFAILED=1\n", "9" * 40, "1"),
         ):
             with self.subTest(content=content):
-                result = self.execute_result(content)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(
-                    self.output.read_text(encoding="utf-8"), f"existing-output\nPASSED={passed}\nFAILED={failed}\n"
-                )
+                result = self.execute_result(content, code=int(int(failed) > 0))
+                self.assertEqual(result.returncode, int(int(failed) > 0), result.stderr)
+                output = self.output.read_text(encoding="utf-8")
+                self.assertIn(f"PASSED={passed}\nFAILED={failed}\n", output)
+                self.assertIn("ARTIFACTS=true", output)
                 report = self.summary.read_text(encoding="utf-8")
-                self.assertTrue(report.startswith("existing-summary\n## 🧪 Výsledky testů\n"))
                 self.assertIn(f"| ✅ Prošlo | {passed} |", report)
                 self.assertIn(f"| ❌ Selhalo | {failed} |", report)
-                self.assertEqual((self.root / "results.xlsx").read_bytes(), b"test-result")
-        clients = (self.root / "clients").read_text(encoding="utf-8").splitlines()
-        self.assertEqual(clients, ["scp"] * 18)
+                self.assertEqual(
+                    (self.root / f"test-results/123-{self.invocations}/results.xlsx").read_bytes(), b"test-result"
+                )
 
-    def test_malformed_or_binary_summaries_leave_existing_results_untouched(self):
-        """Chybějící, duplicitní, neznámé a nečíselné záznamy selžou celé."""
+    def test_noop_and_error_are_explicit_and_cannot_reuse_spreadsheet(self):
+        """No-op nemá starý artefakt; chyba nikdy nemá úspěšné nulové počty."""
+        result = self.execute_result(b"PASSED=0\nFAILED=0\n", state="no-tests")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("STATE=no-tests", self.output.read_text(encoding="utf-8"))
+        self.assertFalse((self.root / f"test-results/123-{self.invocations}/results.xlsx").exists())
+        result = self.execute_result(b"", state="error", code=1)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("STATE=error", self.output.read_text(encoding="utf-8"))
+        self.assertNotIn("PASSED=", self.output.read_text(encoding="utf-8"))
+        self.assert_rejected(b"PASSED=0\nFAILED=0\n")
+
+    def test_malformed_binary_and_command_summaries_publish_nothing(self):
+        """Celé neplatné souhrny i příkazové canary jsou data a nezveřejní nic."""
         for content in (
             b"",
             b"PASSED=1\n",
@@ -455,28 +500,44 @@ class SummaryResultTests(SSHTestCase):
             b"PASSED=1\x00\nFAILED=0\n",
             b"PASSED=1\nFAILED=0\n\x00",
             b"PASSED=1\nFAILED=\xff\n",
+            b"PASSED=1\nFAILED=0\nprintf SUMMARY_CANARY >&2\n",
+            b"PASSED=$(printf SUMMARY_CANARY >&2; printf 1)\nFAILED=0\n",
+            b"PASSED=1\nFAILED=" + bytes([96]) + b"printf SUMMARY_CANARY >&2; printf 0" + bytes([96]) + b"\n",
         ):
             with self.subTest(content=content):
-                self.assert_summary_rejected(content)
+                self.assert_rejected(content)
 
-    def test_commands_and_substitutions_cannot_run_or_publish_partial_counts(self):
-        """Příkazy připojené k platným počtům ani substituce nespustí canary."""
-        for content in (
-            b'PASSED=1\nFAILED=0\nprintf SUMMARY_CANARY >&2\ntouch "$CANARY_PATH"\n',
-            b'PASSED=$(printf SUMMARY_CANARY >&2; touch "$CANARY_PATH"; printf 1)\nFAILED=0\n',
-            b'PASSED=1\nFAILED=`printf SUMMARY_CANARY >&2; touch "$CANARY_PATH"; printf 0`\n',
-            b'PASSED=1; printf SUMMARY_CANARY >&2; touch "$CANARY_PATH"\nFAILED=0\n',
+    def test_old_only_missing_mixed_and_malicious_outcomes_are_rejected(self):
+        """Identita, chybějící soubory a nebezpečné cesty selžou před publikací."""
+        path = self.remote_results / "outcome.json"
+
+        def mutate(**changes):
+            """Změní metadata vzdáleného výsledku.
+
+            :param changes: Přepsaná pole.
+            """
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data.update(changes)
+            path.write_text(json.dumps(data), encoding="utf-8")
+
+        for edit in (
+            lambda: path.unlink(),
+            lambda: mutate(attempt_id="old-1"),
+            lambda: mutate(mode="vsechny", number=""),
+            lambda: mutate(files={"../outside": "a" * 64}),
+            lambda: mutate(state="$(printf SUMMARY_CANARY)"),
+            lambda: (self.remote_results / "test_summary.env").unlink(),
+            lambda: (self.remote_results / "results.xlsx").write_bytes(b"another-attempt"),
         ):
-            with self.subTest(content=content):
-                self.assert_summary_rejected(content)
+            with self.subTest(edit=edit):
+                self.assert_rejected(b"PASSED=1\nFAILED=0\n", edit)
 
     def test_summary_rejection_still_allows_unconditional_agent_cleanup(self):
-        """Neúspěšné čtení výsledků ponechá always úklidu možnost ukončit agenta."""
-        failed = self.assert_summary_rejected(b"PASSED=1\nFAILED=0\nUNKNOWN=1\n")
+        """Chyba validace ponechá always úklidu možnost ukončit agent."""
+        self.assert_rejected(b"PASSED=1\nFAILED=0\nUNKNOWN=1\n")
         cleanup = self.run_shell(self.cleanup["run"], **self.agent_state)
         self.assertEqual(cleanup.returncode, 0, cleanup.stderr)
         self.assert_agent_stopped()
-        self.assertNotEqual(failed.returncode, 0)
 
 
 class DeploymentAgentTests(SSHTestCase):
@@ -540,7 +601,8 @@ class WorkflowInputTests(SSHTestCase):
         for name, operation in (("deploy fixture.sh", "deploy"), ("test fixture.sh", "test")):
             path = self.root / name
             path.write_text(
-                f'#!/usr/bin/env bash\nprintf "%s\\0" {operation} "$#" "$@" >> "$OPERATIONS"\n',
+                f'#!/usr/bin/env bash\nprintf "%s\\0" {operation} "$#" "$@" >> "$OPERATIONS"\n'
+                + ('cat > /dev/null\nexit "${DEPLOY_FIXTURE_EXIT:-0}"\n' if operation == "deploy" else ""),
                 encoding="utf-8",
                 newline="\n",
             )
@@ -670,6 +732,17 @@ class WorkflowInputTests(SSHTestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertNotIn("INJECTION_CANARY", result.stdout + result.stderr)
                 self.assertEqual(self.operations()[0], ("deploy", [self.root.as_posix(), reference, ref_type]))
+
+    def test_consuming_deployment_reproduces_old_transport_and_stops_on_failure(self):
+        """Čtení stdin reprodukuje původní přeskočení testů; chyba nasazení testy zastaví."""
+        old = self.remote.replace(" < /dev/null", "")
+        result = self.run_shell(self.workflow_script(old), NASADIT="true")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([operation for operation, _ in self.operations()], ["deploy"])
+        (self.root / "operations").unlink()
+        result = self.run_shell(self.workflow_script(self.remote), NASADIT="true", DEPLOY_FIXTURE_EXIT="7")
+        self.assertEqual(result.returncode, 7, result.stderr)
+        self.assertEqual([operation for operation, _ in self.operations()], ["deploy"])
 
     def test_deployment_transport_preserves_source_and_tag_arguments(self):
         """Deployment předá normalizovaný tag a oba zdroje beze změny přes vzdálený shell."""

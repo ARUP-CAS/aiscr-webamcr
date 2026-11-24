@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 ###########
 #### SCRIPT: DEPLOYMENT from local repository into SWARM for testing
 #### PARAMS: see -h
@@ -34,8 +35,7 @@ echo_dec ()
 
 er () {
     echo_dec "${1}"
-    eval "${1}"
-    ret_val=$?
+    if eval "${1}"; then ret_val=0; else ret_val=$?; fi
     echo "....................."
     echo ">> DONE: ${1} with status: ${ret_val}"
     return $ret_val
@@ -43,21 +43,22 @@ er () {
 
 check_create_network () {
     
-    docker network inspect ${network_name} > /dev/null 2>&1
-    network_status=$?
-    if [ ${network_status} -eq 1  ]; then
-      er "docker network create -d overlay --attachable ${network_name}"
-      echo_dec "Network ${network_name} created"
-    else
+    if docker network inspect ${network_name} > /dev/null 2>&1; then
        echo_dec "Network ${network_name} already exists"
+    else
+      er "docker network create -d overlay --attachable ${network_name}" || return $?
+      echo_dec "Network ${network_name} created"
     fi
 }
 
 check_stack_exists ()
 {
-    docker stack ps ${stack_name} > /dev/null 2>&1
-    stack_status=$?
-    return ${stack_status}
+    local stacks name
+    stacks="$(docker stack ls --format '{{.Name}}')" || return 2
+    while IFS= read -r name; do
+        if [[ "$name" == "$stack_name" ]]; then return 0; fi
+    done <<< "$stacks"
+    return 1
 }
 
 actualize_repo ()
@@ -107,8 +108,12 @@ run_default ()
    er "${cmd_create_images_redis}"
 
    
-    er "${cmd_deploy_base} ${compose_test} ${stack_name}" && \
-    echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+    if er "${cmd_deploy_base} ${compose_test} ${stack_name}"; then
+      echo_dec "$msg_success"
+    else
+      echo_dec "${msg_fail_build}"
+      return 1
+    fi
     
 
 }
@@ -218,9 +223,11 @@ while getopts "hxqbut:d" option; do
       x) echo "OPTION: -x" 
          echo_dec "Remove docker stack: ${stack_name}"
          if check_stack_exists; then
-            er "${cmd_stack_rm}" && \
-            echo_dec "Stack ${stack_name} removal successful" || echo_dec "Stack ${stack_name} removal FAILED"
+            er "${cmd_stack_rm}" || exit $?
+            echo_dec "Stack ${stack_name} removal successful"
          else
+             stack_status=$?
+             [[ "$stack_status" == 1 ]] || exit "$stack_status"
              echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"
         fi
         sleep 20 # Need to wait before network is really removed.
