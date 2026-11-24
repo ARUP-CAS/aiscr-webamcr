@@ -28,6 +28,9 @@ def report(directory, identity, mode, number, output_path, summary_path):
         passed, failed = counts
         outputs += f"PASSED={passed}\nFAILED={failed}\n"
         summary += f"\n| Stav | Počet |\n|------|-------|\n| ✅ Prošlo | {passed} |\n| ❌ Selhalo | {failed} |\n"
+        skipped, expected = record["counts"]["skipped"], record["counts"]["expected_failures"]
+        outputs += f"SKIPPED={skipped}\nEXPECTED_FAILURES={expected}\n"
+        summary += f"| Přeskočeno | {skipped} |\n| Očekávaná selhání | {expected} |\n"
     with Path(output_path).open("a", encoding="utf-8") as stream:
         stream.write(outputs)
     with Path(summary_path).open("a", encoding="utf-8") as stream:

@@ -42,6 +42,14 @@ Třídy
 
       Neúspěch nelze přepsat zprávou o dokončení ani koncovým exit 0.
 
+   .. py:method:: test_swarm_diagnostic_and_shared_dependency_are_required()
+
+      Chyba Swarmu vypíše příčinu a chybějící pomocný soubor zastaví nasazení.
+
+   .. py:method:: test_wrapper_log_rotation_is_bounded_and_preserves_current_log()
+
+      Oba wrappery odstraní pouze staré přímé deployment logy a zachovají tag.
+
    .. py:method:: test_ci_wrappers_preserve_failure_and_previous_tag()
 
       Při chybě nasazení se nepustí readiness ani nezmění poslední úspěšný tag.

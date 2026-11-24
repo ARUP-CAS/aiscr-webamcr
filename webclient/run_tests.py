@@ -93,7 +93,7 @@ def parse_result(output, returncode):
 
     :param output: Úplný zachycený výstup obou proudů.
     :param returncode: Návratový kód testovacího procesu.
-    :return: Dvojice počtu úspěšných a neúspěšných testů.
+    :return: Úplné počty skutečně úspěšných, neúspěšných, přeskočených a očekávaně selhaných testů.
     :raises ValueError: Při neúplném, nulovém nebo rozporném výsledku.
     """
     ran = re.findall(r"^Ran ([0-9]+) tests? in [^\r\n]+\r?$", output, re.MULTILINE)
@@ -113,7 +113,16 @@ def parse_result(output, returncode):
         raise ValueError("Rozporné počty testů")
     if (returncode == 0) != (status == "OK") or returncode not in (0, 1):
         raise ValueError("Návratový kód neodpovídá úplnému výsledku testů")
-    return total - failed, failed
+    skipped, expected = counters.get("skipped", 0), counters.get("expected failures", 0)
+    if total - skipped <= 0:
+        raise ValueError("Nebylo provedeno žádné tělo testu")
+    return dict(
+        total=total,
+        passed=total - failed - skipped - expected,
+        failed=failed,
+        skipped=skipped,
+        expected_failures=expected,
+    )
 
 
 def execute_tests(labels, directory, file_logging=False):
@@ -204,6 +213,7 @@ def main(argv=None):
     :return: Nula při úspěchu či výslovném no-op, jinak jedna.
     """
     from test_run_results import create_attempt, publish_outcome, write_summary
+    from test_run_retention import AttemptLease
 
     parser = argparse.ArgumentParser()
     modes = parser.add_mutually_exclusive_group()
@@ -217,6 +227,8 @@ def main(argv=None):
     mode = "neuspesne" if args.fail else "konkretni" if args.test is not None else "vsechny"
     number = str(args.test) if args.test is not None else ""
     directory = None
+    lease = None
+    status = 1
     previous_output = os.environ.get("AMCR_TEST_OUTPUT_DIR")
     stage = "initialization"
     try:
@@ -229,7 +241,8 @@ def main(argv=None):
             args.results_root = TEST_SCREENSHOT_PATH
         root = Path(args.results_root)
         stage = "attempt"
-        directory, identity = create_attempt(root, args.attempt_id)
+        lease = AttemptLease(root, args.attempt_id, create_attempt)
+        directory, identity = lease.directory, lease.identity
         print(f"Pokus testů: {identity}")
         stage = "selection"
         labels = select_tests(mode, number, root / "results.xlsx")
@@ -238,31 +251,34 @@ def main(argv=None):
             write_summary(directory, 0, 0)
             publish_outcome(directory, identity, mode, number, "no-tests", 0)
             print("Žádné neúspěšné testy k opakování")
-            return 0
-        os.environ["AMCR_TEST_OUTPUT_DIR"] = str(directory) + os.sep
-        logger.info("amcr_test_runner.start_test")
-        stage = "migration"
-        migration = subprocess.run([sys.executable, "manage.py", "migrate", f"--settings={SETTINGS}"], check=False)
-        if migration.returncode:
-            raise RuntimeError("Migrace testovací databáze selhala")
-        stage = "execution"
-        returncode, output = execute_tests(labels, directory, args.soubor)
-        stage = "summary"
-        passed, failed = parse_result(output, returncode)
-        write_summary(directory, passed, failed)
-        spreadsheet_required = any("test_selenium" in label for label in labels)
-        stage = "publication"
-        publish_outcome(
-            directory,
-            identity,
-            mode,
-            number,
-            "completed",
-            returncode,
-            spreadsheet_required,
-            selection_data=selection_content(root, directory, mode),
-        )
-        return returncode
+            status = 0
+        else:
+            os.environ["AMCR_TEST_OUTPUT_DIR"] = str(directory) + os.sep
+            logger.info("amcr_test_runner.start_test")
+            stage = "migration"
+            migration = subprocess.run([sys.executable, "manage.py", "migrate", f"--settings={SETTINGS}"], check=False)
+            if migration.returncode:
+                raise RuntimeError("Migrace testovací databáze selhala")
+            stage = "execution"
+            returncode, output = execute_tests(labels, directory, args.soubor)
+            stage = "summary"
+            counts = parse_result(output, returncode)
+            passed, failed = counts["passed"], counts["failed"]
+            write_summary(directory, passed, failed)
+            spreadsheet_required = any("test_selenium" in label for label in labels)
+            stage = "publication"
+            publish_outcome(
+                directory,
+                identity,
+                mode,
+                number,
+                "completed",
+                returncode,
+                spreadsheet_required,
+                selection_data=selection_content(root, directory, mode),
+                counts=counts,
+            )
+            status = returncode
     except Exception:
         message = f"Chyba testovacího běhu ({stage})"
         print(message, file=sys.stderr)
@@ -271,13 +287,26 @@ def main(argv=None):
                 publish_outcome(directory, identity, mode, number, "error", 1, message=message)
             except Exception:
                 print("Zveřejnění chybového výsledku selhalo (publication)", file=sys.stderr)
-        return 1
+        status = 1
     finally:
         logger.info("amcr_test_runner.end")
         if previous_output is None:
             os.environ.pop("AMCR_TEST_OUTPUT_DIR", None)
         else:
             os.environ["AMCR_TEST_OUTPUT_DIR"] = previous_output
+        if lease is not None:
+            try:
+                lease.close()
+            except Exception:
+                message = "Chyba testovacího běhu (retention)"
+                print(message, file=sys.stderr)
+                if status == 0:
+                    try:
+                        publish_outcome(directory, identity, mode, number, "error", 1, message=message)
+                    except Exception:
+                        print("Zveřejnění chybového výsledku selhalo (publication)", file=sys.stderr)
+                status = 1
+    return status
 
 
 if __name__ == "__main__":

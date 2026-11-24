@@ -73,6 +73,10 @@ Třídy
 
       Převod pinů zachová dvě Trivy volání a instalátor Cosign.
 
+   .. py:method:: test_shared_ssh_helper_and_dev_serialization()
+
+      Oba SSH kroky používají společné uvozování a DEV operace sdílejí zámek.
+
 
 .. py:class:: SSHTestCase
 
@@ -202,6 +206,10 @@ Třídy
    .. py:method:: test_summary_rejection_still_allows_unconditional_agent_cleanup()
 
       Chyba validace ponechá always úklidu možnost ukončit agent.
+
+   .. py:method:: test_expected_failure_only_counts_and_counter_corruption()
+
+      Skutečný workflow přijme očekávané selhání, ale odmítne rozporná metadata.
 
 
 .. py:class:: DeploymentAgentTests

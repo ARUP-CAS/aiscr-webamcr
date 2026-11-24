@@ -29,8 +29,8 @@ on:
         default: true
 
 concurrency:
-  group: tests-${{ github.repository }}
-  cancel-in-progress: true
+  group: deploy-${{ github.repository }}-DEV
+  cancel-in-progress: false
 
 env:
   server_deploy_root: /home/amcr/aiscr-webamcr
@@ -142,16 +142,8 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOST" >> ~/.ssh/known_hosts
           
           # Quote arguments for the remote login shell; keep the script itself static.
-          shell_quote() {
-            local value="$1"
-            local quote="'"
-            local escaped_quote="'\\''"
-            printf "'%s'" "${value//"$quote"/"$escaped_quote"}"
-          }
-          remote_command="sudo bash -s --"
-          for value in "$NASADIT" "$TEST_MOD" "$TEST_CISLO" "$REF_NAME" "$REF_TYPE" "$SERVER_ROOT" "$DEP_SCRIPT" "$TEST_SCRIPT" "$ATTEMPT_ID"; do
-            remote_command+=" $(shell_quote "$value")"
-          done
+          source "$GITHUB_WORKSPACE/scripts/ssh_arguments.sh"
+          remote_command="$(ssh_command "$NASADIT" "$TEST_MOD" "$TEST_CISLO" "$REF_NAME" "$REF_TYPE" "$SERVER_ROOT" "$DEP_SCRIPT" "$TEST_SCRIPT" "$ATTEMPT_ID")"
           ssh "amcr@$DEPLOYMENT_SERVER" "$remote_command" <<'EOF'
               set -euo pipefail
               NASADIT="$1"

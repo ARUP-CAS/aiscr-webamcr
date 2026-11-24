@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,6 +11,8 @@ import unittest
 from pathlib import Path
 
 import yaml
+
+from scripts.test_shell_utils import bash_executable
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "docs"))
@@ -152,6 +153,33 @@ class ActionReferenceTests(unittest.TestCase):
         self.assertEqual(calls.count("aquasecurity/trivy-action"), 2)
         self.assertEqual(calls.count("sigstore/cosign-installer"), 1)
 
+    def test_shared_ssh_helper_and_dev_serialization(self):
+        """Oba SSH kroky používají společné uvozování a DEV operace sdílejí zámek."""
+        workflows = [
+            yaml.load((ROOT / ".github/workflows" / name).read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+            for name in ("run-tests.yml", "deployment.yml")
+        ]
+        tests, deployment = workflows
+        test_group = tests["concurrency"]["group"]
+        deployment_group = deployment["concurrency"]["group"]
+        for deploy_enabled in (True, False):
+            with self.subTest(deploy_enabled=deploy_enabled):
+                self.assertEqual(test_group, deployment_group.replace("${{ inputs.environment }}", "DEV"))
+                self.assertNotEqual(test_group, deployment_group.replace("${{ inputs.environment }}", "TEST"))
+        for workflow in workflows:
+            self.assertEqual(workflow["concurrency"]["cancel-in-progress"], "false")
+            calls = [
+                step["run"]
+                for job in workflow["jobs"].values()
+                for step in job["steps"]
+                if 'ssh "amcr@$DEPLOYMENT_SERVER"' in step.get("run", "")
+            ]
+            self.assertEqual(len(calls), 1)
+            self.assertIn('source "$GITHUB_WORKSPACE/scripts/ssh_arguments.sh"', calls[0])
+            self.assertIn('remote_command="$(ssh_command ', calls[0])
+            self.assertNotIn("shell_quote()", calls[0])
+            self.assertNotIn("date_stamp", calls[0])
+
 
 class SSHTestCase(unittest.TestCase):
     """Připraví izolované prostředí pro skutečný agent a náhrady síťových operací."""
@@ -159,9 +187,7 @@ class SSHTestCase(unittest.TestCase):
     def setUp(self):
         """Připraví dočasný klíč a náhrady pouze vzdálených operací."""
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory(dir=os.environ.get("TEST_TEMP_ROOT"))))
-        git = shutil.which("git")
-        candidate = Path(git).resolve().parents[1] / "bin/bash.exe" if git and os.name == "nt" else Path("missing")
-        self.bash = str(candidate) if candidate.is_file() else shutil.which("bash")
+        self.bash = bash_executable()
         self.assertIsNotNone(self.bash, "Bash is required for SSH-agent regression tests")
         workflow = yaml.load(
             (ROOT / ".github/workflows/run-tests.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader
@@ -224,8 +250,11 @@ class SSHTestCase(unittest.TestCase):
             files["results.xlsx"] = b"test-result"
         for name, value in files.items():
             (self.remote_results / name).write_bytes(value)
+        numeric = dict(re.findall(rb"(?m)^(PASSED|FAILED)=([0-9]+)\r?$", content))
+        passed, failed = int(numeric.get(b"PASSED", b"1")), int(numeric.get(b"FAILED", b"0"))
+        counts = dict(total=passed + failed, passed=passed, failed=failed, skipped=0, expected_failures=0)
         record = dict(
-            version=1,
+            version=2,
             attempt_id=identity,
             mode=mode,
             number=number,
@@ -233,6 +262,7 @@ class SSHTestCase(unittest.TestCase):
             exit_code=code,
             spreadsheet_required=state == "completed",
             message="fixture",
+            counts=None if state == "error" else counts,
             files={name: hashlib.sha256(value).hexdigest() for name, value in files.items()},
         )
         (self.remote_results / "outcome.json").write_text(json.dumps(record), encoding="utf-8")
@@ -485,6 +515,7 @@ class SummaryResultTests(SSHTestCase):
             b"PASSED=1\nFAILED=0\nFAILED=1\n",
             b"PASSED=1\nFAILED=0\nOTHER=2\n",
             b"PASSED=1\nFAILED=0\n\n",
+            b"PASSED=1\nFAILED=0\n" + b"x" * 4097,
             b"\nPASSED=1\nFAILED=0\n",
             b"PASSED=\nFAILED=0\n",
             b"PASSED=1\nFAILED=-1\n",
@@ -538,6 +569,33 @@ class SummaryResultTests(SSHTestCase):
         cleanup = self.run_shell(self.cleanup["run"], **self.agent_state)
         self.assertEqual(cleanup.returncode, 0, cleanup.stderr)
         self.assert_agent_stopped()
+
+    def test_expected_failure_only_counts_and_counter_corruption(self):
+        """Skutečný workflow přijme očekávané selhání, ale odmítne rozporná metadata."""
+
+        def expected_only():
+            """Doplní nezávislé kategorie skutečně provedeného expected-failure běhu."""
+            path = self.remote_results / "outcome.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["counts"] = dict(total=2, passed=0, failed=0, skipped=0, expected_failures=2)
+            path.write_text(json.dumps(record), encoding="utf-8")
+
+        result = self.execute_result(b"PASSED=0\nFAILED=0\n", edit=expected_only)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("EXPECTED_FAILURES=2", self.output.read_text(encoding="utf-8"))
+        for edit_counts in (
+            dict(total=1, passed=1, failed=0, skipped=True, expected_failures=0),
+            dict(total=2, passed=2, failed=0, skipped=0, expected_failures=0),
+        ):
+
+            def corrupt():
+                """Změní kategorie bez změny souhrnu."""
+                path = self.remote_results / "outcome.json"
+                record = json.loads(path.read_text(encoding="utf-8"))
+                record["counts"] = edit_counts
+                path.write_text(json.dumps(record), encoding="utf-8")
+
+            self.assert_rejected(b"PASSED=1\nFAILED=0\n", corrupt)
 
 
 class DeploymentAgentTests(SSHTestCase):

@@ -1,11 +1,13 @@
 """Regrese skutečných nasazovacích skriptů s úplnou náhradou provozních příkazů."""
 
 import os
-import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
+
+from scripts.test_shell_utils import bash_executable
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -18,9 +20,11 @@ class DeploymentExecutionTests(unittest.TestCase):
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory(dir=os.environ.get("TEST_TEMP_ROOT")))).resolve()
         self.bin = self.root / "bin"
         self.bin.mkdir()
-        self.bash = r"C:\Program Files\Git\bin\bash.exe" if os.name == "nt" else shutil.which("bash")
+        self.bash = bash_executable()
+        self.assertIsNotNone(self.bash, "Bash is required for deployment regression tests")
         self.trace = self.root / "trace"
         for name in (
+            "deployment_helpers.sh",
             "test_deploy.sh",
             "prod_deploy.sh",
             "start_selenium_tests.sh",
@@ -128,6 +132,46 @@ exit 0
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                 if failure.startswith(("build", "pull")):
                     self.assertNotIn("stack deploy", self.trace.read_text(encoding="utf-8"))
+
+    def test_swarm_diagnostic_and_shared_dependency_are_required(self):
+        """Chyba Swarmu vypíše příčinu a chybějící pomocný soubor zastaví nasazení."""
+        for script, args in (("test_deploy.sh", ["-q"]), ("prod_deploy.sh", ["GitHub", "-t", "1.2.3"])):
+            result = self.execute(script, args, FAIL_DOCKER="node ls")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("SWARM not initiated or joined at this HOST. Exiting", result.stdout)
+            self.assertNotIn("stack deploy", self.trace.read_text(encoding="utf-8"))
+        (self.root / "scripts/deployment_helpers.sh").unlink()
+        result = self.execute("ci_deployment/deploy_server.sh", ["1.2.3", self.root.as_posix(), "GitHub"])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.trace.read_text(encoding="utf-8"), "")
+
+    def test_wrapper_log_rotation_is_bounded_and_preserves_current_log(self):
+        """Oba wrappery odstraní pouze staré přímé deployment logy a zachovají tag."""
+        self.tool("date", "printf '20261124T120000\\n'\n")
+        logs = self.root / "logs"
+        current = logs / "deployment_20261124T120000.log"
+        recent = logs / "deployment_recent.log"
+        unrelated = logs / "operator.log"
+        nested = logs / "nested/deployment_old.log"
+        nested.parent.mkdir()
+        for path in (current, recent, unrelated, nested):
+            path.write_text("preserved\n", encoding="utf-8")
+            age = 5 if path == recent else 8
+            os.utime(path, (time.time() - age * 86400,) * 2)
+        for script, args, expected in (
+            ("ci_deployment/deploy_test_server.sh", [self.root.as_posix(), "test", "branch"], "test"),
+            ("ci_deployment/deploy_server.sh", ["1.2.3", self.root.as_posix(), "GitHub"], "1.2.3"),
+        ):
+            old = logs / "deployment_old.log"
+            old.write_text("expired", encoding="utf-8")
+            os.utime(old, (time.time() - 8 * 86400,) * 2)
+            result = self.execute(script, args)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertFalse(old.exists())
+            for path in (current, recent, unrelated, nested):
+                self.assertTrue(path.is_file(), path)
+                self.assertIn("preserved", path.read_text(encoding="utf-8"))
+            self.assertEqual(self.tag.read_text(encoding="utf-8"), expected + "\n")
 
     def test_ci_wrappers_preserve_failure_and_previous_tag(self):
         """Při chybě nasazení se nepustí readiness ani nezmění poslední úspěšný tag."""

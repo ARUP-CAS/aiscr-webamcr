@@ -113,6 +113,22 @@ Třídy
 
       Celý souhrn má právě dva desetinné záznamy a nepřipouští příkazy.
 
+   .. py:method:: test_summary_read_is_bounded_before_allocation()
+
+      Odmítne velký proud po nejvýše 4097 bajtech a přijme přesnou hranici.
+
+   .. py:method:: test_explicit_categories_cross_runner_and_result_consumer()
+
+      Skips a očekávaná selhání nezvýší PASSED ani nezničí platný zero/zero běh.
+
+   .. py:method:: test_counter_consistency_and_legacy_rejection()
+
+      Neplatné typy, kategorie či stará verze neprojdou do nového výsledku.
+
+   .. py:method:: test_all_mode_aliases_and_mutual_exclusion_remain_compatible()
+
+      Bez příznaku i s -a/--all se volí vsechny a konfliktní režimy se odmítnou.
+
 Zdrojový kód
 ------------
 

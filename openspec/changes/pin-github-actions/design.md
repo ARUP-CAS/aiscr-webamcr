@@ -262,13 +262,16 @@ every expression with the same generic string. No live dispatch is needed.
 Keep the producer's two-key numeric summary format. The original two-file
 retrieval is extended by the current-attempt protocol below; a fixed legacy
 file by itself can no longer establish the current run's result.
-Use the result step's existing Bash tooling to read `test_summary.env` as
-data, never with `source` or `eval`. Require exactly one `PASSED` and one
+Use `scripts/collect_test_results.py` and the shared Python standard-library
+consumer `webclient/test_run_results.py:read_summary` to read
+`test_summary.env` as data, never with `source` or `eval`. Require exactly one `PASSED` and one
 `FAILED` assignment containing ASCII decimal digits; reject duplicate or
 unknown keys, missing values, executable text, empty records, and NUL bytes.
 Support LF/CRLF records and a final record without a terminating newline.
-Normalize leading zeros by string operations to canonical decimal outputs;
-avoid arithmetic evaluation and overflow while parsing downloaded values.
+Normalize validated ASCII decimal strings to canonical numeric outputs in
+Python without shell evaluation. The round-four repair additionally bounds
+the raw summary read to 4097 bytes, rejecting a result larger than 4096 bytes
+before decoding or allocating the entire input.
 
 Finish validating the entire file before appending either output or the
 human-readable summary. Preserve their names and Markdown layout, the
@@ -281,10 +284,12 @@ order and line-ending controls, and malformed, duplicate, missing, unknown,
 binary, and command-substitution payloads. Invalid input must execute no
 canary, leave outputs and summary untouched, fail the step, and still permit
 agent cleanup. Document this result-data boundary on the dependency page.
-The earlier result-parsing repair needed no producer change. The approved
-execution-reliability extension now changes the producer and retrieval
-protocol as described below, retaining this numeric parser and adding no
-runtime dependency or new workflow.
+The earlier Bash result-parsing repair needed no producer change. The
+execution-reliability extension subsequently replaced that shell parser with
+the shared Python consumer and introduced the version-1 outcome protocol.
+The round-four implementation below uses explicit version-2 outcome counters while retaining
+the two-key numeric summary and adding no third-party runtime dependency or
+new workflow.
 
 ### Separate current-attempt output from previous selection input
 
@@ -562,6 +567,152 @@ after authorized delivery; do not dismiss the alert to manufacture closure.
 The existing proposal, design, capability delta, tasks, focused test files,
 runner, authored dependency guidance, generated documentation, and one new
 usage entry are repository-owned. No delivered hub asset or sync is involved.
+
+## Round-four review remediation (2026-11-24)
+
+This capture follows the [round-four review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6043320852)
+of [ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544)
+at head `09d4d12e1acf64a6c0276f3af3c549bf6c957f9d`, against
+`d327f2caff9cb0e6ffadb8325defcd948bbaa13f`. The user initially approved capture.
+The subsequent explicit `openspec-apply-change` invocation authorized its implementation.
+The seven finding labels below follow the published review's order; the
+`R4-` prefix distinguishes them and its O1-O8 observations from earlier rounds.
+The review's Medium/Low labels and pre-existing advisory attribution are
+preserved without making a new verdict. Source O4 proposed `fix-in-pr`;
+the agreed local disposition is no change for the reasons recorded below.
+
+| Item and source | Disposition, evidence and bounded response | Tasks |
+| --- | --- | --- |
+| [R4-F1, Medium](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219614) | Repair introduced cleanup regression: the workbook-write raise at `test_selenium.py:1013` bypasses driver and base teardown. Register driver cleanup immediately after creation and ensure teardown errors still propagate. | 8.1 |
+| [R4-F2, Medium](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219634) | Repair introduced accumulation: persistent `runs/<identity>` holds screenshots, workbooks and logs with no pruning. Apply the ten-finished-attempt and thirty-day interrupted-attempt policy safely. | 8.2 |
+| [R4-F3, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219643) | Repair diagnostic regression: `set -e` exits at bare `docker node ls` before the intended Swarm precondition message. Guard the command explicitly in both deployment entry points. | 8.5 |
+| [R4-F4, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219655) | Bound `read_summary` input before allocation; its current `read_bytes()` reads everything before checking the 4096-byte limit. | 8.4 |
+| [R4-F5, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219668) | Corrected the active parser description in this capture to name the Python consumer. Keep final design and dependency guidance aligned with the implemented counter/retention changes. | 8.9 |
+| [R4-F6, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219677) | Replace the deployment fixture's fixed Windows Git path with existing Git-relative Bash discovery and its PATH fallback. | 8.8 |
+| [R4-F7, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219689) | Share the byte-identical SSH quoting/argument-construction helper used by the two SSH workflows; preserve both shell boundaries and current lifecycle tests. | 8.6 |
+| [R4-O1](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683220448) | Advisory `fix-in-pr`: run-global error/failure list lengths already existed in the base. Classify the current workbook row by this test's membership in those lists. | 8.1 |
+| [R4-O2](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219700) | Advisory `fix-in-pr`: skipped/expected-failure outcomes already inflate passes in the base. Add explicit counter accounting across the runner, outcome, validation and report. | 8.3 |
+| [R4-O3](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683220755) | Advisory `fix-in-pr`: base cleanup matches the new timestamp's exact log name with an old-age predicate. Rotate only owned `deployment_*.log` files in the deployment log directory, preserving the current log and unrelated files. | 8.5 |
+| [R4-O4](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219711) | No change: the all flag exists in the base and currently requests the default `vsechny` mode; argparse also enforces mutual exclusion. Read-only probes of no flag, `-a` and `--all` selected the same intended mode. Preserve this compatibility rather than remove the option. | Disposition only; guard in 8.3/8.10 |
+| [R4-O5](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219716) | Advisory `fix-in-pr`: remove the base's unused `last_deployment_tag` reads. Preserve writes of `last_deployment_tag.txt` after successful deployment; the existing capability requires that record. Do not add rollback behavior. | 8.5 |
+| [R4-O6](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683221036) | Advisory `fix-in-pr`: remove the base's unused `date_stamp` write to `GITHUB_ENV`; no later step consumes it. | 8.6 |
+| [R4-O7](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683221381) | Advisory `fix-in-pr`: different test/deployment concurrency groups already share the DEV checkout and stack. Give DEV operations one group with active cancellation disabled; keep TEST deployment independent. | 8.7 |
+| [R4-O8](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4683219723) | Advisory `fix-in-pr`: consolidate the repeated `er`, network/stack checks and wrapper log/tag scaffolding in repository-owned shell helpers. Preserve required failure and bookkeeping behavior. | 8.5 |
+
+Read-only exploration used the actual `tearDown` AST with in-memory
+dependencies to reproduce skipped cleanup after a workbook-write exception
+and a later assertion failure being labelled ERROR after another test's error.
+The current parser returned `(2, 0)` for two skipped tests and `(1, 0)` for one
+expected failure. The combined producer/consumer contract, not only the
+arithmetic expression, therefore needs adjustment. Base-source checks support
+the advisory provenance; equality checks confirmed the duplicated helpers.
+The earlier CodeQL thread is platform-resolved and outdated at this head.
+Those read-only observations did not establish a DEV reproduction of the full
+timeout or disk-exhaustion scenario. The subsequent implementation's local
+fixture and validation results are recorded in the round-four usage entry;
+fresh hosted and live acceptance remain separate follow-up.
+
+### Selenium lifecycle and individual results
+
+Register cleanup immediately after a remote or local driver is successfully
+created, before later driver setup can fail. Guarantee driver cleanup and
+applicable base teardown when workbook reading/writing or another teardown
+operation raises, while preserving the original failure. Avoid duplicate
+driver shutdown on the normal path. Workbook classification must use the
+current test's error/failure membership, not accumulated run-global lists.
+Exercise both driver types and the actual lifecycle code with isolated
+fixtures; do not require live Selenium, databases or Fedora for these controls.
+
+### Retain ten finished attempts and thirty days of interrupted evidence
+
+The user chose ten finished attempts, including failed runs, and then chose a
+month for interrupted evidence, confirmed as thirty days in the capture offer.
+Treat valid terminal outcomes (`completed`, `error`, `no-tests`) as finished;
+retain the ten newest by completion marker time with a deterministic tie-break.
+Active/current attempts are protected even when an outcome has been written.
+The root-level selection workbook is outside the pruning set.
+
+For an attempt without a terminal outcome, retain at least thirty days since
+its last recorded activity. Cleanup after that threshold also requires verified
+inactivity. Establish an ownership/lease or lock that works for standalone and
+container execution; age or a PID observed in another namespace alone cannot
+establish inactivity. If ownership cannot be established, preserve the evidence
+and report the uncertainty. Prune only owned direct children of the configured
+`runs/` directory after validating identity, literal boundaries and symlinks or
+reparse points; never follow a candidate outside that directory. Protect
+unrelated files and any active lease throughout candidate selection/deletion.
+
+Apply retention to normal, failed and no-op runs, including standalone use.
+Pruning after terminal publication must leave no more than ten eligible
+finished attempts; preparation also handles eligible stale interrupted output.
+Recognize finished version-1 records for retention during rollout without
+accepting their old counts as a new version-2 result. Required cleanup errors
+remain explicit failures without widening deletion scope or replacing an
+earlier test failure. Validate deletion with owned temporary fixtures, external
+canaries and exact age/count boundaries; this capture authorizes no live cleanup.
+
+### Distinguish passes, skips and expected failures end to end
+
+Keep `test_summary.env` limited to the existing `PASSED` and `FAILED` keys.
+`PASSED` counts actual successful test bodies; `FAILED` counts unexpected
+failures, errors and unexpected successes. Report skipped and expected-failure
+counts separately. Evolve the strict outcome to version 2 with explicit total,
+passed, failed, skipped and expected-failure metadata, checked against the
+two-key summary and process result before publishing any report or output.
+Use native integer type/range and consistency checks; booleans and malformed
+or contradictory counters are not valid counts.
+
+An executed expected-failure-only run can complete successfully with zero
+passes and zero unexpected failures when its explicit counters establish
+actual execution. An ordinary all-skipped/zero-execution run remains an error;
+it cannot impersonate the intentional failed-only `no-tests` outcome. Keep
+that selection no-op and missing/incomplete summary failures unchanged. Deliver
+producer and consumer together and reject unsupported/mixed outcome versions
+without a legacy-count fallback. This resolves the current bundle validator's
+rejection of completed `0/0` instead of creating a second regression while
+correcting the pass arithmetic. Preserve the no-flag, `-a`, `--all`, failed-only
+and numbered-test CLI behavior.
+
+### Shared helpers, diagnostics and DEV serialization
+
+Use repository-owned sourced shell helpers for the existing repeated
+deployment behavior, and one shared SSH quoting/argument-construction path
+consumed by both workflow SSH steps. Resolve helpers from the correct local
+checkout or entry-point location, include their dependency closure in fixtures,
+and exercise the actual shared code in both callers. Do not substitute a new
+composite action, dependency, deployment service or privileged workflow.
+Keep static remote bodies, safe quoted arguments, native-agent cleanup,
+stdin detachment, required child statuses and readiness contracts intact.
+
+Guard the Swarm precondition explicitly so its operator message runs before a
+nonzero exit. Share wrapper log initialization and rotation without removing
+the last-successful-tag output: delete only eligible old `deployment_*.log`
+files in that log directory under the existing age policy, protect the current
+log, and remove unused prior-tag reads. Remove the unused workflow `date_stamp`
+environment write. Preserve optional-compaction warnings and avoid rollback.
+
+Give DEV tests and DEV deployments one concurrency group with
+`cancel-in-progress: false`, including deployment-disabled tests because they
+still use the shared stack. TEST deployment must use a separate group. Do not
+promise FIFO delivery or preservation of every pending run beyond GitHub's
+configured concurrency semantics. Validate the group expressions and
+cancellation settings without dispatching either workflow.
+
+Reuse Git-relative Bash discovery with the existing PATH fallback for
+regression processes. Cover a non-default Windows Git installation, fallback
+and unavailable-shell diagnostics; do not confuse the WSL launcher with Git
+Bash. Keep existing CI discovery and avoid duplicate test collection when
+sharing discovery code. Refresh generated documentation only with its existing
+generators and keep authored dependency guidance operational, not PR-specific.
+
+The initial capture changed only the four existing planning artifacts and one
+rolling usage entry. The subsequent apply instruction authorized the captured
+implementation. Shared helpers are repository-owned under `scripts/` and the
+existing result/test areas; no
+delivered assistant asset or hub sync is needed. The prior 34 completed tasks
+remain historical evidence. Group 8 records current implementation progress;
+commits, pushes, thread replies/resolution, live operations, sync and archive
+require separate authorization.
 
 ## Risks / Trade-offs
 

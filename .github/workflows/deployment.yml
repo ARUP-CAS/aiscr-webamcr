@@ -124,17 +124,8 @@ jobs:
             if ping -c 1 "$DEPLOYMENT_SERVER"; then break; fi
             sleep 3
           done
-          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
-          shell_quote() {
-            local value="$1"
-            local quote="'"
-            local escaped_quote="'\\''"
-            printf "'%s'" "${value//"$quote"/"$escaped_quote"}"
-          }
-          remote_command="sudo bash -s --"
-          for value in "$GIT_TAG" "$IMAGE_TAG" "$SERVER_ROOT" "$DEP_SCRIPT" "$DEPLOYMENT_SOURCE"; do
-            remote_command+=" $(shell_quote "$value")"
-          done
+          source "$GITHUB_WORKSPACE/scripts/ssh_arguments.sh"
+          remote_command="$(ssh_command "$GIT_TAG" "$IMAGE_TAG" "$SERVER_ROOT" "$DEP_SCRIPT" "$DEPLOYMENT_SOURCE")"
           ssh "amcr@$DEPLOYMENT_SERVER" "$remote_command" <<'EOF'
           set -euo pipefail
           GIT_TAG="$1"

@@ -89,8 +89,11 @@ exec "$PYTHON_TEST_EXE" "$@"
             "if case != 'workbook':\n"
             "    pandas.DataFrame([[42, 'now', 'sample.tests.test_selenium.Test.test_42', 'FAIL' if case == 'test-failure' else 'OK']],\n"
             "                     columns=['index', 'date', 'test name', 'result']).to_excel(directory / 'results.xlsx', index=False)\n"
-            "print('Ran 1 test in 0.001s', file=sys.stderr)\n"
-            "print('\\nFAILED (failures=1)' if case == 'test-failure' else '\\nOK', file=sys.stderr)\n"
+            "total, status = {'mixed-counts': (3, 'OK (skipped=1, expected failures=1)'),\n"
+            "                 'expected-failures': (2, 'OK (expected failures=2)'),\n"
+            "                 'all-skipped': (2, 'OK (skipped=2)')}.get(case, (1, 'FAILED (failures=1)' if case == 'test-failure' else 'OK'))\n"
+            "print(f'Ran {total} tests in 0.001s', file=sys.stderr)\n"
+            "print('\\n' + status, file=sys.stderr)\n"
             "raise SystemExit(1 if case == 'test-failure' else 0)\n",
             encoding="utf-8",
         )
@@ -181,6 +184,12 @@ exec "$PYTHON_TEST_EXE" "$@"
                     "interrupted",
                     "stale",
                     "file-logging",
+                    "mixed-counts",
+                    "expected-failures",
+                    "all-skipped",
+                    "counter-corruption",
+                    "legacy-version",
+                    "mixed-version",
                 )
             ]
             + [("true", "vsechny", case) for case in ("build", "clone", "unhealthy", "timeout")]
@@ -242,7 +251,16 @@ exec "$PYTHON_TEST_EXE" "$@"
                     else (
                         1
                         if case
-                        in ("test-failure", "startup", "migration", "workbook", "unhealthy", "timeout", "unknown")
+                        in (
+                            "test-failure",
+                            "startup",
+                            "migration",
+                            "workbook",
+                            "unhealthy",
+                            "timeout",
+                            "unknown",
+                            "all-skipped",
+                        )
                         else 0
                     )
                 )
@@ -272,13 +290,14 @@ exec "$PYTHON_TEST_EXE" "$@"
                     record = json.loads((directory / "outcome.json").read_text(encoding="utf-8"))
                     expected_state = (
                         "error"
-                        if case in ("startup", "migration", "workbook", "unknown")
+                        if case in ("startup", "migration", "workbook", "unknown", "all-skipped")
                         else ("no-tests" if case == "no-tests" else "completed")
                     )
                     self.assertEqual((record["attempt_id"], record["state"]), (identity, expected_state), details)
                     if expected_state == "error":
                         stage = {
                             "startup": "summary",
+                            "all-skipped": "summary",
                             "migration": "migration",
                             "workbook": "publication",
                             "unknown": "selection",
@@ -295,8 +314,18 @@ exec "$PYTHON_TEST_EXE" "$@"
                     record = json.loads(path.read_text(encoding="utf-8"))
                     record["attempt_id"] = "old-1"
                     path.write_text(json.dumps(record), encoding="utf-8")
+                elif case in ("counter-corruption", "legacy-version", "mixed-version"):
+                    path = directory / "outcome.json"
+                    record = json.loads(path.read_text(encoding="utf-8"))
+                    if case == "counter-corruption":
+                        record["counts"]["total"] = True
+                    else:
+                        record["version"] = 1
+                        if case == "legacy-version":
+                            record.pop("counts")
+                    path.write_text(json.dumps(record), encoding="utf-8")
                 result = self.guarded_shell(self.workflow_script(self.results), **values)
-                successful = case in ("success", "no-tests", "file-logging")
+                successful = case in ("success", "no-tests", "file-logging", "mixed-counts", "expected-failures")
                 self.assertEqual(
                     result.returncode == 0, successful, remote.stdout + remote.stderr + result.stdout + result.stderr
                 )
@@ -310,6 +339,13 @@ exec "$PYTHON_TEST_EXE" "$@"
                 self.assertNotIn("PASSED=99", outputs)
                 if successful:
                     self.assertIn("STATE=no-tests" if case == "no-tests" else "STATE=completed", outputs)
+                if case in ("mixed-counts", "expected-failures"):
+                    self.assertIn("PASSED=1" if case == "mixed-counts" else "PASSED=0", outputs)
+                    self.assertIn("SKIPPED=1" if case == "mixed-counts" else "SKIPPED=0", outputs)
+                    self.assertIn("EXPECTED_FAILURES=1" if case == "mixed-counts" else "EXPECTED_FAILURES=2", outputs)
+                    self.assertIn("FAILED=0", outputs)
+                if case in ("counter-corruption", "legacy-version", "mixed-version", "all-skipped"):
+                    self.assertNotIn("PASSED=", outputs)
                 if case == "test-failure":
                     self.assertNotEqual(remote.returncode, 0)
                     self.assertIn("FAILED=1", outputs)

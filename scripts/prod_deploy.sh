@@ -1,5 +1,6 @@
 #!/bin/bash
 set -eo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/deployment_helpers.sh"
 ###########
 #### SCRIPT: DEPLOYMENT from DOCKERHUB into SWARM
 #### PARAMS: see -h
@@ -29,53 +30,12 @@ ask_continue () {
     done
 }
 
-echo_dec ()
-{
-    echo "---------------------------------------"
-    echo "--> $1"
-    echo "---------------------------------------"
-}
-
-er () {
-    echo_dec "${1}"
-    if eval "${1}"; then ret_val=0; else ret_val=$?; fi
-    echo "....................."
-    echo ">> DONE: ${1} with status: ${ret_val}"
-    return $ret_val
-}
-
-check_create_network () {
-    
-    if docker network inspect ${network_name} > /dev/null 2>&1; then
-       echo_dec "Network ${network_name} already exists"
-    else
-      er "docker network create -d overlay --attachable ${network_name}" || return $?
-      echo_dec "Network ${network_name} created"
-    fi
-}
-
-check_stack_exists ()
-{
-    local stacks name
-    stacks="$(docker stack ls --format '{{.Name}}')" || return 2
-    while IFS= read -r name; do
-        if [[ "$name" == "$stack_name" ]]; then return 0; fi
-    done <<< "$stacks"
-    return 1
-}
-
 run_default ()
 {
    echo_dec "# DEPLOYMENT in SWARM MODE (i.e. host has to be joined or initiated as SWARM NODE) @${start_time}"
 
    #CHECK SWARM ACTIVATED
-   docker node ls
-   status_swarm=$?
-
-   if [ $status_swarm -ne 0 ]; then
-        echo_dec "SWARM not initiated or joined at this HOST. Exiting"
-        exit 1
-   fi
+   require_swarm || return $?
    in_args="${1}"
    
    #DISCLAIMER about DEFAULT CASE triggering

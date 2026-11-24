@@ -65,6 +65,17 @@ outcomes, and deployment readiness.
   result. Reject missing selection input and unknown numbered tests.
 - Check required services and actual health within the target stack, including
   unhealthy, missing, and non-running tasks, before declaring readiness.
+- Guarantee Selenium cleanup after workbook errors and classify each workbook
+  row from that test's own result. Bound attempt history to the latest ten
+  finished attempts and clean up verified inactive interrupted attempts after
+  thirty days, protecting active runs and the previous selection workbook.
+- Report actual passes, skips and expected failures distinctly through matching
+  producer/consumer outcome metadata, retaining the two-key numeric summary.
+  Bound summary reads before allocation, retain deployment precondition
+  diagnostics, and support Bash outside the default Windows Git location.
+- Share the existing SSH quoting and deployment helper implementations, repair
+  deployment-log rotation, remove unused state reads/writes, and serialize DEV
+  tests and deployments without canceling an active shared-host operation.
 - Keep relevant trust rationale and pin-resolution, rollout, and recovery
   instructions on the linked dependency page. Remove PR-specific completion
   wording, special review-date bookkeeping, and the temporary
@@ -104,7 +115,8 @@ None. The repository currently has no durable capability specs.
   `scripts/prod_deploy.sh`, `scripts/start_selenium_tests.sh`, and
   `webclient/run_tests.py`; the test-only output setting and existing Selenium
   spreadsheet writer where needed to separate selection input from new output;
-  repository-owned protocol helpers and focused tests within these areas;
+  Selenium lifecycle/result classification; repository-owned protocol,
+  retention, shell and test helpers and focused tests within these areas;
   the existing `generate-module-docs` pre-commit integration;
   `docs/source/12_zavislosti/github_actions.rst` and its `index.rst` entry;
   the local test instructions in `CONTRIBUTING.md`;
@@ -170,6 +182,32 @@ contracts remain in force. Validate Windows and Linux separately; record any
 hosted CI or CodeQL acceptance still awaiting delivery. Refresh affected
 documentation through its existing generator and keep one usage entry for
 this remediation. The preceding 31 completed tasks describe the earlier scope.
+
+## Round-four review remediation (2026-11-24)
+
+The user approved capture of the [round-four review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6043320852)
+at `09d4d12e1acf64a6c0276f3af3c549bf6c957f9d`. This captures seven findings
+and seven bounded advisory repairs in the same change. Observation O4 is
+recorded as no change: `-a`/`--all` already selects the all-tests default and
+participates in mutual exclusion. The prior CodeQL thread is resolved and
+outdated; it is not reopened. Source attribution, every comment link and task
+mapping are in [design.md](design.md#round-four-review-remediation-2026-11-24).
+
+The confirmed retention policy keeps ten finished attempts, including failed
+attempts, and retains interrupted attempts for thirty days before cleanup,
+which requires verified inactivity. Active attempts and the selection
+workbook remain protected. Explicit skipped/expected-failure accounting must
+work across producer and consumer; correcting one arithmetic expression must
+not accidentally reject an executed expected-failure-only run. Existing
+ordinary zero-execution failure and failed-only no-op behavior remain in force.
+
+The subsequent explicit `openspec-apply-change` invocation authorized the
+captured implementation. Group 8 records its implementation and validation;
+the previous 34 completed tasks remain historical evidence. Capture changed
+only the four existing planning artifacts and one rolling usage entry.
+Implementation uses repository-owned source, fixtures and documentation;
+live cleanup, deployment, posting, delivery, sync and archive retain their
+separate authorization boundaries.
 
 ## Follow-up outside this change
 

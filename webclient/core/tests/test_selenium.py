@@ -423,6 +423,7 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
         else:
             # self.driver = webdriver.Firefox()
             self.driver = webdriver.Chrome(options=options)
+        self.addCleanup(self._quit_driver)
         self.implicit_wait = IMPLICIT_WAIT
         self.driver.implicitly_wait(self.implicit_wait)
         self.wait_interval = 2
@@ -947,7 +948,20 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
             self._js_errors = []
 
     def tearDown(self):
-        """Provádí operaci tearDown."""
+        """Zapíše výsledek a zachová základní úklid i původní chybu zápisu."""
+        try:
+            self._record_test_result()
+        except BaseException:
+            try:
+                super().tearDown()
+            except Exception:
+                logger.error("core.tests.test_selenium.BaseSeleniumTestClass.tearDown.base_cleanup_error")
+            raise
+        else:
+            super().tearDown()
+
+    def _record_test_result(self):
+        """Zaznamená výsledek aktuálního testu bez převzetí chyb předchozích testů."""
         self._collect_js_errors_at_end()
 
         result = self._outcome.result
@@ -997,9 +1011,9 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
         if ok:
             d[index - 1][3] = "OK"
         else:
-            if len(result.errors) > 0:
+            if any(test is self for test, _ in result.errors):
                 d[index - 1][3] = "ERROR"
-            elif len(result.failures) > 0:
+            elif any(test is self for test, _ in result.failures):
                 d[index - 1][3] = "FAIL"
         data = pandas.DataFrame(d)
         data.columns = ["index", "date", "test name", "result"]
@@ -1021,8 +1035,6 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
                 "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.jquery_wait_ignored",
                 extra={"error": exc},
             )
-        self._quit_driver()
-        super().tearDown()
 
     def _quit_driver(self):
         """

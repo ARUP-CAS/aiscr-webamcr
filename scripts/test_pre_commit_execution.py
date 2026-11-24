@@ -40,7 +40,10 @@ class ExecutionTests(unittest.TestCase):
         directory, identity = protocol.create_attempt(self.root, identity)
         if state != "error":
             protocol.write_summary(directory, *counts)
-        protocol.publish_outcome(directory, identity, mode, number, state, code)
+        metadata = dict(total=sum(counts), passed=counts[0], failed=counts[1], skipped=0, expected_failures=0)
+        protocol.publish_outcome(
+            directory, identity, mode, number, state, code, counts=metadata if state == "completed" else None
+        )
         return directory, protocol.load_record(directory, identity, mode, number)
 
     def test_crash_zero_missing_and_inconsistent_results_fail(self):
@@ -59,9 +62,18 @@ class ExecutionTests(unittest.TestCase):
 
     def test_complete_success_failures_and_unexpected_success(self):
         """Úplné souhrny respektují nativní výsledek včetně unexpected successes."""
-        self.assertEqual(runner.parse_result("Ran 3 tests in 1s\n\nOK (skipped=1)\n", 0), (3, 0))
-        self.assertEqual(runner.parse_result("Ran 3 tests in 1s\n\nFAILED (failures=1, errors=1)\n", 1), (1, 2))
-        self.assertEqual(runner.parse_result("Ran 1 test in 1s\n\nFAILED (unexpected successes=1)\n", 1), (0, 1))
+        self.assertEqual(
+            runner.parse_result("Ran 3 tests in 1s\n\nOK (skipped=1)\n", 0),
+            dict(total=3, passed=2, failed=0, skipped=1, expected_failures=0),
+        )
+        self.assertEqual(
+            runner.parse_result("Ran 3 tests in 1s\n\nFAILED (failures=1, errors=1)\n", 1),
+            dict(total=3, passed=1, failed=2, skipped=0, expected_failures=0),
+        )
+        self.assertEqual(
+            runner.parse_result("Ran 1 test in 1s\n\nFAILED (unexpected successes=1)\n", 1),
+            dict(total=1, passed=0, failed=1, skipped=0, expected_failures=0),
+        )
 
     def test_readers_finish_in_console_and_file_modes(self):
         """Dokončení procesu před koncem čtení nezkrátí zachycený výstup."""
@@ -83,7 +95,9 @@ class ExecutionTests(unittest.TestCase):
             )
             with patch.object(runner.subprocess, "Popen", return_value=process), redirect_stdout(io.StringIO()):
                 code, text = runner.execute_tests(["sample.tests.test_one"], self.root, file_mode)
-            self.assertEqual(runner.parse_result(text, code), (1, 0))
+            self.assertEqual(
+                runner.parse_result(text, code), dict(total=1, passed=1, failed=0, skipped=0, expected_failures=0)
+            )
             self.assertEqual((self.root / "test_output.log").read_text(encoding="utf-8"), text)
 
     def test_migration_failure_stops_tests_and_publishes_error(self):
@@ -370,10 +384,27 @@ class ExecutionTests(unittest.TestCase):
         directory, identity = protocol.create_attempt(self.root, "123-1")
         protocol.write_summary(directory, 1, 0)
         with self.assertRaises(ValueError):
-            protocol.publish_outcome(directory, identity, "vsechny", "", "completed", 0, True)
+            protocol.publish_outcome(
+                directory,
+                identity,
+                "vsechny",
+                "",
+                "completed",
+                0,
+                True,
+                counts=dict(total=1, passed=1, failed=0, skipped=0, expected_failures=0),
+            )
         self.assertFalse((directory / "outcome.json").exists())
         with patch.object(protocol.os, "replace", side_effect=OSError("interrupted")), self.assertRaises(OSError):
-            protocol.publish_outcome(directory, identity, "vsechny", "", "completed", 0)
+            protocol.publish_outcome(
+                directory,
+                identity,
+                "vsechny",
+                "",
+                "completed",
+                0,
+                counts=dict(total=1, passed=1, failed=0, skipped=0, expected_failures=0),
+            )
         self.assertFalse((directory / "outcome.json").exists())
         self.assertEqual(list(directory.glob("*.tmp")), [])
 
@@ -391,7 +422,7 @@ class ExecutionTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 protocol.validate_record(candidate, "123-1", "vsechny", "")
         (directory / "outcome.json").write_text(
-            json.dumps(record).replace('"version": 1', '"version": 1, "version": 1'), encoding="utf-8"
+            json.dumps(record).replace('"version": 2', '"version": 2, "version": 2'), encoding="utf-8"
         )
         with self.assertRaises(ValueError):
             protocol.load_record(directory, "123-1", "vsechny", "")
@@ -471,6 +502,107 @@ class ExecutionTests(unittest.TestCase):
             path.write_bytes(raw)
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 protocol.read_summary(path)
+
+    def test_summary_read_is_bounded_before_allocation(self):
+        """Odmítne velký proud po nejvýše 4097 bajtech a přijme přesnou hranici."""
+        stream = io.BytesIO(b"x" * 100000)
+        from unittest.mock import Mock
+
+        stream.read = Mock(wraps=stream.read)
+        path = SimpleNamespace(open=Mock(return_value=stream))
+        with self.assertRaises(ValueError):
+            protocol.read_summary(path)
+        stream.read.assert_called_once_with(4097)
+        path = self.root / "bounded-summary"
+        suffix = b"\nFAILED=0\n"
+        valid = b"PASSED=" + b"0" * (4096 - len(b"PASSED=") - len(suffix)) + suffix
+        path.write_bytes(valid)
+        self.assertEqual(protocol.read_summary(path), (0, 0))
+        path.write_bytes(valid + b"\n")
+        with self.assertRaises(ValueError):
+            protocol.read_summary(path)
+
+    def test_explicit_categories_cross_runner_and_result_consumer(self):
+        """Skips a očekávaná selhání nezvýší PASSED ani nezničí platný zero/zero běh."""
+        from scripts.collect_test_results import report
+
+        for index, (total, details, native, expected) in enumerate(
+            (
+                (5, "OK (skipped=2, expected failures=1)", 0, (2, 0, 2, 1)),
+                (2, "OK (expected failures=2)", 0, (0, 0, 0, 2)),
+                (2, "OK (skipped=2)", 0, None),
+                (1, "FAILED (unexpected successes=1)", 1, (0, 1, 0, 0)),
+            )
+        ):
+            identity = f"categories-{index}"
+            with patch.object(runner, "select_tests", return_value=["sample.tests.one"]), patch.object(
+                runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)
+            ), patch.object(
+                runner, "execute_tests", return_value=(native, f"Ran {total} tests in 0s\n\n{details}\n")
+            ), redirect_stdout(
+                io.StringIO()
+            ), redirect_stderr(
+                io.StringIO()
+            ):
+                code = runner.main(["--results-root", str(self.root), "--attempt-id", identity])
+            directory = self.root / "runs" / identity
+            record = protocol.load_record(directory, identity, "vsechny", "")
+            self.assertEqual(record["version"], 2)
+            outputs, summary = self.root / f"outputs-{index}", self.root / f"summary-{index}"
+            status = report(directory, identity, "vsechny", "", outputs, summary)
+            if expected is None:
+                self.assertEqual((code, status, record["state"]), (1, 1, "error"))
+                self.assertIsNone(record["counts"])
+                self.assertNotIn("PASSED=", outputs.read_text())
+            else:
+                passed, failed, skipped, xfail = expected
+                self.assertEqual((code, status), (native, native))
+                self.assertEqual(
+                    record["counts"],
+                    dict(total=total, passed=passed, failed=failed, skipped=skipped, expected_failures=xfail),
+                )
+                self.assertIn(
+                    f"PASSED={passed}\nFAILED={failed}\nSKIPPED={skipped}\nEXPECTED_FAILURES={xfail}",
+                    outputs.read_text(),
+                )
+
+    def test_counter_consistency_and_legacy_rejection(self):
+        """Neplatné typy, kategorie či stará verze neprojdou do nového výsledku."""
+        directory, record = self.attempt()
+        for key, value in (("total", True), ("passed", -1), ("skipped", False), ("total", 2)):
+            candidate = dict(record, counts=dict(record["counts"], **{key: value}))
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                protocol.validate_record(candidate, "123-1", "vsechny", "")
+        candidate = dict(record, counts=dict(total=2, passed=2, failed=0, skipped=0, expected_failures=0))
+        with self.assertRaises(ValueError):
+            protocol.validate_bundle(directory, candidate)
+        legacy = dict(record, version=1)
+        legacy.pop("counts")
+        path = directory / "outcome.json"
+        path.write_text(json.dumps(legacy), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            protocol.load_record(directory, "123-1", "vsechny", "")
+        owned = protocol.load_record(directory, "123-1", "vsechny", "", allow_legacy=True)
+        self.assertEqual(owned["version"], 1)
+        with self.assertRaises(ValueError):
+            protocol.validate_bundle(directory, owned)
+
+    def test_all_mode_aliases_and_mutual_exclusion_remain_compatible(self):
+        """Bez příznaku i s -a/--all se volí vsechny a konfliktní režimy se odmítnou."""
+        for index, flags in enumerate(([], ["-a"], ["--all"])):
+            with patch.object(runner, "select_tests", return_value=["sample.tests.one"]) as select, patch.object(
+                runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)
+            ), patch.object(runner, "execute_tests", return_value=(0, "Ran 1 test in 0s\n\nOK\n")), redirect_stdout(
+                io.StringIO()
+            ):
+                self.assertEqual(
+                    runner.main(["--results-root", str(self.root), "--attempt-id", f"aliases-{index}", *flags]), 0
+                )
+            self.assertEqual(select.call_args.args[:2], ("vsechny", ""))
+        for flags in (["-a", "-f"], ["--all", "-t", "42"]):
+            with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as error:
+                runner.main(flags)
+            self.assertEqual(error.exception.code, 2)
 
 
 if __name__ == "__main__":

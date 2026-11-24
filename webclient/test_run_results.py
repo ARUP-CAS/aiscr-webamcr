@@ -8,7 +8,19 @@ import uuid
 from pathlib import Path
 
 FILES = {"test_summary.env", "results.xlsx", "test_output.log"}
-FIELDS = {"version", "attempt_id", "mode", "number", "state", "exit_code", "spreadsheet_required", "files", "message"}
+BASE_FIELDS = {
+    "version",
+    "attempt_id",
+    "mode",
+    "number",
+    "state",
+    "exit_code",
+    "spreadsheet_required",
+    "files",
+    "message",
+}
+FIELDS = BASE_FIELDS | {"counts"}
+COUNT_FIELDS = {"total", "passed", "failed", "skipped", "expected_failures"}
 
 
 def validate_identity(identity):
@@ -107,7 +119,8 @@ def read_summary(path):
     :return: Počty testů.
     :raises ValueError: Při neplatném nebo neúplném obsahu.
     """
-    raw = path.read_bytes()
+    with path.open("rb") as stream:
+        raw = stream.read(4097)
     if len(raw) > 4096:
         raise ValueError("Příliš dlouhý souhrn")
     lines = raw.split(b"\n")
@@ -124,22 +137,27 @@ def read_summary(path):
     return counts[b"PASSED"], counts[b"FAILED"]
 
 
-def validate_record(record, identity, mode, number):
+def validate_record(record, identity, mode, number, allow_legacy=False):
     """Ověří schéma a identitu před použitím názvů souborů.
 
     :param record: Deserializovaný záznam.
     :param identity: Očekávaný pokus.
     :param mode: Očekávaný režim.
     :param number: Očekávané číslo.
+    :param allow_legacy: Rozpoznat starý terminální záznam pouze pro retenci.
     :return: Ověřený záznam.
     :raises ValueError: Při nesouladu nebo nepovoleném obsahu.
     """
     validate_identity(identity)
     mode, number = selection(mode, number)
-    if not isinstance(record, dict) or set(record) != FIELDS:
+    if not isinstance(record, dict):
         raise ValueError("Neplatné schéma výsledku")
-    if type(record["version"]) is not int or record["version"] != 1:
+    version = record.get("version")
+    legacy = allow_legacy and type(version) is int and version == 1
+    if type(version) is not int or (version != 2 and not legacy):
         raise ValueError("Neznámá verze výsledku")
+    if set(record) != (BASE_FIELDS if legacy else FIELDS):
+        raise ValueError("Neplatné schéma výsledku")
     if (record["attempt_id"], record["mode"], record["number"]) != (identity, mode, number):
         raise ValueError("Výsledek patří jinému pokusu nebo výběru")
     if record["state"] not in ("completed", "no-tests", "error"):
@@ -165,16 +183,38 @@ def validate_record(record, identity, mode, number):
             mode != "neuspesne" or record["exit_code"] or record["spreadsheet_required"] or "results.xlsx" in files
         ):
             raise ValueError("Neplatný výsledek bez testů")
+    if not legacy:
+        counts = record["counts"]
+        if record["state"] == "error":
+            if counts is not None:
+                raise ValueError("Chyba nesmí vymýšlet počty testů")
+        else:
+            if not isinstance(counts, dict) or set(counts) != COUNT_FIELDS:
+                raise ValueError("Chybí úplné počty testů")
+            if any(type(value) is not int or value < 0 for value in counts.values()):
+                raise ValueError("Neplatné počty testů")
+            if counts["total"] != sum(counts[key] for key in COUNT_FIELDS - {"total"}):
+                raise ValueError("Rozporné kategorie testů")
+            if record["state"] == "no-tests":
+                if any(counts.values()):
+                    raise ValueError("No-op nesmí vykazovat testy")
+            elif (
+                counts["total"] - counts["skipped"] <= 0
+                or record["exit_code"] not in (0, 1)
+                or (record["exit_code"] == 0) != (counts["failed"] == 0)
+            ):
+                raise ValueError("Rozpor provedených testů a procesu")
     return record
 
 
-def load_record(directory, identity, mode, number):
+def load_record(directory, identity, mode, number, allow_legacy=False):
     """Načte JSON s odmítnutím duplicitních klíčů a bez vyhodnocování dat.
 
     :param directory: Adresář staženého pokusu.
     :param identity: Očekávaný pokus.
     :param mode: Očekávaný režim.
     :param number: Očekávané číslo.
+    :param allow_legacy: Rozpoznat starý terminální záznam pouze pro retenci.
     :return: Ověřená metadata.
     """
 
@@ -194,8 +234,12 @@ def load_record(directory, identity, mode, number):
     path = directory / "outcome.json"
     if path.is_symlink() or path.stat().st_size > 16384:
         raise ValueError("Neplatný soubor výsledku")
-    record = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique)
-    return validate_record(record, identity, mode, number)
+    with path.open("rb") as stream:
+        raw = stream.read(16385)
+    if len(raw) > 16384:
+        raise ValueError("Neplatný soubor výsledku")
+    record = json.loads(raw.decode("utf-8"), object_pairs_hook=unique)
+    return validate_record(record, identity, mode, number, allow_legacy=allow_legacy)
 
 
 def validate_bundle(directory, record):
@@ -205,22 +249,29 @@ def validate_bundle(directory, record):
     :param record: Již ověřená metadata.
     :return: Počty testů, pro chybu None.
     """
+    validate_record(record, record["attempt_id"], record["mode"], record["number"])
     for filename, expected in record["files"].items():
         if digest(directory / filename) != expected:
             raise ValueError("Artefakt neodpovídá aktuálnímu výsledku")
     if record["state"] == "error":
         return None
     passed, failed = read_summary(directory / "test_summary.env")
-    if record["state"] == "no-tests":
-        if passed or failed:
-            raise ValueError("No-op nesmí obsahovat provedené testy")
-    elif passed + failed <= 0 or (record["exit_code"] == 0) != (failed == 0):
-        raise ValueError("Rozpor výsledku procesu a čísel testů")
+    if (passed, failed) != (record["counts"]["passed"], record["counts"]["failed"]):
+        raise ValueError("Rozpor souhrnu a kategorií testů")
     return passed, failed
 
 
 def publish_outcome(
-    directory, identity, mode, number, state, exit_code, spreadsheet_required=False, message="", selection_data=None
+    directory,
+    identity,
+    mode,
+    number,
+    state,
+    exit_code,
+    spreadsheet_required=False,
+    message="",
+    selection_data=None,
+    counts=None,
 ):
     """Zveřejní ověřený záznam poslední; stará tabulka se použije jen jako vstup.
 
@@ -233,11 +284,12 @@ def publish_outcome(
     :param spreadsheet_required: Vyžaduje výběr novou tabulku Selenium testů.
     :param message: Diagnostika chyby.
     :param selection_data: Ověřená tabulka pro příští výběr, zveřejněná před záznamem dokončení.
+    :param counts: Úplné kategorie provedených testů; povinné pro completed.
     """
     mode, number = selection(mode, number)
     names = {"test_output.log"} if state == "error" else FILES
     record = dict(
-        version=1,
+        version=2,
         attempt_id=identity,
         mode=mode,
         number=number,
@@ -245,6 +297,7 @@ def publish_outcome(
         exit_code=exit_code,
         spreadsheet_required=spreadsheet_required,
         message=message,
+        counts={key: 0 for key in COUNT_FIELDS} if state == "no-tests" and counts is None else counts,
         files={name: digest(directory / name) for name in sorted(names) if (directory / name).exists()},
     )
     validate_record(record, identity, mode, number)

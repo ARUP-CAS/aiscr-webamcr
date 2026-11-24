@@ -66,7 +66,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.2 <https://github.com/actions/upload-artifact/releases/tag/v7.0.2>`__
      - `cf430e030ddbb5b0abf93d22962f4752f3646cd9 <https://github.com/actions/upload-artifact/tree/cf430e030ddbb5b0abf93d22962f4752f3646cd9>`__
-     - ``.github/workflows/run-tests.yml:221``
+     - ``.github/workflows/run-tests.yml:213``
    * - ``aquasecurity/trivy-action``
      - `aquasecurity <https://github.com/aquasecurity>`__
      - `v0.36.0 <https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0>`__
@@ -194,6 +194,18 @@ jako shell. Konce řádků LF i CRLF a chybějící poslední nový řádek jsou
 podporované; úvodní nuly se odstraní před předáním čísel do dalších kroků.
 Úklid agenta proběhne i při odmítnutí souhrnu.
 
+Souhrn načítá Python modul ``webclient/test_run_results.py`` přes
+``scripts/collect_test_results.py``. Čtení je omezeno na 4097 bajtů a obsah
+delší než 4096 bajtů se odmítne před zpracováním. ``PASSED`` počítá skutečně
+úspěšné testy; přeskočené testy a očekávaná selhání se vykazují samostatně
+jako ``SKIPPED`` a ``EXPECTED_FAILURES``. ``FAILED`` zahrnuje chyby, selhání
+i neočekávané úspěchy. ``outcome.json`` verze 2 obsahuje také celkový počet
+a všechny čtyři kategorie. Ověřují se jejich celočíselné typy, součet, shoda
+se dvěma klíči souhrnu a návratový kód procesu. Běh složený jen z očekávaných
+selhání může uspět s ``PASSED=0`` a ``FAILED=0``; běžný běh se všemi testy
+přeskočenými je chyba. Runner a konzument se nasazují společně; starší ani
+smíšená schémata se jako nový výsledek nepřijímají.
+
 Workflow nasazení předává privátní klíč pouze svému kroku SSH. Agent se v něm
 načte, použije a ukončí pomocí EXIT trapu při úspěchu i chybě načtení klíče
 nebo vzdáleného příkazu. Jeho stav se nepřenáší do dalších kroků a úklid
@@ -205,6 +217,13 @@ a číselný obsah každého zadaného ``test_cislo``; režim ``konkretni`` čí
 vyžaduje. Vstupy i názvy referencí se předávají jako argumenty se samostatným
 uvozením pro vzdálený shell. Tělo vzdáleného testovacího skriptu zůstává
 statické; lokální uvozovky samy neřeší další interpretaci příkazu přes SSH.
+Oba workflow používají společné sestavení argumentů v
+``scripts/ssh_arguments.sh`` z lokálního checkoutu workflow.
+
+Testy na DEV a nasazení na DEV sdílejí concurrency skupinu
+``deploy-<repozitář>-DEV`` s ``cancel-in-progress: false``. Platí to i pro
+testy bez nasazení, které používají stejný stack. Nasazení na TEST má vlastní
+skupinu. GitHub tím nezaručuje FIFO pořadí ani zachování všech čekajících běhů.
 
 Neinteraktivní příkazy nasazení a testování mají uzavřený standardní vstup.
 Nemohou tak přečíst zbytek skriptu předávaného vzdálenému Bash přes stdin.
@@ -232,6 +251,21 @@ kompatibilní vstup pro příští výběr obnoví; selektivní běh neztratí o
 známé testy. Záznam ``outcome.json`` s identitou, režimem, stavem a otisky
 souborů se atomicky zveřejní poslední. Neúplný adresář není hotovým výsledkem.
 
+``webclient/test_run_retention.py`` udržuje deset nejnovějších dokončených
+pokusů včetně chyb a ``no-tests`` podle času záznamu dokončení. Přerušené
+pokusy lze odstranit až po třiceti dnech od poslední aktivity a ověření
+neaktivity. Zámek držený procesem chrání živý pokus při samostatném spuštění
+i v kontejneru; aktuální pokus je chráněn i během závěrečného úklidu.
+Předběžný i závěrečný úklid zasahuje pouze do vlastněných přímých adresářů
+pod ``runs/``. Neznámé vlastnictví, odkazy a junction hranice se zachovají
+s diagnostikou; výběrová tabulka v kořeni ani nesouvisející data se nemažou.
+Terminální záznamy verze 1 slouží při přechodu pouze k retenci. Povinná chyba
+úklidu znamená neúspěch a nepřepisuje původní selhání testů.
+
+Selenium registruje ukončení ovladače ihned po jeho vytvoření. Úklid proběhne
+i po chybě další inicializace nebo čtení či zápisu tabulky a zachová původní
+chybu. Výsledek řádku tabulky vychází z chyb právě zpracovávaného testu.
+
 Workflow stáhne záznam očekávaného pokusu, ověří jeho schéma a teprve potom
 stahuje přesně pojmenované soubory. Před zveřejněním počtů ověří jejich otisky
 a vzájemný soulad. Staré soubory bez identity, jiné pokusy a chybějící či
@@ -247,6 +281,13 @@ přípustná; chyba jeho inspekce není totéž. Chyba volitelné kompakce pamě
 zůstává varováním. Záznam posledního úspěšně nasazeného tagu se změní až po
 úspěchu povinné přípravy a kontroly připravenosti. Automatický rollback se
 tím nezavádí.
+
+``scripts/deployment_helpers.sh`` sdílí kontrolu Swarmu, sítě a stacku,
+propagaci návratových kódů a inicializaci logů obou CI wrapperů. Nalezne se
+vůči umístění vstupního skriptu. Neaktivní Swarm vypíše příčinu před ukončením.
+Rotace odstraňuje pouze přímé soubory ``deployment_*.log`` splňující původní
+pravidlo ``-mtime +5``; aktuální log, novější logy, záznam posledního úspěšného
+tagu a ostatní soubory zůstávají zachovány.
 
 Oba CI nasazovací skripty používají společnou kontrolu připravenosti přes
 Python 3 a jeho standardní knihovnu na nasazovacím hostiteli. Očekávané služby
@@ -264,6 +305,10 @@ oprávnění kopírovaných náhrad příkazů a před lokálním i emulovaným 
 krokem ověřuje jejich skutečný výběr shellem. Chybějící, nespustitelná nebo
 zastíněná náhrada test zastaví; neočekávaný neúspěch jiné fáze není platnou
 negativní kontrolou. Tato cesta se ověřuje také na Linuxu.
+Společné nalezení Bashe v ``scripts/test_shell_utils.py`` dává ve Windows
+přednost interpretu vedle nalezené instalace Gitu a jinak používá ``PATH``;
+spouštěč WSL se za Bash pro tyto fixture nepovažuje. Chybějící interpret
+ukončí test s výslovnou diagnostikou.
 Skutečný kontrolní běh potřebuje
 samostatné schválení cíle a operace. Pro regresi zvolte ``nasadit_verzi: false``,
 platné ``test_mod`` a předem dohodnutý test (v režimu ``konkretni`` i odpovídající

@@ -2272,7 +2272,7 @@ def generate_project_scripts_index_rst(toctree_entries: List[str], output_dir: P
     index_file = output_dir / "index.rst"
 
     index_content = """Projektové skripty
-=================
+==================
 
 Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``scripts/``.
 

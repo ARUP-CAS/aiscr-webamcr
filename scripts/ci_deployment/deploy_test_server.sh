@@ -1,13 +1,8 @@
 #!/bin/bash
 set -eo pipefail
 
-print_d1 () {
-    echo "----------------"
-    echo "${1}" | tee -a ${logfilepath}
-    echo "----------------"
+source "$(dirname "${BASH_SOURCE[0]}")/../deployment_helpers.sh"
 
-}
-print_d1 "Start script deploy_test_server.sh"
 stack_name="swarm_webamcr"
 
 current_deployment_tag="test"
@@ -29,16 +24,8 @@ echo "${deployment_root}"
 echo "${ref}"
 echo "${ref_type}"
 
-d_stamp="$(date +%Y%m%dT%H%M%S)"
-logpath="${deployment_root}/logs"
-scriptpath="${deployment_root}/scripts"
-logfile="deployment_${d_stamp}.log"
-logfilepath="${logpath}/${logfile}"
-path_last_tag="${logpath}/last_deployment_tag.txt"
-last_deployment_tag=$(cat "${path_last_tag}" 2>/dev/null || true)
-
-mkdir -p "$logpath"
-find "$logpath" -name "$logfile" -type f -mtime +5 -exec rm -f {} \;
+init_deployment_log "$deployment_root"
+print_d1 "Start script deploy_test_server.sh"
 
 print_d1 "Update repository..."
 
@@ -101,7 +88,6 @@ else
     echo "WARNING: memory compaction failed"
 fi
 
-print_d1 "PUTTING TAG ${current_deployment_tag} as LAST into ${path_last_tag}"
-echo "${current_deployment_tag}" > ${path_last_tag}
+record_deployment_success
 
 print_d1 "EXITING"

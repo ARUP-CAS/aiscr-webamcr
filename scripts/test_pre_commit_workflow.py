@@ -7,8 +7,13 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import yaml
+
+from scripts import test_shell_utils
+from scripts.test_shell_utils import bash_executable
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = yaml.load((ROOT / ".github/workflows/pre_commit.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
@@ -16,17 +21,37 @@ JOB = WORKFLOW["jobs"]["pre-commit"]
 STEPS = {step.get("id", step["name"]): step for step in JOB["steps"]}
 
 
-def bash_executable():
-    """Ve Windows upřednostní Git Bash před případným spouštěčem WSL v PATH.
+class BashDiscoveryTests(unittest.TestCase):
+    """Nalezení interpretu funguje i mimo výchozí instalaci Gitu."""
 
-    :return: Cesta k Bash použitelnému pro testy nebo ``None``, pokud Bash není dostupný.
-    """
-    if os.name == "nt":
-        git = shutil.which("git")
-        candidate = Path(git).resolve().parents[1] / "bin/bash.exe" if git else Path("missing")
-        if candidate.is_file():
-            return str(candidate)
-    return shutil.which("bash")
+    def test_git_relative_fallback_unavailable_and_linux(self):
+        """Ověří alternativní Git, PATH, odmítnutí WSL a běžný linuxový Bash."""
+        with tempfile.TemporaryDirectory(dir=os.environ.get("TEST_TEMP_ROOT")) as directory:
+            git_root = Path(directory) / "Portable Git"
+            git = git_root / "cmd/git.exe"
+            bash = git_root / "bin/bash.exe"
+            git.parent.mkdir(parents=True)
+            bash.parent.mkdir()
+            git.touch()
+            bash.touch()
+            with patch.object(test_shell_utils, "os", SimpleNamespace(name="nt")), patch.object(
+                test_shell_utils.shutil,
+                "which",
+                side_effect=lambda name: str(git) if name == "git" else "fallback-bash",
+            ):
+                self.assertEqual(bash_executable(), str(bash.resolve()))
+                bash.unlink()
+                self.assertEqual(bash_executable(), "fallback-bash")
+        for platform, fallback, expected in (
+            ("nt", None, None),
+            ("nt", r"C:\Windows\System32\bash.exe", None),
+            ("nt", r"C:\Windows\Sysnative\bash.exe", None),
+            ("posix", "/bin/bash", "/bin/bash"),
+        ):
+            with patch.object(test_shell_utils, "os", SimpleNamespace(name=platform)), patch.object(
+                test_shell_utils.shutil, "which", side_effect=lambda name: fallback if name == "bash" else None
+            ):
+                self.assertEqual(bash_executable(), expected)
 
 
 class WorkflowTests(unittest.TestCase):

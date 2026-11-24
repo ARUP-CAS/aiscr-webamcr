@@ -176,11 +176,12 @@ deployment-source selection, and test modes SHALL retain their behavior.
 
 ### Requirement: Remote test summaries are read as data
 
-The DEV result step SHALL read downloaded summaries without executing their
-contents. It SHALL require exactly one `PASSED` and one `FAILED` assignment
-with nonnegative decimal counts, emit canonical numeric outputs, and reject
-other content. It SHALL validate the complete file before publishing either
-outputs or the report, fail on invalid input, and preserve agent cleanup.
+The DEV result step SHALL parse summaries without execution, requiring exactly
+one nonnegative decimal `PASSED` and `FAILED` value and rejecting other content.
+It SHALL validate the whole summary before publishing canonical outputs or a
+report, fail on invalid input, and preserve agent cleanup. Raw reads SHALL be
+bounded before allocation, rejecting summaries larger than 4096 bytes after
+reading at most 4097 bytes.
 
 #### Scenario: Valid result summaries preserve reporting
 
@@ -208,6 +209,13 @@ outputs or the report, fail on invalid input, and preserve agent cleanup.
 - **WHEN** validation fails
 - **THEN** the unconditional cleanup step still stops the agent
 - **AND** the result step remains failed
+
+#### Scenario: A numeric summary exceeds the input limit
+
+- **GIVEN** a downloaded summary contains more than 4096 bytes
+- **WHEN** the consumer reads the summary
+- **THEN** it reads at most 4097 bytes before rejecting the input
+- **AND** it publishes no partial counts or passing report
 
 ### Requirement: Deployment cannot consume subsequent test commands
 
@@ -291,6 +299,42 @@ without reusing earlier output as a successful new result.
 - **WHEN** selection is attempted
 - **THEN** the attempt fails with a diagnostic outcome and cannot report a successful no-op or stale results
 
+### Requirement: Attempt artifact retention is bounded and contained
+
+Retention SHALL keep the ten newest eligible finished attempts and preserve
+interrupted attempts for thirty days since last activity. Deletion SHALL
+require verified inactivity and ownership inside the results root. Active
+attempts, the selection workbook, unrelated/external data and uncertain
+ownership SHALL be protected. Cleanup errors SHALL remain visible without
+widening deletion scope or masking execution failure.
+
+#### Scenario: More than ten finished attempts exist
+
+- **GIVEN** more than ten eligible finished attempts with successful and unsuccessful terminal outcomes
+- **WHEN** normal, failed, no-op or standalone execution performs retention
+- **THEN** the ten newest finished attempts remain and older eligible attempts are pruned deterministically
+- **AND** the active/current attempt and the root-level selection workbook remain intact
+
+#### Scenario: An interrupted attempt reaches thirty days
+
+- **GIVEN** interrupted attempts without terminal outcomes whose last activity is younger than thirty days or at least thirty days old
+- **WHEN** retention checks their age and ownership
+- **THEN** younger attempts remain and the older attempt is eligible for cleanup only when inactivity is verified
+
+#### Scenario: An old attempt is active or its ownership is uncertain
+
+- **GIVEN** an attempt is active or its inactivity cannot be established, even though its evidence is more than thirty days old
+- **WHEN** retention evaluates it
+- **THEN** its evidence remains protected and uncertainty is reported
+- **AND** age or a PID from another process namespace alone does not authorize deletion
+
+#### Scenario: A retention candidate crosses the results boundary
+
+- **GIVEN** unrelated files or a symbolic link or reparse point that resolves outside the owned attempt directory set
+- **WHEN** retention examines candidates
+- **THEN** no external target, unrelated file or selection workbook is removed
+- **AND** cleanup failure does not silently broaden the candidate set
+
 ### Requirement: Required operation failures reach the workflow
 
 Required build, deployment, database-clone, and test failures SHALL propagate
@@ -352,6 +396,77 @@ only successful zero-execution outcome.
 - **THEN** its counts and outcome reflect both fully captured streams, the complete summary, and the actual process result
 - **AND** a failing process remains unsuccessful even if parsed failure counts are zero
 
+### Requirement: Selenium resources survive test-output failures safely
+
+Selenium driver ownership SHALL register cleanup immediately after successful
+driver creation. Setup and teardown failures SHALL NOT bypass driver cleanup;
+workbook errors SHALL still propagate and applicable base teardown SHALL run.
+Normal completion SHALL NOT introduce duplicate driver shutdown.
+
+#### Scenario: Writing test results fails during teardown
+
+- **GIVEN** a local or remote Selenium driver exists and workbook reading or writing raises an exception
+- **WHEN** teardown completes unsuccessfully
+- **THEN** driver cleanup and applicable base teardown still execute
+- **AND** the original output failure remains visible rather than being swallowed
+
+#### Scenario: Driver setup fails after creation or finishes normally
+
+- **GIVEN** a driver has been created and a later setup step fails, or the test completes normally
+- **WHEN** the registered cleanup runs
+- **THEN** the created session is released on both paths
+- **AND** normal completion does not quit the same driver twice
+
+### Requirement: Workbook result classification belongs to the current test
+
+Each workbook row SHALL classify the current test from that test's membership
+in result errors or failures. Results accumulated for other tests SHALL NOT
+change the current row's classification.
+
+#### Scenario: Earlier tests have different outcomes
+
+- **GIVEN** an earlier test errored or failed and the current test passes, fails an assertion or errors
+- **WHEN** the current workbook row is written
+- **THEN** it records OK, FAIL or ERROR according to the current test's own outcome
+- **AND** a previous error does not turn a later assertion failure into ERROR
+
+### Requirement: Published counts distinguish actual passes from other outcomes
+
+PASSED SHALL exclude skips and expected failures. FAILED SHALL include
+unexpected failures, errors and unexpected successes. Skips and expected
+failures SHALL be reported separately. Versioned metadata SHALL reconcile
+total/category counts, actual execution, the two-key summary and process
+result before publication. Unsupported versions and invalid or conflicting
+counters SHALL fail closed. CLI selection SHALL remain compatible.
+
+#### Scenario: Completed tests include skips and expected failures
+
+- **GIVEN** a complete current run includes successful tests, skips, expected failures and unexpected failures
+- **WHEN** the producer and consumer derive and validate published counts
+- **THEN** actual passes, unexpected failures, skips and expected failures are reported separately
+- **AND** complete category counts reconcile with the total, numeric summary and native process result
+
+#### Scenario: Only expected failures execute
+
+- **GIVEN** tests execute and all produce expected failures with a successful native process result
+- **WHEN** the current outcome is validated
+- **THEN** it can complete successfully with zero PASSED and zero FAILED and an explicit positive expected-failure count
+- **AND** the consumer does not reject that valid executed result merely because the numeric summary is zero/zero
+
+#### Scenario: Every selected test is skipped
+
+- **GIVEN** an ordinary selected run executes no test bodies because every test is skipped
+- **WHEN** the runner determines its outcome
+- **THEN** it remains unsuccessful under the zero-execution contract
+- **AND** it does not impersonate the valid failed-only selection no-op
+
+#### Scenario: Counter metadata cannot establish a current consistent result
+
+- **GIVEN** an outcome has unsupported or mixed versions, missing counters, booleans, negative or contradictory values, or counts that disagree with the summary or process result
+- **WHEN** the consumer validates the current bundle
+- **THEN** it fails before publishing results
+- **AND** it does not fall back to the previous version's potentially inflated pass count
+
 ### Requirement: Readiness verifies the required target stack
 
 Deployment readiness SHALL verify required services, running tasks, and
@@ -379,6 +494,87 @@ SHALL propagate to the caller.
 - **WHEN** readiness is evaluated
 - **THEN** unrelated containers do not affect the result and declared inactive or completed jobs do not create false failures
 - **AND** required active target-stack services still satisfy their own task and health checks
+
+### Requirement: Deployment maintenance preserves diagnostics and history
+
+Entry points SHALL emit the Swarm precondition diagnostic and stop dependent
+work on failure. Rotation SHALL delete only eligible old owned deployment
+logs under the existing age policy, protecting the current log and unrelated
+files. The last-success record SHALL remain and advance only after required
+preparation and readiness. Removing unused reads SHALL NOT remove that
+record or introduce rollback.
+
+#### Scenario: The Swarm precondition fails under fail-fast shell options
+
+- **GIVEN** `docker node ls` fails and the entry point enables fail-fast shell execution
+- **WHEN** the deployment precondition is evaluated
+- **THEN** the explicit operator diagnostic is emitted and the operation exits unsuccessfully
+- **AND** dependent build, pull or deployment operations do not run
+
+#### Scenario: Old deployment logs and a prior success record exist
+
+- **GIVEN** old and recent owned deployment logs, the current log, unrelated files and a prior successful-deployment record
+- **WHEN** rotation and a successful or failed deployment execute
+- **THEN** only eligible old deployment logs are removed, while current/recent logs and unrelated files remain
+- **AND** the success record advances only on deployment success, even after unused state reads are removed
+
+### Requirement: Shared automation helpers preserve caller contracts
+
+The repeated SSH quoting and remote argument construction SHALL use one
+repository-owned implementation in both SSH workflow steps. The repeated
+deployment command, network/stack and wrapper log/tag behavior SHALL use
+shared repository-owned helpers in their existing callers. Helper resolution
+and delivery SHALL include the required dependency closure and preserve safe
+argument transport, stdin detachment, failure propagation, agent cleanup and
+successful-deployment bookkeeping.
+
+#### Scenario: Both SSH workflows use shared quoting behavior
+
+- **GIVEN** both SSH callers use the shared helper with valid references or malicious-looking argument values
+- **WHEN** their actual local and remote shell boundaries execute in isolated fixtures
+- **THEN** both callers use the same production quoting implementation and preserve literal arguments without executing payloads
+- **AND** existing key scope, cleanup, static remote bodies and valid selections remain intact
+
+#### Scenario: Standalone deployment and CI wrappers use shared helpers
+
+- **GIVEN** both deployment entry points and both CI wrappers resolve their shared helpers from their checked-out repository or entry-point location
+- **WHEN** required commands fail or preparation succeeds in isolated fixtures
+- **THEN** the actual shared helper code supplies consistent failure, diagnostic, rotation and bookkeeping behavior
+- **AND** fixtures include the helper dependency closure without selecting real deployment commands
+
+### Requirement: DEV tests and deployments serialize shared mutations
+
+The test workflow and DEV deployment workflow SHALL use the same concurrency
+group with active cancellation disabled because they share a checkout and
+stack. Deployment-disabled test runs SHALL retain that protection. TEST
+deployment SHALL use an independent concurrency group.
+
+#### Scenario: DEV testing overlaps a DEV deployment request
+
+- **GIVEN** a DEV test run, with or without deployment enabled, and a DEV deployment request
+- **WHEN** their workflow concurrency settings are evaluated
+- **THEN** both target one DEV group with `cancel-in-progress: false`
+- **AND** an active shared-host operation is not canceled by the other workflow
+
+#### Scenario: TEST deployment is requested independently
+
+- **GIVEN** deployment targets TEST while DEV testing or deployment is active
+- **WHEN** concurrency groups are evaluated
+- **THEN** TEST selects a group distinct from the shared DEV group
+
+### Requirement: Regression shells support alternate Git installations
+
+Shell regression fixtures SHALL discover a usable Bash from the Git
+installation and existing PATH fallback rather than assume the default Windows
+Git directory. Unavailable-shell diagnostics SHALL be explicit, and sharing
+discovery code SHALL NOT duplicate test collection.
+
+#### Scenario: Windows Git is installed outside the default directory
+
+- **GIVEN** Git uses a non-default Windows installation directory, only a usable PATH fallback is available, or no suitable Bash exists
+- **WHEN** shell fixtures resolve their interpreter
+- **THEN** they choose the available appropriate Bash or fail with an explicit diagnostic
+- **AND** existing CI discovery executes each regression once
 
 ### Requirement: Dependabot preserves pin maintenance
 
