@@ -6,6 +6,11 @@ app_name = "arch_z"
 
 urlpatterns = [
     path("akce/detail/<str:ident_cely>", views.ArcheologickyZaznamDetailView.as_view(), name="detail"),
+    path(
+        "externi-odkazy-tabulka/<str:ident_cely>",
+        views.ExterniOdkazyTableView.as_view(),
+        name="externi_odkazy_tabulka",
+    ),
     path("akce/detail/<str:ident_cely>/dj/zapsat", views.DokumentacniJednotkaCreateView.as_view(), name="create-dj"),
     path(
         "akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>",

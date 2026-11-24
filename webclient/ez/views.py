@@ -211,12 +211,12 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
             ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE)
             .select_related("archeologicky_zaznam")
             .select_related("archeologicky_zaznam__akce")
-        ).order_by("archeologicky_zaznam__ident_cely")
+        ).order_by("archeologicky_zaznam__ident_cely", "id")
         ez_lokality = (
             ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
             .select_related("archeologicky_zaznam")
             .select_related("archeologicky_zaznam__lokalita")
-        ).order_by("archeologicky_zaznam__ident_cely")
+        ).order_by("archeologicky_zaznam__ident_cely", "id")
         context["form"] = ExterniZdrojForm(instance=zaznam, readonly=True, required=False)
         context["zaznam"] = zaznam
         context["app"] = "ext_zdroj"
@@ -1325,13 +1325,13 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
                 ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE)
                 .select_related("archeologicky_zaznam")
                 .select_related("archeologicky_zaznam__akce")
-            ).order_by("archeologicky_zaznam__ident_cely")
+            ).order_by("archeologicky_zaznam__ident_cely", "id")
         elif card_type == "lokalita":
             zaznamy = (
                 ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
                 .select_related("archeologicky_zaznam")
                 .select_related("archeologicky_zaznam__lokalita")
-            ).order_by("archeologicky_zaznam__ident_cely")
+            ).order_by("archeologicky_zaznam__ident_cely", "id")
         context = {
             "zaznamy": zaznamy,
             "card_type": card_type,
@@ -1343,4 +1343,4 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
             },
             "zaznam": zaznam,
         }
-        return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context))
+        return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context, request=request))

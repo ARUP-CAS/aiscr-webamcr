@@ -34,7 +34,8 @@
       </div>
       <div class="card-body content-with-table-responsive">
         {% if soubory %}
-          {% include "core/filetable.html" with next_url='/pas/detail/' ident=sn.ident_cely allow_replace=True vazba_trida="pas" %}
+          {% url 'pas:soubory_tabulka' sn.ident_cely as soubory_tabulka_url %}
+          {% include "core/filetable.html" with next_url='/pas/detail/' ident=sn.ident_cely allow_replace=True vazba_trida="pas" radky_url=soubory_tabulka_url %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>

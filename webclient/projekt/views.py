@@ -76,7 +76,7 @@ from core.message_constants import (
 )
 from core.models import Permissions
 from core.models import Permissions as p
-from core.models import Soubor, check_permissions
+from core.models import check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_heatmap_project,
@@ -88,7 +88,7 @@ from core.utils import (
     get_timezone,
     hodnota_pro_log,
 )
-from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, SouboryTableView, check_stav_changed
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
@@ -192,23 +192,14 @@ def detail(request, ident_cely):
         qs = perm_object.check_filter_permission(qs, p.actionChoices.projekt_pas_zobrazit)
         context["samostatne_nalezy"] = qs
 
-    akce = (
-        Akce.objects.filter(projekt=projekt)
-        .select_related("archeologicky_zaznam__pristupnost", "hlavni_typ")
-        .order_by("archeologicky_zaznam__ident_cely")
-    )
+    akce = projekt.get_akce()
     dokumenty = (
         Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
         .select_related("soubory")
         .prefetch_related("soubory__soubory")
     ).order_by("ident_cely")
     context["akce"] = akce
-    soubory = (
-        projekt.soubory.soubory.select_related("historie")
-        .prefetch_related(Soubor.distribution_history_prefetch())
-        .order_by("nazev")
-    )
-    context["soubory"] = soubory
+    context["soubory"] = projekt.get_soubory()
     context["dalsi_katastry"] = projekt.katastry.all()
     context["history_dates"] = get_history_dates(projekt.historie, request.user)
     context["show"] = get_detail_template_shows(projekt, request.user)
@@ -219,7 +210,57 @@ def detail(request, ident_cely):
     return render(request, "projekt/detail.html", context)
 
 
-# @csrf_exempt
+class ProjektSouboryTableView(SouboryTableView):
+    """Vrací samotnou tabulku souborů projektu (odpovídá ``projekt/detail.html``)."""
+
+    model = Projekt
+    vazba_trida = "projekt"
+    next_url = "/projekt/detail/"
+    allow_replace = False
+
+    def get_soubory(self, zaznam):
+        """
+        Vrátí soubory projektu ve stejném pořadí jako detail projektu.
+
+        :param zaznam: Projekt, jehož soubory se zobrazují.
+        :return: Queryset souborů z ``Projekt.get_soubory()``.
+        """
+        return zaznam.get_soubory()
+
+    def get_show(self, zaznam, user):
+        """
+        Vrátí příznaky zobrazení z ``get_detail_template_shows()`` projektu.
+
+        :param zaznam: Projekt, jehož soubory se zobrazují.
+        :param user: Přihlášený uživatel.
+        :return: Slovník příznaků zobrazení.
+        """
+        return get_detail_template_shows(zaznam, user)
+
+
+@method_decorator(never_cache, name="dispatch")
+class ProjektAkceTableView(LoginRequiredMixin, View):
+    """
+    Vrací samotnou tabulku akcí projektu pro tlačítko „Načíst zbývající záznamy“.
+
+    Kontext odpovídá ``include`` v kartě akcí v ``projekt/detail.html``; ta nepředává příznaky
+    ``show.paginace`` ani ``show.odpojit``, proto je nepředává ani tento pohled.
+    Přístup hlídá ``PermissionMiddleware`` podle stejných pravidel jako detail projektu.
+    """
+
+    def get(self, request, ident_cely):
+        """
+        Vykreslí tabulku akcí projektu.
+
+        :param request: HTTP požadavek s parametrem ``SOUVISEJICI_RADKY_PARAM``.
+        :param ident_cely: Identifikátor projektu.
+        :return: ``HttpResponse`` s HTML tabulky akcí.
+        """
+        projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+        context = {"zaznamy": projekt.get_akce(), "type": "arch_z", "card_type": "akce"}
+        return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context, request=request))
+
+
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_projects_limit(request):
