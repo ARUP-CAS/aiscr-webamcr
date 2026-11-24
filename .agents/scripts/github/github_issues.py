@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 # SPDX-License-Identifier: MIT
-# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
+# delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
 
 """Gather, verify, and write governed GitHub issue bodies.
 
@@ -335,6 +335,25 @@ def _render_provenance(
         ).rstrip()
         + "\n"
     )
+
+
+_PROVENANCE_SOURCE_LINE = re.compile(r"^- Source: (https://\S+)$", re.MULTILINE)
+
+
+def _relink_provenance_header(comment: str) -> str:
+    """Give an engine-written header's bare source permalink its visible identity.
+
+    The header is engine metadata, not reporter text: a record written before source links carried a label would
+    otherwise fail the reference check on every later round. Only the header before the original region is touched;
+    the verbatim original stays byte-identical.
+    """
+    split = comment.find(PROVENANCE_ORIGINAL_OPEN)
+    if split < 0:
+        return comment
+    header = _PROVENANCE_SOURCE_LINE.sub(
+        lambda match: f"- Source: {github_references.reference_link(match.group(1))}", comment[:split]
+    )
+    return header + comment[split:]
 
 
 def _description_edit_sources(previous: str, current: str) -> list[tuple[str, str]]:
@@ -1208,7 +1227,7 @@ def _prepare_post_body(
             "method": "PATCH",
             "payload": {
                 "body": github_utils.replace_after_region(
-                    str(provenance.get("body") or ""),
+                    _relink_provenance_header(str(provenance.get("body") or "")),
                     PROVENANCE_ORIGINAL_CLOSE,
                     github_utils.render_disposition_ledger(
                         ledger or {},
@@ -1216,6 +1235,7 @@ def _prepare_post_body(
                         repository=owner_repo
                         if github_references.check_references(_provenance_original(provenance))
                         else "",
+                        anchor_repository=owner_repo,
                     ),
                 )
             },

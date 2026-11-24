@@ -425,7 +425,9 @@ Funkce
 
    * od :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS` dnů – ``dlouho_bez_dat``, tedy
      „něco je špatně, ověřte URL“; zameškané dny jsou pořád ke stažení,
-   * od :data:`RUIAN_RETENCE_ZDROJE_DNU` dnů – ``mimo_retenci_zdroje``:
+   * jakmile první zameškaný den vypadne z retence zdroje
+     (:func:`~heslar.ruian_sync.vfr_download.kotva_mimo_retenci`, stejné
+     pravidlo jako u ``--valid-to`` plného synchu) – ``mimo_retenci_zdroje``:
      soubory už ze serveru zmizely, denní sync mezeru nedožene a operátor
      musí spustit plný sync ``manage.py aktualizuj_ruian_shp``.
 
@@ -514,13 +516,18 @@ Funkce
 
    Načte a uloží novinkový kanál do cache.
 
-   Tato úloha je volána při startu aplikace a periodicky v intervalu
-   definovaném v settings (cache_ttl - 60 sekund).
+   Úloha se spouští při startu aplikace, po změně konfigurace a podle plánu
+   Celery Beat. Spravovaný interval vychází z cache_ttl - 60 sekund, vlastní
+   plán může mít přednost. Před načítáním se pokusí sladit plán; chyba sladění
+   nezabrání samotnému načítání.
 
+   HTTP přesměrování se nenásledují a odpovědi 3xx jsou považovány za chybu.
    Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
 
    :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
        použije se seznam z nastavení aplikace.
+   :return: ``True``, pokud zpracování skončilo bez vyžádání opakování úlohy;
+       výsledek nepotvrzuje zveřejnění dat vyřazených kvůli změně konfigurace.
 
 .. py:function:: run_news_feed_warmup()
 

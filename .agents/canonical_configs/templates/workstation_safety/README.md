@@ -1,6 +1,6 @@
 <!-- SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 # workstation_safety – user-level safety templates
 
@@ -13,7 +13,7 @@ Templates carry only evidence-backed safety settings: a vendor gets a template h
 - **`setup_workstation_assistant_safety.py`** – merges each registered template into its user-home destination; the target list, governed units and reconciliation policies live in `workspace_safety_registry.py` (keeps bootstrap doctor checks aligned).
   Codex uses the current top-level `sandbox_mode`; an existing legacy `[sandbox].mode` is migrated and `[windows].sandbox` is preserved (the merge prints an advisory for the native Windows `elevated` sandbox but never changes it).
 
-Workflow: [`aiscr-setup-workstation-safety.md`](../../workflows/aiscr-setup-workstation-safety.md).
+Workflow: [`aiscr-setup-workstation-safety`](../../../skills/aiscr-setup-workstation-safety/SKILL.md).
 Workspace-boundary governance: `AGENTS.md`, `.agents/canonical_configs/governance_rules/aiscr-workspace-boundary-safety.md`.
 
 ## Files in this directory

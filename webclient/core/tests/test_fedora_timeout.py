@@ -26,7 +26,12 @@ from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 from uzivatel.models import User
 
-TIMEOUTY = {"FEDORA_CONNECT_TIMEOUT": 10.0, "FEDORA_READ_TIMEOUT": 300.0, "FEDORA_CONTENT_READ_TIMEOUT": 600.0}
+TIMEOUTY = {
+    "FEDORA_CONNECT_TIMEOUT": 10.0,
+    "FEDORA_READ_TIMEOUT": 300.0,
+    "FEDORA_GET_READ_TIMEOUT": 60.0,
+    "FEDORA_CONTENT_READ_TIMEOUT": 600.0,
+}
 URL = "http://fcrepo:8080/rest/AMCR/record/X-M-000023036"
 
 
@@ -53,10 +58,21 @@ class SendRequestTimeoutTest(SimpleTestCase):
         session, _ = self._send(FedoraRequestType.UPDATE_METADATA, **{"put.return_value.status_code": 204})
         self.assertEqual(session.put.call_args.kwargs["timeout"], (10.0, 300.0))
 
-    def test_get_ma_vychozi_timeout(self):
-        """GET dostane výchozí timeout."""
+    def test_get_v_transakci_ma_vychozi_timeout(self):
+        """GET v transakci může čekat na zámek jako zápis, dostane proto výchozí timeout."""
         session, _ = self._send(FedoraRequestType.GET_METADATA, **{"get.return_value.status_code": 200})
         self.assertEqual(session.get.call_args.kwargs["timeout"], (10.0, 300.0))
+
+    def test_get_mimo_transakci_ma_kratky_timeout(self):
+        """
+        GET mimo transakci (náhled, stažení) dostane ``FEDORA_GET_READ_TIMEOUT``, aby zaseknutá
+        Fedora nedržela worker 300 s za každý náhled na stránce.
+        """
+        connector = FedoraRepositoryConnector(mock.Mock(ident_cely="X-M-000023036"))
+        session = mock.Mock(**{"get.return_value.status_code": 200})
+        with mock.patch.object(connector, "_get_session", return_value=session):
+            connector._send_request(URL, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB)
+        self.assertEqual(session.get.call_args.kwargs["timeout"], (10.0, 60.0))
 
     def test_obsah_souboru_ma_dlouhy_timeout(self):
         """

@@ -8,7 +8,7 @@
 # every operator retains direct access to these commands.
 # Command-shape evidence: argument vectors as observed in the Codex probe and
 # the shell-wrapper splitting rules in the vendor rules documentation.
-# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
+# delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
 
 prefix_rule(
     pattern = ["git", "push", ["--force", "--force-with-lease", "-f"]],

@@ -296,7 +296,25 @@
         newsContent.style.maxHeight = maxHeight + "px";
       };
 
+      const recalculateAfterImageLoad = function () {
+        window.requestAnimationFrame(function () {
+          updateToggleVisibility();
+          if (newsContent.classList.contains("is-collapsed")) {
+            updateCollapsedHeight();
+          } else if (newsContent.classList.contains("is-expanded")) {
+            newsContent.style.maxHeight = newsContent.scrollHeight + "px";
+          }
+        });
+      };
+
       updateToggleVisibility();
+
+      newsContent.querySelectorAll(".news-item-html img").forEach(function (image) {
+        image.addEventListener("load", recalculateAfterImageLoad);
+        if (image.complete && image.naturalWidth > 0) {
+          recalculateAfterImageLoad();
+        }
+      });
 
       newsToggle.addEventListener("click", function () {
         if (newsContent.classList.contains("is-collapsed")) {

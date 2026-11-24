@@ -277,8 +277,8 @@ Třídy
               chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
       :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
       :raises FedoraNoResponseError: Vyvolá se, pokud se požadavek nepodaří odeslat
-              nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, u obsahu souborů
-              ``FEDORA_CONTENT_READ_TIMEOUT``).
+              nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, mimo transakci
+              u GET ``FEDORA_GET_READ_TIMEOUT``, u obsahu souborů ``FEDORA_CONTENT_READ_TIMEOUT``).
 
    .. py:method:: _create_container()
 
@@ -1178,10 +1178,12 @@ Funkce
    :param admin: ``True`` pro identitu ``FEDORA_ADMIN_USER``, jinak ``FEDORA_USER``.
    :return: Session příslušná aktuálnímu vláknu a identitě.
 
-.. py:function:: _get_fedora_timeout(content)
+.. py:function:: _get_fedora_timeout(content, read_only)
 
    Vrátí timeout ``(connect, read)`` pro požadavek do Fedory.
 
    :param content: ``True`` pro přenos obsahu binárního souboru nebo commit transakce,
-       kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``; jinak ``FEDORA_READ_TIMEOUT``.
+       kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``.
+   :param read_only: ``True`` pro GET mimo transakci (čtení pro zobrazení nebo stažení),
+       kde se použije kratší ``FEDORA_GET_READ_TIMEOUT``. Jinak platí ``FEDORA_READ_TIMEOUT``.
    :return: Dvojice ``(connect, read)`` v sekundách pro parametr ``timeout`` knihovny ``requests``.

@@ -10,7 +10,7 @@ author: AIS CR (Archaeological Information System of the Czech Republic) <https:
 <!-- SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- aiscr:compiled=aiscr-setup-workstation-safety -->
-<!-- delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00 -->
+<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
 
 <!-- aiscr:entry-scope -->
 
@@ -55,7 +55,7 @@ A union-merged deny list keeps entries the merge stops carrying, so deny-entry p
 The script prints an optional manual Cursor Workspace Trust hint at the end of a run; Workspace Trust is a manual editor setting the port does not write.
 
 Templates are validated with JSON Schema and Codex structure checks **before** any write.
-The script [`.agents/scripts/setup_workstation_assistant_safety.py`](../../../.agents/scripts/setup_workstation_assistant_safety.py) may install missing Python packages from pinned [`requirements-ci.txt`](../../../requirements-ci.txt) lines via [`.agents/scripts/lib/requirements_subset_install.py`](../../../.agents/scripts/lib/requirements_subset_install.py); prefer the repo **`.venv`** when running.
+The script [`.agents/scripts/setup_workstation_assistant_safety.py`](../../../.agents/scripts/setup_workstation_assistant_safety.py) may install missing Python packages from the bundled [`.agents/scripts/lib/workstation_safety_requirements.txt`](../../../.agents/scripts/lib/workstation_safety_requirements.txt) pins via [`.agents/scripts/lib/requirements_subset_install.py`](../../../.agents/scripts/lib/requirements_subset_install.py); prefer the repo **`.venv`** when running.
 
 Typical use is **maintainer or local workstation** alignment with canonical templates, not day-to-day edits inside application repositories (webapps, APIs, data tools, vocab repos).
 Those repos may still copy the same script or templates via governance bootstrap or sync workflows when explicitly chosen.
@@ -88,7 +88,7 @@ Those repos may still copy the same script or templates via governance bootstrap
 
 - **Paths affected (on apply):** every user-home destination registered in `workspace_safety_registry.py`, or paths under `--target-dir` for isolated testing.
 - **Repositories:** Source templates and script live in **aiscr-management** (or equivalent checkout); it does **not** mutate sibling AIS CR repositories.
-- **Dependencies:** Optional `pip install` of subset packages (e.g. `jsonschema`, `tomli-w`) per `requirements-ci.txt` on missing imports.
+- **Dependencies:** Optional `pip install` of subset packages (e.g. `jsonschema`, `tomli-w`) from the bundled `.agents/scripts/lib/workstation_safety_requirements.txt` pins on missing imports.
 - **Risks:** An incorrect target directory or skipped dry-run can overwrite home config; mitigated by the operator-run apply after dry-run review, with the deny floor keeping the governed session out of the write path.
 - **Governance files:** Executing this workflow does not by itself require edits to `.cursor/rules/**` or `AGENTS.md`; treat any such changes as a separate task unless explicitly in scope.
 
@@ -239,6 +239,7 @@ The enrollment bundle installs these repository-local runtime scripts:
 - `.agents/scripts/lib/__init__.py`
 - `.agents/scripts/lib/workspace_safety_registry.py`
 - `.agents/scripts/lib/requirements_subset_install.py`
+- `.agents/scripts/lib/workstation_safety_requirements.txt`
 - `.agents/scripts/lib/repo_layout.py`
 - `.agents/scripts/lib/log_utils.py`
 - `.agents/scripts/lib/proc_utils.py`
