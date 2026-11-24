@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import urljoin
@@ -45,6 +45,33 @@ logger = logging.getLogger(__name__)
 #: Pevná varianta VFR souborů, kterou AMČR používá – kompletní sada
 #: s originálními hranicemi katastrů (ne generalizovanými).
 _VARIANT = "ZKSH"
+
+#: Jak dlouho ČÚZK drží denní změnové soubory ke stažení. Změřeno 8. 9. 2026
+#: proti ``https://vdp.cuzk.gov.cz/vymenny_format/soucasna/``: ``-92 dní``
+#: ještě vrací HTTP 200, ``-93 dní`` už 404 – tedy klouzavé okno 3 měsíců.
+#:
+#: Po překročení téhle hranice přestává platit záruka, na které stojí zotavení
+#: z výpadku (nepotvrzené dny se po opravě URL stáhnou znovu): zameškané dny
+#: na serveru prostě nejsou. Denní sync už mezeru nedožene a jediná cesta zpět
+#: je plný sync ze SHP. Hranici vyhodnocuje :func:`kotva_mimo_retenci`.
+RUIAN_RETENCE_ZDROJE_DNU = 92
+
+
+def kotva_mimo_retenci(kotva: date, dnes: date) -> bool:
+    """
+    Zjistí, jestli denní sync po kotvě ještě naváže, nebo už první den ČÚZK nenabízí.
+
+    Denní sync pokračuje dnem po kotvě (``data_valid_to + 1``). Když je změnový
+    soubor toho dne starší než :data:`RUIAN_RETENCE_ZDROJE_DNU`, na serveru už
+    není a kotva se nikdy neposune. Jediné místo s tímto pravidlem – používá
+    ho hlídač stáří dat v cronu i kontrola ``--valid-to`` plného synchu.
+
+    :param kotva: Kotva ``RuianSyncRun.data_valid_to``.
+    :param dnes: Dnešní datum.
+    :return: ``True``, když první potřebný změnový soubor leží mimo retenci.
+    """
+    return (dnes - (kotva + timedelta(days=1))).days > RUIAN_RETENCE_ZDROJE_DNU
+
 
 #: Default chunk size pro streamované stahování (8 MB).
 _DEFAULT_CHUNK_SIZE = 8 * 1024 * 1024

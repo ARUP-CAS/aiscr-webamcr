@@ -13,9 +13,11 @@ zápis do Fedory přes ``transaction.on_commit()``, který se v ``TestCase``
 nespouští, takže se při testech do repozitáře nesahá.
 """
 
+import contextlib
 import datetime
 import logging
 import os
+import shutil
 import tempfile
 import threading
 import time
@@ -26,13 +28,14 @@ from unittest import mock
 from core.utils import reprezentativni_bod_sql
 from cron import tasks
 from django.apps import apps as django_apps
-from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point, Polygon
 from django.db import connection, transaction
 from django.test import SimpleTestCase, TestCase, override_settings
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres, RuianSyncRun
 from heslar.ruian_sync import reassign as reassign_mod
 from heslar.ruian_sync import souhrn_varovani, syncer
 from heslar.ruian_sync.provider import (
+    EVENT_DELETE,
     EVENT_UPSERT,
     LEVEL_KATASTR,
     LEVEL_KRAJ,
@@ -46,6 +49,7 @@ from heslar.ruian_sync.vfr_parser import (
     RuianMissingMandatoryFieldError,
     _lezi_uvnitr,
     _neznamy_geometricky_prvek,
+    _parse_katastr_dto,
     _preved_vnorene_casti_na_diry,
 )
 from lxml import etree
@@ -175,6 +179,88 @@ class NeznamyGeometrickyPrvekTests(SimpleTestCase):
         self.assertIsNone(_neznamy_geometricky_prvek(self._hranice("")))
 
 
+class HraniceKatastruDtoTests(SimpleTestCase):
+    """
+    Testy rozlišení chybějící a odmítnuté hranice katastru v parseru.
+
+    Katastr, který ve změnovém VFR přijde **bez hranice**, se může smazat jako
+    zrušený. Hranice, kterou parser odmítl (nepodporovaný GML), je vada
+    exportu a ke smazání vést nesmí – musí se proto dát odlišit.
+    """
+
+    @staticmethod
+    def _dto(geometrie):
+        """
+        Naparsuje ``KatastralniUzemi`` s předaným obsahem elementu ``Geometrie``.
+
+        :param geometrie: Obsah ``Geometrie``, nebo ``None`` pro prvek bez ní.
+        :return: :class:`RuianKatastrDTO`.
+        """
+        vnitrek = "" if geometrie is None else f"<Geometrie>{geometrie}</Geometrie>"
+        elem = etree.fromstring(
+            f'<KatastralniUzemi xmlns:gml="{GML}"><Kod>798762</Kod><Nazev>Nové Petrovice</Nazev>'
+            f"{vnitrek}</KatastralniUzemi>"
+        )
+        return _parse_katastr_dto(elem, obec_okres_map={})
+
+    def test_chybejici_hranice(self):
+        """Prvek bez ``Geometrie`` (Nové Petrovice 4. 11. 2026) – hranice chybí, ne odmítnutá."""
+        dto = self._dto(None)
+
+        self.assertIsNone(dto.hranice_wkt)
+        self.assertFalse(dto.hranice_odmitnuta)
+
+    def test_odmitnuta_hranice(self):
+        """Nepodporovaný GML prvek v ``OriginalniHranice`` → hranice odmítnutá."""
+        dto = self._dto(
+            "<OriginalniHranice><gml:MultiSurface><gml:surfaceMember><gml:Polygon><gml:exterior>"
+            "<gml:LinearRing><gml:Bezier>0 0</gml:Bezier></gml:LinearRing>"
+            "</gml:exterior></gml:Polygon></gml:surfaceMember></gml:MultiSurface></OriginalniHranice>"
+        )
+
+        self.assertIsNone(dto.hranice_wkt)
+        self.assertTrue(dto.hranice_odmitnuta)
+
+    def test_platna_hranice(self):
+        """Čitelná hranice se převede a odmítnutá není."""
+        dto = self._dto(
+            "<OriginalniHranice><gml:MultiSurface><gml:surfaceMember><gml:Polygon><gml:exterior>"
+            "<gml:LinearRing><gml:posList>-700000 -1100000 -699000 -1100000 -699000 -1099000 "
+            "-700000 -1100000</gml:posList></gml:LinearRing>"
+            "</gml:exterior></gml:Polygon></gml:surfaceMember></gml:MultiSurface></OriginalniHranice>"
+        )
+
+        self.assertTrue(dto.hranice_wkt)
+        self.assertFalse(dto.hranice_odmitnuta)
+
+    def test_komentar_v_souboru_parser_neshodi(self):
+        """
+        XML komentář uvnitř katastru parser přeskočí, místo aby shodil celý den.
+
+        ``tag`` komentáře není jméno prvku a ``etree.QName`` nad ním spadne.
+        """
+        from heslar.ruian_sync.vfr_parser import parse_changes
+
+        adresar = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, adresar, ignore_errors=True)
+        cesta = Path(adresar) / "20261104_ST_ZKSH.xml"
+        cesta.write_text(
+            f'<?xml version="1.0" encoding="UTF-8"?><VymennyFormat xmlns:gml="{GML}"><Data>'
+            "<KatastralniUzemi><KatastralniUzemi><!-- komentář --><Kod>798762</Kod>"
+            "<Nazev>Nové Petrovice</Nazev><?pi data?><Geometrie><OriginalniHranice><!-- hranice -->"
+            "<gml:MultiSurface><gml:surfaceMember><gml:Polygon><gml:exterior><gml:LinearRing>"
+            "<gml:posList>-700000 -1100000 -699000 -1100000 -699000 -1099000 -700000 -1100000</gml:posList>"
+            "</gml:LinearRing></gml:exterior></gml:Polygon></gml:surfaceMember></gml:MultiSurface>"
+            "</OriginalniHranice></Geometrie></KatastralniUzemi></KatastralniUzemi></Data></VymennyFormat>",
+            encoding="utf-8",
+        )
+
+        udalosti = list(parse_changes(cesta))
+
+        self.assertEqual([ev.kod for ev in udalosti], [798762])
+        self.assertTrue(udalosti[0].payload.hranice_wkt)
+
+
 class PopisZmenyKatastruTests(SimpleTestCase):
     """
     Testy skládání poznámky do historie bez zásahu do databáze.
@@ -213,18 +299,26 @@ def _vytvor_ruian_data(pocet_katastru, *, prefix=900000):
     :param prefix: Základ číselné řady kódů, ať nekolidují s reálnými daty.
     :return: Trojice ``(kraj, okres, seznam katastrů)``.
     """
-    kraj = RuianKraj.objects.create(
-        nazev=f"Testovací kraj {prefix}",
-        kod=prefix,
-        rada_id="T",
-        nazev_en=f"Test region {prefix}",
+    (kraj,) = RuianKraj.objects.bulk_create(
+        [
+            RuianKraj(
+                nazev=f"Testovací kraj {prefix}",
+                kod=prefix,
+                rada_id="T",
+                nazev_en=f"Test region {prefix}",
+            )
+        ]
     )
-    okres = RuianOkres.objects.create(
-        nazev=f"Testovací okres {prefix}",
-        kraj=kraj,
-        spz=f"T{(prefix // 1000) % 100:02d}",
-        kod=prefix + 1,
-        nazev_en=f"Test district {prefix}",
+    (okres,) = RuianOkres.objects.bulk_create(
+        [
+            RuianOkres(
+                nazev=f"Testovací okres {prefix}",
+                kraj=kraj,
+                spz=f"T{(prefix // 1000) % 100:02d}",
+                kod=prefix + 1,
+                nazev_en=f"Test district {prefix}",
+            )
+        ]
     )
     katastry = []
     for i in range(pocet_katastru):
@@ -750,8 +844,12 @@ class StariPoslednichDatTests(TestCase):
         self.assertIn("dlouho_bez_dat", self._hlaska(tasks.RUIAN_NO_DOWNLOAD_ERROR_DAYS + 1))
 
     def test_tesne_pred_retenci_stale_jen_varovani(self):
-        """Den před hranicí retence se ještě dá spolehnout na denní sync."""
-        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU - 1)
+        """
+        Dokud je první zameškaný den (kotva + 1) v retenci, denní sync ho ještě dožene.
+
+        Kotva stará 93 dnů → první den starý 92 dnů, ČÚZK ho ještě nabízí.
+        """
+        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU + 1)
 
         self.assertIn("dlouho_bez_dat", hlasky)
         self.assertNotIn("mimo_retenci_zdroje", hlasky)
@@ -763,7 +861,7 @@ class StariPoslednichDatTests(TestCase):
         Rada „ověřte URL“ by tu byla zavádějící, proto ji nahradí výzva
         ke spuštění plného syncu.
         """
-        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU)
+        hlasky = self._hlaska(tasks.RUIAN_RETENCE_ZDROJE_DNU + 2)
 
         self.assertIn("mimo_retenci_zdroje", hlasky)
         self.assertNotIn("dlouho_bez_dat", hlasky)
@@ -2003,6 +2101,10 @@ class ReprezentativniBodTests(SimpleTestCase):
         self.assertEqual(vyraz.count("dp.pian_geom"), 5)
 
 
+#: Funkce příkazu ``aktualizuj_ruian_shp`` vracející dnešní datum (nahrazuje se v testech).
+_DNES_PRIKAZU = "heslar.management.commands.aktualizuj_ruian_shp._dnes"
+
+
 class DatumSnapshotuTests(SimpleTestCase):
     """
     Testy křížové kontroly ``--valid-to`` proti názvu ÚZSZ souboru (N10).
@@ -2014,9 +2116,160 @@ class DatumSnapshotuTests(SimpleTestCase):
 
     def setUp(self):
         """Připraví instanci příkazu bez spouštění."""
+        import io
+
         from heslar.management.commands.aktualizuj_ruian_shp import Command
 
-        self.command = Command()
+        self.vystup = io.StringIO()
+        self.command = Command(stdout=self.vystup)
+        # Pevné „dnes“ kousek po datech v testech, ať je retence změnových
+        # souborů nevyřadí s plynoucím časem. Testy retence si ho přenastaví.
+        self.dnes = datetime.date(2026, 9, 1)
+        patcher = mock.patch(_DNES_PRIKAZU, return_value=self.dnes)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _shp_zip(self, *casy):
+        """
+        Vytvoří dočasný ``1.zip`` s vrstvami vygenerovanými v daných časech.
+
+        :param casy: Časy souborů ``.shp`` jako n-tice ``(rok, mesic, den, hod, min, s)``.
+        :return: Cesta k archivu (smaže se po testu).
+        """
+        from pathlib import Path
+
+        adresar = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, adresar, ignore_errors=True)
+        cesta = Path(adresar) / "1.zip"
+        with zipfile.ZipFile(cesta, "w") as zf:
+            zf.writestr(zipfile.ZipInfo("1/", date_time=max(casy)), "")
+            for poradi, cas in enumerate(casy):
+                zf.writestr(zipfile.ZipInfo(f"1/VRSTVA{poradi}_P.shp", date_time=cas), b"x")
+                zf.writestr(zipfile.ZipInfo(f"1/VRSTVA{poradi}_P.dbf", date_time=(2030, 1, 1, 0, 0, 0)), b"x")
+        return cesta
+
+    def test_datum_vygenerovani_z_nejstarsi_vrstvy(self):
+        """Datum SHP se bere z nejstarší vrstvy ``.shp``, ne z adresáře ani ``.dbf``."""
+        # Vrstvy z různých dnů (generování přes půlnoc) a nejstarší až druhá
+        # v pořadí – projde jen ``min``, ne ``max`` ani první vrstva.
+        cesta = self._shp_zip((2026, 11, 11, 0, 2, 6), (2026, 11, 10, 23, 58, 14))
+
+        self.assertEqual(self.command._datum_vygenerovani_shp(cesta), datetime.date(2026, 11, 10))
+
+    def test_valid_to_pozdejsi_nez_shp_se_odmitne(self):
+        """
+        Kotva ke dni vygenerování SHP (nebo později) se odmítne.
+
+        Na testu kotva 12. 10. nad SHP vygenerovaným 12. 10. přeskočila
+        změnový soubor z 12. 10. a sousední katastry se pak překrývaly.
+        """
+        from pathlib import Path
+
+        from django.core.management.base import CommandError
+
+        cesta = self._shp_zip((2026, 8, 13, 20, 27, 14))
+        with self.assertRaises(CommandError) as chyceno:
+            self.command._zkontroluj_valid_to(cesta, Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 8, 13))
+
+        self.assertIn("nejvýš 2026-08-12", str(chyceno.exception))
+
+    def test_valid_to_den_pred_vygenerovanim_projde(self):
+        """Den před vygenerováním SHP je nejpozdější přípustná kotva."""
+        from pathlib import Path
+
+        cesta = self._shp_zip((2026, 8, 13, 20, 27, 14))
+        self.command._zkontroluj_valid_to(cesta, Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 8, 12))
+
+    def test_adresar_jen_upozorni(self):
+        """U rozbaleného adresáře datum zjistit nejde – jen upozornění, ne chyba."""
+        from pathlib import Path
+
+        self.command._zkontroluj_valid_to(
+            Path(tempfile.gettempdir()), Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 8, 12)
+        )
+
+        self.assertIn("nejde zjistit datum vygenerování SHP", self.vystup.getvalue())
+
+    def test_bez_valid_to_se_kotva_odvodi_z_archivu(self):
+        """Bez ``--valid-to`` je kotvou den před vygenerováním ``1.zip``."""
+        cesta = self._shp_zip((2026, 10, 12, 20, 27, 6), (2026, 10, 12, 20, 31, 14))
+
+        with mock.patch(_DNES_PRIKAZU, return_value=datetime.date(2026, 10, 13)):
+            self.assertEqual(self.command._urci_valid_to(cesta, None), datetime.date(2026, 10, 11))
+        self.assertIn("kotva bude 2026-10-11", self.vystup.getvalue())
+
+    def test_bez_valid_to_kotva_mimo_retenci_se_odmitne(self):
+        """
+        Odvozená kotva, po které by denní sync navazoval souborem mimo retenci ČÚZK, se odmítne.
+
+        Typicky přebalený archiv se starými časy souborů – cron by dny po
+        takové kotvě už nestáhl a kotva by se nikdy neposunula. Prvním
+        potřebným souborem je den vygenerování archivu; ČÚZK drží soubory
+        staré 92 dnů, 93 dnů už ne.
+        """
+        from django.core.management.base import CommandError
+
+        vygenerovano = datetime.date(2026, 10, 12)
+        cesta = self._shp_zip((2026, 10, 12, 20, 27, 6))
+
+        for stari in (91, 92):
+            with self.subTest(stari=stari), mock.patch(
+                _DNES_PRIKAZU, return_value=vygenerovano + datetime.timedelta(days=stari)
+            ):
+                self.assertEqual(self.command._urci_valid_to(cesta, None), datetime.date(2026, 10, 11))
+        with mock.patch(_DNES_PRIKAZU, return_value=vygenerovano + datetime.timedelta(days=93)), self.assertRaises(
+            CommandError
+        ) as chyceno:
+            self.command._urci_valid_to(cesta, None)
+
+        self.assertIn("mimo retenci", str(chyceno.exception))
+
+    def test_rucni_valid_to_mimo_retenci_se_odmitne(self):
+        """
+        I ručně zadaná kotva mimo retenci změnových souborů se odmítne – u ZIP i u adresáře.
+
+        Plný sync ze starého archivu se starou kotvou by jinak kotvu vrátil do
+        dnů, které ČÚZK už nenabízí, a denní sync by nenavázal.
+        """
+        from django.core.management.base import CommandError
+
+        uzsz = Path("/d/20260731_ST_UZSZ.xml.zip")
+        adresar = Path(tempfile.gettempdir())
+        with mock.patch(_DNES_PRIKAZU, return_value=datetime.date(2026, 11, 20)):
+            # Kotva 19. 8. → první den 20. 8. je starý 92 dnů, ČÚZK ho ještě nabízí.
+            self.command._zkontroluj_valid_to(adresar, uzsz, datetime.date(2026, 8, 19))
+            # Kotva 18. 8. → první den 19. 8. je starý 93 dnů, už není.
+            for shp in (self._shp_zip((2026, 8, 20, 20, 27, 14)), adresar):
+                with self.subTest(shp=shp), self.assertRaises(CommandError) as chyceno:
+                    self.command._zkontroluj_valid_to(shp, uzsz, datetime.date(2026, 8, 18))
+                self.assertIn("mimo retenci", str(chyceno.exception))
+
+    def test_zadane_valid_to_ma_prednost(self):
+        """Ručně zadaná kotva se použije, i když by šla odvodit (ověří ji až kontrola)."""
+        cesta = self._shp_zip((2026, 10, 12, 20, 27, 6))
+
+        self.assertEqual(self.command._urci_valid_to(cesta, "2026-10-01"), datetime.date(2026, 10, 1))
+
+    def test_bez_valid_to_u_adresare_se_odmitne(self):
+        """U rozbaleného adresáře datum odvodit nejde, ``--valid-to`` je pak povinné."""
+        from pathlib import Path
+
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError) as chyceno:
+            self.command._urci_valid_to(Path(tempfile.gettempdir()), None)
+
+        self.assertIn("zadejte proto --valid-to", str(chyceno.exception))
+
+    def test_neplatny_format_valid_to_se_odmitne(self):
+        """Hodnota mimo ``YYYY-MM-DD`` se odmítne."""
+        from django.core.management.base import CommandError
+
+        cesta = self._shp_zip((2026, 10, 12, 20, 27, 6))
+        # Prázdná hodnota (např. nenastavená proměnná shellu) se nebere jako nezadaná.
+        for hodnota in ("12.10.2026", ""):
+            with self.subTest(hodnota=hodnota), self.assertRaises(CommandError):
+                self.command._urci_valid_to(cesta, hodnota)
 
     def test_datum_se_vycte_z_nazvu(self):
         """Očekávaný tvar ``YYYYMMDD_ST_UZSZ.xml.zip``."""
@@ -2044,9 +2297,9 @@ class DatumSnapshotuTests(SimpleTestCase):
 
         from django.core.management.base import CommandError
 
-        zitra = datetime.date.today() + datetime.timedelta(days=1)
+        zitra = self.dnes + datetime.timedelta(days=1)
         with self.assertRaises(CommandError) as chyceno:
-            self.command._zkontroluj_valid_to(Path("/d/20260731_ST_UZSZ.xml.zip"), zitra)
+            self.command._zkontroluj_valid_to(Path("/d/neni_zip"), Path("/d/20260731_ST_UZSZ.xml.zip"), zitra)
 
         self.assertIn("leží v budoucnosti", str(chyceno.exception))
 
@@ -2056,17 +2309,22 @@ class DatumSnapshotuTests(SimpleTestCase):
 
         Polygony nese nedatované ``1.zip`` (stejná URL vrací aktuální stav),
         zatímco ÚZSZ s definičními body vychází řidčeji – kombinace ÚZSZ
-        z 31. 7. a dat platných k 13. 8. je tedy správná.
+        z 31. 7. a dat platných k 13. 8. je tedy správná. Kontrolu proti
+        datu SHP tu nahrazuje cesta, která není ZIP.
         """
         from pathlib import Path
 
-        self.command._zkontroluj_valid_to(Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 8, 13))
+        self.command._zkontroluj_valid_to(
+            Path("/d/neni_zip"), Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 8, 13)
+        )
 
     def test_shodne_valid_to_projde(self):
         """Datum shodné s vydáním ÚZSZ je také správné použití."""
         from pathlib import Path
 
-        self.command._zkontroluj_valid_to(Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 7, 31))
+        self.command._zkontroluj_valid_to(
+            Path("/d/neni_zip"), Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 7, 31)
+        )
 
 
 class PollingProtokolTests(SimpleTestCase):
@@ -2118,6 +2376,489 @@ class PollingProtokolTests(SimpleTestCase):
         from heslar.views import ContinueKatastrProcessing as C
 
         self.assertEqual(C.job_expirace, 6 * 60 * 60)
+
+
+@_BEZ_CACHEOPS
+class KatastrBezHraniceTests(TestCase):
+    """
+    Testy katastru, který přišel ve změnovém VFR bez hranice.
+
+    Při sloučení Nových Petrovic do Okříšek (rozhodnutí 7. 10. 2026) poslal
+    ČÚZK 4. 11. Okříškám novou hranici s celým územím a Nové Petrovice bez
+    hranice; formální zánik přijde až později. Ponechaná stará hranice dělala
+    překryv 28 ha a chybné přiřazení AZ.
+
+    Zápis varování a uložení běhu se nahrazují, aby test nezávisel na
+    sloupci ``warnings`` v testovací databázi.
+    """
+
+    STRANA = 1000.0
+    # Mimo území ČR: pokrytí se počítá ze všech katastrů v DB a testovací
+    # databáze může obsahovat reálná data, která by čtverce překrývala.
+    X0 = -300000.0
+    Y0 = -1500000.0
+    RUSENY = 960101
+    NASTUPCE = 960102
+
+    def setUp(self):
+        """Založí okres a rušený katastr (čtverec 1 × 1 km)."""
+        _, self.okres, _ = _vytvor_ruian_data(0, prefix=960000)
+        self.run = RuianSyncRun(mode=RuianSyncRun.MODE_DELTA, data_valid_to=datetime.date(2026, 11, 4))
+        self.varovani = []
+        self._katastr(self.RUSENY, self.X0, self.X0 + self.STRANA)
+
+    def _katastr(self, kod, x0, x1):
+        """
+        Uloží obdélníkový katastr přes ``bulk_create`` (bez Fedory).
+
+        :param kod: Kód katastru.
+        :param x0: Levá souřadnice X.
+        :param x1: Pravá souřadnice X.
+        """
+        y0, y1 = self.Y0, self.Y0 + self.STRANA
+        ctverec = Polygon(((x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)), srid=5514)
+        RuianKatastr.objects.bulk_create(
+            [
+                RuianKatastr(
+                    okres=self.okres,
+                    nazev=f"Testovací KÚ {kod}",
+                    kod=kod,
+                    definicni_bod=Point((x0 + x1) / 2, (y0 + y1) / 2, srid=5514),
+                    hranice=MultiPolygon(ctverec, srid=5514),
+                )
+            ]
+        )
+
+    def _udalost(self, kod, hranice_wkt=None, *, hranice_odmitnuta=False):
+        """
+        Sestaví upsert událost katastru.
+
+        :param kod: Kód katastru.
+        :param hranice_wkt: Hranice ve WKT, nebo ``None`` (přišel bez hranice).
+        :param hranice_odmitnuta: Hranice přišla, ale parser ji odmítl.
+        :return: Instance :class:`RuianChangeEvent`.
+        """
+        return RuianChangeEvent(
+            level=LEVEL_KATASTR,
+            event_type=EVENT_UPSERT,
+            kod=kod,
+            payload=RuianKatastrDTO(
+                kod=kod,
+                nazev=f"Testovací KÚ {kod}",
+                okres_kod=self.okres.kod,
+                hranice_wkt=hranice_wkt,
+                hranice_odmitnuta=hranice_odmitnuta,
+            ),
+        )
+
+    def _apply(self, udalosti):
+        """
+        Spustí ``_apply_changes`` s náhradou mazání a kontrol (bez Fedory).
+
+        :param udalosti: Události změnového souboru.
+        :return: Kódy katastrů, které by se smazaly.
+        """
+        smazane = []
+
+        def smaz(katastr, run):
+            smazane.append(katastr.kod)
+            return True
+
+        with self._patche(), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology"
+        ), mock.patch.object(syncer, "_soucet_plochy_katastru", return_value=None), mock.patch.object(self.run, "save"):
+            syncer._apply_changes(udalosti, self.run)
+        return smazane
+
+    def test_odmitnuta_hranice_katastr_nemaze(self):
+        """
+        Hranice, kterou parser odmítl, nevede ke smazání ani při úplném pokrytí.
+
+        Jde běžným upsertem, který stávající hranici ponechá – stejně jako
+        před zavedením rušení katastrů bez hranice.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+
+        smazane = self._apply([self._udalost(self.RUSENY, hranice_odmitnuta=True)])
+
+        self.assertEqual(smazane, [])
+        self.upsert.assert_called_once()
+        self.assertTrue(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
+
+    def test_soused_s_odmitnutou_hranici_pokryti_nepodlozi(self):
+        """
+        Soused, jehož novou hranici parser odmítl, se do pokrytí nezapočítá.
+
+        V DB mu zůstala stará hranice – o tom, jestli území rušeného katastru
+        opravdu převzal, nic neříká. Katastr bez hranice se proto nesmaže.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+
+        smazane = self._apply([self._udalost(self.RUSENY), self._udalost(self.NASTUPCE, hranice_odmitnuta=True)])
+
+        self.assertEqual(smazane, [])
+        self.assertIn("hranice ponechána", self.varovani[0])
+
+    def test_soused_s_hranici_odmitnutou_geos_pokryti_nepodlozi(self):
+        """
+        Soused, jehož WKT parser přijal, ale GEOS odmítl, se do pokrytí nezapočítá.
+
+        Běží skutečný ``_upsert_katastr``: GEOS nečitelné WKT odmítne, sousedovi
+        zůstane stará hranice a upsert ho označí jako odmítnutý. Katastr bez
+        hranice se proto nesmaže.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        stara_hranice = RuianKatastr.objects.get(kod=self.NASTUPCE).hranice
+        smazane = []
+
+        def smaz(katastr, run):
+            smazane.append(katastr.kod)
+            return True
+
+        with mock.patch.object(
+            syncer, "_append_run_warning", lambda run, text: self.varovani.append(text)
+        ), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology"
+        ), mock.patch.object(
+            syncer, "_soucet_plochy_katastru", return_value=None
+        ), mock.patch.object(
+            self.run, "save"
+        ):
+            syncer._apply_changes(
+                [self._udalost(self.RUSENY), self._udalost(self.NASTUPCE, "MULTIPOLYGON (((nečitelné)))")], self.run
+            )
+
+        self.assertEqual(smazane, [])
+        self.assertIn("hranice ponechána", self.varovani[0])
+        self.assertTrue(RuianKatastr.objects.get(kod=self.NASTUPCE).hranice.equals(stara_hranice))
+
+    def test_mazany_soused_pokryti_nepodlozi(self):
+        """
+        Katastr, který tentýž soubor maže, se do pokrytí nezapočítá.
+
+        Po fázi mazání jeho území nikdo nepokrývá – zrušení katastru bez
+        hranice by tím nebylo podložené.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        smazani_nastupce = RuianChangeEvent(
+            level=LEVEL_KATASTR, event_type=EVENT_DELETE, kod=self.NASTUPCE, payload=None
+        )
+
+        smazane = self._apply([self._udalost(self.RUSENY), smazani_nastupce])
+
+        self.assertEqual(smazane, [self.NASTUPCE])
+        self.assertIn("hranice ponechána", self.varovani[0])
+
+    def _patche(self):
+        """
+        Nahradí zápis varování (sbírá text) a upsert katastru (bez Fedory).
+
+        :return: Kontextový manažer s oběma patchi.
+        """
+        stack = contextlib.ExitStack()
+        stack.enter_context(
+            mock.patch.object(syncer, "_append_run_warning", lambda run, text: self.varovani.append(text))
+        )
+        self.upsert = stack.enter_context(mock.patch.object(syncer, "_upsert_katastr", return_value=(False, False)))
+        return stack
+
+    def test_uzemi_prevzal_soused_katastr_se_rusi(self):
+        """Nástupce pokrývající celé území rušeného katastru → katastr ke smazání."""
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+
+        with self._patche():
+            zrusit = syncer._vyhodnot_katastry_bez_hranice([self._udalost(self.RUSENY)], self.run)
+
+        self.assertEqual(zrusit, [self.RUSENY])
+        self.assertIn("bere se jako zrušený", self.varovani[0])
+        self.upsert.assert_not_called()
+
+    def test_bez_pokryti_se_hranice_ponecha(self):
+        """Soused území nepokrývá → hranice zůstane, atributy se uloží, varování."""
+        self._katastr(self.NASTUPCE, self.X0 + self.STRANA, self.X0 + 2 * self.STRANA)
+
+        with self._patche():
+            zrusit = syncer._vyhodnot_katastry_bez_hranice([self._udalost(self.RUSENY)], self.run)
+
+        self.assertEqual(zrusit, [])
+        self.assertIn("hranice ponechána", self.varovani[0])
+        self.upsert.assert_called_once()
+
+    def test_bez_sousedu_se_hranice_ponecha(self):
+        """Katastr bez jediného souseda → pokrytí 0 %, nic se neruší."""
+        with self._patche():
+            zrusit = syncer._vyhodnot_katastry_bez_hranice([self._udalost(self.RUSENY)], self.run)
+
+        self.assertEqual(zrusit, [])
+        self.assertIn("jen 0.0 %", self.varovani[0])
+
+    def test_jiny_katastr_bez_hranice_se_nezapocita(self):
+        """
+        Stará hranice jiného katastru bez hranice o převzetí území nevypovídá.
+
+        Kdyby se počítala, dva katastry, které se v DB (třeba po chybě) překrývají
+        a oba přijdou bez hranice, by se navzájem „pokryly“ a oba smazaly.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+
+        with self._patche():
+            zrusit = syncer._vyhodnot_katastry_bez_hranice(
+                [self._udalost(self.RUSENY), self._udalost(self.NASTUPCE)], self.run
+            )
+
+        self.assertEqual(zrusit, [])
+
+    def test_apply_changes_zruseny_katastr_smaze(self):
+        """``_apply_changes`` předá zrušený katastr do mazání spolu se ZaniklePrvky."""
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        smazane = []
+        udalosti = [
+            self._udalost(self.NASTUPCE, hranice_wkt="MULTIPOLYGON(((0 0,1 0,1 1,0 0)))"),
+            self._udalost(self.RUSENY),
+        ]
+
+        poradi = []
+
+        def smaz(katastr, run):
+            smazane.append(katastr.kod)
+            poradi.append("smazani")
+            return True
+
+        with self._patche(), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology", lambda run, plocha: poradi.append("topologie")
+        ), mock.patch.object(
+            syncer, "_soucet_plochy_katastru", side_effect=lambda: poradi.append("plocha_pred")
+        ), mock.patch.object(
+            self.run, "save"
+        ):
+            syncer._apply_changes(udalosti, self.run)
+
+        # Součet ploch před změnami, mazání zrušeného katastru a teprve pak
+        # topologická kontrola – jinak by sloučení hlásilo falešný překryv.
+        self.assertEqual(poradi, ["plocha_pred", "smazani", "topologie"])
+
+        self.assertEqual(smazane, [self.RUSENY])
+        self.assertEqual(self.run.katastr_deletes, 1)
+
+    def test_novy_katastr_bez_hranice_se_nezalozi(self):
+        """Katastr bez hranice, který v DB není, se nezakládá – nespadne na NOT NULL."""
+        with self._patche(), mock.patch.object(syncer, "_check_katastry_topology"), mock.patch.object(
+            syncer, "_soucet_plochy_katastru", return_value=None
+        ), mock.patch.object(self.run, "save"):
+            syncer._apply_changes([self._udalost(960199)], self.run)
+
+        self.upsert.assert_not_called()
+        self.assertFalse(RuianKatastr.objects.filter(kod=960199).exists())
+        self.assertIn("nezaložen", self.varovani[0])
+
+    def test_novy_katastr_s_odmitnutou_hranici_se_nezalozi(self):
+        """
+        Nový katastr, jehož hranici odmítl parser nebo GEOS, se nezaloží – den nespadne.
+
+        Běží skutečný ``_upsert_katastr``; dřív skončil na NOT NULL sloupci
+        ``hranice`` a shodil celý den.
+        """
+        udalosti = [
+            self._udalost(960198, hranice_odmitnuta=True),
+            self._udalost(960199, "MULTIPOLYGON (((nečitelné)))"),
+        ]
+
+        with mock.patch.object(
+            syncer, "_append_run_warning", lambda run, text: self.varovani.append(text)
+        ), mock.patch.object(syncer, "_check_katastry_topology"), mock.patch.object(
+            syncer, "_soucet_plochy_katastru", return_value=None
+        ), mock.patch.object(
+            self.run, "save"
+        ):
+            syncer._apply_changes(udalosti, self.run)
+
+        self.assertFalse(RuianKatastr.objects.filter(kod__in=[960198, 960199]).exists())
+        self.assertEqual(len(self.varovani), 2)
+        self.assertTrue(all("nepodařilo načíst" in text for text in self.varovani))
+
+    def test_novy_katastr_bez_definicniho_bodu_dostane_centroid(self):
+        """
+        Nový katastr bez definičního bodu se založí s centroidem hranice.
+
+        Sloupec je NOT NULL; dřív uložení shodilo celý den. Plný sync dopočítává
+        centroid stejně. Ukládání se nahrazuje, aby test nepsal do Fedory.
+        """
+        x0, x1, y0, y1 = self.X0 + 5 * self.STRANA, self.X0 + 6 * self.STRANA, self.Y0, self.Y0 + self.STRANA
+        udalost = self._udalost(960197, f"MULTIPOLYGON((({x0} {y0},{x1} {y0},{x1} {y1},{x0} {y1},{x0} {y0})))")
+        ulozene = []
+
+        with mock.patch.object(RuianKatastr, "save", autospec=True, side_effect=ulozene.append), mock.patch.object(
+            syncer, "_append_run_warning", lambda run, text: self.varovani.append(text)
+        ):
+            vysledek = syncer._upsert_katastr(None, udalost.payload, self.run)
+
+        self.assertEqual(vysledek, (True, True))
+        # Přibližný definiční bod musí být vidět v auditu běhu, ne jen v logu.
+        self.assertEqual(len(self.varovani), 1)
+        self.assertIn("centroid hranice", self.varovani[0])
+        self.assertEqual(len(ulozene), 1)
+        self.assertEqual(ulozene[0].definicni_bod.srid, 5514)
+        self.assertAlmostEqual(ulozene[0].definicni_bod.x, (x0 + x1) / 2)
+        self.assertAlmostEqual(ulozene[0].definicni_bod.y, (y0 + y1) / 2)
+
+    def test_zruseni_po_rozsireni_nastupce_neni_dira(self):
+        """
+        Zrušení katastru, jehož území nástupce převzal už dřív, se nehlásí jako díra.
+
+        Nástupce dostal novou hranici v souboru dřívějšího dne (součet ploch
+        tehdy stoupl o překryv), rušený katastr přijde bez hranice až teď.
+        Smazání součet sníží, ale území dál pokrývá nástupce. Součet ploch se
+        počítá doopravdy, nahrazuje se jen zbytek topologické kontroly.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        ubytky = []
+
+        def kontrola(run, plocha_pred):
+            ubytky.append(syncer._zkontroluj_pokryti(run, plocha_pred))
+
+        def smaz(katastr, run):
+            # Přímo SQL – ``delete()`` by přes signály psal do Fedory.
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM ruian_katastr WHERE id = %s", [katastr.pk])
+            return True
+
+        with self._patche(), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology", kontrola
+        ), mock.patch.object(self.run, "save"):
+            syncer._apply_changes([self._udalost(self.RUSENY)], self.run)
+
+        self.assertFalse(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
+        self.assertEqual(ubytky, [None])
+
+    def test_formalni_zanik_pokryteho_katastru_neni_dira(self):
+        """
+        Formální zánik (``ZaniklePrvky``) katastru, jehož území už pokrývá nástupce, se nehlásí jako díra.
+
+        Runbook doporučuje na formální zánik počkat – ten pak nesmí vyvolat
+        planý poplach. Součet ploch se počítá doopravdy.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        ubytky = []
+
+        def kontrola(run, plocha_pred):
+            ubytky.append(syncer._zkontroluj_pokryti(run, plocha_pred))
+
+        def smaz(katastr, run):
+            # Přímo SQL – ``delete()`` by přes signály psal do Fedory.
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM ruian_katastr WHERE id = %s", [katastr.pk])
+            return True
+
+        zanik = RuianChangeEvent(level=LEVEL_KATASTR, event_type=EVENT_DELETE, kod=self.RUSENY, payload=None)
+        with self._patche(), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology", kontrola
+        ), mock.patch.object(self.run, "save"):
+            syncer._apply_changes([zanik], self.run)
+
+        self.assertFalse(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
+        self.assertEqual(ubytky, [None])
+
+    def test_zruseni_s_nastupcem_v_temze_souboru_hlasi_nepokryty_zbytek(self):
+        """
+        Nástupce rozšířený v tomtéž souboru: díra se hlásí za nepokrytý zbytek.
+
+        Nástupce převezme 96 % území rušeného katastru až v tomtéž souboru.
+        Jeho rozšíření součet ploch zvýší a zrušení ho sníží, takže úbytek je
+        právě nepokrytá 4 % (40 000 m²). Odečíst od výchozího součtu i pokrytí
+        změřené po upsertech by úbytek přebilo a díra by se neohlásila.
+        """
+        self._katastr(self.NASTUPCE, self.X0 + self.STRANA, self.X0 + 2 * self.STRANA)
+        x0, x1 = self.X0 + 0.04 * self.STRANA, self.X0 + 2 * self.STRANA
+        y0, y1 = self.Y0, self.Y0 + self.STRANA
+        nova_hranice = f"MULTIPOLYGON((({x0} {y0},{x1} {y0},{x1} {y1},{x0} {y1},{x0} {y0})))"
+        ubytky = []
+
+        def kontrola(run, plocha_pred):
+            ubytky.append(syncer._zkontroluj_pokryti(run, plocha_pred))
+
+        def upsert(existing, dto, run, *, vynutit_metadata=False):
+            # Přímo do DB – save() by přes signály psal do Fedory.
+            if dto.hranice_wkt:
+                RuianKatastr.objects.filter(kod=dto.kod).update(hranice=GEOSGeometry(dto.hranice_wkt, srid=5514))
+                return True, True
+            return False, False
+
+        def smaz(katastr, run):
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM ruian_katastr WHERE id = %s", [katastr.pk])
+            return True
+
+        with self._patche(), mock.patch.object(syncer, "_upsert_katastr", upsert), mock.patch.object(
+            syncer, "_delete_katastr", smaz
+        ), mock.patch.object(syncer, "_check_katastry_topology", kontrola), mock.patch.object(self.run, "save"):
+            syncer._apply_changes([self._udalost(self.NASTUPCE, nova_hranice), self._udalost(self.RUSENY)], self.run)
+
+        self.assertFalse(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
+        self.assertEqual(len(ubytky), 1)
+        self.assertAlmostEqual(ubytky[0], 0.04 * self.STRANA**2, delta=1.0)
+
+
+class ZmenaKatastruAzTests(SimpleTestCase):
+    """
+    Testy, že se za změněný AZ počítá i změna jen ostatních katastrů (M2M).
+
+    Na testu 7. 11. 2026 měly všechny AZ změnu jen v M2M ``katastry``
+    (např. „+Okříšky“), historie ``ZMENA_KATASTRU`` se zapsala, ale audit běhu
+    ukázal 0 dotčených AZ – čítač porovnával jen hlavní katastr.
+    """
+
+    def _az(self):
+        """
+        Sestaví neuložený AZ s hlavním katastrem a pomocnými metodami.
+
+        :return: Mock se strukturou :class:`ArcheologickyZaznam`.
+        """
+        az = mock.Mock(ident_cely="C-202600001A", hlavni_katastr_id=1)
+        az.hlavni_katastr = mock.Mock(pk=1)
+        return az
+
+    def _spust(self, zmeneno_m2m):
+        """
+        Zavolá ``reassign_az_se_zmenou`` pro AZ s DJ, kde se hlavní katastr nemění.
+
+        :param zmeneno_m2m: Návratová hodnota ``_update_az_katastry_if_changed``.
+        :return: Dvojice ``(hlavni_katastr, zmeneno)``.
+        """
+        prvni_dj = mock.Mock(typ_id=-1)
+        dj_qs = mock.Mock()
+        dj_qs.filter.return_value.order_by.return_value.first.return_value = prvni_dj
+        az = self._az()
+        with mock.patch.object(reassign_mod.DokumentacniJednotka, "objects", dj_qs), mock.patch.object(
+            reassign_mod, "_update_az_katastry_if_changed", return_value=zmeneno_m2m
+        ), mock.patch.object(reassign_mod, "_odkazuje_na_mazany_katastr", return_value=False):
+            vysledek = reassign_mod.reassign_az_se_zmenou(az)
+        self.assertIs(vysledek[0], az.hlavni_katastr, "hlavní katastr se nemění")
+        return vysledek
+
+    def test_zmena_jen_ostatnich_katastru_je_zmena(self):
+        """Změna jen M2M ``katastry`` se hlásí jako změna, i když hlavní zůstal."""
+        self.assertTrue(self._spust(zmeneno_m2m=True)[1])
+
+    def test_beze_zmeny(self):
+        """Bez zápisu se změna nehlásí."""
+        self.assertFalse(self._spust(zmeneno_m2m=False)[1])
+
+    def test_reassign_az_vraci_jen_katastr(self):
+        """Obal ``reassign_az`` zachovává původní rozhraní – vrací jen katastr."""
+        kat = mock.Mock()
+        with mock.patch.object(reassign_mod, "reassign_az_se_zmenou", return_value=(kat, True)):
+            self.assertIs(reassign_mod.reassign_az(self._az()), kat)
+
+    def test_admin_pokracovani_bere_priznak_zmeny(self):
+        """Pokračování v adminu převezme příznak změny z ``reassign_az_se_zmenou``."""
+        from arch_z.models import ArcheologickyZaznam
+        from heslar.views import ContinueKatastrProcessing
+
+        reassign = mock.Mock()
+        reassign.reassign_az_se_zmenou.return_value = (None, True)
+
+        self.assertTrue(ContinueKatastrProcessing._process(ArcheologickyZaznam(), reassign))
+        reassign.reassign_az_se_zmenou.assert_called_once()
 
 
 class ZastaraleParametryKatastruTests(SimpleTestCase):
@@ -2460,6 +3201,48 @@ class PresmerovaniPriStahovaniTests(SimpleTestCase):
         self.assertEqual(odpoved.status_code, 200)
 
 
+class UzszKomentareTests(SimpleTestCase):
+    """
+    Testy, že XML komentář ani instrukce zpracování v ÚZSZ neshodí plný sync.
+
+    Jejich ``tag`` není jméno prvku a ``etree.QName`` nad ním spadne – stejná
+    třída chyb jako v parseru změnových VFR.
+    """
+
+    def _zdroj(self, obsah):
+        """
+        Zapíše ÚZSZ XML a sestaví nad ním :class:`ShpUzszSource` bez kontrol konstruktoru.
+
+        :param obsah: Text XML.
+        :return: Instance s nastaveným ``uzsz_path``.
+        """
+        from heslar.ruian_sync.shp_importer import ShpUzszSource
+
+        adresar = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, adresar, ignore_errors=True)
+        cesta = Path(adresar) / "20260731_ST_UZSZ.xml"
+        cesta.write_text(obsah, encoding="utf-8")
+        zdroj = ShpUzszSource.__new__(ShpUzszSource)
+        zdroj.uzsz_path = cesta
+        return zdroj
+
+    def test_komentar_a_pi_neshodi_hlavicku_ani_definicni_body(self):
+        """Hlavička se ověří a definiční bod katastru načte i s komentáři a instrukcemi zpracování."""
+        zdroj = self._zdroj(
+            f'<?xml version="1.0" encoding="UTF-8"?><VymennyFormat xmlns:gml="{GML}"><!-- export -->'
+            "<Hlavicka><?pi data?><TypSouboru>ST_UZSZ</TypSouboru></Hlavicka><Data>"
+            '<KatastralniUzemi><!-- bod --><gml:MultiPoint gml:id="DKU.668753">'
+            '<gml:pointMember><gml:Point gml:id="DKU.668753.1"><?pi data?>'
+            "<gml:pos>-700000.00 -1100000.00</gml:pos></gml:Point></gml:pointMember></gml:MultiPoint>"
+            "</KatastralniUzemi></Data></VymennyFormat>"
+        )
+
+        zdroj._validate_uzsz_header()
+        _kraje, _okresy, katastry = zdroj._load_uzsz_definicni_body()
+
+        self.assertIn(668753, katastry)
+
+
 class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
     """
     Testy rozbalení vrstvy SHP z novějšího archivu (#4455).
@@ -2541,6 +3324,41 @@ class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
 
         self.assertEqual(target.read_bytes(), b"nova")
         self.assertEqual(sorted(p.name for p in self.unpack_dir.glob("VUSC_P.*")), ["VUSC_P.shp"])
+
+    def test_vrstva_s_cestou_mimo_archiv_nesahne_vedle(self):
+        """
+        Název ``../VUSC_P.shp`` v archivu nepřepíše vrstvu souborem mimo rozbalovací adresář.
+
+        ``extract()`` název očistí a zapíše do ``1_unpacked``; cesta sestavená
+        ze surového názvu ale mířila na soubor vedle archivu a ten se přesunul
+        přes rozbalenou vrstvu.
+        """
+        cizi = Path(self._tmp.name) / "VUSC_P.shp"
+        cizi.write_bytes(b"cizi")
+        self._zapis_archiv({"../VUSC_P.shp": b"nova"})
+
+        target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(target, self.unpack_dir / "VUSC_P.shp")
+        self.assertEqual(target.read_bytes(), b"nova")
+        self.assertEqual(cizi.read_bytes(), b"cizi")
+
+    def test_adresar_pojmenovany_jako_vrstva_se_preskoci(self):
+        """
+        Položka adresáře ``VUSC_P.shp/`` se nerozbalí jako vrstva.
+
+        Jen adresář → chybí vrstva (``FileNotFoundError``), ne adresář pro GDAL.
+        Adresář vedle skutečné vrstvy → vrátí se soubor.
+        """
+        self._zapis_archiv({"VUSC_P.shp/": b""})
+        with self.assertRaises(FileNotFoundError):
+            self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self._zapis_archiv({"VUSC_P.shp/": b"", "data/VUSC_P.shp": b"nova"})
+        target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertTrue(target.is_file())
+        self.assertEqual(target.read_bytes(), b"nova")
 
     def test_aktualni_kopie_se_nerozbaluje(self):
         """Kopie novější než archiv se vrátí beze změny a archiv se neotevře."""
