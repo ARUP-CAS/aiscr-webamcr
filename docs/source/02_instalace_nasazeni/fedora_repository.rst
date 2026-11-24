@@ -21,8 +21,8 @@ se self-signed certifikátem, distribuce vlastní CA do kontejnerů by k bezpeč
 nic nepřidala. Pokud by se Fedora někdy zpřístupnila mimo interní síť, je potřeba ověřování
 certifikátu zapnout.
 
-Timeouty požadavků do Fedory nastavují klíče ``FEDORA_CONNECT_TIMEOUT``, ``FEDORA_READ_TIMEOUT``
-a ``FEDORA_CONTENT_READ_TIMEOUT`` (viz :doc:`secrets`).
+Timeouty požadavků do Fedory nastavují klíče ``FEDORA_CONNECT_TIMEOUT``, ``FEDORA_READ_TIMEOUT``,
+``FEDORA_GET_READ_TIMEOUT`` a ``FEDORA_CONTENT_READ_TIMEOUT`` (viz :doc:`secrets`).
 
 
 Postup generování Fedora repozitáře
