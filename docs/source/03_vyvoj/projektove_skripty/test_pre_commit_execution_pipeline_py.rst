@@ -21,6 +21,18 @@ Třídy
 
       Připraví skutečné procesy a agent, provozní příkazy však zůstanou náhradami.
 
+   .. py:method:: guarded_shell()
+
+      Ověří izolaci nástrojů před lokálním i emulovaným vzdáleným krokem.
+
+      :param script: Skutečný blok workflow.
+      :param values: Proměnné izolovaného pokusu.
+      :return: Výsledek shellového kroku.
+
+   .. py:method:: test_missing_unexecutable_and_shadowed_stubs_stop_before_commands()
+
+      Nefunkční náhrada nesmí propustit lokální ani vzdálený provozní příkaz.
+
    .. py:method:: test_full_attempt_chain_and_failure_matrix()
 
       Provede reálnou cestu a ověří přípravu, stavy, identitu, artefakty i cleanup.

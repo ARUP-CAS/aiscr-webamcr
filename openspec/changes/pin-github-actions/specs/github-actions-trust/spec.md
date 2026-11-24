@@ -483,6 +483,57 @@ including relevant trust in nested actions and downloaded tools.
 - **THEN** the chosen release and material constraint or residual risk are explained with source evidence
 - **AND** the assessment distinguishes the action wrapper from its nested dependencies and executable defaults
 
+### Requirement: Execution fixtures select isolated operational commands
+
+Execution regression fixtures SHALL preserve executable permissions and
+verify that operational commands resolve to their fixture stubs before
+executing the local or emulated remote command chain. Missing or unusable
+stubs SHALL fail without falling through to real deployment commands.
+Negative controls SHALL establish the intended failure stage rather than
+accepting any unrelated nonzero result.
+
+#### Scenario: Linux executes the combined fixture
+
+- **GIVEN** command stubs copied into an isolated execution fixture
+- **WHEN** the combined workflow chain runs on Linux
+- **THEN** the copied commands remain executable and local and emulated remote command resolution selects the stubs
+- **AND** a missing, non-executable, or shadowed stub stops the fixture before operational execution
+
+#### Scenario: A negative control fails for an unrelated reason
+
+- **GIVEN** a fixture intends to exercise a named deployment, runner, or result-validation failure
+- **WHEN** the operation fails at another stage or never creates its prerequisite current outcome
+- **THEN** the fixture fails instead of accepting that unrelated error as coverage
+
+### Requirement: Runner diagnostics do not disclose configured paths
+
+Runner-owned console diagnostics and outcome messages SHALL use only
+validated attempt identifiers and controlled failure stages. They SHALL NOT
+include configured filesystem paths or raw caught exception text. Failure to
+publish an error outcome SHALL remain nonzero without disclosing the exception
+through an uncaught traceback.
+
+#### Scenario: An attempt uses a secret-backed output root
+
+- **GIVEN** the runner obtains its output root from secret-backed settings or an explicit configuration value
+- **WHEN** it creates and completes an attempt
+- **THEN** runner-owned diagnostics identify the attempt without printing the configured root
+- **AND** outcome identity, result status, and artifact paths retain their existing behavior
+
+#### Scenario: A runner failure contains sensitive exception text
+
+- **GIVEN** configuration, attempt creation, selection, migration, execution, summary, or publication raises an exception containing a synthetic sensitive value
+- **WHEN** the runner reports failure
+- **THEN** stderr and any published outcome message contain a controlled failure stage and omit that value and configured path
+- **AND** the operation remains unsuccessful
+
+#### Scenario: Error outcome publication also fails
+
+- **GIVEN** a runner error is followed by an exception while publishing its error outcome
+- **WHEN** the runner exits
+- **THEN** it returns a nonzero status and emits a fixed publication diagnostic
+- **AND** no uncaught traceback or raw exception value is printed
+
 ### Requirement: Dependency checks belong to the existing test suite
 
 Action-reference validation and inventory generation SHALL have regression

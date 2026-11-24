@@ -57,6 +57,22 @@ Třídy
 
       Chyba startu procesu dostane error místo completed s nulou.
 
+   .. py:method:: test_runner_diagnostics_hide_explicit_and_secret_backed_roots()
+
+      Pokus lze sledovat podle identity bez zveřejnění cesty z konfigurace.
+
+   .. py:method:: test_failures_before_attempt_creation_hide_sensitive_exceptions()
+
+      Chyba inicializace, konfigurace či adresáře nezveřejní hodnotu výjimky.
+
+   .. py:method:: test_runner_error_stages_and_metadata_hide_sensitive_exceptions()
+
+      Provozní chyby zachovají fázi a nepropustí citlivý text do konzole ani JSON.
+
+   .. py:method:: test_failed_error_publication_does_not_escape_or_disclose_exception()
+
+      Druhá chyba publikace zachová neúspěch bez tracebacku s citlivou cestou.
+
    .. py:method:: test_runner_publishes_completed_pass_and_failure()
 
       Dokončené testy zachovají skutečný status a zveřejní aktuální počty.

@@ -217,6 +217,12 @@ běžný běh znamenají chybu. Jen režim neúspěšných testů s platným př
 vstupem a prázdným výběrem smí skončit jako výslovné ``no-tests``. Chybějící
 tabulka nebo nenalezené číslo testu jsou chyby, nikoli úspěšné prázdné běhy.
 
+Vlastní diagnostika runneru uvádí ověřenou identitu pokusu a pevně pojmenovanou
+fázi selhání. Nevypisuje nakonfigurovaný kořen výsledků ani nezpracovaný text
+výjimky; totéž platí pro zprávu v ``outcome.json``. Pokud selže i zveřejnění
+chybového výsledku, runner vrátí neúspěch a pevnou zprávu bez tracebacku.
+Zachycený výstup samotných testů se tím nefiltruje.
+
 Každý pokus má identitu ``<github.run_id>-<github.run_attempt>`` a vlastní
 adresář ``runs/<pokus>/`` ve stávajícím svazku výsledků. Samostatné spuštění
 vygeneruje lokální identitu. Runner předá adresář testovacímu nastavení přes
@@ -253,7 +259,12 @@ a služby bez healthchecku mají výslovné výjimky; cizí kontejnery hostitele
 výsledek neovlivňují.
 
 Lokální testy používají dočasný testovací klíč a izolované procesy, nikoli
-produkční secrets nebo DEV připojení. Skutečný kontrolní běh potřebuje
+produkční secrets nebo DEV připojení. Kombinovaná fixture zachovává spustitelné
+oprávnění kopírovaných náhrad příkazů a před lokálním i emulovaným vzdáleným
+krokem ověřuje jejich skutečný výběr shellem. Chybějící, nespustitelná nebo
+zastíněná náhrada test zastaví; neočekávaný neúspěch jiné fáze není platnou
+negativní kontrolou. Tato cesta se ověřuje také na Linuxu.
+Skutečný kontrolní běh potřebuje
 samostatné schválení cíle a operace. Pro regresi zvolte ``nasadit_verzi: false``,
 platné ``test_mod`` a předem dohodnutý test (v režimu ``konkretni`` i odpovídající
 ``test_cislo``). Výchozí hodnota nasazení v existujícím workflow je ``true``;

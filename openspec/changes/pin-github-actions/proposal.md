@@ -151,6 +151,26 @@ selection, and test modes. Reject unsafe values before they can become shell
 code. These bounded repairs do not authorize a deployment, workflow dispatch,
 review post, or broader infrastructure refactor.
 
+## CI portability and runner diagnostic remediation (2026-11-24)
+
+After delivery of `5ae9cf45c`, the user approved capture and implementation of
+two introduced defects in [ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544).
+The [pre-commit job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45374557884/job/138377173853)
+failed in the combined execution fixture before hooks ran: copying command
+stubs without executable permissions selected real host commands on Linux.
+The [CodeQL discussion](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4678598669)
+traces a secret-backed output path to runner logging. Raw exception messages
+also reach stderr and outcome metadata.
+
+Group 7 repairs fixture permissions and verifies command selection and intended
+failure stages, replaces runner-owned path and exception diagnostics with
+validated attempt identifiers and controlled stages, and adds regressions
+including failed error publication. Existing output files and process status
+contracts remain in force. Validate Windows and Linux separately; record any
+hosted CI or CodeQL acceptance still awaiting delivery. Refresh affected
+documentation through its existing generator and keep one usage entry for
+this remediation. The preceding 31 completed tasks describe the earlier scope.
+
 ## Follow-up outside this change
 
 After merge, follow up the DEV SSH/SCP run, an actual Dependabot SHA/comment

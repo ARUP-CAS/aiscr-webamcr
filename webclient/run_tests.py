@@ -218,31 +218,40 @@ def main(argv=None):
     number = str(args.test) if args.test is not None else ""
     directory = None
     previous_output = os.environ.get("AMCR_TEST_OUTPUT_DIR")
+    stage = "initialization"
     try:
         configure_logging()
         logger.info("amcr_test_runner.start")
+        stage = "configuration"
         if args.results_root is None:
             from webclient.settings.dev_test import TEST_SCREENSHOT_PATH
 
             args.results_root = TEST_SCREENSHOT_PATH
         root = Path(args.results_root)
+        stage = "attempt"
         directory, identity = create_attempt(root, args.attempt_id)
-        print(f"Výsledky pokusu: {directory}")
+        print(f"Pokus testů: {identity}")
+        stage = "selection"
         labels = select_tests(mode, number, root / "results.xlsx")
         if not labels:
+            stage = "publication"
             write_summary(directory, 0, 0)
             publish_outcome(directory, identity, mode, number, "no-tests", 0)
             print("Žádné neúspěšné testy k opakování")
             return 0
         os.environ["AMCR_TEST_OUTPUT_DIR"] = str(directory) + os.sep
         logger.info("amcr_test_runner.start_test")
+        stage = "migration"
         migration = subprocess.run([sys.executable, "manage.py", "migrate", f"--settings={SETTINGS}"], check=False)
         if migration.returncode:
             raise RuntimeError("Migrace testovací databáze selhala")
+        stage = "execution"
         returncode, output = execute_tests(labels, directory, args.soubor)
+        stage = "summary"
         passed, failed = parse_result(output, returncode)
         write_summary(directory, passed, failed)
         spreadsheet_required = any("test_selenium" in label for label in labels)
+        stage = "publication"
         publish_outcome(
             directory,
             identity,
@@ -254,10 +263,14 @@ def main(argv=None):
             selection_data=selection_content(root, directory, mode),
         )
         return returncode
-    except Exception as exc:
-        print(f"Chyba testovacího běhu: {exc}", file=sys.stderr)
+    except Exception:
+        message = f"Chyba testovacího běhu ({stage})"
+        print(message, file=sys.stderr)
         if directory is not None:
-            publish_outcome(directory, identity, mode, number, "error", 1, message=str(exc))
+            try:
+                publish_outcome(directory, identity, mode, number, "error", 1, message=message)
+            except Exception:
+                print("Zveřejnění chybového výsledku selhalo (publication)", file=sys.stderr)
         return 1
     finally:
         logger.info("amcr_test_runner.end")

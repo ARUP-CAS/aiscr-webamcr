@@ -7,7 +7,7 @@ import sys
 import tempfile
 import time
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -133,6 +133,134 @@ class ExecutionTests(unittest.TestCase):
             self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"]), 1)
         record = protocol.load_record(self.root / "runs/123-1", "123-1", "vsechny", "")
         self.assertEqual(record["state"], "error")
+
+    def test_runner_diagnostics_hide_explicit_and_secret_backed_roots(self):
+        """Pokus lze sledovat podle identity bez zveřejnění cesty z konfigurace."""
+        for configured in (False, True):
+            with self.subTest(secret_backed=configured), ExitStack() as stack:
+                root = self.root / f"sensitive-output-root-{configured}"
+                identity = f"safe-{configured}"
+                stdout, stderr = io.StringIO(), io.StringIO()
+                stack.enter_context(patch.dict(os.environ))
+                os.environ.pop("AMCR_TEST_RESULTS_ROOT", None)
+                stack.enter_context(
+                    patch.dict(
+                        sys.modules,
+                        {"webclient.settings.dev_test": SimpleNamespace(TEST_SCREENSHOT_PATH=str(root))},
+                    )
+                )
+                stack.enter_context(patch.object(runner, "select_tests", return_value=["sample.tests.one"]))
+                stack.enter_context(patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)))
+                stack.enter_context(patch.object(runner, "execute_tests", return_value=(0, "Ran 1 test in 0s\n\nOK\n")))
+                stack.enter_context(redirect_stdout(stdout))
+                stack.enter_context(redirect_stderr(stderr))
+                args = ["--attempt-id", identity]
+                if not configured:
+                    args += ["--results-root", str(root)]
+                self.assertEqual(runner.main(args), 0)
+                record = protocol.load_record(root / "runs" / identity, identity, "vsechny", "")
+                self.assertEqual(protocol.validate_bundle(root / "runs" / identity, record), (1, 0))
+                self.assertIn(identity, stdout.getvalue())
+                diagnostics = stdout.getvalue() + stderr.getvalue() + json.dumps(record)
+                self.assertNotIn(str(root), diagnostics)
+                self.assertNotIn("sensitive-output-root", diagnostics)
+
+    def test_failures_before_attempt_creation_hide_sensitive_exceptions(self):
+        """Chyba inicializace, konfigurace či adresáře nezveřejní hodnotu výjimky."""
+        sensitive = f"{self.root}/private-root\ncredential-canary"
+        for stage, target, attribute in (
+            ("initialization", runner, "configure_logging"),
+            ("configuration", runner, "Path"),
+            ("attempt", protocol, "create_attempt"),
+        ):
+            with self.subTest(stage=stage), patch.object(target, attribute, side_effect=OSError(sensitive)):
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    code = runner.main(["--results-root", str(self.root), "--attempt-id", "private-attempt"])
+                self.assertEqual(code, 1)
+                self.assertIn(f"({stage})", stderr.getvalue())
+                diagnostics = stdout.getvalue() + stderr.getvalue()
+                self.assertNotIn("credential-canary", diagnostics)
+                self.assertNotIn(str(self.root), diagnostics)
+                self.assertFalse((self.root / "runs/private-attempt").exists())
+
+    def test_runner_error_stages_and_metadata_hide_sensitive_exceptions(self):
+        """Provozní chyby zachovají fázi a nepropustí citlivý text do konzole ani JSON."""
+        sensitive = f"{self.root}/private-root\ncredential-canary"
+        publish = protocol.publish_outcome
+
+        def fail_completed_publication(*args, **kwargs):
+            """První publikaci odmítne, chybový výsledek zapíše skutečnou funkcí.
+
+            :param args: Argumenty publikovaného pokusu.
+            :param kwargs: Volitelná metadata výsledku.
+            :return: Výsledek skutečné publikace chyby.
+            :raises OSError: Při pokusu zveřejnit dokončený běh.
+            """
+            if args[4] != "error":
+                raise OSError(sensitive)
+            return publish(*args, **kwargs)
+
+        for case, stage, target, attribute in (
+            ("selection", "selection", runner, "select_tests"),
+            ("migration", "migration", runner.subprocess, "run"),
+            ("execution", "execution", runner, "execute_tests"),
+            ("summary", "summary", runner, "parse_result"),
+            ("summary-write", "summary", protocol, "write_summary"),
+            ("publication", "publication", protocol, "publish_outcome"),
+            ("noop-publication", "publication", protocol, "write_summary"),
+        ):
+            with self.subTest(case=case), ExitStack() as stack:
+                identity = f"safe-{case}"
+                stdout, stderr = io.StringIO(), io.StringIO()
+                stack.enter_context(
+                    patch.object(
+                        runner, "select_tests", return_value=[] if case == "noop-publication" else ["sample.tests.one"]
+                    )
+                )
+                stack.enter_context(patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)))
+                stack.enter_context(patch.object(runner, "execute_tests", return_value=(0, "Ran 1 test in 0s\n\nOK\n")))
+                stack.enter_context(
+                    patch.object(
+                        target,
+                        attribute,
+                        side_effect=fail_completed_publication if case == "publication" else OSError(sensitive),
+                    )
+                )
+                stack.enter_context(redirect_stdout(stdout))
+                stack.enter_context(redirect_stderr(stderr))
+                args = ["--results-root", str(self.root), "--attempt-id", identity]
+                mode = "neuspesne" if case == "noop-publication" else "vsechny"
+                if mode == "neuspesne":
+                    args.append("-f")
+                self.assertEqual(runner.main(args), 1)
+                directory = self.root / "runs" / identity
+                record = protocol.load_record(directory, identity, mode, "")
+                self.assertEqual(record["state"], "error")
+                self.assertIn(f"({stage})", record["message"])
+                self.assertIn(f"({stage})", stderr.getvalue())
+                diagnostics = stdout.getvalue() + stderr.getvalue() + (directory / "outcome.json").read_text()
+                self.assertNotIn("credential-canary", diagnostics)
+                self.assertNotIn(str(self.root), diagnostics)
+                self.assertNotIn("Traceback", diagnostics)
+                self.assertIsNone(protocol.validate_bundle(directory, record))
+
+    def test_failed_error_publication_does_not_escape_or_disclose_exception(self):
+        """Druhá chyba publikace zachová neúspěch bez tracebacku s citlivou cestou."""
+        stdout, stderr = io.StringIO(), io.StringIO()
+        sensitive = f"{self.root}/private-root\ncredential-canary"
+        with patch.object(runner, "select_tests", side_effect=OSError(sensitive)), patch.object(
+            protocol, "publish_outcome", side_effect=OSError(sensitive)
+        ), redirect_stdout(stdout), redirect_stderr(stderr):
+            code = runner.main(["--results-root", str(self.root), "--attempt-id", "safe-error"])
+        self.assertEqual(code, 1)
+        self.assertIn("(selection)", stderr.getvalue())
+        self.assertIn("(publication)", stderr.getvalue())
+        diagnostics = stdout.getvalue() + stderr.getvalue()
+        self.assertNotIn("credential-canary", diagnostics)
+        self.assertNotIn(str(self.root), diagnostics)
+        self.assertNotIn("Traceback", diagnostics)
+        self.assertFalse((self.root / "runs/safe-error/outcome.json").exists())
 
     def test_runner_publishes_completed_pass_and_failure(self):
         """Dokončené testy zachovají skutečný status a zveřejní aktuální počty."""

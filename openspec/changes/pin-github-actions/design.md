@@ -523,6 +523,46 @@ normal dependency review remains the place to explain relevant constraints.
 The advisory sources and fixed-version ranges are linked below. No independent
 manual tool-pin maintenance process is introduced.
 
+## CI portability and runner diagnostic remediation (2026-11-24)
+
+The user approved capture and implementation of both findings after
+`5ae9cf45c14e4ddb609c3f20991d42dd428b0e6a` was pushed. Group 7 records this
+renewed scope; earlier completion counts remain dated local evidence.
+
+| Item | Verified evidence and bounded repair | Tasks |
+| --- | --- | --- |
+| CI-EXECUTABLE-STUBS | [Job 138377173853](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45374557884/job/138377173853) reports nine failures and three errors in the combined fixture. `shutil.copyfile` copies executable stubs as non-executable files on Linux, allowing real host tools to be selected. Preserve their modes, check shell command resolution before execution, and assert each failure's intended stage and current outcome. | 7.1 |
+| RUNNER-DIAGNOSTICS | [CodeQL alert 7461](https://github.com/ARUP-CAS/aiscr-webamcr/security/code-scanning/7461), linked by [the review discussion](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4678598669), traces `TEST_SCREENSHOT_PATH` from secret-backed settings to the runner's directory print. Raw exception text is also printed and stored in `outcome.json`. Use validated attempt identifiers and fixed failure stages in runner-owned diagnostics; protect error publication against a second exception. | 7.2 |
+
+Use permission-preserving copies for the four borrowed command stubs. Before
+any combined workflow operation, verify every operational command resolves to
+the fixture directory, including inside its emulated remote shell. A missing,
+non-executable, or shadowed stub must stop before a real operational command.
+Assert successful preparation before deliberately corrupting output fixtures;
+negative cases must identify the expected stage, outcome, or command trace.
+Keep the real disposable SSH agent and actual production scripts in the test.
+
+The runner may log the validated attempt identity, state, and fixed stages
+such as selection, migration, execution, summary, and publication. Do not print
+the configured output root or interpolate caught exception text into stderr
+or outcome metadata. If publishing an error outcome itself fails, emit a
+fixed publication diagnostic and return nonzero without an uncaught traceback.
+This concerns diagnostics authored by the runner, not filtering arbitrary
+child test output or changing the outcome schema or artifact paths.
+
+Add synthetic sensitive-path and exception canaries covering normal output,
+errors before/after attempt creation, selection, migration, execution,
+publication, and failed error publication. Preserve native result status,
+current-attempt identity, explicit no-op, and prior selection semantics.
+Run the existing suites on Windows and in an isolated local Linux environment,
+using only synthetic service/process fixtures. Do not use a successful Windows
+run as Linux acceptance. Hosted pre-commit and CodeQL closure remain follow-up
+after authorized delivery; do not dismiss the alert to manufacture closure.
+
+The existing proposal, design, capability delta, tasks, focused test files,
+runner, authored dependency guidance, generated documentation, and one new
+usage entry are repository-owned. No delivered hub asset or sync is involved.
+
 ## Risks / Trade-offs
 
 - Repository-wide activation can block workflows on unprepared refs. During
