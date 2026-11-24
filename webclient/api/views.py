@@ -18,6 +18,8 @@ import django.utils.timezone
 from api.models import ApiRequestLog
 from core.constants import (
     AKTUALIZACE_SN,
+    API_REQUEST_LOG_IGSN_STATUS_FAILED,
+    API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING,
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_SUCCESS,
@@ -49,6 +51,12 @@ from core.setting_models import CustomAdminSettings
 from core.soubor_naming import get_mime_safe_soubor_name, get_next_soubor_name
 from core.translation import format_message
 from core.utils import get_cadastre_from_point, hodnota_pro_log
+from cron.tasks import (
+    IGSN_UPDATE_RETRYABLE,
+    IGSN_UPDATE_SUCCESS,
+    schedule_samostatny_nalez_igsn_retry,
+    update_samostatny_nalez_igsn,
+)
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
@@ -75,7 +83,6 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from lxml import etree
 from pas.models import SamostatnyNalez
-from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
 from rest_framework import serializers, status
 from rest_framework.authtoken.models import Token
@@ -151,6 +158,15 @@ _ALLOWED_SCHEMA_URL_PATTERNS = (
 
 _XSD_BYTES_CACHE: dict[str, bytes] = {}
 _XSD_BYTES_CACHE_LOCK = threading.Lock()
+
+
+#: Hlavička úspěšné odpovědi PAS API, která ohlašuje selhání aktualizace IGSN po uložení změny (#4523).
+IGSN_STATUS_HEADER = "X-IGSN-Status"
+#: Hodnoty hlavičky ``X-IGSN-Status`` podle stavu ``ApiRequestLog.igsn_status``.
+IGSN_STATUS_HEADER_VALUES = {
+    API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING: "retry-pending",
+    API_REQUEST_LOG_IGSN_STATUS_FAILED: "failed",
+}
 
 
 def _rollback_fedora_transaction(fedora_transaction) -> None:
@@ -1788,16 +1804,57 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         return True
 
     @staticmethod
-    def _update_igsn_if_archived(instance: "SamostatnyNalez") -> None:
+    def _update_igsn_after_commit(instance: "SamostatnyNalez") -> str | None:
         """
-        Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
+        U archivovaného záznamu (SN4) aktualizuje IGSN až po potvrzení změny v databázi i ve Fedoře.
 
-        :param instance: Aktualizovaný záznam samostatného nálezu.
+        Aktualizace se odesílá s kontrolou stavových kódů DataCite (:func:`cron.tasks.update_samostatny_nalez_igsn`).
+        Selhání změnu nevrací: opakovatelná chyba (nedostupné DataCite, 429, 5xx) naplánuje úlohu
+        :func:`cron.tasks.retry_samostatny_nalez_igsn_update` a vrátí ``retry_pending``; neopakovatelná chyba
+        (ostatní 4xx včetně 401/403), neočekávaná výjimka nebo nemožnost úlohu naplánovat vrátí ``failed``.
+        Každé selhání se zaloguje s ``ident_cely``.
 
-        :raises DoiWriteError: Pokud aktualizace IGSN selže.
+        :param instance: Uložený záznam samostatného nálezu.
+
+        :return: ``API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING``, ``API_REQUEST_LOG_IGSN_STATUS_FAILED``, nebo
+            ``None``, pokud aktualizace proběhla nebo nebyla potřeba (záznam není ve stavu SN4).
         """
-        if instance.stav == SN_ARCHIVOVANY:
-            instance.igsn_update(False, True)
+        if instance.stav != SN_ARCHIVOVANY:
+            return None
+        ident_cely = instance.ident_cely
+        try:
+            outcome, err = update_samostatny_nalez_igsn(instance)
+        except Exception as unexpected:
+            logger.error(
+                "api.views.PasApiBaseView._update_igsn_after_commit.unexpected_error",
+                extra={"ident_cely": ident_cely, "error": str(unexpected)},
+            )
+            return API_REQUEST_LOG_IGSN_STATUS_FAILED
+        if outcome == IGSN_UPDATE_SUCCESS:
+            return None
+        if outcome == IGSN_UPDATE_RETRYABLE:
+            logger.warning(
+                "api.views.PasApiBaseView._update_igsn_after_commit.retry_pending",
+                extra={"ident_cely": ident_cely, "error": str(err)},
+            )
+            try:
+                schedule_samostatny_nalez_igsn_retry(instance)
+            except Exception as schedule_err:
+                logger.error(
+                    "api.views.PasApiBaseView._update_igsn_after_commit.schedule_failed",
+                    extra={"ident_cely": ident_cely, "error": str(schedule_err)},
+                )
+                return API_REQUEST_LOG_IGSN_STATUS_FAILED
+            return API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING
+        logger.error(
+            "api.views.PasApiBaseView._update_igsn_after_commit.failed",
+            extra={
+                "ident_cely": ident_cely,
+                "status_code": getattr(err, "status_code", None),
+                "error": str(err),
+            },
+        )
+        return API_REQUEST_LOG_IGSN_STATUS_FAILED
 
     @staticmethod
     def _acquire_record_lock(ident_cely: str) -> tuple[bool, int]:
@@ -1894,6 +1951,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         metadata: bytes,
         notes: list[str],
         http_status: int = 200,
+        igsn_status: str | None = None,
     ) -> HttpResponse:
         """
         Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
@@ -1907,14 +1965,22 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         :param instance: Uložený záznam samostatného nálezu.
         :param metadata: XML metadata vrácená Fedora repozitářem.
         :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
+        :param http_status: HTTP stavový kód úspěšné odpovědi (výchozí 200).
+        :param igsn_status: Výsledek aktualizace IGSN po uložení změny (``retry_pending`` nebo ``failed``), který se
+            uloží do logu a ohlásí hlavičkou ``X-IGSN-Status``; ``None``, pokud aktualizace proběhla nebo nebyla
+            potřeba.
 
-        :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
+        :return: HTTP odpověď s XML metadaty a zadaným stavovým kódem.
         """
         log_entry.status = API_REQUEST_LOG_STATUS_SUCCESS
         log_entry.finished_at = django.utils.timezone.now()
         log_entry.ident_cely = instance.ident_cely
         log_entry.samostatny_nalez = instance
-        log_entry.save(update_fields=["status", "finished_at", "ident_cely", "samostatny_nalez"])
+        update_fields = ["status", "finished_at", "ident_cely", "samostatny_nalez"]
+        if igsn_status is not None:
+            log_entry.igsn_status = igsn_status
+            update_fields.append("igsn_status")
+        log_entry.save(update_fields=update_fields)
 
         user_pk = log_entry.user.pk if log_entry.user else None
         # ident_cely and user_pk are logged intentionally so successful imports
@@ -1937,6 +2003,8 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         response = HttpResponse(metadata, content_type="application/xml", status=http_status)
         response["X-Record-ID"] = instance.ident_cely
         response["Location"] = f"{settings.OAI_PURL}{instance.ident_cely}"
+        if igsn_status is not None:
+            response[IGSN_STATUS_HEADER] = IGSN_STATUS_HEADER_VALUES[igsn_status]
         return response
 
 
@@ -3067,6 +3135,10 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
         parametrem a přítomným parametrem s prázdnou hodnotou, aby klient
         mohl oba validační stavy zpracovat odlišně.
 
+        U archivovaného záznamu (SN4) se IGSN aktualizuje až po potvrzení změny v databázi i ve Fedoře.
+        Selhání IGSN změnu nevrací; úspěšná odpověď pak nese hlavičku ``X-IGSN-Status`` (``retry-pending``
+        s opakováním na pozadí, nebo ``failed``) a stav se zapíše do ``ApiRequestLog.igsn_status``.
+
         Příklad volání::
 
             PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
@@ -3076,7 +3148,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
         :param ident_cely: Identifikátor záznamu samostatného nálezu.
         :param format: Formát odpovědi.
 
-        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200, případně s hlavičkou ``X-IGSN-Status``),
                  nebo chybou syntaxe volání (HTTP 400; chybějící parametr
                  ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
                  dlouhá nebo shodná hodnota), nenalezeným
@@ -3169,16 +3241,6 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 instance.save(update_fields=["evidencni_cislo"])
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
                 instance.save_metadata()
-            self._update_igsn_if_archived(instance)
-        except DoiWriteError as err:
-            logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
-            _rollback_fedora_transaction(fedora_transaction)
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
             _rollback_fedora_transaction(fedora_transaction)
@@ -3225,8 +3287,10 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        # IGSN až po commitu databáze i Fedory: DataCite tak nikdy nedostane data, která AMČR nemá (#4523).
+        igsn_status = self._update_igsn_after_commit(instance)
         self._release_record_lock(ident_cely, lock_ttl)
-        return self._success(log_entry, instance, metadata, [])
+        return self._success(log_entry, instance, metadata, [], igsn_status=igsn_status)
 
     @staticmethod
     def _create_history_record(instance: SamostatnyNalez, user, old_value: str | None, new_value: str | None) -> None:
@@ -3310,11 +3374,15 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         MIME typu a antiviru. Úspěšný upload uloží fotografii do Fedora repository,
         založí záznam ``Soubor`` navázaný na nález a vrátí aktualizovaná XML metadata z Fedory.
 
+        U archivovaného záznamu (SN4) se IGSN aktualizuje až po potvrzení změny v databázi i ve Fedoře.
+        Selhání IGSN nahrání nevrací; úspěšná odpověď pak nese hlavičku ``X-IGSN-Status`` (``retry-pending``
+        s opakováním na pozadí, nebo ``failed``) a stav se zapíše do ``ApiRequestLog.igsn_status``.
+
         :param request: HTTP požadavek obsahující fotografii v poli ``file``.
         :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
         :param format: Formát odpovědi.
 
-        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 201),
+        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 201, případně s hlavičkou ``X-IGSN-Status``),
                  nebo chybu syntaxe volání (HTTP 400; vč. více než jednoho souboru),
                  nenalezený záznam (HTTP 404), validační chybu souboru (HTTP 422),
                  nebo interní chybu (HTTP 500).
@@ -3482,16 +3550,6 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes)
                 self._create_rearchive_history_record(instance, request.user)
                 soubor_instance.save()
-            self._update_igsn_if_archived(instance)
-        except DoiWriteError as err:
-            logger.error("api.views.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
-            _rollback_fedora_transaction(fedora_transaction)
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
             _rollback_fedora_transaction(fedora_transaction)
@@ -3535,8 +3593,12 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        # IGSN až po commitu databáze i Fedory: DataCite tak nikdy nedostane data, která AMČR nemá (#4523).
+        igsn_status = self._update_igsn_after_commit(instance)
         self._release_record_lock(ident_cely, lock_ttl)
-        return self._success(log_entry, instance, metadata, [], http_status=status.HTTP_201_CREATED)
+        return self._success(
+            log_entry, instance, metadata, [], http_status=status.HTTP_201_CREATED, igsn_status=igsn_status
+        )
 
 
 class MyXMLRenderer(BaseRenderer):

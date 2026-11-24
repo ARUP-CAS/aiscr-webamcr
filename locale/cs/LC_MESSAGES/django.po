@@ -250,6 +250,22 @@ msgstr "Nález"
 msgid "api.model.apiRequestLog.errors"
 msgstr "Chyby"
 
+#: api/models.py:114
+msgid "api.model.apiRequestLog.igsnStatus"
+msgstr "Stav IGSN"
+
+#: api/models.py:29
+msgid "api.model.apiRequestLog.igsnStatus.retryPending"
+msgstr "čeká na opakování"
+
+#: api/models.py:30
+msgid "api.model.apiRequestLog.igsnStatus.updated"
+msgstr "aktualizováno"
+
+#: api/models.py:31
+msgid "api.model.apiRequestLog.igsnStatus.failed"
+msgstr "selhalo"
+
 #: api/models.py:105
 msgid "api.model.apiRequestLog.modelTitle.label"
 msgstr "Správa API"
@@ -660,11 +676,6 @@ msgid "api.views.PasApiBaseView.record_locked"
 msgstr ""
 "Záznam je aktuálně zpracováván jiným požadavkem. Zkuste akci zopakovat "
 "později."
-
-#: api/views.py:3166
-msgid ""
-"api.views.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error"
-msgstr "Evidenční číslo se nepodařilo propsat do DOI/IGSN."
 
 #: api/views.py:3176 api/views.py:3186 api/views.py:3198
 msgid "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error"

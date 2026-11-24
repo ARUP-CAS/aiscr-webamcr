@@ -640,13 +640,20 @@ Třídy
 
       :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam.
 
-   .. py:method:: _update_igsn_if_archived()
+   .. py:method:: _update_igsn_after_commit()
 
-      Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
+      U archivovaného záznamu (SN4) aktualizuje IGSN až po potvrzení změny v databázi i ve Fedoře.
 
-      :param instance: Aktualizovaný záznam samostatného nálezu.
+      Aktualizace se odesílá s kontrolou stavových kódů DataCite (:func:`cron.tasks.update_samostatny_nalez_igsn`).
+      Selhání změnu nevrací: opakovatelná chyba (nedostupné DataCite, 429, 5xx) naplánuje úlohu
+      :func:`cron.tasks.retry_samostatny_nalez_igsn_update` a vrátí ``retry_pending``; neopakovatelná chyba
+      (ostatní 4xx včetně 401/403), neočekávaná výjimka nebo nemožnost úlohu naplánovat vrátí ``failed``.
+      Každé selhání se zaloguje s ``ident_cely``.
 
-      :raises DoiWriteError: Pokud aktualizace IGSN selže.
+      :param instance: Uložený záznam samostatného nálezu.
+
+      :return: ``API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING``, ``API_REQUEST_LOG_IGSN_STATUS_FAILED``, nebo
+          ``None``, pokud aktualizace proběhla nebo nebyla potřeba (záznam není ve stavu SN4).
 
    .. py:method:: _acquire_record_lock()
 
@@ -699,8 +706,12 @@ Třídy
       :param instance: Uložený záznam samostatného nálezu.
       :param metadata: XML metadata vrácená Fedora repozitářem.
       :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
+      :param http_status: HTTP stavový kód úspěšné odpovědi (výchozí 200).
+      :param igsn_status: Výsledek aktualizace IGSN po uložení změny (``retry_pending`` nebo ``failed``), který se
+          uloží do logu a ohlásí hlavičkou ``X-IGSN-Status``; ``None``, pokud aktualizace proběhla nebo nebyla
+          potřeba.
 
-      :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
+      :return: HTTP odpověď s XML metadaty a zadaným stavovým kódem.
 
 
 .. py:class:: SamostatnyNalezXmlBaseView
@@ -953,6 +964,10 @@ Třídy
       parametrem a přítomným parametrem s prázdnou hodnotou, aby klient
       mohl oba validační stavy zpracovat odlišně.
 
+      U archivovaného záznamu (SN4) se IGSN aktualizuje až po potvrzení změny v databázi i ve Fedoře.
+      Selhání IGSN změnu nevrací; úspěšná odpověď pak nese hlavičku ``X-IGSN-Status`` (``retry-pending``
+      s opakováním na pozadí, nebo ``failed``) a stav se zapíše do ``ApiRequestLog.igsn_status``.
+
       Příklad volání::
 
           PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
@@ -962,7 +977,7 @@ Třídy
       :param ident_cely: Identifikátor záznamu samostatného nálezu.
       :param format: Formát odpovědi.
 
-      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200, případně s hlavičkou ``X-IGSN-Status``),
                nebo chybou syntaxe volání (HTTP 400; chybějící parametr
                ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
                dlouhá nebo shodná hodnota), nenalezeným
@@ -1022,11 +1037,15 @@ Třídy
       MIME typu a antiviru. Úspěšný upload uloží fotografii do Fedora repository,
       založí záznam ``Soubor`` navázaný na nález a vrátí aktualizovaná XML metadata z Fedory.
 
+      U archivovaného záznamu (SN4) se IGSN aktualizuje až po potvrzení změny v databázi i ve Fedoře.
+      Selhání IGSN nahrání nevrací; úspěšná odpověď pak nese hlavičku ``X-IGSN-Status`` (``retry-pending``
+      s opakováním na pozadí, nebo ``failed``) a stav se zapíše do ``ApiRequestLog.igsn_status``.
+
       :param request: HTTP požadavek obsahující fotografii v poli ``file``.
       :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
       :param format: Formát odpovědi.
 
-      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 201),
+      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 201, případně s hlavičkou ``X-IGSN-Status``),
                nebo chybu syntaxe volání (HTTP 400; vč. více než jednoho souboru),
                nenalezený záznam (HTTP 404), validační chybu souboru (HTTP 422),
                nebo interní chybu (HTTP 500).

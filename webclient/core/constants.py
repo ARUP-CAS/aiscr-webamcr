@@ -213,3 +213,13 @@ API_REQUEST_LOG_STATUS_FAILURE: Final = "failure"
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT: Final = "samostatny_nalez_xml_import"
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH: Final = "samostatny_nalez_evidencni_cislo_patch"
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD: Final = "samostatny_nalez_fotografie_upload"
+
+# ApiRequestLog — výsledek aktualizace IGSN po uložení změny (prázdné = aktualizace proběhla nebo nebyla potřeba).
+API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING: Final = "retry_pending"
+API_REQUEST_LOG_IGSN_STATUS_UPDATED: Final = "updated"
+API_REQUEST_LOG_IGSN_STATUS_FAILED: Final = "failed"
+
+# Opakování aktualizace IGSN na pozadí: prodleva před n-tým pokusem je min(BASE * 2^(n-1), MAX) sekund.
+IGSN_RETRY_MAX_RETRIES: Final = 20
+IGSN_RETRY_BASE_DELAY: Final = 60
+IGSN_RETRY_MAX_DELAY: Final = 6 * 60 * 60

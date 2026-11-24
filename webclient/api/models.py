@@ -1,4 +1,7 @@
 from core.constants import (
+    API_REQUEST_LOG_IGSN_STATUS_FAILED,
+    API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING,
+    API_REQUEST_LOG_IGSN_STATUS_UPDATED,
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_RECEIVED,
@@ -20,6 +23,12 @@ class ApiRequestLog(models.Model):
         (API_REQUEST_LOG_STATUS_PROCESSING, _("api.model.apiRequestLog.status.processing")),
         (API_REQUEST_LOG_STATUS_SUCCESS, _("api.model.apiRequestLog.status.success")),
         (API_REQUEST_LOG_STATUS_FAILURE, _("api.model.apiRequestLog.status.failure")),
+    )
+
+    IGSN_STATUS_CHOICES = (
+        (API_REQUEST_LOG_IGSN_STATUS_RETRY_PENDING, _("api.model.apiRequestLog.igsnStatus.retryPending")),
+        (API_REQUEST_LOG_IGSN_STATUS_UPDATED, _("api.model.apiRequestLog.igsnStatus.updated")),
+        (API_REQUEST_LOG_IGSN_STATUS_FAILED, _("api.model.apiRequestLog.igsnStatus.failed")),
     )
 
     REQUEST_TARGET_CHOICES = (
@@ -95,6 +104,14 @@ class ApiRequestLog(models.Model):
         null=True,
         blank=True,
         verbose_name=_("api.model.apiRequestLog.errors"),
+    )
+    # Výsledek aktualizace IGSN po uložení změny; prázdné, pokud aktualizace proběhla nebo nebyla potřeba.
+    igsn_status = models.CharField(
+        max_length=20,
+        choices=IGSN_STATUS_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name=_("api.model.apiRequestLog.igsnStatus"),
     )
 
     class Meta:
