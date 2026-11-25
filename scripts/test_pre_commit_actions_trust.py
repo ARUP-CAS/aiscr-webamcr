@@ -166,7 +166,9 @@ class ActionReferenceTests(unittest.TestCase):
             with self.subTest(deploy_enabled=deploy_enabled):
                 self.assertEqual(test_group, deployment_group.replace("${{ inputs.environment }}", "DEV"))
                 self.assertNotEqual(test_group, deployment_group.replace("${{ inputs.environment }}", "TEST"))
-        for workflow in workflows:
+        for workflow, helper in zip(
+            workflows, ("scripts/ssh_arguments.sh", ".workflow-source/scripts/ssh_arguments.sh"), strict=True
+        ):
             self.assertEqual(workflow["concurrency"]["cancel-in-progress"], "false")
             calls = [
                 step["run"]
@@ -175,7 +177,7 @@ class ActionReferenceTests(unittest.TestCase):
                 if 'ssh "amcr@$DEPLOYMENT_SERVER"' in step.get("run", "")
             ]
             self.assertEqual(len(calls), 1)
-            self.assertIn('source "$GITHUB_WORKSPACE/scripts/ssh_arguments.sh"', calls[0])
+            self.assertIn(f'source "$GITHUB_WORKSPACE/{helper}"', calls[0])
             self.assertIn('remote_command="$(ssh_command ', calls[0])
             self.assertNotIn("shell_quote()", calls[0])
             self.assertNotIn("date_stamp", calls[0])
@@ -340,6 +342,33 @@ class SSHTestCase(unittest.TestCase):
         if (self.root / "agent-start").is_file():
             self.run_shell('eval "$(cat "$AGENT_TRACE")" > /dev/null\n' + self.cleanup["run"])
 
+    def deployment_workspace(self, steps, tag, helper=True, tag_has_helper=False):
+        """Připraví dvě oddělené složky podle deklarace checkoutu v deployment workflow.
+
+        :param steps: Kroky deployment workflow.
+        :param tag: Název testovaného tagu.
+        :param helper: Zda je dostupný soubor z revize workflow.
+        :param tag_has_helper: Zda stejný soubor obsahuje také tag.
+        :return: Kořen lokálního checkoutu tagu.
+        """
+        checkout = next(step for step in steps if step.get("id") == "checkout-ssh-helper")
+        release = next(step for step in steps if step.get("with", {}).get("ref", "").startswith("refs/tags/"))
+        self.assertEqual(checkout["uses"], release["uses"])
+        self.assertEqual(release["with"]["ref"], "refs/tags/${{ steps.normalize-tag.outputs.git_tag }}")
+        self.assertEqual(checkout["with"]["ref"], "${{ github.workflow_sha }}")
+        self.assertEqual(checkout["with"]["persist-credentials"], "false")
+        self.assertEqual(checkout["with"]["sparse-checkout-cone-mode"], "false")
+        relative_helper = Path(checkout["with"]["sparse-checkout"])
+        self.assertEqual(relative_helper.as_posix(), "scripts/ssh_arguments.sh")
+        workspace = self.root / tag
+        workspace.mkdir(exist_ok=True)
+        for parent, available in ((workspace / checkout["with"]["path"], helper), (workspace, tag_has_helper)):
+            path = parent / relative_helper
+            if available:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes((ROOT / relative_helper).read_bytes())
+        return workspace.as_posix()
+
     def agent_environment(self):
         """Načte proměnné, které by GitHub přenesl do samostatného kroku.
 
@@ -464,6 +493,7 @@ class SummaryResultTests(SSHTestCase):
         result = self.execute_result(content, edit=edit)
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("SUMMARY_CANARY", result.stdout + result.stderr)
+        self.assertNotIn("::error::Selhalo", result.stdout + result.stderr)
         self.assertEqual(self.output.read_text(encoding="utf-8"), "existing-output\n")
         self.assertEqual(self.summary.read_text(encoding="utf-8"), "existing-summary\n")
         return result
@@ -483,6 +513,8 @@ class SummaryResultTests(SSHTestCase):
             with self.subTest(content=content):
                 result = self.execute_result(content, code=int(int(failed) > 0))
                 self.assertEqual(result.returncode, int(int(failed) > 0), result.stderr)
+                annotations = [line for line in result.stdout.splitlines() if line.startswith("::error::Selhalo")]
+                self.assertEqual(annotations, [f"::error::Selhalo {failed} testů"] if int(failed) else [])
                 output = self.output.read_text(encoding="utf-8")
                 self.assertIn(f"PASSED={passed}\nFAILED={failed}\n", output)
                 self.assertIn("ARTIFACTS=true", output)
@@ -501,6 +533,7 @@ class SummaryResultTests(SSHTestCase):
         self.assertFalse((self.root / f"test-results/123-{self.invocations}/results.xlsx").exists())
         result = self.execute_result(b"", state="error", code=1)
         self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertNotIn("::error::Selhalo", result.stdout + result.stderr)
         self.assertIn("STATE=error", self.output.read_text(encoding="utf-8"))
         self.assertNotIn("PASSED=", self.output.read_text(encoding="utf-8"))
         self.assert_rejected(b"PASSED=0\nFAILED=0\n")
@@ -614,6 +647,7 @@ class DeploymentAgentTests(SSHTestCase):
         self.assertIn("secrets.SSH_PRIVATE_KEY_SERVER_DEV", connection["env"]["SSH_PRIVATE_KEY"])
         self.assertIn("secrets.SSH_PRIVATE_KEY_SERVER_TEST", connection["env"]["SSH_PRIVATE_KEY"])
         self.write_tool("ping", "exit 0\n")
+        workspace = self.deployment_workspace(job["steps"], "v1.2.3")
         for key, client_exit, expected in (
             (self.private_key, "0", 0),
             (self.private_key, "7", 7),
@@ -623,7 +657,10 @@ class DeploymentAgentTests(SSHTestCase):
                 clients = self.root / "clients"
                 clients.unlink(missing_ok=True)
                 result = self.run_shell(
-                    self.workflow_script(connection["run"]), SSH_PRIVATE_KEY=key, CLIENT_EXIT=client_exit
+                    self.workflow_script(connection["run"]),
+                    SSH_PRIVATE_KEY=key,
+                    CLIENT_EXIT=client_exit,
+                    GITHUB_WORKSPACE=workspace,
                 )
                 self.assertEqual(result.returncode, expected, result.stderr)
                 self.assertEqual(clients.exists(), key == self.private_key)
@@ -646,7 +683,8 @@ class WorkflowInputTests(SSHTestCase):
         }
         self.steps = workflows["run-tests"]["jobs"]["deployment"]["steps"]
         self.validation = next(step for step in self.steps if step.get("id") == "validate-inputs")
-        deployment_steps = workflows["deployment"]["jobs"]["deployment"]["steps"]
+        self.deployment_steps = workflows["deployment"]["jobs"]["deployment"]["steps"]
+        deployment_steps = self.deployment_steps
         self.normalize = next(step for step in deployment_steps if step.get("id") == "normalize-tag")
         self.deploy = next(step for step in deployment_steps if step.get("name") == "SSH connection")
         self.write_tool(
@@ -804,16 +842,34 @@ class WorkflowInputTests(SSHTestCase):
 
     def test_deployment_transport_preserves_source_and_tag_arguments(self):
         """Deployment předá normalizovaný tag a oba zdroje beze změny přes vzdálený shell."""
-        for source in ("GitHub", "DockerHub"):
-            with self.subTest(source=source):
+        for source, tag, tag_has_helper in (("GitHub", "v1.4.0", False), ("DockerHub", "v2.0.0", True)):
+            with self.subTest(source=source, tag=tag):
                 (self.root / "operations").unlink(missing_ok=True)
+                workspace = self.deployment_workspace(self.deployment_steps, tag, tag_has_helper=tag_has_helper)
                 result = self.run_shell(
-                    self.workflow_script(self.deploy["run"]), SSH_PRIVATE_KEY=self.private_key, DEPLOYMENT_SOURCE=source
+                    self.workflow_script(self.deploy["run"]),
+                    SSH_PRIVATE_KEY=self.private_key,
+                    DEPLOYMENT_SOURCE=source,
+                    GITHUB_WORKSPACE=workspace,
+                    GIT_TAG=tag,
+                    IMAGE_TAG=tag[1:],
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(self.operations()[-1], ("deploy", ["1.2.3", self.root.as_posix(), source]))
-                self.assertIn(("git", ["checkout", "-f", "refs/tags/v1.2.3"]), self.operations())
+                self.assertEqual(self.operations()[-1], ("deploy", [tag[1:], self.root.as_posix(), source]))
+                self.assertIn(("git", ["checkout", "-f", f"refs/tags/{tag}"]), self.operations())
                 self.assert_agent_stopped()
+
+    def test_missing_workflow_helper_stops_before_ssh(self):
+        """Chybějící pomocník workflow zastaví SSH i při dostupné kopii v tagu."""
+        workspace = self.deployment_workspace(self.deployment_steps, "v2.0.0", helper=False, tag_has_helper=True)
+        result = self.run_shell(
+            self.workflow_script(self.deploy["run"]), SSH_PRIVATE_KEY=self.private_key, GITHUB_WORKSPACE=workspace
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ssh_arguments.sh", result.stderr)
+        self.assertFalse((self.root / "clients").exists())
+        self.assertEqual(self.operations(), [])
+        self.assert_agent_stopped()
 
 
 if __name__ == "__main__":

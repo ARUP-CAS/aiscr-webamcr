@@ -46,7 +46,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.1 <https://github.com/actions/checkout/releases/tag/v7.0.1>`__
      - `3d3c42e5aac5ba805825da76410c181273ba90b1 <https://github.com/actions/checkout/tree/3d3c42e5aac5ba805825da76410c181273ba90b1>`__
-     - ``.github/workflows/deployment.yml:66``, ``.github/workflows/new-version.yml:211``, ``.github/workflows/new-version.yml:70``, ``.github/workflows/pre_commit.yml:111``, ``.github/workflows/publish_images.yml:68``, ``.github/workflows/run-tests.yml:75``
+     - ``.github/workflows/deployment.yml:66``, ``.github/workflows/deployment.yml:73``, ``.github/workflows/new-version.yml:211``, ``.github/workflows/new-version.yml:70``, ``.github/workflows/pre_commit.yml:111``, ``.github/workflows/publish_images.yml:68``, ``.github/workflows/run-tests.yml:75``
    * - ``actions/create-github-app-token``
      - `actions <https://github.com/actions>`__
      - `v3.4.0 <https://github.com/actions/create-github-app-token/releases/tag/v3.4.0>`__
@@ -183,7 +183,7 @@ trasování a bez zápisu do artefaktů. Mezi kroky se přes ``GITHUB_ENV`` pře
 jen ``SSH_AUTH_SOCK`` a ``SSH_AGENT_PID``. Proto agent slouží pozdějšímu SSH
 i kroku pro získání výsledků aktuálního pokusu. Neúspěšná inicializace
 uklidí agenta ihned; krok s ``always()`` zajišťuje úklid po použití agenta
-i po chybě SSH/SCP. Následuje odpojení VPN a kontrola výsledku testů.
+i po chybě SSH/SCP. Po úklidu agenta se odpojí VPN.
 Ověření hostitele přes existující ``known_hosts`` a VPN se nemění.
 
 Stažený ``test_summary.env`` se čte pouze jako data: musí obsahovat právě
@@ -218,7 +218,10 @@ vyžaduje. Vstupy i názvy referencí se předávají jako argumenty se samostat
 uvozením pro vzdálený shell. Tělo vzdáleného testovacího skriptu zůstává
 statické; lokální uvozovky samy neřeší další interpretaci příkazu přes SSH.
 Oba workflow používají společné sestavení argumentů v
-``scripts/ssh_arguments.sh`` z lokálního checkoutu workflow.
+``scripts/ssh_arguments.sh``. Workflow nasazení čte tento soubor z odděleného
+checkoutu na ``github.workflow_sha``. Zvolený tag nadále určuje vlastní soubory
+nasazení a skript na serveru. Starší platný tag lze proto zvolit i při ručním
+návratu na předchozí verzi, přestože ještě neobsahuje pomocný skript SSH.
 
 Testy na DEV a nasazení na DEV sdílejí concurrency skupinu
 ``deploy-<repozitář>-DEV`` s ``cancel-in-progress: false``. Platí to i pro
@@ -256,11 +259,16 @@ pokusů včetně chyb a ``no-tests`` podle času záznamu dokončení. Přeruše
 pokusy lze odstranit až po třiceti dnech od poslední aktivity a ověření
 neaktivity. Zámek držený procesem chrání živý pokus při samostatném spuštění
 i v kontejneru; aktuální pokus je chráněn i během závěrečného úklidu.
+Runner odmítne existující identitu před úklidem a pro nový pokus získá
+platný zámek před vytvořením jeho adresáře.
 Předběžný i závěrečný úklid zasahuje pouze do vlastněných přímých adresářů
 pod ``runs/``. Neznámé vlastnictví, odkazy a junction hranice se zachovají
 s diagnostikou; výběrová tabulka v kořeni ani nesouvisející data se nemažou.
-Terminální záznamy verze 1 slouží při přechodu pouze k retenci. Povinná chyba
-úklidu znamená neúspěch a nepřepisuje původní selhání testů.
+Chybějící nebo neplatný zámek s neověřeným vlastnictvím nezakládá nárok
+na odstranění ani po třiceti dnech. Výsledkový krok i retence používají stejné
+omezené čtení ``outcome.json`` s odmítnutím duplicitních klíčů. Terminální
+záznamy verze 1 slouží při přechodu pouze k retenci. Povinná chyba úklidu
+znamená neúspěch a nepřepisuje původní selhání testů.
 
 Selenium registruje ukončení ovladače ihned po jeho vytvoření. Úklid proběhne
 i po chybě další inicializace nebo čtení či zápisu tabulky a zachová původní
@@ -270,8 +278,9 @@ Workflow stáhne záznam očekávaného pokusu, ověří jeho schéma a teprve p
 stahuje přesně pojmenované soubory. Před zveřejněním počtů ověří jejich otisky
 a vzájemný soulad. Staré soubory bez identity, jiné pokusy a chybějící či
 smíšené artefakty jsou odmítnuty. Výsledkový krok běží i po chybě testů,
-aby uchoval aktuální diagnostiku; neúspěch tím nezmění na úspěch. Artefakt
-obsahuje jen ověřený aktuální balík, u ``no-tests`` žádnou starou tabulku.
+aby uchoval aktuální diagnostiku. Při ověřeném kladném počtu ``FAILED``
+vypíše anotaci GitHub Actions a vrátí původní nenulový kód. Artefakt obsahuje
+jen ověřený aktuální balík, u ``no-tests`` žádnou starou tabulku.
 
 Povinné operace sestavení, stažení image, odstranění existujícího stacku,
 nasazení a klonování databáze propagují neúspěch přes všechny obaly až do
@@ -282,7 +291,7 @@ zůstává varováním. Záznam posledního úspěšně nasazeného tagu se změ
 úspěchu povinné přípravy a kontroly připravenosti. Automatický rollback se
 tím nezavádí.
 
-``scripts/deployment_helpers.sh`` sdílí kontrolu Swarmu, sítě a stacku,
+``scripts/deployment_helpers.sh`` sdílí kontrolu Swarmu, sítě a odstranění stacku,
 propagaci návratových kódů a inicializaci logů obou CI wrapperů. Nalezne se
 vůči umístění vstupního skriptu. Neaktivní Swarm vypíše příčinu před ukončením.
 Rotace odstraňuje pouze přímé soubory ``deployment_*.log`` splňující původní
@@ -309,12 +318,15 @@ Společné nalezení Bashe v ``scripts/test_shell_utils.py`` dává ve Windows
 přednost interpretu vedle nalezené instalace Gitu a jinak používá ``PATH``;
 spouštěč WSL se za Bash pro tyto fixture nepovažuje. Chybějící interpret
 ukončí test s výslovnou diagnostikou.
-Skutečný kontrolní běh potřebuje
-samostatné schválení cíle a operace. Pro regresi zvolte ``nasadit_verzi: false``,
-platné ``test_mod`` a předem dohodnutý test (v režimu ``konkretni`` i odpovídající
-``test_cislo``). Výchozí hodnota nasazení v existujícím workflow je ``true``;
-při tomto testu ji proto výslovně změňte. Nasazení vyžaduje další souhlas.
-Uložte URL běhu, jeho commit a výsledek SSH i následného stažení výsledků SCP.
+Skutečný kontrolní běh potřebuje samostatné schválení cíle a operace.
+Před během s ``nasadit_verzi: false`` ověřte, že nasazený spouštěcí skript na DEV
+předává identitu pokusu a běžící kontejner webu publikuje ``outcome.json``
+verze 2. Pokud některá součást ještě používá starší verzi, vyčkejte na
+kompatibilní nasazení nebo nejdříve schvalte kontrolu s nasazením. Pro kontrolu
+bez nasazení výslovně změňte výchozí hodnotu ``true`` na ``false``, zvolte platné
+``test_mod`` a předem dohodnutý test (v režimu ``konkretni`` také odpovídající
+``test_cislo``). Uložte URL běhu, revizi workflow i nasazené verze, identitu
+pokusu a výsledek SSH i následného stažení výsledků SCP.
 
 Zapnutí vynucení a obnova
 -----------------------------

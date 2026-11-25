@@ -34,6 +34,19 @@ check_stack_exists () {
     return 1
 }
 
+remove_old_stack () {
+    local stack_status
+    echo_dec "Remove docker stack: ${stack_name}"
+    if check_stack_exists; then
+        er "docker stack rm ${stack_name}" || return $?
+        echo_dec "Stack ${stack_name} removal successful"
+    else
+        stack_status=$?
+        [[ "$stack_status" == 1 ]] || return "$stack_status"
+        echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"
+    fi
+}
+
 require_swarm () {
     if ! docker node ls; then
         echo_dec "SWARM not initiated or joined at this HOST. Exiting"

@@ -8,7 +8,7 @@ import time
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
-from test_run_results import load_record, validate_identity
+from test_run_results import attempt_identity, read_outcome, validate_identity, validate_record
 
 LOCK_MARKER = b"AMCR test attempt lease v1\n"
 STALE_SECONDS = 30 * 24 * 60 * 60
@@ -53,6 +53,13 @@ class FileLease:
         self.path, self.stream, self.locked = path, None, False
         if linked(path):
             raise ValueError("Odkaz místo zámku")
+        try:
+            existing = path.lstat()
+        except FileNotFoundError:
+            pass
+        else:
+            if not stat.S_ISREG(existing.st_mode):
+                raise ValueError("Neplatný soubor zámku")
         flags = os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
         try:
             fd = os.open(path, flags | (os.O_CREAT | os.O_EXCL if create else 0), 0o600)
@@ -141,17 +148,11 @@ def terminal_record(directory):
     :param directory: Přímý adresář pokusu.
     :return: Záznam nebo None, pokud ještě není publikován.
     """
-    path = directory / "outcome.json"
-    if not path.exists():
+    try:
+        record = read_outcome(directory)
+    except FileNotFoundError:
         return None
-    import json
-
-    with path.open("rb") as stream:
-        raw = stream.read(16385)
-    if linked(path) or len(raw) > 16384:
-        raise ValueError("Neplatný terminální záznam")
-    record = json.loads(raw)
-    return load_record(directory, directory.name, record["mode"], record["number"], allow_legacy=True)
+    return validate_record(record, directory.name, record["mode"], record["number"], allow_legacy=True)
 
 
 def contained_activity(directory, runs):
@@ -243,20 +244,29 @@ class AttemptLease:
     """Drží živé vlastnictví od vytvoření až po závěrečnou retenci pokusu."""
 
     def __init__(self, root, identity, creator):
-        """Prořeže historii a atomicky vůči ostatním běhům založí vlastní pokus.
+        """Odmítne kolizi a před vytvořením adresáře uzamkne vlastnictví pokusu.
 
         :param root: Kořen výsledků.
         :param identity: Požadovaná identita nebo None.
         :param creator: Produkční funkce pro založení adresáře.
         """
         self.root = root
+        self.identity = attempt_identity(identity)
         runs, leases = layout(root)
         with locked_root(runs):
+            try:
+                (runs / self.identity).lstat()
+            except FileNotFoundError:
+                pass
+            else:
+                raise FileExistsError("Identita pokusu již existuje")
             prune_locked(runs, leases)
-            self.directory, self.identity = creator(root, identity)
             self.lease = FileLease(leases / (self.identity + ".lock"), create=True)
             try:
-                self.lease.acquire()
+                # A valid unclaimed marker can remain after interruption before mkdir.
+                if not self.lease.acquire(blocking=False):
+                    raise ValueError("Identitu pokusu již vlastní jiný proces")
+                self.directory, _ = creator(root, self.identity)
             except BaseException:
                 self.lease.close()
                 raise

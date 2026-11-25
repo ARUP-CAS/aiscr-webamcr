@@ -35,6 +35,8 @@ def report(directory, identity, mode, number, output_path, summary_path):
         stream.write(outputs)
     with Path(summary_path).open("a", encoding="utf-8") as stream:
         stream.write(summary)
+    if counts is not None and counts[1] > 0:
+        print(f"::error::Selhalo {counts[1]} testů")
     return record["exit_code"]
 
 

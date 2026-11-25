@@ -228,9 +228,3 @@ jobs:
         if: always()
         run: |
           sudo pkill openvpn || true
-
-      - name: Zkontrolovat výsledek testů
-        if: ${{ steps.test-result.outputs.FAILED > 0 }}
-        run: |
-          echo "::error::Selhalo ${{ steps.test-result.outputs.FAILED }} testů"
-          exit 1

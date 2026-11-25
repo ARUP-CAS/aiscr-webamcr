@@ -118,6 +118,16 @@ Třídy
 
       Ukončí pouze testem vytvořený agent i při selhání assertion.
 
+   .. py:method:: deployment_workspace()
+
+      Připraví dvě oddělené složky podle deklarace checkoutu v deployment workflow.
+
+      :param steps: Kroky deployment workflow.
+      :param tag: Název testovaného tagu.
+      :param helper: Zda je dostupný soubor z revize workflow.
+      :param tag_has_helper: Zda stejný soubor obsahuje také tag.
+      :return: Kořen lokálního checkoutu tagu.
+
    .. py:method:: agent_environment()
 
       Načte proměnné, které by GitHub přenesl do samostatného kroku.
@@ -266,6 +276,10 @@ Třídy
    .. py:method:: test_deployment_transport_preserves_source_and_tag_arguments()
 
       Deployment předá normalizovaný tag a oba zdroje beze změny přes vzdálený shell.
+
+   .. py:method:: test_missing_workflow_helper_stops_before_ssh()
+
+      Chybějící pomocník workflow zastaví SSH i při dostupné kopii v tagu.
 
 Zdrojový kód
 ------------

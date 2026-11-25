@@ -188,7 +188,7 @@ reading at most 4097 bytes.
 - **GIVEN** the producer's `PASSED` and `FAILED` records with decimal counts, including zero or leading zeros
 - **WHEN** the result step reads either record order using LF/CRLF or a final record without a newline
 - **THEN** it emits canonical decimal outputs and the existing report without executing the file
-- **AND** positive failed counts remain visible to the existing workflow failure check
+- **AND** a validated positive failed count is annotated by the result report
 
 #### Scenario: Incomplete or malformed summaries publish no results
 
@@ -271,6 +271,14 @@ execution error without evaluating downloaded data.
 - **THEN** the workflow can retain those results while remaining failed
 - **AND** result retrieval and unconditional cleanup cannot turn that failure into success
 
+#### Scenario: The current report has a validated positive failed count
+
+- **GIVEN** a matching completed outcome and validated bundle with one or more failed tests
+- **WHEN** the result report publishes the counts, summary and artifact eligibility
+- **THEN** it emits a failed-tests annotation based on the validated count and returns the recorded nonzero status
+- **AND** applicable artifact upload and unconditional cleanup can still run
+- **AND** invalid bundles or execution errors without verified counts do not produce a failed-count annotation
+
 ### Requirement: Previous results remain selection input
 
 Failed-only and numbered-test selection SHALL retain access to the previous
@@ -334,6 +342,39 @@ widening deletion scope or masking execution failure.
 - **WHEN** retention examines candidates
 - **THEN** no external target, unrelated file or selection workbook is removed
 - **AND** cleanup failure does not silently broaden the candidate set
+
+### Requirement: New attempt directories have prior ownership
+
+Attempt creation SHALL reject an existing requested identity before pruning
+and acquire a valid ownership lease before exposing a new attempt directory.
+
+#### Scenario: An explicit attempt identity already exists
+
+- **GIVEN** a requested attempt identity already has a directory, including an eligible finished attempt outside the ten newest
+- **WHEN** the runner prepares the new attempt under the retention lock
+- **THEN** creation fails without pruning, removing, replacing, or rewriting that attempt
+
+#### Scenario: Attempt creation is interrupted
+
+- **GIVEN** the runner is creating a fresh attempt
+- **WHEN** creation stops before or after publishing its directory
+- **THEN** any visible new attempt directory has a valid corresponding ownership marker and had an acquired lease before publication
+- **AND** inability to establish that ownership prevents publication
+
+### Requirement: Retention validates metadata from one bounded read
+
+Retention and result retrieval SHALL use the same bounded, strict JSON
+decoder for outcome metadata. Retention SHALL validate its parsed record
+against the directory identity without rereading it. Historical v1 terminal
+metadata may establish retention ownership under the existing rules.
+Current result retrieval SHALL continue to require outcome v2.
+
+#### Scenario: Retention inspects terminal metadata
+
+- **GIVEN** an owned candidate has terminal metadata
+- **WHEN** retention inspects its outcome to determine eligibility
+- **THEN** it reads the file once through the shared size-bounded decoder, rejects duplicate keys and validates the parsed record and identity
+- **AND** malformed, oversized or uncertain evidence remains protected and is reported
 
 ### Requirement: Required operation failures reach the workflow
 
@@ -502,7 +543,7 @@ work on failure. Rotation SHALL delete only eligible old owned deployment
 logs under the existing age policy, protecting the current log and unrelated
 files. The last-success record SHALL remain and advance only after required
 preparation and readiness. Removing unused reads SHALL NOT remove that
-record or introduce rollback.
+record or introduce automatic rollback.
 
 #### Scenario: The Swarm precondition fails under fail-fast shell options
 
@@ -517,6 +558,13 @@ record or introduce rollback.
 - **WHEN** rotation and a successful or failed deployment execute
 - **THEN** only eligible old deployment logs are removed, while current/recent logs and unrelated files remain
 - **AND** the success record advances only on deployment success, even after unused state reads are removed
+
+#### Scenario: The entry points remove an old stack
+
+- **GIVEN** test and production deployment may encounter an existing stack, a genuinely absent stack, or an inspection error
+- **WHEN** either entry point requests removal
+- **THEN** both use shared status handling, with removal attempted for an existing stack and skipped successfully for a genuinely absent stack
+- **AND** inspection and removal failures remain nonzero and prevent dependent operations
 
 ### Requirement: Shared automation helpers preserve caller contracts
 
@@ -541,6 +589,19 @@ successful-deployment bookkeeping.
 - **WHEN** required commands fail or preparation succeeds in isolated fixtures
 - **THEN** the actual shared helper code supplies consistent failure, diagnostic, rotation and bookkeeping behavior
 - **AND** fixtures include the helper dependency closure without selecting real deployment commands
+
+### Requirement: Workflow helper resolution preserves manual tag selection
+
+The deployment workflow SHALL load the local SSH helper from the revision
+that supplied the workflow. The requested release tag SHALL still select the
+remote checkout and its deployment entry point.
+
+#### Scenario: A deployable release tag predates the shared SSH helper
+
+- **GIVEN** the workflow revision provides the SSH helper and the selected release tag predates it
+- **WHEN** the deployment job prepares and sends its SSH command
+- **THEN** it loads the helper from a separate checkout of the workflow revision
+- **AND** the requested tag still determines which deployment code runs remotely, including when manually selecting an older tag
 
 ### Requirement: DEV tests and deployments serialize shared mutations
 
@@ -701,6 +762,12 @@ accepting any unrelated nonzero result.
 - **WHEN** the operation fails at another stage or never creates its prerequisite current outcome
 - **THEN** the fixture fails instead of accepting that unrelated error as coverage
 
+#### Scenario: The Docker stub changes before fixture setup
+
+- **GIVEN** the exact fragment the combined workflow fixture must replace is missing or occurs more than once
+- **WHEN** the fixture prepares its isolated Docker command
+- **THEN** setup stops with a diagnostic before workflow execution
+
 ### Requirement: Runner diagnostics do not disclose configured paths
 
 Runner-owned console diagnostics and outcome messages SHALL use only
@@ -775,10 +842,17 @@ pattern used by CI, and SSH lifecycle descriptions SHALL match the workflow.
 
 #### Scenario: SSH documentation describes the actual step arrangement
 
-- **GIVEN** the DEV workflow retrieves the current attempt's outcome and result files and has unconditional agent cleanup followed by VPN disconnection and result checking
+- **GIVEN** the DEV result step validates and reports the current attempt and the workflow then performs unconditional agent cleanup and VPN disconnection
 - **WHEN** the dependency page describes the agent lifecycle
 - **THEN** it accurately describes the shared identity and cleanup after SSH/SCP use
-- **AND** it does not describe multiple separate SCP steps or cleanup as the workflow's final step
+- **AND** it records one retrieval step and places agent cleanup before VPN disconnection
+
+#### Scenario: A maintainer prepares a deployment-disabled DEV control
+
+- **GIVEN** the workflow requires a current outcome v2 and a control will skip deployment
+- **WHEN** a maintainer follows the dependency guidance
+- **THEN** the guide requires a compatible deployed host wrapper and running container before this control
+- **AND** it explains that an older producer needs a compatible rollout or a separately authorized deployment-enabled control first
 
 ### Requirement: Retained scanner and signer integrations
 

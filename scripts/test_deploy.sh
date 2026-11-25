@@ -155,7 +155,6 @@ echo_dec "# DEPLOYMENT in SWARM MODE (i.e. host has to be joined or initiated as
 require_swarm || exit $?
 
 #Build commands
-cmd_stack_rm="docker stack rm ${stack_name}"
 # INSTALL_TEST_REQUIREMENTS=false postaví čistý produkční image (bez selenium aj.); testy v něm nepoběží.
 install_test_requirements="${INSTALL_TEST_REQUIREMENTS:-true}"
 cmd_create_images="docker build -t test_web -f Dockerfile --build-arg INSTALL_TEST_REQUIREMENTS=${install_test_requirements} --build-arg VERSION_APP=\"$(git rev-parse --short HEAD | head -c 8)\" --build-arg TAG_APP=local_build  ."
@@ -180,16 +179,8 @@ while getopts "hxqbut:d" option; do
          Help
          exit;;
       x) echo "OPTION: -x" 
-         echo_dec "Remove docker stack: ${stack_name}"
-         if check_stack_exists; then
-            er "${cmd_stack_rm}" || exit $?
-            echo_dec "Stack ${stack_name} removal successful"
-         else
-             stack_status=$?
-             [[ "$stack_status" == 1 ]] || exit "$stack_status"
-             echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"
-        fi
-        sleep 20 # Need to wait before network is really removed.
+         remove_old_stack || exit $?
+         sleep 20 # Need to wait before network is really removed.
          ;;
       b) #deploy stack 
         echo "OPTION: -b"

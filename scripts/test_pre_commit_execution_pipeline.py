@@ -25,6 +25,28 @@ for fixture_tool in git sleep grep sudo docker python3 ssh scp; do
 done
 """
 
+    DOCKER_CHILD_EXIT = '    exit "${CHILD_EXIT:-0}" ;;'
+
+    def route_docker_exec(self, docker):
+        """Přesměruje právě jednu větev izolovaného Dockeru do testovacího runneru.
+
+        :param docker: Zdroj skutečné náhrady Dockeru z deployment fixture.
+        :return: Stejná náhrada s jedinou přesměrovanou větví.
+        """
+        self.assertEqual(
+            docker.count(self.DOCKER_CHILD_EXIT), 1, "Docker fixture must contain exactly one child status branch"
+        )
+        return docker.replace(
+            self.DOCKER_CHILD_EXIT,
+            """    if [[ "$*" == *clone_test_db.py* ]]; then exit "${CLONE_EXIT:-0}"; fi
+    while [[ "$1" != "-c" ]]; do shift; done
+    shift
+    read -r -a runner_args <<< "$1"
+    if [[ "${FILE_LOGGING:-0}" == 1 ]]; then runner_args+=("-s"); fi
+    exec "$PYTHON_TEST_EXE" "$RUNNER_DRIVER" "${runner_args[@]:2}" ;;""",
+            1,
+        )
+
     def setUp(self):
         """Připraví skutečné procesy a agent, provozní příkazy však zůstanou náhradami."""
         super().setUp()
@@ -34,15 +56,7 @@ done
         for name in ("git", "sleep", "grep", "sudo"):
             shutil.copy2(self.deployment.bin / name, self.bin / name)
         docker = (self.deployment.bin / "docker").read_text(encoding="utf-8")
-        docker = docker.replace(
-            '    exit "${CHILD_EXIT:-0}" ;;',
-            """    if [[ "$*" == *clone_test_db.py* ]]; then exit "${CLONE_EXIT:-0}"; fi
-    while [[ "$1" != "-c" ]]; do shift; done
-    shift
-    read -r -a runner_args <<< "$1"
-    if [[ "${FILE_LOGGING:-0}" == 1 ]]; then runner_args+=("-s"); fi
-    exec "$PYTHON_TEST_EXE" "$RUNNER_DRIVER" "${runner_args[@]:2}" ;;""",
-        )
+        docker = self.route_docker_exec(docker)
         self.write_tool("docker", docker.removeprefix("#!/usr/bin/env bash\n"))
         self.write_tool(
             "python3",
@@ -109,6 +123,13 @@ exec "$PYTHON_TEST_EXE" "$@"
         :return: Výsledek shellového kroku.
         """
         return self.run_shell(self.COMMAND_GUARD + script, FIXTURE_COMMAND_GUARD=self.COMMAND_GUARD, **values)
+
+    def test_docker_stub_drift_fails_at_setup(self):
+        """Chybějící či opakovaná větev zastaví přípravu místo pozdějšího selhání."""
+        docker = (self.deployment.bin / "docker").read_text(encoding="utf-8")
+        for invalid in (docker.replace(self.DOCKER_CHILD_EXIT, ""), docker + "\n" + self.DOCKER_CHILD_EXIT):
+            with self.assertRaisesRegex(AssertionError, "exactly one child status branch"):
+                self.route_docker_exec(invalid)
 
     def test_missing_unexecutable_and_shadowed_stubs_stop_before_commands(self):
         """Nefunkční náhrada nesmí propustit lokální ani vzdálený provozní příkaz."""

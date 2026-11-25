@@ -134,13 +134,12 @@ IMAGE_SOURCE="${IMAGE_SOURCE:-github}" # Default to github if not specified
 while getopts ":t:u:" option; do
     
    case ${option} in
-        t|u|d)  #Overriding of default latest image by providing specific tag
+        t|u)  #Overriding of default latest image by providing specific tag
             if [ "$OPTARG" == "latest" ]; then
                 echo "Warning: IMAGE TAG must not be 'latest'"
                 exit 1
             fi
             export IMAGE_TAG="${OPTARG}"
-            tag_passed="yes"
             echo "IMAGE TAG FOR DOCKER IMAGES IS >>>> ${IMAGE_TAG}"
             ;;
 	 *)
@@ -173,7 +172,6 @@ compose_prod="docker-compose.yml"
 
 msg_fail_build="!! DEPLOYMENT not successfull"
 msg_pull_fail="!! PULL not successfull"
-msg_pull_success="PULL success"
 msg_success="DEPLOYED in SWARM MODE ---> APPLICATION ACCESSIBLE on: port 8080"
 
 #TRANSLATION backups path
@@ -193,7 +191,6 @@ exec > >(tee "${log_dir}/${log_file}" )
 exec 2>&1
 
 #Build commands
-cmd_stack_rm="docker stack rm ${stack_name}"
 cmd_pull_images="docker pull ${proxy_image} && docker pull ${amcr_image}"
 cmd_deploy_base="docker stack deploy --compose-file"
 
@@ -215,15 +212,7 @@ while getopts "hxu:t:i" option; do
       x) echo "OPTION: -x" 
          option_passed=true
          prune_images
-         echo_dec "Remove docker stack: ${stack_name}"
-         if check_stack_exists; then
-            er "${cmd_stack_rm}" || exit $?
-            echo_dec "Stack ${stack_name} removal successful"
-         else
-             stack_status=$?
-             [[ "$stack_status" == 1 ]] || exit "$stack_status"
-             echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"
-        fi
+         remove_old_stack || exit $?
         echo sleep 20 second to wait before network is really removed.
         sleep 20 # Need to wait before network is really removed.
          ;;

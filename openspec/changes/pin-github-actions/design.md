@@ -275,7 +275,8 @@ before decoding or allocating the entire input.
 
 Finish validating the entire file before appending either output or the
 human-readable summary. Preserve their names and Markdown layout, the
-spreadsheet artifact, and the numeric failure check. The existing `always()`
+spreadsheet artifact, and the failed-test reporting contract. Group 9 moves
+the failure annotation into the result report. The existing `always()`
 cleanup handles a parse failure after the SCP clients used the agent.
 
 Extend the existing disposable-key result-step fixtures to deliver arbitrary
@@ -714,6 +715,107 @@ remain historical evidence. Group 8 records current implementation progress;
 commits, pushes, thread replies/resolution, live operations, sync and archive
 require separate authorization.
 
+## Round-five review capture (2026-11-25)
+
+The [round-five review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6049994746)
+compares `d90182be3893880e6f9d9e4c4a89591180b202e7` with `test`
+(`d327f2caff9cb0e6ffadb8325defcd948bbaa13f`). It confirms the fourteen
+round-four repairs and records R4-O4 as unchanged. GitHub reported success
+for [pre-commit](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45483796675)
+and [CodeQL](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45483783871)
+on the reviewed commit. The earlier CodeQL alert thread remains resolved.
+Those results describe the reviewed commit. The user approved capture on
+2026-11-25 and subsequently invoked `openspec-apply-change` for group 9.
+
+| Review item | Agreed disposition | Task |
+| --- | --- | --- |
+| [R5-F1, Medium](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801621) | Source the runner-side SSH helper from the workflow commit so a valid pre-helper deployment tag can reach SSH. Keep the remote deployment on the requested tag. | 9.1 |
+| [R5-F2, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801631) | Reject a duplicate explicit attempt identity before pruning can remove the existing attempt. | 9.2 |
+| [R5-F3, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801636) | Acquire a valid lease before exposing a new attempt directory. Preserve and report existing candidates with uncertain ownership. Age alone does not change eligibility. | 9.2 |
+| [R5-F4, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801645) | Document which server wrapper and container runner must be in place before the deployment-disabled DEV control can verify outcome v2. | 9.7 |
+| [R5-F5, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801652) | Emit an annotation for a validated positive failure count in the result report and remove the unreachable downstream gate. | 9.4 |
+| [R5-F6, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801654) | Share one bounded and duplicate-key-rejecting outcome reader. Retention validates the single parsed object. | 9.3 |
+| [R5-F7, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801659) | Require exactly one Docker stub replacement and stop fixture setup when the expected fragment changes. | 9.6 |
+| [R5-O9, advisory](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688801976) | `fix-in-pr`. Remove the pre-existing `tag_passed`, `msg_pull_success`, and unreachable `d` option branch in `prod_deploy.sh`. | 9.5 |
+| [R5-O10, advisory](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4688802118) | `fix-in-pr`. Share the stack removal status mapping between the two deployment entry points. | 9.5 |
+
+### Keep the workflow checkout and deployment target distinct
+
+The job currently sources `scripts/ssh_arguments.sh` after checking out the
+selected tag. The local Git trees for `v1.4.0`, `v2.0.0-alpha.1` and
+`v2.0.0-alpha.2` contain their own server wrapper and VPN config and lack that
+helper. Under fail-fast shell options this prevents SSH. Keep the existing
+release checkout for its tag validation and files. Use a separate, read-only
+checkout with the existing pinned checkout action and `github.workflow_sha`
+for the helper. Source from its fixed local path. The remote shell continues
+to check out and execute the exact requested tag with its own entry point.
+This restores the manual release selection path, including rollback by
+choosing an earlier tag. The workflow does not perform automatic rollback.
+Exercise the actual SSH step with separate fixture trees for the workflow
+helper and a pre-helper tag. Use only stubbed transport and server commands.
+Regenerate affected workflow-reference locations through the existing
+generator.
+
+### Reserve attempt ownership before exposing results
+
+Under the root retention lock, validate the requested identity and reject
+any existing attempt at that path before a prune can run. This makes name
+collision behavior independent of the age or terminal state of the attempt.
+Resolve and reserve the identity and acquire its valid per-attempt lease
+before creating the visible results directory. Keep it held while the
+runner writes and publishes. Handle failures during creation without
+adopting unknown markers or leaving an unleased visible attempt.
+
+The thirty-day rule still applies only when ownership and inactivity can
+be verified. Legacy interrupted attempts with missing leases and candidates
+with invalid leases remain protected and reported, even after thirty days.
+The count limit still applies to eligible finished attempts. Retention
+may recognize valid historical v1 terminal outcomes under the existing
+ownership rules. Use one bounded, strict JSON decoding path for both
+retention and results, and check the parsed record once in retention using
+the directory identity and its recorded selection. Consumer validation
+continues to require a current v2 outcome and matching bundle. Cover
+duplicate identities outside the retention window, interrupted creation,
+old uncertain evidence, and bad or oversized outcome records.
+
+### Report the failure at the point of validation
+
+Publish the verified failed count, applicable artifacts and Markdown summary
+as before. Emit the failed-tests annotation from the report when a validated
+completed outcome has a positive failed count, and keep its nonzero return
+status. Remove the downstream success-gated annotation step. An invalid
+bundle or an execution error without verified counts must not emit a
+failed-count annotation. Verify that artifact upload and unconditional
+agent and VPN cleanup still run in the appropriate failure paths.
+
+### Keep the advisory repairs and fixtures narrow
+
+The legacy production option assignments and the duplicated removal path are
+pre-existing. Remove the dead assignments and unreachable option alone.
+Move the common stack removal operation and status mapping to the existing
+helper. An absent stack is an allowed removal no-op. Inspection and removal
+failures still propagate. Leave the entry points responsible for their own
+ordering and wait behavior. Keep the combined fixture on real workflow
+shell and isolated stubs, and abort setup if the intended unique edit of the
+Docker stub cannot be applied.
+
+### DEV control and validation
+
+A deployment-disabled control uses the DEV checkout's existing launcher
+and the code inside its running web container. After promotion, verify both
+support the v2 protocol before attempting that control. On an older stack,
+wait for the compatible rollout or obtain separate approval for a
+deployment-enabled control first. Record the deployed revision, workflow
+revision and matching attempt evidence for each authorized run. Tests use
+offline fixtures, and no legacy-format fallback is planned.
+
+Validate the targeted paths and the existing Windows and isolated Linux
+regression suites, compilation, pre-commit, affected documentation and
+OpenSpec. Implementation and generated documentation belong to this
+repository. The group 9 apply invocation covers this implementation and local
+validation. Live operations, review-thread writes, delivery, hub sync and
+archive require separate authorization.
+
 ## Risks / Trade-offs
 
 - Repository-wide activation can block workflows on unprepared refs. During
@@ -778,13 +880,15 @@ The runbook preserves the following operational sequence. These steps remain
 follow-up in [tasks.md](tasks.md#workflow-follow-up), outside the PR's scope.
 
 1. Review the complete workflow diff and merge into `test` through human
-   review. Record an approved manual `Run tests` execution against DEV with
-   `nasadit_verzi: false` and an agreed valid test selection. A deployment
-   requires its own explicit authorization. The run already supplied for this
-   investigation demonstrates the defect, not repair acceptance. A separately
-   authorized deployment-enabled control is also needed to establish hosted
-   acceptance of the repaired stdin, preparation, and readiness path; keep that
-   evidence distinct from the no-deployment control.
+   review. Before recording an approved manual `Run tests` execution against
+   DEV with `nasadit_verzi: false`, verify that the host wrapper passes the
+   current attempt identity and the running web container publishes outcome
+   v2. If either is older, wait for a compatible rollout or obtain separate
+   approval for a deployment-enabled control first. Use an agreed valid test
+   selection for each control. The earlier supplied run demonstrates the
+   defect. Hosted acceptance of repaired stdin, preparation, and readiness
+   needs its own deployment-enabled evidence, in addition to evidence from
+   the deployment-disabled control.
 2. Observe the real Dependabot pin/comment update PR. Arrange human promotion
    of the pinned workflows to `main`; identify every other intended execution
    ref and either prepare it or explicitly exclude it from future runs.

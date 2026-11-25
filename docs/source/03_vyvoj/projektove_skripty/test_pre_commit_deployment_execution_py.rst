@@ -62,9 +62,13 @@ Třídy
 
       Klonování a konečná kontrola jsou povinné, jejich chyby zůstanou chybami.
 
-   .. py:method:: test_absent_stack_cleanup_and_optional_compaction_remain_valid()
+   .. py:method:: test_stack_removal_preserves_command_order_and_distinct_statuses()
 
-      Chybějící starý stack a chyba volitelné kompakce nefalšují povinné chyby.
+      Existence, absence a obě chyby zachovají příkazy, čekání a návratový kód.
+
+   .. py:method:: test_optional_compaction_failure_remains_nonfatal()
+
+      Chyba volitelné kompakce zůstane varováním při úspěšném nasazení.
 
    .. py:method:: test_test_wrapper_propagates_identity_modes_and_child_failure()
 

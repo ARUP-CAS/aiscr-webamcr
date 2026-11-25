@@ -219,13 +219,31 @@ exit 0
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.tag.read_text(encoding="utf-8"), "previous\n")
 
-    def test_absent_stack_cleanup_and_optional_compaction_remain_valid(self):
-        """Chybějící starý stack a chyba volitelné kompakce nefalšují povinné chyby."""
+    def test_stack_removal_preserves_command_order_and_distinct_statuses(self):
+        """Existence, absence a obě chyby zachovají příkazy, čekání a návratový kód."""
+        self.tool("sleep", 'printf "sleep %s\\n" "$*" >> "$TRACE"\n')
         for script in ("test_deploy.sh", "prod_deploy.sh"):
-            result = self.execute(script, ["-x"], STACK_ABSENT="1")
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            result = self.execute(script, ["-x"], STACK_INSPECTION_EXIT="7")
-            self.assertNotEqual(result.returncode, 0)
+            for values, status, removes, diagnostic in (
+                ({}, 0, True, "removal successful"),
+                ({"STACK_ABSENT": "1"}, 0, False, "doesn't exist"),
+                ({"STACK_INSPECTION_EXIT": "7"}, 2, False, None),
+                ({"FAIL_DOCKER": "stack rm"}, 7, True, None),
+            ):
+                with self.subTest(script=script, case=values):
+                    result = self.execute(script, ["-x"], **values)
+                    self.assertEqual(result.returncode, status, result.stdout + result.stderr)
+                    expected = ["node ls"] if script == "test_deploy.sh" else []
+                    expected.extend(["image prune -f", "stack ls --format {{.Name}}"])
+                    if removes:
+                        expected.append("stack rm swarm_webamcr")
+                    if status == 0:
+                        expected.append("sleep 20")
+                        self.assertIn(diagnostic, result.stdout)
+                    self.assertEqual(self.trace.read_text(encoding="utf-8").splitlines(), expected)
+                    self.assertEqual(self.tag.read_text(encoding="utf-8"), "previous\n")
+
+    def test_optional_compaction_failure_remains_nonfatal(self):
+        """Chyba volitelné kompakce zůstane varováním při úspěšném nasazení."""
         result = self.execute(
             "ci_deployment/deploy_test_server.sh", [self.root.as_posix(), "test", "branch"], COMPACTION_EXIT="7"
         )

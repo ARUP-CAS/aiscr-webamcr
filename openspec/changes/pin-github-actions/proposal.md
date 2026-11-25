@@ -209,6 +209,31 @@ Implementation uses repository-owned source, fixtures and documentation;
 live cleanup, deployment, posting, delivery, sync and archive retain their
 separate authorization boundaries.
 
+## Round-five review capture (2026-11-25)
+
+The user approved planning capture of the [round-five review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6049994746)
+at `d90182be3893880e6f9d9e4c4a89591180b202e7`. The review confirms the
+fourteen round-four repairs and the decision to keep the all-tests aliases.
+The 44 completed tasks describe that work. Group 9 tracks seven new findings
+and two bounded advisory repairs. The [design ledger](design.md#round-five-review-capture-2026-11-25)
+links each item to its task and distinguishes new findings from pre-existing
+observations.
+
+Restore selection of older release tags by resolving the shared SSH helper
+from the workflow revision while retaining the requested tag for deployment.
+Reject duplicate attempt identities before pruning and acquire an ownership
+lease before publishing a new attempt directory. Existing uncertain evidence
+stays protected under the agreed retention policy. Consolidate bounded outcome
+reading, report validated test failures with an annotation and a nonzero exit,
+and make Docker fixture drift fail at setup. Document the outcome-v2
+prerequisite for the deployment-disabled DEV control. Include the production
+option cleanup and shared stack removal as advisory `fix-in-pr` work.
+
+The scope covers repository-owned workflow, test runner, fixture and
+documentation behavior. It requires no delivered governance or hub asset
+changes. The user subsequently authorized group 9 implementation by invoking
+`openspec-apply-change`. Delivery and live acceptance remain separate.
+
 ## Follow-up outside this change
 
 After merge, follow up the DEV SSH/SCP run, an actual Dependabot SHA/comment

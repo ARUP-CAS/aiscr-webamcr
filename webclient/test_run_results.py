@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import uuid
 from pathlib import Path
 
@@ -21,6 +22,7 @@ BASE_FIELDS = {
 }
 FIELDS = BASE_FIELDS | {"counts"}
 COUNT_FIELDS = {"total", "passed", "failed", "skipped", "expected_failures"}
+OUTCOME_LIMIT = 16384
 
 
 def validate_identity(identity):
@@ -52,6 +54,15 @@ def selection(mode, number):
     return mode, str(int(number)) if mode == "konkretni" else ""
 
 
+def attempt_identity(identity=None):
+    """Ověří zadanou identitu nebo vytvoří novou pro samostatný běh.
+
+    :param identity: Volitelná identita pokusu.
+    :return: Identita vhodná pro název adresáře i zámku.
+    """
+    return validate_identity(identity or f"local-{uuid.uuid4().hex}")
+
+
 def create_attempt(root, identity=None):
     """Vytvoří nový adresář a odmítne přepsání existujícího pokusu.
 
@@ -59,7 +70,7 @@ def create_attempt(root, identity=None):
     :param identity: Identita z CI nebo None pro samostatné spuštění.
     :return: Cesta nového pokusu a jeho identita.
     """
-    identity = validate_identity(identity or f"local-{uuid.uuid4().hex}")
+    identity = attempt_identity(identity)
     runs = Path(root) / "runs"
     if runs.is_symlink():
         raise ValueError("Adresář pokusů nesmí být odkaz")
@@ -207,15 +218,11 @@ def validate_record(record, identity, mode, number, allow_legacy=False):
     return record
 
 
-def load_record(directory, identity, mode, number, allow_legacy=False):
-    """Načte JSON s odmítnutím duplicitních klíčů a bez vyhodnocování dat.
+def read_outcome(directory):
+    """Načte jediný omezený objekt JSON bez duplicitních klíčů.
 
-    :param directory: Adresář staženého pokusu.
-    :param identity: Očekávaný pokus.
-    :param mode: Očekávaný režim.
-    :param number: Očekávané číslo.
-    :param allow_legacy: Rozpoznat starý terminální záznam pouze pro retenci.
-    :return: Ověřená metadata.
+    :param directory: Adresář pokusu.
+    :return: Načtený objekt k ověření proti očekávanému pokusu.
     """
 
     def unique(pairs):
@@ -232,13 +239,33 @@ def load_record(directory, identity, mode, number, allow_legacy=False):
         return result
 
     path = directory / "outcome.json"
-    if path.is_symlink() or path.stat().st_size > 16384:
+    metadata = path.lstat()
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > OUTCOME_LIMIT:
         raise ValueError("Neplatný soubor výsledku")
     with path.open("rb") as stream:
-        raw = stream.read(16385)
-    if len(raw) > 16384:
+        raw = stream.read(OUTCOME_LIMIT + 1)
+    if len(raw) > OUTCOME_LIMIT:
         raise ValueError("Neplatný soubor výsledku")
-    record = json.loads(raw.decode("utf-8"), object_pairs_hook=unique)
+    try:
+        record = json.loads(raw.decode("utf-8"), object_pairs_hook=unique)
+    except RecursionError as exc:
+        raise ValueError("Příliš hluboký objekt výsledku") from exc
+    if not isinstance(record, dict):
+        raise ValueError("Neplatné schéma výsledku")
+    return record
+
+
+def load_record(directory, identity, mode, number, allow_legacy=False):
+    """Načte a ověří výsledek proti očekávané identitě a výběru.
+
+    :param directory: Adresář staženého pokusu.
+    :param identity: Očekávaný pokus.
+    :param mode: Očekávaný režim.
+    :param number: Očekávané číslo.
+    :param allow_legacy: Rozpoznat starý terminální záznam pouze pro retenci.
+    :return: Ověřená metadata.
+    """
+    record = read_outcome(directory)
     return validate_record(record, identity, mode, number, allow_legacy=allow_legacy)
 
 

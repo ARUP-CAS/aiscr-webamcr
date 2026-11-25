@@ -17,6 +17,13 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: route_docker_exec()
+
+      Přesměruje právě jednu větev izolovaného Dockeru do testovacího runneru.
+
+      :param docker: Zdroj skutečné náhrady Dockeru z deployment fixture.
+      :return: Stejná náhrada s jedinou přesměrovanou větví.
+
    .. py:method:: setUp()
 
       Připraví skutečné procesy a agent, provozní příkazy však zůstanou náhradami.
@@ -28,6 +35,10 @@ Třídy
       :param script: Skutečný blok workflow.
       :param values: Proměnné izolovaného pokusu.
       :return: Výsledek shellového kroku.
+
+   .. py:method:: test_docker_stub_drift_fails_at_setup()
+
+      Chybějící či opakovaná větev zastaví přípravu místo pozdějšího selhání.
 
    .. py:method:: test_missing_unexecutable_and_shadowed_stubs_stop_before_commands()
 

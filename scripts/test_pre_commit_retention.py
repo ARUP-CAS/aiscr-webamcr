@@ -77,15 +77,97 @@ class RetentionTests(unittest.TestCase):
         young = self.attempt("young")
         old = self.attempt("old")
         unknown, _ = protocol.create_attempt(self.results, "unknown")
+        invalid = self.attempt("invalid")
+        invalid_marker = self.results / "runs/.leases/invalid.lock"
+        invalid_marker.write_bytes(b"unknown marker")
+        nonfile, _ = protocol.create_attempt(self.results, "nonfile")
+        nonfile_marker = self.results / "runs/.leases/nonfile.lock"
+        nonfile_marker.mkdir()
         self.age(young, now - retention.STALE_SECONDS + 1)
         self.age(old, now - retention.STALE_SECONDS)
         self.age(unknown, now - retention.STALE_SECONDS - 1)
+        self.age(invalid, now - retention.STALE_SECONDS - 1)
+        self.age(nonfile, now - retention.STALE_SECONDS - 1)
         with redirect_stdout(io.StringIO()) as output:
             removed = retention.prune_attempts(self.results, now=now)
         self.assertEqual(removed, ["old"])
         self.assertTrue(young.exists())
         self.assertTrue(unknown.exists())
+        self.assertTrue(invalid.exists())
+        self.assertEqual(invalid_marker.read_bytes(), b"unknown marker")
+        self.assertTrue(nonfile.is_dir())
+        self.assertTrue(nonfile_marker.is_dir())
         self.assertIn("neověřené vlastnictví", output.getvalue())
+
+    def test_explicit_reuse_of_old_finished_attempt_is_refused_before_pruning(self):
+        """Kolize nevyvolá retenci ani u pokusu mimo deset nejnovějších."""
+        with patch.object(retention, "prune_locked", return_value=[]):
+            old = self.attempt("old", "completed")
+            os.utime(old / "outcome.json", (1000, 1000))
+            for index in range(10):
+                self.attempt(f"new-{index}", "completed")
+        evidence = {path.name: path.read_bytes() for path in old.iterdir()}
+        with self.assertRaises(FileExistsError):
+            retention.AttemptLease(self.results, "old", protocol.create_attempt)
+        self.assertEqual({path.name: path.read_bytes() for path in old.iterdir()}, evidence)
+        self.assertEqual(self.selection.read_bytes(), b"previous selection")
+        self.assertEqual(retention.prune_attempts(self.results), ["old"])
+
+    def test_interrupted_creation_has_valid_ownership_before_publication(self):
+        """Přerušení před i po vzniku adresáře ponechá platný a odemčený zámek."""
+        for published in (False, True):
+            identity = f"interrupted-{published}"
+            directory = self.results / "runs" / identity
+            marker = directory.parent / ".leases" / f"{identity}.lock"
+            acquire = retention.FileLease.acquire
+            acquired = []
+
+            def track_acquire(lease, blocking=True):
+                """Zaznamená úspěšné uzamčení skutečného souboru.
+
+                :param lease: Soubor zámku z produkčního kódu.
+                :param blocking: Zda čekat na zámek.
+                :return: Skutečný výsledek pokusu o uzamčení.
+                """
+                ok = acquire(lease, blocking)
+                if ok:
+                    acquired.append(lease.path)
+                return ok
+
+            def interrupted(root, attempt_id):
+                """Přeruší založení pokusu na straně zapisujícího procesu.
+
+                :param root: Kořen pokusů.
+                :param attempt_id: Již uzamčená identita.
+                """
+                self.assertIn(marker, acquired)
+                self.assertFalse(directory.exists())
+                if published:
+                    protocol.create_attempt(root, attempt_id)
+                raise KeyboardInterrupt
+
+            with patch.object(retention.FileLease, "acquire", track_acquire), self.assertRaises(KeyboardInterrupt):
+                retention.AttemptLease(self.results, identity, interrupted)
+            self.assertEqual(directory.exists(), published)
+            self.assertEqual(marker.read_bytes(), retention.LOCK_MARKER)
+            if published:
+                self.age(directory, time.time() - retention.STALE_SECONDS - 10)
+                self.assertEqual(retention.prune_attempts(self.results), [identity])
+            else:
+                self.assertEqual(self.attempt(identity), directory)
+
+    def test_failed_lease_creation_prevents_publication(self):
+        """Chyba zámku ani neznámé označení nevytvoří adresář pokusu."""
+        retention.prune_attempts(self.results)
+        with patch.object(retention.os, "fsync", side_effect=OSError("fixture")), self.assertRaises(OSError):
+            retention.AttemptLease(self.results, "failed", protocol.create_attempt)
+        self.assertFalse((self.results / "runs/failed").exists())
+        marker = self.results / "runs/.leases/unknown.lock"
+        marker.write_bytes(b"unrecognized lease")
+        with self.assertRaises(ValueError):
+            retention.AttemptLease(self.results, "unknown", protocol.create_attempt)
+        self.assertFalse((self.results / "runs/unknown").exists())
+        self.assertEqual(marker.read_bytes(), b"unrecognized lease")
 
     def test_active_old_attempt_is_protected_across_processes(self):
         """Skutečný zámek jiného procesu chrání i pokus starší než třicet dní."""
@@ -228,3 +310,25 @@ class RetentionTests(unittest.TestCase):
             self.assertEqual(retention.prune_attempts(self.results), [])
         self.assertTrue(directory.exists())
         self.assertEqual(unrelated.read_bytes(), b"keep")
+
+    def test_terminal_record_is_read_once_and_rejects_bad_metadata(self):
+        """Retence i konzument používají stejné omezení, jediný čtecí průchod a přísný JSON."""
+        directory = self.attempt("terminal", "completed")
+        outcome = directory / "outcome.json"
+        raw = outcome.read_bytes()
+        max_size = protocol.OUTCOME_LIMIT
+        outcome.write_bytes(raw.ljust(max_size, b" "))
+        with patch.object(Path, "open", autospec=True, side_effect=Path.open) as opened:
+            record = retention.terminal_record(directory)
+        opened.assert_called_once_with(outcome, "rb")
+        self.assertEqual(record["attempt_id"], directory.name)
+        for invalid in (raw.ljust(max_size + 1, b" "), raw[:-1] + b', "version":2}', b"{"):
+            outcome.write_bytes(invalid)
+            with self.assertRaises(ValueError):
+                protocol.load_record(directory, directory.name, "vsechny", "")
+            self.age(directory, time.time() - retention.STALE_SECONDS - 10)
+            with redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(retention.prune_attempts(self.results), [])
+            self.assertTrue(directory.is_dir())
+            self.assertEqual(outcome.read_bytes(), invalid)
+            self.assertIn("neověřený kandidát", output.getvalue())
