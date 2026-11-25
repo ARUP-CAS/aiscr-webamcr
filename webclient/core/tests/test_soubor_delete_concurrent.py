@@ -19,7 +19,6 @@ from core.repository_connector import (
     FedoraError,
     FedoraRepositoryConnector,
     FedoraTransaction,
-    FedoraTransactionStatus,
     FedoraUpdatedByAnotherTransactionError,
 )
 from core.views import delete_file, delete_file_DZ
@@ -67,7 +66,7 @@ class _DeleteViewTestMixin:
     def _run(self, view, delete_method, delete_side_effect=None):
         soubor = self._soubor()
         request = self._request()
-        ft = mock.Mock(uid="tx1", status=FedoraTransactionStatus.ACTIVE)
+        ft = mock.Mock(uid="tx1")
         connector = mock.Mock()
         if delete_side_effect is not None:
             getattr(connector, delete_method).side_effect = delete_side_effect
@@ -76,8 +75,8 @@ class _DeleteViewTestMixin:
         session_identifier.file_exists.return_value = True
         atomic = _RecordingAtomic()
         self.last_request, self.last_atomic = request, atomic
-        soubor_model = mock.Mock()
-        soubor_model.objects.filter.return_value.exists.return_value = False
+        on_commit = mock.Mock()
+        self.last_on_commit = on_commit
         with mock.patch("core.views.SessionIdentifier", return_value=session_identifier), mock.patch(
             "core.views.get_object_or_404", return_value=soubor
         ), mock.patch("core.views.check_soubor_vazba"), mock.patch(
@@ -87,7 +86,7 @@ class _DeleteViewTestMixin:
         ), mock.patch(
             "core.views.transaction.atomic", atomic
         ), mock.patch(
-            "core.views.Soubor", soubor_model
+            "core.views.transaction.on_commit", on_commit
         ):
             response = view(request, "projekt", "X-M-000023036", 834816)
         return response, soubor, ft, connector, atomic
@@ -106,7 +105,8 @@ class DeleteFileDZViewTest(_DeleteViewTestMixin, SimpleTestCase):
         self.assertTrue(json.loads(response.content)["success"])
         soubor.delete.assert_called_once()
         connector.delete_binary_file_completely.assert_called_once_with(soubor)
-        ft.mark_transaction_as_closed.assert_called_once()
+        self.last_on_commit.assert_called_once_with(ft.mark_transaction_as_closed)
+        ft.mark_transaction_as_closed.assert_not_called()
         ft.rollback_transaction.assert_not_called()
 
     def test_post_another_transaction_error(self):
@@ -115,7 +115,9 @@ class DeleteFileDZViewTest(_DeleteViewTestMixin, SimpleTestCase):
         response, soubor, ft, connector, atomic = self._run_dz(delete_side_effect=err)
         self.assertEqual(response.status_code, 400)
         self.assertFalse(json.loads(response.content)["success"])
-        ft.rollback_transaction.assert_called_once()
+        # Transakci Fedory odvolává konektor před vyhozením chyby (viz ``DeleteBinaryFileConnectorTest``).
+        ft.rollback_transaction.assert_not_called()
+        self.last_on_commit.assert_not_called()
         self.assertIs(atomic.exit_exc_type, FedoraUpdatedByAnotherTransactionError)
 
     def test_post_already_deleted(self):
@@ -125,7 +127,9 @@ class DeleteFileDZViewTest(_DeleteViewTestMixin, SimpleTestCase):
             response, soubor, ft, connector, atomic = self._run_dz(delete_side_effect=err)
         self.assertEqual(response.status_code, 400)
         self.assertFalse(json.loads(response.content)["success"])
-        ft.rollback_transaction.assert_called_once()
+        # Transakci Fedory odvolává konektor před vyhozením chyby (viz ``DeleteBinaryFileConnectorTest``).
+        ft.rollback_transaction.assert_not_called()
+        self.last_on_commit.assert_not_called()
         self.assertIs(atomic.exit_exc_type, FedoraBinaryFileAlreadyDeletedError)
 
     def test_post_other_fedora_error_propagates(self):
@@ -148,7 +152,9 @@ class DeleteFileViewTest(_DeleteViewTestMixin, SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("redirect", json.loads(response.content))
         connector.delete_binary_file.assert_called_once_with(soubor)
-        ft.mark_transaction_as_closed.assert_called_once()
+        self.last_on_commit.assert_called_once_with(ft.mark_transaction_as_closed)
+        ft.mark_transaction_as_closed.assert_not_called()
+        ft.rollback_transaction.assert_not_called()
         self.assertIsNone(atomic.exit_exc_type)
 
     def test_post_another_transaction_error(self):
@@ -156,7 +162,9 @@ class DeleteFileViewTest(_DeleteViewTestMixin, SimpleTestCase):
         err = FedoraUpdatedByAnotherTransactionError("url", "conflict", 409)
         response, soubor, ft, connector, atomic = self._run_file(delete_side_effect=err)
         self.assertEqual(response.status_code, 400)
-        ft.rollback_transaction.assert_called_once()
+        # Transakci Fedory odvolává konektor před vyhozením chyby (viz ``DeleteBinaryFileConnectorTest``).
+        ft.rollback_transaction.assert_not_called()
+        self.last_on_commit.assert_not_called()
         self.assertIs(atomic.exit_exc_type, FedoraUpdatedByAnotherTransactionError)
 
     def test_post_already_deleted(self):
@@ -166,7 +174,9 @@ class DeleteFileViewTest(_DeleteViewTestMixin, SimpleTestCase):
             response, soubor, ft, connector, atomic = self._run_file(delete_side_effect=err)
         self.assertEqual(response.status_code, 400)
         self.assertFalse(json.loads(response.content)["success"])
-        ft.rollback_transaction.assert_called_once()
+        # Transakci Fedory odvolává konektor před vyhozením chyby (viz ``DeleteBinaryFileConnectorTest``).
+        ft.rollback_transaction.assert_not_called()
+        self.last_on_commit.assert_not_called()
         self.assertIs(atomic.exit_exc_type, FedoraBinaryFileAlreadyDeletedError)
         levels = [m.level for m in self.last_request._messages]
         self.assertNotIn(messages.SUCCESS, levels)
@@ -207,6 +217,7 @@ class DeleteBinaryFileConnectorTest(SimpleTestCase):
         with mock.patch.object(connector, "_get_session", return_value=session), mock.patch.object(
             connector.transaction, "rollback_transaction"
         ) as rollback:
+            self.last_rollback = rollback
             getattr(connector, method)(soubor)
         return session, rollback
 
@@ -215,6 +226,7 @@ class DeleteBinaryFileConnectorTest(SimpleTestCase):
         with self.assertNoLogs("core.repository_connector", level="ERROR"):
             with self.assertRaises(FedoraBinaryFileAlreadyDeletedError):
                 self._delete("delete_binary_file_completely", 403, get_status=410)
+        self.last_rollback.assert_called_once()
 
     def test_delete_completely_not_found_on_check(self):
         """Ověřovací GET vrátí 404: soubor už není, FedoraBinaryFileAlreadyDeletedError."""
@@ -225,6 +237,7 @@ class DeleteBinaryFileConnectorTest(SimpleTestCase):
         """PATCH (``delete_binary_file``) na soubor, který mezitím úplně smazal jiný request."""
         with self.assertRaises(FedoraBinaryFileAlreadyDeletedError):
             self._delete("delete_binary_file", 410, get_status=410)
+        self.last_rollback.assert_called_once()
 
     def test_delete_forbidden_and_file_exists(self):
         """403 na DELETE, ale soubor ve Fedoře pořád je: obecná FedoraError a ERROR log."""
@@ -232,6 +245,7 @@ class DeleteBinaryFileConnectorTest(SimpleTestCase):
             with self.assertRaises(FedoraError) as ctx:
                 self._delete("delete_binary_file_completely", 403, get_status=200)
         self.assertNotIsInstance(ctx.exception, FedoraBinaryFileAlreadyDeletedError)
+        self.last_rollback.assert_called_once()
 
     def test_delete_error_and_check_fails(self):
         """Ověřovací GET selže na síti: nelze potvrdit smazání, obecná FedoraError."""
@@ -259,7 +273,8 @@ class DeleteBinaryFileConnectorTest(SimpleTestCase):
         session.delete.return_value = self._response(409)
         with mock.patch.object(connector, "_get_session", return_value=session), mock.patch.object(
             connector.transaction, "rollback_transaction"
-        ):
+        ) as rollback:
             with self.assertRaises(FedoraUpdatedByAnotherTransactionError):
                 connector.delete_binary_file_completely(soubor)
         session.get.assert_not_called()
+        rollback.assert_called_once()
