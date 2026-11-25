@@ -126,7 +126,7 @@ django-tables2-column-shifter==2.2.0
     # via -r requirements.in
 django-timezone-field==7.2.2
     # via django-celery-beat
-django-widget-tweaks==1.5.1
+django-widget-tweaks==1.6.0
     # via -r requirements.in
 djangorestframework==3.18.3
     # via -r requirements.in
