@@ -274,7 +274,7 @@ pyparsing==3.3.3
     #   -r requirements.txt
     #   pyrtf3
     #   rdflib
-pypdf==7.1.0
+pypdf==7.1.1
     # via -r requirements.txt
 pyppmd==1.3.1
     # via
