@@ -75,12 +75,13 @@ exit 0
         path.write_text("#!/usr/bin/env bash\n" + body, encoding="utf-8", newline="\n")
         path.chmod(0o755)
 
-    def execute(self, script, args=(), previous_tag=True, **values):
+    def execute(self, script, args=(), previous_tag=True, stdin=None, **values):
         """Spustí reálný zkopírovaný skript v bezpečném prostředí.
 
         :param script: Cesta skriptu pod scripts.
         :param args: Jeho argumenty.
         :param previous_tag: Připravit existující záznam předchozího nasazení.
+        :param stdin: Volitelná odpověď na výzvu skriptu.
         :param values: Stav simulovaných příkazů.
         :return: Výsledek procesu.
         """
@@ -92,10 +93,16 @@ exit 0
             TEST_BIN=self.bin.as_posix(),
             TRACE=self.trace.as_posix(),
             FIXTURE_HOME=self.root.as_posix(),
+            FIXTURE_STDIN=stdin or "",
             AMCR_TEST_ATTEMPT_ID="123-1",
         )
         env.update(values)
-        prefix = 'bin="$TEST_BIN"; if command -v cygpath >/dev/null 2>&1; then bin="$(cygpath -u "$bin")"; fi\nexport PATH="$bin:$PATH"\nexec "$@"'
+        prefix = (
+            'bin="$TEST_BIN"; if command -v cygpath >/dev/null 2>&1; then bin="$(cygpath -u "$bin")"; fi\n'
+            'export PATH="$bin:$PATH"\n'
+            'if [[ -n "$FIXTURE_STDIN" ]]; then exec "$@" <<< "$FIXTURE_STDIN"; fi\n'
+            'exec "$@"'
+        )
         return subprocess.run(
             [
                 self.bash,
@@ -112,7 +119,7 @@ exit 0
             capture_output=True,
             text=True,
             encoding="utf-8",
-            timeout=15,
+            timeout=45,
         )
 
     def test_required_build_pull_removal_and_deployment_failures_propagate(self):
@@ -250,6 +257,72 @@ exit 0
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("WARNING: memory compaction failed", result.stdout)
         self.assertEqual(self.tag.read_text(encoding="utf-8"), "test\n")
+
+    def test_web_container_lookup_guards_clone_and_test_launch(self):
+        """Oba vstupy spustí podřízený příkaz jen s právě jedním kontejnerem."""
+        for script, args, command in (
+            ("ci_deployment/deploy_test_server.sh", [self.root.as_posix(), "test", "branch"], "clone_test_db.py"),
+            ("start_selenium_tests.sh", ["-t", "42"], "run_tests.py -t 42"),
+        ):
+            for values, status in (
+                ({"CONTAINER_ID": "current-web"}, 0),
+                ({"CONTAINER_ID": ""}, 1),
+                ({"CONTAINER_ID": "old-web\nnew-web"}, 1),
+                ({"FAIL_DOCKER": "ps -q"}, 7),
+            ):
+                with self.subTest(script=script, values=values):
+                    result = self.execute(script, args, **values)
+                    self.assertEqual(result.returncode, status, result.stdout + result.stderr)
+                    trace = self.trace.read_text(encoding="utf-8").splitlines()
+                    lookup = "ps -q -f label=com.docker.swarm.service.name=swarm_webamcr_web"
+                    self.assertEqual(trace.count(lookup), 1)
+                    after_lookup = trace[trace.index(lookup) + 1 :]
+                    if status:
+                        self.assertFalse(any(line.startswith("exec ") for line in trace))
+                        if status == 1:
+                            self.assertIn("Expected one web container", result.stderr)
+                    else:
+                        self.assertEqual(len(after_lookup), 1)
+                        self.assertIn("current-web script -e -q -c", after_lookup[0])
+                        self.assertIn(command, after_lookup[0])
+
+    def test_invalid_test_deploy_options_stop_before_docker(self):
+        """Neplatný přepínač selže i za platným přepínačem bez účinků Dockeru."""
+        for args in (["-t", "1.4.0"], ["-d"], ["-u"], ["-z"], ["-x", "-d"], ["--", "-d"]):
+            with self.subTest(args=args):
+                result = self.execute("test_deploy.sh", args)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("Error:", result.stderr)
+                self.assertEqual(self.trace.read_text(encoding="utf-8"), "")
+
+    def test_test_deploy_supported_modes_and_order_remain_intact(self):
+        """Výchozí, explicitní a tichý build, nápověda i pořadí akcí zůstanou platné."""
+        for args, prompt in (([], True), (["-b"], True), (["-q"], False), (["-xq"], False)):
+            with self.subTest(args=args):
+                result = self.execute("test_deploy.sh", args, stdin="n")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual("Do you want to update the local repository" in result.stdout, prompt)
+                trace = self.trace.read_text(encoding="utf-8").splitlines()
+                rollout = "stack deploy --resolve-image never --compose-file docker-compose-test.yml swarm_webamcr"
+                self.assertEqual(trace.count(rollout), 1)
+                if "-xq" in args:
+                    self.assertLess(trace.index("stack rm swarm_webamcr"), trace.index(rollout))
+        help_result = self.execute("test_deploy.sh", ["-h"])
+        self.assertEqual(help_result.returncode, 0, help_result.stdout + help_result.stderr)
+        self.assertIn("usage:", help_result.stdout)
+        self.assertNotIn("stack deploy", self.trace.read_text(encoding="utf-8"))
+
+    def test_production_tagged_deployment_and_update_still_execute(self):
+        """Produkční -t a -u použijí tag při nasazení a výměně služeb."""
+        tag = "1.4.0"
+        for flag, command in (
+            ("-t", "pull ghcr.io/arup-cas/aiscr-webamcr:"),
+            ("-u", "service update --force --image ghcr.io/arup-cas/aiscr-webamcr:"),
+        ):
+            with self.subTest(flag=flag):
+                result = self.execute("prod_deploy.sh", ["GitHub", flag, tag])
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn(command + tag, self.trace.read_text(encoding="utf-8"))
 
     def test_test_wrapper_propagates_identity_modes_and_child_failure(self):
         """Předání identity a script --return zachovají selhání všech režimů."""

@@ -357,20 +357,39 @@ exec "$PYTHON_TEST_EXE" "$@"
                 elif deploy == "true":
                     self.assertEqual(self.deployment.tag.read_text(encoding="utf-8"), "test\n")
                 outputs = (self.root / "outputs").read_text(encoding="utf-8")
-                self.assertNotIn("PASSED=99", outputs)
+                report = (self.root / "summary").read_text(encoding="utf-8")
+                self.assertNotIn("| ✅ Prošlo | 99 |", report)
+                invalid_bundle = preparation_failure or case in (
+                    "mixed",
+                    "interrupted",
+                    "stale",
+                    "counter-corruption",
+                    "legacy-version",
+                    "mixed-version",
+                )
+                self.assertEqual(outputs, "" if invalid_bundle else "ARTIFACTS=true\n")
+                self.assertEqual(list(self.runner_temp.iterdir()), [])
+                if invalid_bundle:
+                    self.assertEqual(report, "")
+                else:
+                    bundle = self.root / "test-results" / identity
+                    downloaded = json.loads((bundle / "outcome.json").read_text(encoding="utf-8"))
+                    self.assertEqual({path.name for path in bundle.iterdir()}, {"outcome.json", *downloaded["files"]})
                 if successful:
-                    self.assertIn("STATE=no-tests" if case == "no-tests" else "STATE=completed", outputs)
+                    self.assertIn("stav: `no-tests`" if case == "no-tests" else "stav: `completed`", report)
                 if case in ("mixed-counts", "expected-failures"):
-                    self.assertIn("PASSED=1" if case == "mixed-counts" else "PASSED=0", outputs)
-                    self.assertIn("SKIPPED=1" if case == "mixed-counts" else "SKIPPED=0", outputs)
-                    self.assertIn("EXPECTED_FAILURES=1" if case == "mixed-counts" else "EXPECTED_FAILURES=2", outputs)
-                    self.assertIn("FAILED=0", outputs)
-                if case in ("counter-corruption", "legacy-version", "mixed-version", "all-skipped"):
-                    self.assertNotIn("PASSED=", outputs)
+                    mixed = case == "mixed-counts"
+                    self.assertIn(f"| ✅ Prošlo | {int(mixed)} |", report)
+                    self.assertIn(f"| Přeskočeno | {int(mixed)} |", report)
+                    self.assertIn(f"| Očekávaná selhání | {1 if mixed else 2} |", report)
+                    self.assertIn("| ❌ Selhalo | 0 |", report)
+                if case == "all-skipped":
+                    self.assertIn("stav: `error`", report)
+                    self.assertNotIn("| Stav | Počet |", report)
                 if case == "test-failure":
                     self.assertNotEqual(remote.returncode, 0)
-                    self.assertIn("FAILED=1", outputs)
-                    self.assertIn("ARTIFACTS=true", outputs)
+                    self.assertIn("| ❌ Selhalo | 1 |", report)
+                    self.assertIn("::error::Selhalo 1 testů", result.stdout)
         cleanup = self.run_shell(self.cleanup["run"], **self.agent_state)
         self.assertEqual(cleanup.returncode, 0, cleanup.stderr)
         self.assert_agent_stopped()

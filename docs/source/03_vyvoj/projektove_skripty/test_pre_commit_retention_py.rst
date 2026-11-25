@@ -40,6 +40,14 @@ Třídy
 
       Normální, neúspěšné i prázdné terminální pokusy sdílí limit deseti.
 
+   .. py:method:: test_first_concurrent_use_publishes_one_complete_lock()
+
+      Dva procesy zveřejní úplný marker a respektují stejný živý zámek.
+
+   .. py:method:: test_invalid_existing_root_marker_is_not_replaced()
+
+      Prázdný či jinak neověřený marker zůstane beze změny a retence selže.
+
    .. py:method:: test_thirty_day_boundary_and_unknown_ownership()
 
       Přerušené pokusy vyžadují třicet dní i ověřené neaktivní vlastnictví.
@@ -87,6 +95,21 @@ Třídy
    .. py:method:: test_terminal_record_is_read_once_and_rejects_bad_metadata()
 
       Retence i konzument používají stejné omezení, jediný čtecí průchod a přísný JSON.
+
+
+Funkce
+------
+
+.. py:function:: simultaneous_attempt(root, identity, publication, acquired, owner, contender)
+
+   Vytvoří pokus až po souběžném zveřejnění markeru a ověření výlučnosti.
+
+   :param root: Sdílený dočasný kořen výsledků.
+   :param identity: Vlastní identita procesu.
+   :param publication: Bariéra před zveřejněním dvou úplných markerů.
+   :param acquired: Signál prvního držitele zámku.
+   :param owner: Identita procesu, který má vstoupit první.
+   :param contender: Signál, že druhý proces ověřil obsazený zámek.
 
 Zdrojový kód
 ------------

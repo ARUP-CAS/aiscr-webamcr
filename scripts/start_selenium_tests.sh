@@ -17,8 +17,8 @@ while getopts 'fabt:h' flag; do
     *) usage >&2; exit 1 ;;
   esac
 done
-container="$(docker ps -q -f label=com.docker.swarm.service.name=swarm_webamcr_web)"
-[[ -n "$container" && "$container" != *$'\n'* ]] || { echo "Expected one web container" >&2; exit 1; }
+source "$(dirname "${BASH_SOURCE[0]}")/deployment_helpers.sh"
+container="$(find_dev_web_container)"
 docker_env=(-e "AMCR_TEST_ATTEMPT_ID=${AMCR_TEST_ATTEMPT_ID:-}")
 if [[ -n "${AMCR_TEST_RESULTS_ROOT:-}" ]]; then
   docker_env+=(-e "AMCR_TEST_RESULTS_ROOT=$AMCR_TEST_RESULTS_ROOT")

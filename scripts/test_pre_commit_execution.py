@@ -550,10 +550,13 @@ class ExecutionTests(unittest.TestCase):
             self.assertEqual(record["version"], 2)
             outputs, summary = self.root / f"outputs-{index}", self.root / f"summary-{index}"
             status = report(directory, identity, "vsechny", "", outputs, summary)
+            self.assertEqual(outputs.read_text(encoding="utf-8"), "ARTIFACTS=true\n")
+            report_text = summary.read_text(encoding="utf-8")
             if expected is None:
                 self.assertEqual((code, status, record["state"]), (1, 1, "error"))
                 self.assertIsNone(record["counts"])
-                self.assertNotIn("PASSED=", outputs.read_text())
+                self.assertIn("stav: `error`", report_text)
+                self.assertNotIn("| Stav | Počet |", report_text)
             else:
                 passed, failed, skipped, xfail = expected
                 self.assertEqual((code, status), (native, native))
@@ -561,10 +564,10 @@ class ExecutionTests(unittest.TestCase):
                     record["counts"],
                     dict(total=total, passed=passed, failed=failed, skipped=skipped, expected_failures=xfail),
                 )
-                self.assertIn(
-                    f"PASSED={passed}\nFAILED={failed}\nSKIPPED={skipped}\nEXPECTED_FAILURES={xfail}",
-                    outputs.read_text(),
-                )
+                self.assertIn(f"| ✅ Prošlo | {passed} |", report_text)
+                self.assertIn(f"| ❌ Selhalo | {failed} |", report_text)
+                self.assertIn(f"| Přeskočeno | {skipped} |", report_text)
+                self.assertIn(f"| Očekávaná selhání | {xfail} |", report_text)
 
     def test_counter_consistency_and_legacy_rejection(self):
         """Neplatné typy, kategorie či stará verze neprojdou do nového výsledku."""

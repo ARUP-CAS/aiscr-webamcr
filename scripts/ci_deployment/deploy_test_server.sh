@@ -71,8 +71,7 @@ python3 "$scriptpath/check_stack_ready.py" "$stack_name" --compose-file docker-c
 
 #FINAL
 print_d1 "Cloning test database"
-web_container="$(docker ps -q -f label=com.docker.swarm.service.name=swarm_webamcr_web)"
-[[ -n "$web_container" && "$web_container" != *$'\n'* ]] || exit 1
+web_container="$(find_dev_web_container)"
 docker exec "$web_container" script -e -q -c "python3 /scripts/db/clone_test_db.py" < /dev/null || exit $?
 
 # Kompakce paměti před testy. Build image a start stacku rozdrobí volnou paměť; bez souvislých

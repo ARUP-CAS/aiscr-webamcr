@@ -87,7 +87,7 @@ Help ()
 {
     cat <<EOF
     !!!MUST BE RUN from REPOSIOTRY root like =>
-    usage: ./scrips/${script_name} [-x|b|h], 
+    usage: ./scripts/${script_name} [-x|-b|-q|-h]
     ---
        PURPOSE: manage deployment/run of production docker images build from GIT repository for AIS CR project in SWARM mode
     ----
@@ -119,6 +119,19 @@ EOF
 script_name=$(basename ${0})
 passed_args="$@"
 
+# Validate the entire request before any Swarm or image operations.
+options=()
+OPTIND=1
+while getopts ":hxbq" option; do
+    case "$option" in
+        \?) printf 'Error: Invalid option -%s\n' "$OPTARG" >&2; exit 1 ;;
+        *) options+=("$option");;
+    esac
+done
+if (( OPTIND <= $# )); then
+    echo "Error: Unexpected positional argument" >&2
+    exit 1
+fi
 
 #INPUTS
 
@@ -142,8 +155,6 @@ log_dir="logs/test_deploy"
 start_time=$(date +%Y%m%dT%H%M%S)
 log_file="${start_time}_test-deployment_${passed_args}.log"
 mkdir -p ${log_dir}
-
-OPTIND=1
 
 #REDIRECT to log
 exec > >(tee "${log_dir}/${log_file}" )
@@ -171,8 +182,7 @@ cmd_deploy_base="docker stack deploy --resolve-image never --compose-file"
 echo "Pruning unused Docker images..."
 docker image prune -f
 
-while getopts "hxqbut:d" option; do
-   option_passed="yes"
+for option in "${options[@]}"; do
    case ${option} in
       h) # display Help
          echo "OPTION: -h"
@@ -191,15 +201,11 @@ while getopts "hxqbut:d" option; do
          quiet_mode="yes"
          run_default
          ;;
-     \?) # Invalid option
-         echo_dec "OPTION: INVALID"
-         echo "Error: Invalid option ${option}"
-         exit;;
    esac
 done
 
 # RUN docker compose [default option]
-if [ -z ${option_passed+x} ]; then
+if (( ${#options[@]} == 0 )); then
    echo_dec "NO option passed as ARG so default case is called,"
    run_default
 fi

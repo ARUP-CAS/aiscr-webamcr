@@ -203,6 +203,8 @@ class SSHTestCase(unittest.TestCase):
         self.assertEqual(self.setup["env"]["SSH_PRIVATE_KEY"], "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}")
         self.bin = self.root / "bin"
         self.bin.mkdir()
+        self.runner_temp = self.root / "runner-temp"
+        self.runner_temp.mkdir()
         self.state = self.root / "github-env"
         self.state.write_text("", encoding="utf-8")
         executable = self.run_shell("command -v ssh-agent")
@@ -298,6 +300,7 @@ class SSHTestCase(unittest.TestCase):
             TEST_BIN=self.bin.as_posix(),
             TEST_SSH_DIR=(self.root / "ssh").as_posix(),
             GITHUB_WORKSPACE=ROOT.as_posix(),
+            RUNNER_TEMP=self.runner_temp.as_posix(),
             PYTHON_TEST_EXE=Path(sys.executable).as_posix(),
             REMOTE_RESULTS=(self.root / "remote-results").as_posix(),
             KEY_PATH=(self.root / "identity").as_posix(),
@@ -410,7 +413,8 @@ class SSHAgentTests(SSHTestCase):
         fingerprints = (self.root / "fingerprints").read_text(encoding="utf-8").splitlines()
         self.assertEqual(len(fingerprints), 4)
         self.assertEqual(len(set(fingerprints)), 1)
-        self.assertIn("PASSED=1", (self.root / "outputs").read_text(encoding="utf-8"))
+        self.assertEqual((self.root / "outputs").read_text(encoding="utf-8"), "ARTIFACTS=true\n")
+        self.assertIn("| ✅ Prošlo | 1 |", (self.root / "summary").read_text(encoding="utf-8"))
         cleanup = self.run_shell(self.cleanup["run"], **state)
         self.assertEqual(cleanup.returncode, 0, cleanup.stderr)
         self.assert_agent_stopped()
@@ -475,13 +479,15 @@ class SummaryResultTests(SSHTestCase):
             edit()
         self.output.write_text("existing-output\n", encoding="utf-8")
         self.summary.write_text("existing-summary\n", encoding="utf-8")
-        return self.run_shell(
+        result = self.run_shell(
             self.workflow_script(self.results),
             ATTEMPT_ID=identity,
             TEST_MOD=mode,
             TEST_CISLO=number,
             **self.agent_state,
         )
+        self.assertEqual(list(self.runner_temp.iterdir()), [])
+        return result
 
     def assert_rejected(self, content, edit=None):
         """Ověří neúspěch bez publikovaných částečných výstupů.
@@ -516,26 +522,30 @@ class SummaryResultTests(SSHTestCase):
                 annotations = [line for line in result.stdout.splitlines() if line.startswith("::error::Selhalo")]
                 self.assertEqual(annotations, [f"::error::Selhalo {failed} testů"] if int(failed) else [])
                 output = self.output.read_text(encoding="utf-8")
-                self.assertIn(f"PASSED={passed}\nFAILED={failed}\n", output)
-                self.assertIn("ARTIFACTS=true", output)
+                self.assertEqual(output, "existing-output\nARTIFACTS=true\n")
                 report = self.summary.read_text(encoding="utf-8")
                 self.assertIn(f"| ✅ Prošlo | {passed} |", report)
                 self.assertIn(f"| ❌ Selhalo | {failed} |", report)
+                bundle = self.root / f"test-results/123-{self.invocations}"
                 self.assertEqual(
-                    (self.root / f"test-results/123-{self.invocations}/results.xlsx").read_bytes(), b"test-result"
+                    {path.name for path in bundle.iterdir()}, {"outcome.json", "test_summary.env", "results.xlsx"}
                 )
+                self.assertEqual((bundle / "results.xlsx").read_bytes(), b"test-result")
 
     def test_noop_and_error_are_explicit_and_cannot_reuse_spreadsheet(self):
         """No-op nemá starý artefakt; chyba nikdy nemá úspěšné nulové počty."""
         result = self.execute_result(b"PASSED=0\nFAILED=0\n", state="no-tests")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("STATE=no-tests", self.output.read_text(encoding="utf-8"))
+        self.assertEqual(self.output.read_text(encoding="utf-8"), "existing-output\nARTIFACTS=true\n")
+        self.assertIn("stav: `no-tests`", self.summary.read_text(encoding="utf-8"))
         self.assertFalse((self.root / f"test-results/123-{self.invocations}/results.xlsx").exists())
         result = self.execute_result(b"", state="error", code=1)
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertNotIn("::error::Selhalo", result.stdout + result.stderr)
-        self.assertIn("STATE=error", self.output.read_text(encoding="utf-8"))
-        self.assertNotIn("PASSED=", self.output.read_text(encoding="utf-8"))
+        self.assertEqual(self.output.read_text(encoding="utf-8"), "existing-output\nARTIFACTS=true\n")
+        report = self.summary.read_text(encoding="utf-8")
+        self.assertIn("stav: `error`", report)
+        self.assertNotIn("| Stav | Počet |", report)
         self.assert_rejected(b"PASSED=0\nFAILED=0\n")
 
     def test_malformed_binary_and_command_summaries_publish_nothing(self):
@@ -615,7 +625,8 @@ class SummaryResultTests(SSHTestCase):
 
         result = self.execute_result(b"PASSED=0\nFAILED=0\n", edit=expected_only)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("EXPECTED_FAILURES=2", self.output.read_text(encoding="utf-8"))
+        self.assertEqual(self.output.read_text(encoding="utf-8"), "existing-output\nARTIFACTS=true\n")
+        self.assertIn("| Očekávaná selhání | 2 |", self.summary.read_text(encoding="utf-8"))
         for edit_counts in (
             dict(total=1, passed=1, failed=0, skipped=True, expected_failures=0),
             dict(total=2, passed=2, failed=0, skipped=0, expected_failures=0),

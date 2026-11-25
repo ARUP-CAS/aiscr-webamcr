@@ -178,8 +178,8 @@ deployment-source selection, and test modes SHALL retain their behavior.
 
 The DEV result step SHALL parse summaries without execution, requiring exactly
 one nonnegative decimal `PASSED` and `FAILED` value and rejecting other content.
-It SHALL validate the whole summary before publishing canonical outputs or a
-report, fail on invalid input, and preserve agent cleanup. Raw reads SHALL be
+It SHALL validate the whole summary before reporting counts or signaling
+artifact eligibility, fail on invalid input, and preserve agent cleanup. Raw reads SHALL be
 bounded before allocation, rejecting summaries larger than 4096 bytes after
 reading at most 4097 bytes.
 
@@ -187,7 +187,7 @@ reading at most 4097 bytes.
 
 - **GIVEN** the producer's `PASSED` and `FAILED` records with decimal counts, including zero or leading zeros
 - **WHEN** the result step reads either record order using LF/CRLF or a final record without a newline
-- **THEN** it emits canonical decimal outputs and the existing report without executing the file
+- **THEN** it reports canonical decimal counts without executing the file
 - **AND** a validated positive failed count is annotated by the result report
 
 #### Scenario: Incomplete or malformed summaries publish no results
@@ -279,6 +279,28 @@ execution error without evaluating downloaded data.
 - **AND** applicable artifact upload and unconditional cleanup can still run
 - **AND** invalid bundles or execution errors without verified counts do not produce a failed-count annotation
 
+### Requirement: Workflow artifact upload uses only the verified bundle
+
+The DEV result step SHALL keep internal retrieval bookkeeping outside the
+uploaded artifact. It SHALL export only `ARTIFACTS` as its step output
+after validation and preserve result state and validated counts in the
+report and applicable outcome and numeric summary files.
+
+#### Scenario: A current bundle qualifies for upload
+
+- **GIVEN** a current validated outcome and matching allowlisted files
+- **WHEN** the workflow signals eligibility and uploads results
+- **THEN** the artifact contains only the outcome and its verified files
+- **AND** the temporary retrieval plan is excluded and cleaned up
+- **AND** state and counts remain available without separate step outputs
+
+#### Scenario: Retrieval or validation fails
+
+- **GIVEN** there is a missing, incomplete or mismatched current result
+- **WHEN** the result step cannot verify the bundle
+- **THEN** it does not signal artifact eligibility or report unverified counts
+- **AND** the temporary plan is cleaned up and the failure remains visible
+
 ### Requirement: Previous results remain selection input
 
 Failed-only and numbered-test selection SHALL retain access to the previous
@@ -342,6 +364,20 @@ widening deletion scope or masking execution failure.
 - **WHEN** retention examines candidates
 - **THEN** no external target, unrelated file or selection workbook is removed
 - **AND** cleanup failure does not silently broaden the candidate set
+
+### Requirement: Concurrent retention startup shares one initialized root lock
+
+The retention root marker SHALL be completely initialized before it is
+published. Its publication SHALL never replace an existing canonical lock.
+Concurrent callers SHALL use the same valid root lock and reject uncertain,
+invalid or redirected markers.
+
+#### Scenario: Two processes start with no retention root lock
+
+- **GIVEN** two isolated runner processes start against the same fresh results root
+- **WHEN** they concurrently initialize and acquire the root lock
+- **THEN** one complete marker is published and both use the same canonical lock
+- **AND** both can proceed with valid distinct attempt identities without observing an empty marker or entering the protected section simultaneously
 
 ### Requirement: New attempt directories have prior ownership
 
@@ -566,6 +602,26 @@ record or introduce automatic rollback.
 - **THEN** both use shared status handling, with removal attempted for an existing stack and skipped successfully for a genuinely absent stack
 - **AND** inspection and removal failures remain nonzero and prevent dependent operations
 
+### Requirement: Unsupported test deployment options fail before Docker operations
+
+The standalone test deployment script SHALL reject unsupported options
+before touching Docker. It SHALL preserve default deployment, explicit
+build deployment, quiet deployment, stack removal and help. Production
+tag and update modes and Selenium numbered-test selection SHALL retain
+their behavior.
+
+#### Scenario: An unsupported test deployment option is supplied
+
+- **GIVEN** the caller supplies `-t`, `-d`, `-u` or another unsupported option, alone or with a supported option
+- **WHEN** the test deployment script validates the request
+- **THEN** it emits a diagnostic and exits nonzero without Swarm inspection, pruning, removal or deployment
+
+#### Scenario: A supported test deployment mode is selected
+
+- **GIVEN** the caller supplies no options or valid `-b`, `-q`, `-x` or `-h` options
+- **WHEN** the test deployment script dispatches the request
+- **THEN** it performs the selected mode in the existing valid operation order
+
 ### Requirement: Shared automation helpers preserve caller contracts
 
 The repeated SSH quoting and remote argument construction SHALL use one
@@ -590,6 +646,19 @@ successful-deployment bookkeeping.
 - **THEN** the actual shared helper code supplies consistent failure, diagnostic, rotation and bookkeeping behavior
 - **AND** fixtures include the helper dependency closure without selecting real deployment commands
 
+### Requirement: DEV callers share the web container selection rule
+
+Database cloning and test launch SHALL use one repository-owned helper to
+identify exactly one current web container for the DEV Swarm service. Both
+callers SHALL resolve the container when needed and propagate lookup failure
+without starting the dependent command.
+
+#### Scenario: Web container lookup succeeds or fails
+
+- **GIVEN** Docker lists one, zero or multiple matching web containers, or returns an inspection error
+- **WHEN** either DEV caller resolves its current container
+- **THEN** one valid result reaches the dependent command and each other outcome fails before that command
+
 ### Requirement: Workflow helper resolution preserves manual tag selection
 
 The deployment workflow SHALL load the local SSH helper from the revision
@@ -602,6 +671,13 @@ remote checkout and its deployment entry point.
 - **WHEN** the deployment job prepares and sends its SSH command
 - **THEN** it loads the helper from a separate checkout of the workflow revision
 - **AND** the requested tag still determines which deployment code runs remotely, including when manually selecting an older tag
+
+#### Scenario: An older tag has historical failure handling
+
+- **GIVEN** an older release tag runs a wrapper with historical readiness or exit behavior
+- **WHEN** a maintainer follows guidance for a rollback to that tag
+- **THEN** the guide explains that the wrapper keeps its historical behavior
+- **AND** success requires independent evidence of the actual deployed version and target readiness for wrappers that can report misleading success
 
 ### Requirement: DEV tests and deployments serialize shared mutations
 

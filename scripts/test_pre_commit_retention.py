@@ -2,6 +2,7 @@
 
 import io
 import json
+import multiprocessing
 import os
 import subprocess
 import sys
@@ -16,6 +17,67 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "webclient"))
 import test_run_results as protocol  # noqa: E402
 import test_run_retention as retention  # noqa: E402
+
+
+def simultaneous_attempt(root, identity, publication, acquired, owner, contender):
+    """Vytvoří pokus až po souběžném zveřejnění markeru a ověření výlučnosti.
+
+    :param root: Sdílený dočasný kořen výsledků.
+    :param identity: Vlastní identita procesu.
+    :param publication: Bariéra před zveřejněním dvou úplných markerů.
+    :param acquired: Signál prvního držitele zámku.
+    :param owner: Identita procesu, který má vstoupit první.
+    :param contender: Signál, že druhý proces ověřil obsazený zámek.
+    """
+    operation = "rename" if os.name == "nt" else "link"
+    publish = getattr(os, operation)
+    acquire = retention.FileLease.acquire
+    first_root_acquire = True
+
+    def synchronize_publish(source, target):
+        """Seřadí oba procesy těsně před skutečným zveřejněním souboru.
+
+        :param source: Cesta k inicializovanému markeru.
+        :param target: Kanonická cesta zámku.
+        :return: Výsledek vytvoření odkazu.
+        """
+        assert Path(source).read_bytes() == retention.LOCK_MARKER
+        publication.wait(10)
+        return publish(source, target)
+
+    def check_acquire(lease, blocking=True):
+        """Ověří obsazený skutečný zámek druhým procesem.
+
+        :param lease: Zámek pokusu nebo kořene.
+        :param blocking: Zda má získání zámku čekat.
+        :return: Výsledek skutečného získání zámku.
+        """
+        nonlocal first_root_acquire
+        if lease.path.name == ".retention.lock" and first_root_acquire:
+            first_root_acquire = False
+            if identity != owner:
+                assert acquired.wait(10), "First process did not acquire the canonical lock"
+                assert not acquire(lease, blocking=False), "Second process acquired a held root lock"
+                contender.set()
+        return acquire(lease, blocking)
+
+    def create(results, attempt_id):
+        """Ponechá první zámek obsazený, dokud druhý proces neověří výlučnost.
+
+        :param results: Kořen úložiště výsledků.
+        :param attempt_id: Ověřená identita běhu.
+        :return: Adresář a identita vytvořeného pokusu.
+        """
+        if identity == owner:
+            acquired.set()
+            assert contender.wait(10), "Second process did not verify mutual exclusion"
+        return protocol.create_attempt(results, attempt_id)
+
+    with patch.object(retention.os, operation, synchronize_publish), patch.object(
+        retention.FileLease, "acquire", check_acquire
+    ):
+        lease = retention.AttemptLease(root, identity, create)
+        lease.close()
 
 
 class RetentionTests(unittest.TestCase):
@@ -70,6 +132,44 @@ class RetentionTests(unittest.TestCase):
         remaining = sorted(path.name for path in (self.results / "runs").iterdir() if not path.name.startswith("."))
         self.assertEqual(remaining, [f"run-{index:02}" for index in range(3, 13)])
         self.assertEqual(self.selection.read_bytes(), b"previous selection")
+
+    def test_first_concurrent_use_publishes_one_complete_lock(self):
+        """Dva procesy zveřejní úplný marker a respektují stejný živý zámek."""
+        context = multiprocessing.get_context("spawn")
+        publication, acquired, contender = context.Barrier(2), context.Event(), context.Event()
+        identities = ("first", "second")
+        children = [
+            context.Process(
+                target=simultaneous_attempt,
+                args=(self.results, identity, publication, acquired, identities[0], contender),
+            )
+            for identity in identities
+        ]
+        for child in children:
+            child.start()
+        try:
+            for child in children:
+                child.join(25)
+                self.assertEqual(child.exitcode, 0)
+            runs = self.results / "runs"
+            self.assertEqual(sorted(path.name for path in runs.iterdir()), [".leases", ".retention.lock", *identities])
+            self.assertEqual((runs / ".retention.lock").read_bytes(), retention.LOCK_MARKER)
+        finally:
+            for child in children:
+                if child.is_alive():
+                    child.terminate()
+                child.join()
+                child.close()
+
+    def test_invalid_existing_root_marker_is_not_replaced(self):
+        """Prázdný či jinak neověřený marker zůstane beze změny a retence selže."""
+        runs, _ = retention.layout(self.results)
+        root_lock = runs / ".retention.lock"
+        for marker in (b"", b"unrecognized"):
+            root_lock.write_bytes(marker)
+            with self.assertRaises(ValueError):
+                retention.prune_attempts(self.results)
+            self.assertEqual(root_lock.read_bytes(), marker)
 
     def test_thirty_day_boundary_and_unknown_ownership(self):
         """Přerušené pokusy vyžadují třicet dní i ověřené neaktivní vlastnictví."""

@@ -268,16 +268,17 @@ consumer `webclient/test_run_results.py:read_summary` to read
 `FAILED` assignment containing ASCII decimal digits; reject duplicate or
 unknown keys, missing values, executable text, empty records, and NUL bytes.
 Support LF/CRLF records and a final record without a terminating newline.
-Normalize validated ASCII decimal strings to canonical numeric outputs in
+Normalize validated ASCII decimal strings to canonical report counts in
 Python without shell evaluation. The round-four repair additionally bounds
 the raw summary read to 4097 bytes, rejecting a result larger than 4096 bytes
 before decoding or allocating the entire input.
 
 Finish validating the entire file before appending either output or the
-human-readable summary. Preserve their names and Markdown layout, the
-spreadsheet artifact, and the failed-test reporting contract. Group 9 moves
-the failure annotation into the result report. The existing `always()`
-cleanup handles a parse failure after the SCP clients used the agent.
+human-readable summary. Preserve the Markdown layout, spreadsheet artifact
+and failed-test reporting contract. Group 9 moved the failure annotation
+into the result report. Group 10 narrows the result step output to
+`ARTIFACTS`. The existing `always()` cleanup handles a parse failure after
+the SCP clients used the agent.
 
 Extend the existing disposable-key result-step fixtures to deliver arbitrary
 summary bytes. Exercise the real shell with valid/zero/failed counts, record
@@ -815,6 +816,103 @@ OpenSpec. Implementation and generated documentation belong to this
 repository. The group 9 apply invocation covers this implementation and local
 validation. Live operations, review-thread writes, delivery, hub sync and
 archive require separate authorization.
+
+## Round-six review capture (2026-11-25)
+
+The [round-six review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6053375832)
+at `5dc50a8797e184f8c11b06746bb6939526bff4db` compares the PR with
+`test` (`d327f2caff9cb0e6ffadb8325defcd948bbaa13f`). It confirms all nine
+round-five repairs and records the earlier round-four and CodeQL threads
+as resolved. After the review was gathered, hosted
+[pre-commit](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45531908215)
+and [CodeQL](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45531903494)
+passed for this head. The user approved capture and subsequently invoked
+`openspec-apply-change` for group 10.
+
+| Review item | Agreed disposition | Task |
+| --- | --- | --- |
+| [R6-F1, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4691616888) | Publish a complete retention root-lock marker with an atomic create-if-absent operation. Concurrent callers reuse the winning lock. | 10.1 |
+| [R6-F2, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4691616898) | Store the download plan outside the artifact directory and clean it up after retrieval. | 10.2 |
+| [R6-F3, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4691616903) | Document that an older tag retains its own deploy and failure behavior, including limitations of a green workflow and of the last-success marker. | 10.3 |
+| [R6-F4, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4691616906) | Narrow the internal step outputs to `ARTIFACTS`. Retain validated state and counts in the report and outcome data. | 10.4 |
+| [R6-F5, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4691616909) | Share the exactly-one web container lookup between DEV database cloning and test launch. | 10.5 |
+| [R6-O11, advisory](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4691617174) | `fix-in-pr`. Reject unsupported test-deployment options, including `-t`, `-d` and `-u`, without Docker side effects. Preserve the supported modes. | 10.6 |
+
+### Initialize one stable retention root lock
+
+The current exclusive open publishes an empty file before the creator
+writes and syncs its marker. A second caller can open that file and acquire
+its lock before the marker is present. Initialize a unique temporary
+marker in the same filesystem, then publish it atomically if the canonical
+root lock is absent. A concurrent caller opens the winner. Never replace
+an already-visible lock, since an existing file descriptor may still hold
+the lock on it. Clean up temporary initialization data where ownership is
+known. Retain fail-closed handling for invalid or redirected canonical
+markers and preserve per-attempt ownership, pruning and diagnostics.
+Exercise simultaneous starting processes against a fresh root using
+isolated fixtures and deterministic synchronization.
+
+### Keep retrieval data outside the verified bundle
+
+Write the validated filename plan to a unique runner-owned temporary file
+outside the upload directory. Remove it on success and failure. The artifact
+contains the current outcome and only its verified, allowlisted files. The
+report step still validates the complete bundle before signaling artifact
+eligibility. It preserves the native failure status, failure annotation
+and unconditional cleanup.
+
+Only `steps.test-result.outputs.ARTIFACTS` has a workflow consumer. Retire
+the unused `STATE`, `PASSED`, `FAILED`, `SKIPPED` and `EXPECTED_FAILURES`
+step outputs. This narrows the earlier step-output contract. State and
+validated counts remain available through the report and applicable outcome
+and summary files. Update regressions to assert published results through
+those channels. Preserve the distinction among a completed result, an
+allowed no-op and an execution error.
+
+### Keep old-tag and container selection behavior explicit
+
+The workflow revision supplies the SSH helper. The selected release tag
+continues to supply the remote deployment wrapper. The local `v1.4.0`
+wrapper can report a failed readiness check yet still write
+`last_deployment_tag.txt` and return success. Document that a green run for
+such a tag needs independent verification of the actual deployed version,
+stack health and readiness. Preserve older tag selection and treat live
+verification as a separately authorized operation.
+
+Use a shared repository helper for the Swarm service filter and the
+nonempty, single-container requirement. The DEV deployment wrapper and
+standalone test launcher each resolve the current container when their
+operation runs. This keeps the selection rule consistent without binding
+both operations to one container ID across possible Docker replacement.
+Preserve the existing command and status propagation for each caller.
+
+### Reject unsupported options without retiring working modes
+
+Git history identifies
+[`b88874461`](https://github.com/ARUP-CAS/aiscr-webamcr/commit/b88874461c8e378aebab7adf3ee08f452de5bb9d)
+as the creation of `test_deploy.sh` in June 2024. Its production ancestor
+had image-tag selection, service update and database Compose modes. The
+new test script inherited the `getopts` letters without those handlers.
+An in-memory Bash probe of the actual option block at the PR base,
+previous reviewed head and current head returned zero without dispatching
+an action for `-t 1.4.0`, `-d` and `-u`. The same probe reached the
+intended stub for each documented mode. The earlier production O9 repair
+removed an unreachable preliminary `d` alternative. Production
+`-t`/`-u` and Selenium's numbered-test `-t` remain separate working modes.
+
+Validate the test deployment request before Swarm inspection, image pruning
+or action dispatch. Report unsupported options and return nonzero, even
+when combined with a valid option. Removing letters alone still takes the
+success-returning invalid-option branch. Keep default and `-b` deployment,
+quiet `-q`, removal `-x`, help `-h` and existing valid operation order.
+Test the entry points with isolated stubs rather than running deployment.
+
+Implementation belongs to the existing repository workflows, scripts,
+tests and documentation. The four planning artifacts and one rolling
+usage entry cover this capture. The 52 earlier task descriptions are
+preserved. The group 10 apply invocation covers implementation and local
+validation. Delivery, live operations and review-thread writes require
+separate authorization.
 
 ## Risks / Trade-offs
 

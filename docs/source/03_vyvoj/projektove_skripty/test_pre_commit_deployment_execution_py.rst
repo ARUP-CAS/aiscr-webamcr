@@ -35,6 +35,7 @@ Třídy
       :param script: Cesta skriptu pod scripts.
       :param args: Jeho argumenty.
       :param previous_tag: Připravit existující záznam předchozího nasazení.
+      :param stdin: Volitelná odpověď na výzvu skriptu.
       :param values: Stav simulovaných příkazů.
       :return: Výsledek procesu.
 
@@ -69,6 +70,22 @@ Třídy
    .. py:method:: test_optional_compaction_failure_remains_nonfatal()
 
       Chyba volitelné kompakce zůstane varováním při úspěšném nasazení.
+
+   .. py:method:: test_web_container_lookup_guards_clone_and_test_launch()
+
+      Oba vstupy spustí podřízený příkaz jen s právě jedním kontejnerem.
+
+   .. py:method:: test_invalid_test_deploy_options_stop_before_docker()
+
+      Neplatný přepínač selže i za platným přepínačem bez účinků Dockeru.
+
+   .. py:method:: test_test_deploy_supported_modes_and_order_remain_intact()
+
+      Výchozí, explicitní a tichý build, nápověda i pořadí akcí zůstanou platné.
+
+   .. py:method:: test_production_tagged_deployment_and_update_still_execute()
+
+      Produkční -t a -u použijí tag při nasazení a výměně služeb.
 
    .. py:method:: test_test_wrapper_propagates_identity_modes_and_child_failure()
 

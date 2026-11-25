@@ -234,6 +234,29 @@ documentation behavior. It requires no delivered governance or hub asset
 changes. The user subsequently authorized group 9 implementation by invoking
 `openspec-apply-change`. Delivery and live acceptance remain separate.
 
+## Round-six review capture (2026-11-25)
+
+The user approved capture of the [round-six review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6053375832)
+at `5dc50a8797e184f8c11b06746bb6939526bff4db`. The review confirms the
+nine round-five repairs. Group 10 covers five new findings and one advisory
+in the same repository-owned workflow and runner scope. The
+[design ledger](design.md#round-six-review-capture-2026-11-25) links each
+disposition to its task.
+
+Publish the retention root lock only after its marker is initialized.
+Keep retrieval bookkeeping out of the verified artifact and narrow
+`GITHUB_OUTPUT` to the artifact eligibility signal, with all validated result
+details still in the report and outcome. Share the web-container lookup
+used by cloning and test launch. Explain the historical failure semantics
+that apply when deploying an older tag.
+
+O11 is a pre-existing advisory. The test deployment parser inherited
+unsupported letters from its production ancestor. It will reject these
+and other unsupported options before touching Docker, while preserving
+the valid deployment and test selection modes. The 52 completed tasks
+remain historical evidence. The user subsequently authorized group 10
+implementation by invoking `openspec-apply-change`.
+
 ## Follow-up outside this change
 
 After merge, follow up the DEV SSH/SCP run, an actual Dependabot SHA/comment

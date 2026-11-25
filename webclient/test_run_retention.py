@@ -4,6 +4,7 @@ import errno
 import os
 import shutil
 import stat
+import tempfile
 import time
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
@@ -127,6 +128,31 @@ class FileLease:
             self.stream.close()
 
 
+def publish_root_marker(path):
+    """Zveřejní úplný marker bez nahrazení souběžně vytvořeného zámku.
+
+    :param path: Cesta kořenového zámku v ověřeném adresáři.
+    """
+    stream = tempfile.NamedTemporaryFile(dir=path.parent, prefix=".retention-", delete=False)
+    temporary = Path(stream.name)
+    try:
+        with stream:
+            stream.write(LOCK_MARKER)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            # Windows rename fails if the target exists. On POSIX use a hard
+            # link to publish without replacing the winner.
+            if os.name == "nt":
+                temporary.rename(path)
+            else:
+                os.link(temporary, path)
+        except FileExistsError:
+            pass
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 @contextmanager
 def locked_root(runs):
     """Serializuje vytváření a prořezávání pokusů.
@@ -134,7 +160,12 @@ def locked_root(runs):
     :param runs: Ověřený kořen pokusů.
     :yield: Žádná hodnota; zámek platí uvnitř kontextu.
     """
-    lease = FileLease(runs / ".retention.lock", create=True)
+    path = runs / ".retention.lock"
+    try:
+        lease = FileLease(path)
+    except FileNotFoundError:
+        publish_root_marker(path)
+        lease = FileLease(path)
     try:
         lease.acquire()
         yield

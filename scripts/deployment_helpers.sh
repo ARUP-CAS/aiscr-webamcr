@@ -54,6 +54,16 @@ require_swarm () {
     fi
 }
 
+find_dev_web_container () {
+    local container
+    container="$(docker ps -q -f label=com.docker.swarm.service.name=swarm_webamcr_web)" || return $?
+    if [[ -z "$container" || "$container" == *$'\n'* ]]; then
+        echo "Expected one web container" >&2
+        return 1
+    fi
+    printf '%s\n' "$container"
+}
+
 print_d1 () {
     echo "----------------"
     echo "${1}" | tee -a "$logfilepath"

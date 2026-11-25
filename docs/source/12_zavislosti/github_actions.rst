@@ -66,7 +66,7 @@ Zdrojem verze a commitu jsou workflow, nikoli ručně udržovaný seznam.
      - `actions <https://github.com/actions>`__
      - `v7.0.2 <https://github.com/actions/upload-artifact/releases/tag/v7.0.2>`__
      - `cf430e030ddbb5b0abf93d22962f4752f3646cd9 <https://github.com/actions/upload-artifact/tree/cf430e030ddbb5b0abf93d22962f4752f3646cd9>`__
-     - ``.github/workflows/run-tests.yml:213``
+     - ``.github/workflows/run-tests.yml:215``
    * - ``aquasecurity/trivy-action``
      - `aquasecurity <https://github.com/aquasecurity>`__
      - `v0.36.0 <https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0>`__
@@ -191,14 +191,14 @@ jeden záznam ``PASSED`` a jeden ``FAILED`` s nezáporným celočíselným počt
 Chybějící, duplicitní, neznámé či neplatné záznamy a binární obsah způsobí
 neúspěch před zápisem výstupů a souhrnné tabulky. Obsah souboru se nespouští
 jako shell. Konce řádků LF i CRLF a chybějící poslední nový řádek jsou
-podporované; úvodní nuly se odstraní před předáním čísel do dalších kroků.
+podporované. V přehledu se počty zobrazí bez úvodních nul.
 Úklid agenta proběhne i při odmítnutí souhrnu.
 
 Souhrn načítá Python modul ``webclient/test_run_results.py`` přes
 ``scripts/collect_test_results.py``. Čtení je omezeno na 4097 bajtů a obsah
 delší než 4096 bajtů se odmítne před zpracováním. ``PASSED`` počítá skutečně
-úspěšné testy; přeskočené testy a očekávaná selhání se vykazují samostatně
-jako ``SKIPPED`` a ``EXPECTED_FAILURES``. ``FAILED`` zahrnuje chyby, selhání
+úspěšné testy. Přeskočené testy a očekávaná selhání mají vlastní řádky
+v přehledu a pole v metadatech. ``FAILED`` zahrnuje chyby, selhání
 i neočekávané úspěchy. ``outcome.json`` verze 2 obsahuje také celkový počet
 a všechny čtyři kategorie. Ověřují se jejich celočíselné typy, součet, shoda
 se dvěma klíči souhrnu a návratový kód procesu. Běh složený jen z očekávaných
@@ -222,6 +222,12 @@ Oba workflow používají společné sestavení argumentů v
 checkoutu na ``github.workflow_sha``. Zvolený tag nadále určuje vlastní soubory
 nasazení a skript na serveru. Starší platný tag lze proto zvolit i při ručním
 návratu na předchozí verzi, přestože ještě neobsahuje pomocný skript SSH.
+Při návratu na starší tag se na serveru spustí nasazovací skript z tohoto
+tagu, včetně jeho původní kontroly připravenosti a návratových kódů. Některé
+starší skripty mohou skončit úspěšně a zapsat ``last_deployment_tag.txt``
+i po chybě nasazení nebo kontroly. Při schválené kontrole proto ověřte
+skutečně nasazenou verzi a připravenost cílového stacku nezávisle na stavu
+workflow a záznamu tagu.
 
 Testy na DEV a nasazení na DEV sdílejí concurrency skupinu
 ``deploy-<repozitář>-DEV`` s ``cancel-in-progress: false``. Platí to i pro
@@ -261,6 +267,8 @@ neaktivity. Zámek držený procesem chrání živý pokus při samostatném spu
 i v kontejneru; aktuální pokus je chráněn i během závěrečného úklidu.
 Runner odmítne existující identitu před úklidem a pro nový pokus získá
 platný zámek před vytvořením jeho adresáře.
+Kořenový zámek se při prvním spuštění zveřejní až s úplným markerem.
+Souběžné procesy pak používají stejný soubor zámku.
 Předběžný i závěrečný úklid zasahuje pouze do vlastněných přímých adresářů
 pod ``runs/``. Neznámé vlastnictví, odkazy a junction hranice se zachovají
 s diagnostikou; výběrová tabulka v kořeni ani nesouvisející data se nemažou.
@@ -279,17 +287,20 @@ stahuje přesně pojmenované soubory. Před zveřejněním počtů ověří jej
 a vzájemný soulad. Staré soubory bez identity, jiné pokusy a chybějící či
 smíšené artefakty jsou odmítnuty. Výsledkový krok běží i po chybě testů,
 aby uchoval aktuální diagnostiku. Při ověřeném kladném počtu ``FAILED``
-vypíše anotaci GitHub Actions a vrátí původní nenulový kód. Artefakt obsahuje
-jen ověřený aktuální balík, u ``no-tests`` žádnou starou tabulku.
+vypíše anotaci GitHub Actions a vrátí původní nenulový kód. Krok předává
+pouze příznak ``ARTIFACTS``; stav a počty zůstávají v přehledu a příslušných
+souborech výsledku. Dočasný seznam souborů pro stažení je mimo artefakt
+a po skončení kroku se odstraní. Artefakt obsahuje jen ověřený aktuální
+balík, u ``no-tests`` žádnou starou tabulku.
 
 Povinné operace sestavení, stažení image, odstranění existujícího stacku,
 nasazení a klonování databáze propagují neúspěch přes všechny obaly až do
 workflow. PTY obal používá ``script --return`` a nepředává procesu zbytek
 vzdáleného skriptu na stdin. Ověřená absence starého stacku je při úklidu
 přípustná; chyba jeho inspekce není totéž. Chyba volitelné kompakce paměti
-zůstává varováním. Záznam posledního úspěšně nasazeného tagu se změní až po
-úspěchu povinné přípravy a kontroly připravenosti. Automatický rollback se
-tím nezavádí.
+zůstává varováním. Aktuální nasazovací skripty změní záznam posledního
+úspěšně nasazeného tagu až po úspěchu povinné přípravy a kontroly
+připravenosti. Výběr staršího tagu je ruční.
 
 ``scripts/deployment_helpers.sh`` sdílí kontrolu Swarmu, sítě a odstranění stacku,
 propagaci návratových kódů a inicializaci logů obou CI wrapperů. Nalezne se
@@ -297,6 +308,12 @@ vůči umístění vstupního skriptu. Neaktivní Swarm vypíše příčinu pře
 Rotace odstraňuje pouze přímé soubory ``deployment_*.log`` splňující původní
 pravidlo ``-mtime +5``; aktuální log, novější logy, záznam posledního úspěšného
 tagu a ostatní soubory zůstávají zachovány.
+
+Klonování databáze i spuštění testů vyhledávají právě jeden aktuální
+kontejner webové služby přes společný helper. Jestliže žádný nebo více
+kontejnerů odpovídá filtru nebo vyhledání selže, závislý příkaz se nespustí.
+``scripts/test_deploy.sh`` podporuje výchozí nasazení bez přepínače,
+``-b``, ``-q``, ``-x`` a ``-h``. Nepodporované volby odmítne před voláním Dockeru.
 
 Oba CI nasazovací skripty používají společnou kontrolu připravenosti přes
 Python 3 a jeho standardní knihovnu na nasazovacím hostiteli. Očekávané služby

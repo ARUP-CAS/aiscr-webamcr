@@ -30,6 +30,10 @@ On 2026-11-25 the user approved capture of the round-five review at
 `d90182be3` and subsequently invoked `openspec-apply-change` for group 9.
 The existing 44 completed tasks describe the preceding work. Group 9 records
 the round-five implementation and validation.
+On 2026-11-25 the user approved capture of the round-six review at
+`5dc50a879` and subsequently invoked `openspec-apply-change` for group 10.
+The preceding 52 completed tasks describe earlier work. Group 10 records
+the round-six implementation and validation.
 
 ## 1. Immutable action references and update compatibility
 
@@ -130,6 +134,20 @@ the nine linked dispositions and prior-review evidence.
 - [x] 9.7 Repair R5-F4 in the authored Czech dependency/runbook guidance and reconcile it with the design and workflow follow-up. Require an outcome-v2-capable DEV wrapper and container for the deployment-disabled control. Describe the rollout or separately approved deployment-enabled control prerequisite for older installations, and the older-tag deployment path. Align result annotation and retention descriptions. Regenerate affected script and workflow-reference documentation through the existing generators and check idempotency and affected-page builds.
 - [x] 9.8 Verify the seven findings and both advisory repairs on Windows and isolated Linux using the relevant focused cases and existing workflow/report and dependency-generation suites. Run compilation, full pre-commit including new files if applicable, strict affected documentation builds, strict change and aggregate OpenSpec validation, and diff review. Preserve the prior 44 completed task descriptions and close the rolling round-five usage entry with actual evidence and limits. Record any separately authorized hosted or live evidence as follow-up. If future hub sync becomes necessary, plan and review its dry run before seeking a separate sync apply order.
 
+## 10. Round-six review remediation
+
+Source: [round-six review of ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6053375832).
+See the [design ledger](design.md#round-six-review-capture-2026-11-25) for
+the six linked dispositions, O11 provenance and prior-review evidence.
+
+- [x] 10.1 Repair R6-F1 by initializing and syncing a unique temporary root-lock marker before publishing it atomically without replacing the canonical lock. Concurrent callers acquire the winning lock, and invalid or redirected existing markers still fail closed. Check deterministic concurrent first use and mutual exclusion with separate processes on Windows and Linux. Preserve attempt leases and existing pruning protection.
+- [x] 10.2 Repair R6-F2 by writing the filename plan to a unique runner-owned temporary file outside the uploaded bundle and cleaning it up on success or failure. Verify the actual result step keeps only the outcome and validated allowlisted artifacts in the upload path, even for a verified failed run. Preserve coverage of invalid and interrupted results, report status and unconditional cleanup.
+- [x] 10.3 Repair R6-F3 in the authored Czech dependency guide. Explain that an older tag uses its own wrapper and can keep historical readiness, status and last-success behavior. Describe independent verification of the deployed version and target readiness. Preserve older-tag selection and keep live controls separately authorized.
+- [x] 10.4 Repair R6-F4 by making `ARTIFACTS` the only result step output. Remove the unused state and counter exports. Preserve the Markdown report, outcome and summary schemas, validated counts, zero/expected-failure and no-op behavior, failure annotation and exit status. Update report and pipeline fixtures to check these published surfaces and the exact upload-eligibility output.
+- [x] 10.5 Repair R6-F5 by sharing the exactly-one web container lookup in the existing deployment helper. Keep database cloning and test launch on the selected current container for each operation and preserve arguments, output mode and exit propagation. Test one, zero, multiple and failed lookup cases through both callers and verify no dependent execution on lookup failure.
+- [x] 10.6 Implement advisory R6-O11 by validating test-deployment options before any Docker operation and rejecting unsupported options with a diagnostic and nonzero exit. Cover `-t`, `-d`, `-u`, unknown options and an unsupported option after a valid one. Preserve no-argument deployment, `-b`, `-q`, `-x`, `-h` and valid ordering. Verify production tagged deployment and update plus Selenium numbered-test selection in isolated fixtures.
+- [x] 10.7 Verify the five findings and advisory using focused cases and the existing Windows and isolated Linux workflow/report and generator suites. Run compilation, all pre-commit hooks, strict affected-page documentation builds and strict and aggregate OpenSpec validation. Refresh generated references through their existing generators and confirm idempotency. Preserve the previous 52 completed descriptions and close the single round-six usage entry with actual evidence. Treat hosted checks of the eventual delivered head and live operations as separate follow-up. If hub sync becomes necessary, inspect its dry run before any separately authorized apply.
+
 ## Workflow follow-up
 
 These operations remain follow-up to the driving issue. They are outside this
@@ -144,4 +162,5 @@ PR's implementation scope and do not block completion of this OpenSpec change.
 - Sync durable specs or archive this change only on a separate explicit instruction.
 - **Remediation hosted checks:** After authorized delivery of group 7, verify the exact new head's pre-commit run and CodeQL result for alert 7461; local fixture/canary success does not establish hosted acceptance or dismiss the alert.
 - **Round-four hosted evidence:** Pre-commit and CodeQL succeeded on group 8 delivery commit `d90182be3`. The round-five review confirms the fourteen repairs and records R4-O4's alias disposition. Review replies and GitHub thread resolution are distinct actions.
-- **Round-five hosted acceptance:** After separately authorized delivery of group 9, verify pre-commit and CodeQL on the delivered commit and reconcile the posted items under separate posting/resolution authority. Live retention cleanup and deployment/test controls require target-specific authorization.
+- **Round-five hosted evidence:** Pre-commit and CodeQL succeeded on group 9 delivery commit `5dc50a879`. The round-six review confirms the nine round-five repairs.
+- **Round-six hosted acceptance:** After separately authorized delivery of group 10, verify pre-commit and CodeQL on the delivered commit. Review-thread actions and live retention or deployment/test controls require separate authorization.

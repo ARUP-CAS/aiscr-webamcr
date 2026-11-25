@@ -22,17 +22,14 @@ def report(directory, identity, mode, number, output_path, summary_path):
     """
     record = load_record(directory, identity, mode, number)
     counts = validate_bundle(directory, record)
-    outputs = f"STATE={record['state']}\nARTIFACTS=true\n"
     summary = f"## 🧪 Výsledky testů\n\nPokus: `{identity}`; stav: `{record['state']}`.\n"
     if counts is not None:
         passed, failed = counts
-        outputs += f"PASSED={passed}\nFAILED={failed}\n"
         summary += f"\n| Stav | Počet |\n|------|-------|\n| ✅ Prošlo | {passed} |\n| ❌ Selhalo | {failed} |\n"
         skipped, expected = record["counts"]["skipped"], record["counts"]["expected_failures"]
-        outputs += f"SKIPPED={skipped}\nEXPECTED_FAILURES={expected}\n"
         summary += f"| Přeskočeno | {skipped} |\n| Očekávaná selhání | {expected} |\n"
     with Path(output_path).open("a", encoding="utf-8") as stream:
-        stream.write(outputs)
+        stream.write("ARTIFACTS=true\n")
     with Path(summary_path).open("a", encoding="utf-8") as stream:
         stream.write(summary)
     if counts is not None and counts[1] > 0:

@@ -200,11 +200,13 @@ jobs:
           mkdir -p ./test-results
           mkdir "$result_dir"
           scp "amcr@$DEPLOYMENT_SERVER:$remote_dir/outcome.json" "$result_dir/outcome.json"
+          download_plan="$(mktemp "$RUNNER_TEMP/amcr-download-plan.XXXXXX")"
+          trap 'rm -f -- "$download_plan"' EXIT
           python3 "$GITHUB_WORKSPACE/scripts/collect_test_results.py" plan "$result_dir" \
-            --attempt-id "$ATTEMPT_ID" --mode "$TEST_MOD" --number "$TEST_CISLO" > "$result_dir/download-files"
+            --attempt-id "$ATTEMPT_ID" --mode "$TEST_MOD" --number "$TEST_CISLO" > "$download_plan"
           while IFS= read -r result_file; do
             scp "amcr@$DEPLOYMENT_SERVER:$remote_dir/$result_file" "$result_dir/$result_file"
-          done < "$result_dir/download-files"
+          done < "$download_plan"
           python3 "$GITHUB_WORKSPACE/scripts/collect_test_results.py" report "$result_dir" \
             --attempt-id "$ATTEMPT_ID" --mode "$TEST_MOD" --number "$TEST_CISLO"
 
