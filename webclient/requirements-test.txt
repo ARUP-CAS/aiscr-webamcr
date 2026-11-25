@@ -300,7 +300,7 @@ python-magic==0.4.27
     # via -r requirements.txt
 pytz==2026.6
     # via -r requirements.txt
-pyyaml==6.0.3
+pyyaml==6.0.4
     # via -r requirements.txt
 rarfile==4.5
     # via -r requirements.txt
