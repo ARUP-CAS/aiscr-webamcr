@@ -217,7 +217,7 @@ python-magic==0.4.27
     # via -r requirements.in
 pytz==2026.6
     # via -r requirements.in
-pyyaml==6.0.3
+pyyaml==6.0.4
     # via tablib
 rarfile==4.5
     # via -r requirements.in
