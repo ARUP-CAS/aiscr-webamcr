@@ -148,6 +148,17 @@ the six linked dispositions, O11 provenance and prior-review evidence.
 - [x] 10.6 Implement advisory R6-O11 by validating test-deployment options before any Docker operation and rejecting unsupported options with a diagnostic and nonzero exit. Cover `-t`, `-d`, `-u`, unknown options and an unsupported option after a valid one. Preserve no-argument deployment, `-b`, `-q`, `-x`, `-h` and valid ordering. Verify production tagged deployment and update plus Selenium numbered-test selection in isolated fixtures.
 - [x] 10.7 Verify the five findings and advisory using focused cases and the existing Windows and isolated Linux workflow/report and generator suites. Run compilation, all pre-commit hooks, strict affected-page documentation builds and strict and aggregate OpenSpec validation. Refresh generated references through their existing generators and confirm idempotency. Preserve the previous 52 completed descriptions and close the single round-six usage entry with actual evidence. Treat hosted checks of the eventual delivered head and live operations as separate follow-up. If hub sync becomes necessary, inspect its dry run before any separately authorized apply.
 
+## 11. Round-seven review remediation
+
+The [round-seven review of ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6061348584)
+and the [design ledger](design.md#round-seven-review-capture-2026-11-25)
+record one finding and two advisory dispositions.
+
+- [x] 11.1 Repair R7-F1 by sharing complete, synced, no-replace marker publication across the root lock, new attempt leases, and eligible legacy lease backfill. Test interruption before publication followed by a same-ID retry, reuse of a complete unclaimed marker, legacy backfill, and preservation of unknown or redirected canonical markers. Preserve root mutual exclusion, acquisition before attempt-directory publication, and active-run protection.
+- [x] 11.2 Implement advisory R7-O12 by handling test deployment help after full option validation and before log and backup setup, Swarm checks, or Docker. Cover standalone help, help combined with valid and invalid options, and existing default, build, quiet, and removal modes using isolated stubs.
+- [x] 11.3 Implement advisory R7-O13 by validating the whole production request before setup and dispatch. Cover an unknown option alone and after a valid mode, missing tag arguments, invalid source, unexpected operands, and early help. Verify nonzero invalid-input status and the absence of side effects. Preserve valid source and tag selection, tagged deployment and update, tag listing, stack removal, operation ordering, and no-argument guidance using isolated stubs.
+- [x] 11.4 Verify the three dispositions with focused retention and deployment regressions on Windows and isolated Linux, and run the relevant existing suites, compilation, full pre-commit, strict affected documentation builds, and strict and aggregate OpenSpec validation. Regenerate affected references through their existing generators and confirm idempotency. Preserve the 59 completed tasks and close the single round-seven usage entry with actual evidence. Check a sync dry run before any separately authorized future apply.
+
 ## Workflow follow-up
 
 These operations remain follow-up to the driving issue. They are outside this
@@ -163,4 +174,5 @@ PR's implementation scope and do not block completion of this OpenSpec change.
 - **Remediation hosted checks:** After authorized delivery of group 7, verify the exact new head's pre-commit run and CodeQL result for alert 7461; local fixture/canary success does not establish hosted acceptance or dismiss the alert.
 - **Round-four hosted evidence:** Pre-commit and CodeQL succeeded on group 8 delivery commit `d90182be3`. The round-five review confirms the fourteen repairs and records R4-O4's alias disposition. Review replies and GitHub thread resolution are distinct actions.
 - **Round-five hosted evidence:** Pre-commit and CodeQL succeeded on group 9 delivery commit `5dc50a879`. The round-six review confirms the nine round-five repairs.
-- **Round-six hosted acceptance:** After separately authorized delivery of group 10, verify pre-commit and CodeQL on the delivered commit. Review-thread actions and live retention or deployment/test controls require separate authorization.
+- **Round-six hosted evidence** Pre-commit and CodeQL passed on group 10 delivery commit `244db4ac5`. The round-seven review confirms all six round-six repairs.
+- **Round-seven hosted acceptance** After separately authorized delivery of group 11, verify pre-commit and CodeQL on the delivered commit. Review-thread actions and live retention or deployment/test controls require separate authorization.

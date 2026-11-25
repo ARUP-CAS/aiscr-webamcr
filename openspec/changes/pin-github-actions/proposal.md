@@ -257,6 +257,22 @@ the valid deployment and test selection modes. The 52 completed tasks
 remain historical evidence. The user subsequently authorized group 10
 implementation by invoking `openspec-apply-change`.
 
+## Round-seven review capture (2026-11-25)
+
+The user approved capture of the
+[round-seven review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6061348584)
+at `244db4ac53d6eb249ae002d5345006e59f70a3e0`. The review confirms the six
+round-six repairs. Group 11 covers one new finding and two pre-existing
+advisories. The [design ledger](design.md#round-seven-review-capture-2026-11-25)
+links all three to their tasks.
+
+Extend atomic lock-marker publication to new Selenium attempt leases and
+legacy lease backfill. Validate standalone test and production deployment
+requests before side effects, and let valid help requests exit before any
+deployment setup. Preserve the supported operations and their order for
+requests without help. Both advisories remain `fix-in-pr` within the
+repository-owned automation scope.
+
 ## Follow-up outside this change
 
 After merge, follow up the DEV SSH/SCP run, an actual Dependabot SHA/comment

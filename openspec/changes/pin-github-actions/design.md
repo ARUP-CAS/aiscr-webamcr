@@ -914,6 +914,58 @@ preserved. The group 10 apply invocation covers implementation and local
 validation. Delivery, live operations and review-thread writes require
 separate authorization.
 
+## Round-seven review capture (2026-11-25)
+
+The [round-seven review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6061348584)
+examined `244db4ac53d6eb249ae002d5345006e59f70a3e0` against `test`
+(`d327f2caff9cb0e6ffadb8325defcd948bbaa13f`) and confirmed all six
+round-six repairs. Hosted
+[pre-commit](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45618950961/job/139221674405)
+and [CodeQL](https://github.com/ARUP-CAS/aiscr-webamcr/runs/139221977213)
+passed on the reviewed commit, along with the other hosted checks.
+
+| Review item | Agreed disposition | Task |
+| --- | --- | --- |
+| [R7-F1, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4697868828) | Use atomic publication for per-attempt markers, including legacy backfill, so an interrupted initialization cannot strand an explicit attempt ID. | 11.1 |
+| [R7-O12, advisory](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4697868849) | `fix-in-pr`. Return test deployment help after validating the whole request and before setup or Docker operations. | 11.2 |
+| [R7-O13, advisory](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4697869269) | `fix-in-pr`. Reject invalid production requests before dispatch with nonzero status, and apply the same early help handling. | 11.3 |
+
+### Publish complete per-attempt lease markers
+
+Both new attempt creation and verified v1 terminal metadata backfill can
+publish the canonical marker before writing it. A write failure or process
+interruption can leave an empty marker, which blocks reuse of an explicit ID
+even when no attempt directory was published. Normal CI uses distinct IDs.
+Reuse the root lock's same-directory temporary file, sync and atomic
+create-if-absent operation for both lease creation paths. Open the canonical
+file after publication, and acquire and validate it before making the attempt
+directory visible. An interrupted creator can leave a complete unclaimed
+marker that a later caller can acquire. An existing invalid or redirected
+marker still fails closed. Existing leases, retention limits, and pruning
+eligibility retain their current protections.
+
+### Validate both deployment requests before dispatch
+
+Both advisories are visible at the PR base. Test deployment validates options
+early, but dispatches help after the Swarm check and image pruning. Production
+deployment's preliminary pass ignores unknown switches, and the later error
+branch exits zero. A valid operation earlier in a mixed request can already
+have executed by the time that branch runs.
+
+Validate the entire request, including production source selection, trailing
+operands, and required tag arguments, before setup or action dispatch. Emit a
+diagnostic and return nonzero for invalid requests. After validation, help
+takes precedence over any other valid mode and exits zero before Docker,
+network operations, or log and backup setup. Retain test default, build,
+quiet and removal modes, production no-argument guidance, removal, tagged
+deployment, tagged update and tag listing, and the existing ordering and
+tag and registry selection for valid operational requests.
+
+The user approved capture and then invoked `openspec-apply-change` for these
+three dispositions. Group 11 records the work in the repository-owned
+runner, scripts, tests and affected documentation. Delivery, live
+operations and review-thread writes retain their separate approvals.
+
 ## Risks / Trade-offs
 
 - Repository-wide activation can block workflows on unprepared refs. During

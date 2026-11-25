@@ -57,26 +57,20 @@ class FileLease:
         try:
             existing = path.lstat()
         except FileNotFoundError:
-            pass
-        else:
-            if not stat.S_ISREG(existing.st_mode):
-                raise ValueError("Neplatný soubor zámku")
+            if not create:
+                raise
+            publish_lease_marker(path)
+            existing = path.lstat()
+        if not stat.S_ISREG(existing.st_mode):
+            raise ValueError("Neplatný soubor zámku")
         flags = os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
-        try:
-            fd = os.open(path, flags | (os.O_CREAT | os.O_EXCL if create else 0), 0o600)
-            fresh = create
-        except FileExistsError:
-            fd = os.open(path, flags)
-            fresh = False
+        fd = os.open(path, flags)
         self.stream = os.fdopen(fd, "r+b", buffering=0)
         try:
             if not stat.S_ISREG(os.fstat(fd).st_mode) or not os.path.samestat(
                 os.fstat(fd), path.stat(follow_symlinks=False)
             ):
                 raise ValueError("Neplatný soubor zámku")
-            if fresh:
-                self.stream.write(LOCK_MARKER)
-                os.fsync(fd)
         except BaseException:
             self.stream.close()
             raise
@@ -128,10 +122,10 @@ class FileLease:
             self.stream.close()
 
 
-def publish_root_marker(path):
+def publish_lease_marker(path):
     """Zveřejní úplný marker bez nahrazení souběžně vytvořeného zámku.
 
-    :param path: Cesta kořenového zámku v ověřeném adresáři.
+    :param path: Cesta zámku v ověřeném adresáři.
     """
     stream = tempfile.NamedTemporaryFile(dir=path.parent, prefix=".retention-", delete=False)
     temporary = Path(stream.name)
@@ -160,12 +154,7 @@ def locked_root(runs):
     :param runs: Ověřený kořen pokusů.
     :yield: Žádná hodnota; zámek platí uvnitř kontextu.
     """
-    path = runs / ".retention.lock"
-    try:
-        lease = FileLease(path)
-    except FileNotFoundError:
-        publish_root_marker(path)
-        lease = FileLease(path)
+    lease = FileLease(runs / ".retention.lock", create=True)
     try:
         lease.acquire()
         yield

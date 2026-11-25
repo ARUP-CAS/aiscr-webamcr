@@ -121,16 +121,22 @@ passed_args="$@"
 
 # Validate the entire request before any Swarm or image operations.
 options=()
+show_help=false
 OPTIND=1
 while getopts ":hxbq" option; do
     case "$option" in
         \?) printf 'Error: Invalid option -%s\n' "$OPTARG" >&2; exit 1 ;;
+        h) show_help=true ;;
         *) options+=("$option");;
     esac
 done
 if (( OPTIND <= $# )); then
     echo "Error: Unexpected positional argument" >&2
     exit 1
+fi
+if [[ "$show_help" == true ]]; then
+    Help
+    exit 0
 fi
 
 #INPUTS
@@ -184,10 +190,6 @@ docker image prune -f
 
 for option in "${options[@]}"; do
    case ${option} in
-      h) # display Help
-         echo "OPTION: -h"
-         Help
-         exit;;
       x) echo "OPTION: -x" 
          remove_old_stack || exit $?
          sleep 20 # Need to wait before network is really removed.

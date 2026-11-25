@@ -383,6 +383,9 @@ invalid or redirected markers.
 
 Attempt creation SHALL reject an existing requested identity before pruning
 and acquire a valid ownership lease before exposing a new attempt directory.
+New per-attempt markers, including markers created for eligible legacy
+candidates, SHALL be completely initialized and synced before their atomic
+publication. Publication SHALL preserve an existing canonical marker.
 
 #### Scenario: An explicit attempt identity already exists
 
@@ -396,6 +399,20 @@ and acquire a valid ownership lease before exposing a new attempt directory.
 - **WHEN** creation stops before or after publishing its directory
 - **THEN** any visible new attempt directory has a valid corresponding ownership marker and had an acquired lease before publication
 - **AND** inability to establish that ownership prevents publication
+
+#### Scenario: A per-attempt marker write is interrupted
+
+- **GIVEN** a new explicit attempt identity has no directory or canonical marker
+- **WHEN** marker initialization or sync stops before publication
+- **THEN** neither a partial canonical marker nor an attempt directory becomes visible
+- **AND** a subsequent attempt can use the same identity
+
+#### Scenario: An eligible legacy candidate needs a lease
+
+- **GIVEN** a retention candidate with verified v1 terminal metadata has no canonical marker
+- **WHEN** retention creates a lease for the candidate
+- **THEN** it publishes a complete marker and establishes ownership before using that lease for pruning
+- **AND** an invalid or redirected existing marker stays protected and cannot authorize deletion
 
 ### Requirement: Retention validates metadata from one bounded read
 
@@ -618,9 +635,47 @@ their behavior.
 
 #### Scenario: A supported test deployment mode is selected
 
-- **GIVEN** the caller supplies no options or valid `-b`, `-q`, `-x` or `-h` options
+- **GIVEN** the caller supplies no options or valid `-b`, `-q` or `-x` options without help
 - **WHEN** the test deployment script dispatches the request
 - **THEN** it performs the selected mode in the existing valid operation order
+
+### Requirement: Production deployment validates requests before dispatch
+
+The standalone production deployment script SHALL validate the complete
+request before setup or operation dispatch. It SHALL preserve source and
+tag selection, tagged deployment, tagged update, tag listing, stack
+removal, and no-argument guidance.
+
+#### Scenario: A production deployment request is invalid
+
+- **GIVEN** the caller supplies an unsupported option, a missing or invalid required tag, an invalid source, or an unexpected positional argument
+- **WHEN** the production deployment script validates the request, including when a valid operation appears before the invalid input
+- **THEN** it emits a diagnostic and exits nonzero before Docker, network operations or log and backup setup
+
+#### Scenario: A supported production deployment mode is selected
+
+- **GIVEN** the caller supplies a valid production request without help
+- **WHEN** the production deployment script dispatches the request
+- **THEN** the existing source and tag selection, operation ordering and mode behavior are preserved
+
+### Requirement: Deployment help has no operational side effects
+
+The standalone test and production deployment scripts SHALL validate the
+entire request before displaying help. A valid request for help SHALL take
+precedence over other selected modes and exit zero before any Swarm check,
+Docker or network operation, or creation of log or backup directories.
+
+#### Scenario: A caller asks for help
+
+- **GIVEN** a test or production deployment request includes `-h`, alone or with other valid options
+- **WHEN** the script accepts the request
+- **THEN** it prints usage and exits zero without operational side effects, including on a host without Swarm
+
+#### Scenario: Help is combined with invalid input
+
+- **GIVEN** a test or production deployment request includes help and invalid input
+- **WHEN** the script validates the full request
+- **THEN** it emits a diagnostic and exits nonzero without operational side effects
 
 ### Requirement: Shared automation helpers preserve caller contracts
 

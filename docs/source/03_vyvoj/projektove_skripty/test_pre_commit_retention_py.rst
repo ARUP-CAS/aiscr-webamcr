@@ -62,7 +62,11 @@ Třídy
 
    .. py:method:: test_failed_lease_creation_prevents_publication()
 
-      Chyba zámku ani neznámé označení nevytvoří adresář pokusu.
+      Přerušená inicializace nezveřejní marker a neblokuje další pokus.
+
+   .. py:method:: test_existing_unverified_attempt_markers_are_preserved()
+
+      Neznámá či přesměrovaná cesta zámku nepovolí publikaci pokusu.
 
    .. py:method:: test_active_old_attempt_is_protected_across_processes()
 

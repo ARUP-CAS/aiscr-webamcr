@@ -5,6 +5,7 @@ Automatické testy
 
 Ke spuštění testů slouží vývojový server (.24). Před spuštěním testů je nutné nasadit aktuální nebo požadovanou verzi aplikace WebAMČR.
 To se provede pomocí skriptu ``./scripts/test_deploy.sh``. Skript se při spuštění také zeptá, zda má stáhnout aktuální verzi WebAMČR origin/dev.
+Příkaz ``./scripts/test_deploy.sh -h`` zobrazí nápovědu bez přístupu k Dockeru a bez vytváření logů.
 Po nasazení verze je potřeba cca 5 minut počkat než se WebAMČR rozběhne
 Testy je možné spustit následujícím příkazem 
 

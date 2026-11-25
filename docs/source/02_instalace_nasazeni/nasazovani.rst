@@ -84,7 +84,7 @@ V takových případech může docházet k neočekávaným chybám a konfliktům
       - Speciální případy
 
 
-===============================
+================================
 Automatické nasazení
 ================================
 Automatické nasazení probíhá při vytvoření tagu pojmenovaného dle formátu "v*" v repozitáři Github. Po vytvoření takového tagu nejprve proběhne proces vytvoření docker obrazů (popsaný výše) a poté dojde ke spuštění
@@ -114,8 +114,12 @@ Github Action worfklow `.github\workflows\deployment.yml` potřebuje ke správn�
 Skriptované nasazení z docker-hubu
 ===================================
 Pro nasazování na testovací prostředí byl vytvořen automatizační skript `scripts/prod_deploy.sh`, který zjednodušuje nasazení, provádí logování celého průběhu do adresáře `logs/prod_deploy/`, aktualizaci docker obrazů, ověřování prostředí, a nasazení aplikace WebAMČR.
-Tento skript má několik možných parametrů, nápověda přístupná spuštěním příkazu ``./scripts/prod_deploy.sh -h.``. V základním módu se tento skript spouští
-bez jakéhokoliv volitelného parametru, tzn. ``./scripts/prod_deploy.sh``. Po úspěšném vykonání je aplikace WebAMČR dostupná na ip adrese dané stanice a portu **8080**.
+Skript ověří všechny argumenty před zahájením operací. Příkaz
+``./scripts/prod_deploy.sh -h`` zobrazí nápovědu i bez spuštěného Dockeru.
+Bez volby skript vypíše pokyny k použití. Pro nasazení zadejte ``-t <tag>``.
+Výchozím zdrojem obrazů je GitHub Container Registry. Pro nasazení z Docker Hubu
+uveďte ``dockerhub`` jako první argument. Po úspěšném nasazení je aplikace
+WebAMČR dostupná na IP adrese stanice a portu **8080**.
 
 Skript pro nasazení z Docker Hubu do Docker Swarm podporuje několik parametrů, každý s určitým účelem a příkladem použití. Zde je seznam možných parametrů s popisem a příklady v češtině:
 
@@ -127,7 +131,7 @@ Niže je přehled dostupných parametrů.
    - **Použití**: `scripts/prod_deploy.sh -x`
    - **Popis**: Použití tohoto parametru způsobí odstranění celého Docker stacku, což zahrnuje všechny běžící služby definované v Docker Compose souboru.
 * `-u <tag_name>`: Aktualizuje všechny služby novými verzeme images.
-   - **Příklad**: `scripts/prod_deploy.sh -u`
+   - **Příklad**: `scripts/prod_deploy.sh -u my-custom-tag`
    - **Popis**: Použitím tohoto parametru dojde k aktualizaci všech služeb.
 * `-t <tag_name>`: Umožňuje specifikovat konkrétní tag image pro nasazení.
    - **Příklad**: `scripts/prod_deploy.sh -t my-custom-tag`

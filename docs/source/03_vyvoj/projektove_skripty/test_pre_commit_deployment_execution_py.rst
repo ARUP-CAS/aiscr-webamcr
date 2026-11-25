@@ -81,11 +81,31 @@ Třídy
 
    .. py:method:: test_test_deploy_supported_modes_and_order_remain_intact()
 
-      Výchozí, explicitní a tichý build, nápověda i pořadí akcí zůstanou platné.
+      Výchozí, explicitní a tichý build i pořadí akcí zůstanou platné.
+
+   .. py:method:: assert_no_deployment_setup()
+
+      Ověří, že nevznikly logy, záloha ani záznam o provozním příkazu.
+
+   .. py:method:: test_test_deploy_help_validates_before_operational_setup()
+
+      Platná nápověda funguje bez Swarmu, neplatný požadavek předem selže.
 
    .. py:method:: test_production_tagged_deployment_and_update_still_execute()
 
       Produkční -t a -u použijí tag při nasazení a výměně služeb.
+
+   .. py:method:: test_production_invalid_request_stops_before_setup()
+
+      Chybný argument zastaví celý požadavek i za platnou operací.
+
+   .. py:method:: test_production_help_validates_before_setup()
+
+      Nápověda má přednost před platnými operacemi, ne před validací.
+
+   .. py:method:: test_production_operation_order_tag_selection_and_guidance()
+
+      Pořadí operací, společný tag i pokyny bez voleb zůstanou zachovány.
 
    .. py:method:: test_test_wrapper_propagates_identity_modes_and_child_failure()
 

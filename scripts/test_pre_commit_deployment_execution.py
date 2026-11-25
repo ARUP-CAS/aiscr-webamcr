@@ -45,6 +45,21 @@ class DeploymentExecutionTests(unittest.TestCase):
         self.tool("python3", 'printf "READY\\n" >> "$TRACE"\nexit "${READINESS_EXIT:-0}"\n')
         self.tool("sudo", 'if [[ "$1" == tee ]]; then cat > /dev/null; exit "${COMPACTION_EXIT:-0}"; fi\nexec "$@"\n')
         self.tool(
+            "curl",
+            r"""
+printf 'curl %s\n' "$*" >> "$TRACE"
+printf '%s\n' '{"results":[{"name":"fixture-tag"}]}'
+""",
+        )
+        self.tool(
+            "jq",
+            """
+read -r response
+[[ "$response" == '{"results":[{"name":"fixture-tag"}]}' ]] || exit 1
+echo fixture-tag
+""",
+        )
+        self.tool(
             "docker",
             r"""
 printf '%s\n' "$*" >> "$TRACE"
@@ -296,7 +311,7 @@ exit 0
                 self.assertEqual(self.trace.read_text(encoding="utf-8"), "")
 
     def test_test_deploy_supported_modes_and_order_remain_intact(self):
-        """Výchozí, explicitní a tichý build, nápověda i pořadí akcí zůstanou platné."""
+        """Výchozí, explicitní a tichý build i pořadí akcí zůstanou platné."""
         for args, prompt in (([], True), (["-b"], True), (["-q"], False), (["-xq"], False)):
             with self.subTest(args=args):
                 result = self.execute("test_deploy.sh", args, stdin="n")
@@ -307,10 +322,26 @@ exit 0
                 self.assertEqual(trace.count(rollout), 1)
                 if "-xq" in args:
                     self.assertLess(trace.index("stack rm swarm_webamcr"), trace.index(rollout))
-        help_result = self.execute("test_deploy.sh", ["-h"])
-        self.assertEqual(help_result.returncode, 0, help_result.stdout + help_result.stderr)
-        self.assertIn("usage:", help_result.stdout)
-        self.assertNotIn("stack deploy", self.trace.read_text(encoding="utf-8"))
+
+    def assert_no_deployment_setup(self):
+        """Ověří, že nevznikly logy, záloha ani záznam o provozním příkazu."""
+        self.assertEqual(self.trace.read_text(encoding="utf-8"), "")
+        self.assertEqual(list(self.tag.parent.iterdir()), [self.tag])
+        self.assertFalse((self.root / "translations_backup").exists())
+        self.assertEqual(self.tag.read_text(encoding="utf-8"), "previous\n")
+
+    def test_test_deploy_help_validates_before_operational_setup(self):
+        """Platná nápověda funguje bez Swarmu, neplatný požadavek předem selže."""
+        for args, status in ((["-h"], 0), (["-xh"], 0), (["-h", "-d"], 1), (["-x", "-h", "unexpected"], 1)):
+            with self.subTest(args=args):
+                result = self.execute("test_deploy.sh", args, FAIL_DOCKER="node ls")
+                self.assertEqual(result.returncode, status, result.stdout + result.stderr)
+                if status:
+                    self.assertIn("Error:", result.stderr)
+                    self.assertNotIn("usage:", result.stdout)
+                else:
+                    self.assertIn("usage:", result.stdout)
+                self.assert_no_deployment_setup()
 
     def test_production_tagged_deployment_and_update_still_execute(self):
         """Produkční -t a -u použijí tag při nasazení a výměně služeb."""
@@ -323,6 +354,66 @@ exit 0
                 result = self.execute("prod_deploy.sh", ["GitHub", flag, tag])
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertIn(command + tag, self.trace.read_text(encoding="utf-8"))
+
+    def test_production_invalid_request_stops_before_setup(self):
+        """Chybný argument zastaví celý požadavek i za platnou operací."""
+        for args in (
+            ["-z"],
+            ["-xz"],
+            ["-x", "-z"],
+            ["-x", "-t"],
+            ["-u", "-x"],
+            ["-u", ""],
+            ["-x", "-u", "latest"],
+            ["-t", "invalid tag"],
+            ["-t", "a" * 129],
+            ["OtherRegistry", "-x"],
+            ["GitHub", "-x", "extra"],
+        ):
+            with self.subTest(args=args):
+                result = self.execute("prod_deploy.sh", args)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("Error:", result.stderr)
+                self.assert_no_deployment_setup()
+
+    def test_production_help_validates_before_setup(self):
+        """Nápověda má přednost před platnými operacemi, ne před validací."""
+        for args, status in (
+            (["-h"], 0),
+            (["DockerHub", "-xih", "-t", "1.4.0"], 0),
+            (["-h", "-z"], 1),
+            (["-h", "-t"], 1),
+        ):
+            with self.subTest(args=args):
+                result = self.execute("prod_deploy.sh", args, FAIL_DOCKER="node ls")
+                self.assertEqual(result.returncode, status, result.stdout + result.stderr)
+                if status:
+                    self.assertIn("Error:", result.stderr)
+                    self.assertNotIn("usage:", result.stdout)
+                else:
+                    self.assertIn("usage:", result.stdout)
+                self.assert_no_deployment_setup()
+
+    def test_production_operation_order_tag_selection_and_guidance(self):
+        """Pořadí operací, společný tag i pokyny bez voleb zůstanou zachovány."""
+        tag = "Release_2.1-" + "r" * 116
+        self.assertEqual(len(tag), 128)
+        result = self.execute("prod_deploy.sh", ["DockerHub", "-t", "1.4.0", "-u" + tag, "-i"])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("fixture-tag", result.stdout)
+        trace = self.trace.read_text(encoding="utf-8").splitlines()
+        expected = (
+            "pull aiscr/webamcr:" + tag,
+            f"service update --force --image aiscr/webamcr:{tag} swarm_webamcr_web",
+            "curl -s https://hub.docker.com/v2/repositories/aiscr/webamcr/tags/",
+        )
+        positions = [trace.index(command) for command in expected]
+        self.assertEqual(positions, sorted(positions))
+
+        result = self.execute("prod_deploy.sh")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("for help use -h", result.stdout)
+        self.assertEqual(self.trace.read_text(encoding="utf-8"), "")
 
     def test_test_wrapper_propagates_identity_modes_and_child_failure(self):
         """Předání identity a script --return zachovají selhání všech režimů."""

@@ -42,7 +42,8 @@ def simultaneous_attempt(root, identity, publication, acquired, owner, contender
         :return: Výsledek vytvoření odkazu.
         """
         assert Path(source).read_bytes() == retention.LOCK_MARKER
-        publication.wait(10)
+        if Path(target).name == ".retention.lock":
+            publication.wait(10)
         return publish(source, target)
 
     def check_acquire(lease, blocking=True):
@@ -257,17 +258,34 @@ class RetentionTests(unittest.TestCase):
                 self.assertEqual(self.attempt(identity), directory)
 
     def test_failed_lease_creation_prevents_publication(self):
-        """Chyba zámku ani neznámé označení nevytvoří adresář pokusu."""
+        """Přerušená inicializace nezveřejní marker a neblokuje další pokus."""
         retention.prune_attempts(self.results)
         with patch.object(retention.os, "fsync", side_effect=OSError("fixture")), self.assertRaises(OSError):
             retention.AttemptLease(self.results, "failed", protocol.create_attempt)
-        self.assertFalse((self.results / "runs/failed").exists())
-        marker = self.results / "runs/.leases/unknown.lock"
-        marker.write_bytes(b"unrecognized lease")
-        with self.assertRaises(ValueError):
-            retention.AttemptLease(self.results, "unknown", protocol.create_attempt)
-        self.assertFalse((self.results / "runs/unknown").exists())
-        self.assertEqual(marker.read_bytes(), b"unrecognized lease")
+        runs = self.results / "runs"
+        self.assertFalse((runs / "failed").exists())
+        self.assertEqual(list((runs / ".leases").iterdir()), [])
+        self.assertEqual(self.attempt("failed"), runs / "failed")
+
+    def test_existing_unverified_attempt_markers_are_preserved(self):
+        """Neznámá či přesměrovaná cesta zámku nepovolí publikaci pokusu."""
+        runs, leases = retention.layout(self.results)
+        unknown = leases / "unknown.lock"
+        for marker in (b"", b"unrecognized lease"):
+            unknown.write_bytes(marker)
+            with self.assertRaises(ValueError):
+                retention.AttemptLease(self.results, "unknown", protocol.create_attempt)
+            self.assertFalse((runs / "unknown").exists())
+            self.assertEqual(unknown.read_bytes(), marker)
+
+        redirected = leases / "redirected.lock"
+        redirected.write_bytes(retention.LOCK_MARKER)
+        linked = retention.linked
+        with patch.object(retention, "linked", side_effect=lambda path: path == redirected or linked(path)):
+            with self.assertRaises(ValueError):
+                retention.AttemptLease(self.results, "redirected", protocol.create_attempt)
+        self.assertFalse((runs / "redirected").exists())
+        self.assertEqual(redirected.read_bytes(), retention.LOCK_MARKER)
 
     def test_active_old_attempt_is_protected_across_processes(self):
         """Skutečný zámek jiného procesu chrání i pokus starší než třicet dní."""
@@ -374,6 +392,7 @@ class RetentionTests(unittest.TestCase):
 
     def test_legacy_terminal_history_is_recognized_without_accepting_old_counts(self):
         """Vlastněný terminální záznam verze 1 lze uklidit při migraci historie."""
+        retention.prune_attempts(self.results)
         for index in range(12):
             directory, identity = protocol.create_attempt(self.results, f"legacy-{index:02}")
             protocol.write_summary(directory, 1, 0)
@@ -392,7 +411,13 @@ class RetentionTests(unittest.TestCase):
             record.pop("counts", None)
             path.write_text(json.dumps(record), encoding="utf-8")
             os.utime(path, (1000 + index, 1000 + index))
+        leases = self.results / "runs/.leases"
+        with patch.object(retention.os, "fsync", side_effect=OSError("fixture")), self.assertRaises(OSError):
+            retention.prune_attempts(self.results)
+        self.assertEqual(list(leases.iterdir()), [])
+        self.assertTrue((self.results / "runs/legacy-00").is_dir())
         self.assertEqual(retention.prune_attempts(self.results), ["legacy-00", "legacy-01"])
+        self.assertEqual((leases / "legacy-11.lock").read_bytes(), retention.LOCK_MARKER)
 
     def test_redirected_runs_or_lease_root_is_rejected(self):
         """Junction nebo symlink v hranici úložiště zabrání práci s cizí cestou."""
