@@ -1,6 +1,6 @@
 #!/bin/bash
-set -eo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/deployment_helpers.sh"
+# No fail-fast mode: each required operation checks its status explicitly.
+source "$(dirname "${BASH_SOURCE[0]}")/deployment_helpers.sh" || exit 1
 ###########
 #### SCRIPT: DEPLOYMENT from DOCKERHUB into SWARM
 #### PARAMS: see -h
@@ -48,7 +48,7 @@ run_default ()
    do_manual_checks
 
    # Check network exists
-   check_create_network
+   check_create_network || return $?
 
    #Update images
    if ! er "${cmd_pull_images}"; then
@@ -209,7 +209,7 @@ cmd_deploy_base="docker stack deploy --compose-file"
 prune_images (){
 #Cleaning old images
 echo "Pruning unused Docker images..."
-docker image prune -f
+docker image prune -f || echo_dec "WARNING: unused image pruning failed"
 }
 
 for option in "${options[@]}"; do
@@ -237,7 +237,7 @@ for option in "${options[@]}"; do
       t)
         echo "OPTION: -t with ${IMAGE_TAG}"
         prune_images
-        run_default b
+        run_default b || exit $?
 	      ;;
       i)
         echo 10 last available versions

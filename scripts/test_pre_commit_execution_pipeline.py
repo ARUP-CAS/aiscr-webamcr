@@ -239,7 +239,7 @@ exec "$PYTHON_TEST_EXE" "$@"
                     columns=["index", "date", "test name", "result"],
                 ).to_excel(results_root / "results.xlsx", index=False)
                 (results_root / "test_summary.env").write_text("PASSED=99\nFAILED=0\n", encoding="ascii")
-                directory = results_root / "runs" / identity
+                directory = results_root / "current"
                 values = dict(
                     **self.agent_state,
                     ATTEMPT_ID=identity,
@@ -295,7 +295,9 @@ exec "$PYTHON_TEST_EXE" "$@"
                 self.assertEqual(manage_trace.read_text(encoding="utf-8").splitlines(), expected_commands, details)
                 trace = self.deployment.trace.read_text(encoding="utf-8")
                 if preparation_failure:
-                    self.assertFalse(directory.exists(), details)
+                    # The runner never started: current/ still holds the preceding case's outcome.
+                    stale = json.loads((directory / "outcome.json").read_text(encoding="utf-8"))
+                    self.assertNotEqual(stale["attempt_id"], identity, details)
                     if case == "build":
                         self.assertIn("build -t test_web", trace)
                         self.assertNotIn("READINESS", trace)
@@ -352,7 +354,6 @@ exec "$PYTHON_TEST_EXE" "$@"
                 )
                 if case in ("build", "clone", "unhealthy", "timeout"):
                     self.assertNotEqual(remote.returncode, 0)
-                    self.assertFalse(directory.exists())
                     self.assertEqual(self.deployment.tag.read_text(encoding="utf-8"), "previous\n")
                 elif deploy == "true":
                     self.assertEqual(self.deployment.tag.read_text(encoding="utf-8"), "test\n")

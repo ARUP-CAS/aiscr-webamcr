@@ -42,7 +42,6 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    test_pre_commit_execution_pipeline_py
    test_pre_commit_execution_py
    test_pre_commit_report_py
-   test_pre_commit_retention_py
    test_pre_commit_selenium_lifecycle_py
    test_pre_commit_stack_ready_py
    test_pre_commit_workflow_py

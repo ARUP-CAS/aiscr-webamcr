@@ -5,7 +5,7 @@ mode="a"
 t_value=""
 usage() {
   echo "Použití: $0 [-a|-f|-t cislo|-b] [-h]"
-  echo "Výsledky: /opt/selenium_test/runs/<pokus>/; předchozí results.xlsx slouží výběru."
+  echo "Výsledky: /opt/selenium_test/current/, předchozí běh v previous/; kořenový results.xlsx slouží výběru."
 }
 while getopts 'fabt:h' flag; do
   case "$flag" in

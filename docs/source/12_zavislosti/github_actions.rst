@@ -251,41 +251,29 @@ výjimky; totéž platí pro zprávu v ``outcome.json``. Pokud selže i zveřejn
 chybového výsledku, runner vrátí neúspěch a pevnou zprávu bez tracebacku.
 Zachycený výstup samotných testů se tím nefiltruje.
 
-Každý pokus má identitu ``<github.run_id>-<github.run_attempt>`` a vlastní
-adresář ``runs/<pokus>/`` ve stávajícím svazku výsledků. Samostatné spuštění
-vygeneruje lokální identitu. Runner předá adresář testovacímu nastavení přes
-``AMCR_TEST_OUTPUT_DIR``; souhrn, nové tabulky a výstup tak patří jedinému
-pokusu. Předchozí ``results.xlsx`` zůstává vstupem výběru. Po dokončení se
-kompatibilní vstup pro příští výběr obnoví; selektivní běh neztratí ostatní
-známé testy. Záznam ``outcome.json`` s identitou, režimem, stavem a otisky
-souborů se atomicky zveřejní poslední. Neúplný adresář není hotovým výsledkem.
+Každý pokus má identitu ``<github.run_id>-<github.run_attempt>``; samostatné
+spuštění vygeneruje lokální identitu. Na začátku běhu runner přesune adresář
+``current/`` ve svazku výsledků do ``previous/``, starší ``previous/`` smaže
+a vytvoří prázdný ``current/``. Je-li ``current/`` nebo ``previous/`` odkaz či
+junction, běh skončí chybou a nic nesmaže. Runner předá ``current/``
+testovacímu nastavení přes ``AMCR_TEST_OUTPUT_DIR``; souhrn, nová tabulka,
+snímky a výstup tak patří jedinému běhu. Kořenový ``results.xlsx`` zůstává
+vstupem výběru. Po dokončení se tento vstup obnoví; selektivní běh neztratí
+ostatní známé testy. Záznam ``outcome.json`` s identitou, režimem, stavem
+a otisky souborů se atomicky zveřejní poslední. Adresář ``previous/`` slouží
+jen k diagnostice; výběr testů ani workflow jej nečtou.
 
-``webclient/test_run_retention.py`` udržuje deset nejnovějších dokončených
-pokusů včetně chyb a ``no-tests`` podle času záznamu dokončení. Přerušené
-pokusy lze odstranit až po třiceti dnech od poslední aktivity a ověření
-neaktivity. Zámek držený procesem chrání živý pokus při samostatném spuštění
-i v kontejneru; aktuální pokus je chráněn i během závěrečného úklidu.
-Runner odmítne existující identitu před úklidem a pro nový pokus získá
-platný zámek před vytvořením jeho adresáře.
-Kořenový zámek, zámek nového pokusu i zámek doplněný pro ověřený
-terminální záznam verze 1 se zveřejní atomicky až po zápisu a synchronizaci
-úplného markeru. Existující soubor zámku přitom zůstane zachován.
-Souběžné procesy používají stejný kořenový zámek.
-Předběžný i závěrečný úklid zasahuje pouze do vlastněných přímých adresářů
-pod ``runs/``. Neznámé vlastnictví, odkazy a junction hranice se zachovají
-s diagnostikou; výběrová tabulka v kořeni ani nesouvisející data se nemažou.
-Chybějící nebo neplatný zámek s neověřeným vlastnictvím nezakládá nárok
-na odstranění ani po třiceti dnech. Výsledkový krok i retence používají stejné
-omezené čtení ``outcome.json`` s odmítnutím duplicitních klíčů. Terminální
-záznamy verze 1 slouží při přechodu pouze k retenci. Povinná chyba úklidu
-znamená neúspěch a nepřepisuje původní selhání testů.
+Souběh běhů z CI vylučuje concurrency skupina DEV. Ruční spuštění testů na
+serveru během běhu z CI podporováno není, protože oba běhy sdílejí
+``current/``. Workflow i v takovém případě odmítne výsledek s jinou identitou
+nebo se změněnými soubory.
 
 Selenium registruje ukončení ovladače ihned po jeho vytvoření. Úklid proběhne
 i po chybě další inicializace nebo čtení či zápisu tabulky a zachová původní
 chybu. Výsledek řádku tabulky vychází z chyb právě zpracovávaného testu.
 
-Workflow stáhne záznam očekávaného pokusu, ověří jeho schéma a teprve potom
-stahuje přesně pojmenované soubory. Před zveřejněním počtů ověří jejich otisky
+Workflow stáhne ``current/outcome.json``, ověří jeho schéma a identitu
+očekávaného pokusu a teprve potom stahuje přesně pojmenované soubory. Před zveřejněním počtů ověří jejich otisky
 a vzájemný soulad. Staré soubory bez identity, jiné pokusy a chybějící či
 smíšené artefakty jsou odmítnuty. Výsledkový krok běží i po chybě testů,
 aby uchoval aktuální diagnostiku. Při ověřeném kladném počtu ``FAILED``
@@ -339,8 +327,8 @@ spouštěč WSL se za Bash pro tyto fixture nepovažuje. Chybějící interpret
 ukončí test s výslovnou diagnostikou.
 Skutečný kontrolní běh potřebuje samostatné schválení cíle a operace.
 Před během s ``nasadit_verzi: false`` ověřte, že nasazený spouštěcí skript na DEV
-předává identitu pokusu a běžící kontejner webu publikuje ``outcome.json``
-verze 2. Pokud některá součást ještě používá starší verzi, vyčkejte na
+předává identitu pokusu a běžící kontejner webu publikuje
+``current/outcome.json`` verze 2. Pokud některá součást ještě používá starší verzi, vyčkejte na
 kompatibilní nasazení nebo nejdříve schvalte kontrolu s nasazením. Pro kontrolu
 bez nasazení výslovně změňte výchozí hodnotu ``true`` na ``false``, zvolte platné
 ``test_mod`` a předem dohodnutý test (v režimu ``konkretni`` také odpovídající

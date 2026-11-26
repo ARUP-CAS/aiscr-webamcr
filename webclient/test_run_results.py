@@ -4,12 +4,13 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import stat
 import uuid
 from pathlib import Path
 
 FILES = {"test_summary.env", "results.xlsx", "test_output.log"}
-BASE_FIELDS = {
+FIELDS = {
     "version",
     "attempt_id",
     "mode",
@@ -19,8 +20,8 @@ BASE_FIELDS = {
     "spreadsheet_required",
     "files",
     "message",
+    "counts",
 }
-FIELDS = BASE_FIELDS | {"counts"}
 COUNT_FIELDS = {"total", "passed", "failed", "skipped", "expected_failures"}
 OUTCOME_LIMIT = 16384
 
@@ -57,27 +58,32 @@ def selection(mode, number):
 def attempt_identity(identity=None):
     """Ověří zadanou identitu nebo vytvoří novou pro samostatný běh.
 
-    :param identity: Volitelná identita pokusu.
-    :return: Identita vhodná pro název adresáře i zámku.
+    :param identity: Volitelná identita pokusu z CI.
+    :return: Ověřená identita, případně ``local-<uuid>`` pro ruční spuštění.
     """
     return validate_identity(identity or f"local-{uuid.uuid4().hex}")
 
 
-def create_attempt(root, identity=None):
-    """Vytvoří nový adresář a odmítne přepsání existujícího pokusu.
+def prepare_current(root):
+    """Přesune poslední běh do ``previous/`` a připraví prázdný ``current/``.
+
+    Starší obsah ``previous/`` se smaže. Kořenová tabulka výběru a ostatní
+    soubory v kořeni zůstávají beze změny.
 
     :param root: Kořen výsledků.
-    :param identity: Identita z CI nebo None pro samostatné spuštění.
-    :return: Cesta nového pokusu a jeho identita.
+    :return: Absolutní cesta prázdného adresáře ``current/``.
+    :raises ValueError: Pokud je ``current/`` nebo ``previous/`` odkaz či junction.
     """
-    identity = attempt_identity(identity)
-    runs = Path(root) / "runs"
-    if runs.is_symlink():
-        raise ValueError("Adresář pokusů nesmí být odkaz")
-    runs.mkdir(parents=True, exist_ok=True)
-    directory = runs / identity
-    directory.mkdir()
-    return directory.resolve(), identity
+    current, previous = Path(root) / "current", Path(root) / "previous"
+    for path in (current, previous):
+        if path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction()):
+            raise ValueError("Adresář výsledků nesmí být odkaz")
+    if previous.exists():
+        shutil.rmtree(previous)
+    if current.exists():
+        current.rename(previous)
+    current.mkdir(parents=True)
+    return current.resolve()
 
 
 def digest(path):
@@ -148,14 +154,13 @@ def read_summary(path):
     return counts[b"PASSED"], counts[b"FAILED"]
 
 
-def validate_record(record, identity, mode, number, allow_legacy=False):
+def validate_record(record, identity, mode, number):
     """Ověří schéma a identitu před použitím názvů souborů.
 
     :param record: Deserializovaný záznam.
     :param identity: Očekávaný pokus.
     :param mode: Očekávaný režim.
     :param number: Očekávané číslo.
-    :param allow_legacy: Rozpoznat starý terminální záznam pouze pro retenci.
     :return: Ověřený záznam.
     :raises ValueError: Při nesouladu nebo nepovoleném obsahu.
     """
@@ -164,10 +169,9 @@ def validate_record(record, identity, mode, number, allow_legacy=False):
     if not isinstance(record, dict):
         raise ValueError("Neplatné schéma výsledku")
     version = record.get("version")
-    legacy = allow_legacy and type(version) is int and version == 1
-    if type(version) is not int or (version != 2 and not legacy):
+    if type(version) is not int or version != 2:
         raise ValueError("Neznámá verze výsledku")
-    if set(record) != (BASE_FIELDS if legacy else FIELDS):
+    if set(record) != FIELDS:
         raise ValueError("Neplatné schéma výsledku")
     if (record["attempt_id"], record["mode"], record["number"]) != (identity, mode, number):
         raise ValueError("Výsledek patří jinému pokusu nebo výběru")
@@ -194,27 +198,26 @@ def validate_record(record, identity, mode, number, allow_legacy=False):
             mode != "neuspesne" or record["exit_code"] or record["spreadsheet_required"] or "results.xlsx" in files
         ):
             raise ValueError("Neplatný výsledek bez testů")
-    if not legacy:
-        counts = record["counts"]
-        if record["state"] == "error":
-            if counts is not None:
-                raise ValueError("Chyba nesmí vymýšlet počty testů")
-        else:
-            if not isinstance(counts, dict) or set(counts) != COUNT_FIELDS:
-                raise ValueError("Chybí úplné počty testů")
-            if any(type(value) is not int or value < 0 for value in counts.values()):
-                raise ValueError("Neplatné počty testů")
-            if counts["total"] != sum(counts[key] for key in COUNT_FIELDS - {"total"}):
-                raise ValueError("Rozporné kategorie testů")
-            if record["state"] == "no-tests":
-                if any(counts.values()):
-                    raise ValueError("No-op nesmí vykazovat testy")
-            elif (
-                counts["total"] - counts["skipped"] <= 0
-                or record["exit_code"] not in (0, 1)
-                or (record["exit_code"] == 0) != (counts["failed"] == 0)
-            ):
-                raise ValueError("Rozpor provedených testů a procesu")
+    counts = record["counts"]
+    if record["state"] == "error":
+        if counts is not None:
+            raise ValueError("Chyba nesmí vymýšlet počty testů")
+    else:
+        if not isinstance(counts, dict) or set(counts) != COUNT_FIELDS:
+            raise ValueError("Chybí úplné počty testů")
+        if any(type(value) is not int or value < 0 for value in counts.values()):
+            raise ValueError("Neplatné počty testů")
+        if counts["total"] != sum(counts[key] for key in COUNT_FIELDS - {"total"}):
+            raise ValueError("Rozporné kategorie testů")
+        if record["state"] == "no-tests":
+            if any(counts.values()):
+                raise ValueError("No-op nesmí vykazovat testy")
+        elif (
+            counts["total"] - counts["skipped"] <= 0
+            or record["exit_code"] not in (0, 1)
+            or (record["exit_code"] == 0) != (counts["failed"] == 0)
+        ):
+            raise ValueError("Rozpor provedených testů a procesu")
     return record
 
 
@@ -255,18 +258,16 @@ def read_outcome(directory):
     return record
 
 
-def load_record(directory, identity, mode, number, allow_legacy=False):
+def load_record(directory, identity, mode, number):
     """Načte a ověří výsledek proti očekávané identitě a výběru.
 
     :param directory: Adresář staženého pokusu.
     :param identity: Očekávaný pokus.
     :param mode: Očekávaný režim.
     :param number: Očekávané číslo.
-    :param allow_legacy: Rozpoznat starý terminální záznam pouze pro retenci.
     :return: Ověřená metadata.
     """
-    record = read_outcome(directory)
-    return validate_record(record, identity, mode, number, allow_legacy=allow_legacy)
+    return validate_record(read_outcome(directory), identity, mode, number)
 
 
 def validate_bundle(directory, record):
@@ -302,7 +303,10 @@ def publish_outcome(
 ):
     """Zveřejní ověřený záznam poslední; stará tabulka se použije jen jako vstup.
 
-    :param directory: Nový adresář pokusu.
+    Po dokončeném běhu nahradí sloučená tabulka kořenovou tabulku výběru
+    v nadřazeném adresáři ``current/``.
+
+    :param directory: Adresář ``current/`` aktuálního běhu.
     :param identity: Identita pokusu.
     :param mode: Režim výběru.
     :param number: Číslo testu.
@@ -330,5 +334,5 @@ def publish_outcome(
     validate_record(record, identity, mode, number)
     validate_bundle(directory, record)
     if state == "completed" and "results.xlsx" in record["files"] and selection_data is not None:
-        atomic_write(directory.parent.parent / "results.xlsx", selection_data)
+        atomic_write(directory.parent / "results.xlsx", selection_data)
     atomic_write(directory / "outcome.json", json.dumps(record, ensure_ascii=True, sort_keys=True).encode("utf-8"))

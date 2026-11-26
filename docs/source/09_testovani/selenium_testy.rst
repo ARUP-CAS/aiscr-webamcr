@@ -23,12 +23,16 @@ Skript podporuje tyto volby.
   do ``/opt/selenium_test/run.log`` a nečeká na dokončení běhu.
 * ``-h`` zobrazí nápovědu.
 
-Každý pokus má na serveru vlastní adresář
-``/opt/selenium_test/runs/<pokus>/``. Výstup běžících testů se zapisuje
-do ``test_output.log``. Tabulka výsledků ``results.xlsx`` a snímky
-obrazovky se ukládají do stejného adresáře, pokud je testy vytvoří.
+Výsledky posledního běhu jsou na serveru v ``/opt/selenium_test/current/``.
+Na začátku každého běhu se tento adresář přesune do
+``/opt/selenium_test/previous/`` a starší výsledky se smažou. Výstup běžících
+testů se zapisuje do ``test_output.log``. Tabulka výsledků ``results.xlsx``
+a snímky obrazovky se ukládají do stejného adresáře, pokud je testy vytvoří.
 Kořenová tabulka ``/opt/selenium_test/results.xlsx`` průběžně uchovává
 výsledky pro výběr testů v dalších bězích.
+
+Nespouštějte testy na serveru ručně, zatímco běží testy z Github Actions.
+Oba běhy by zapisovaly do stejného adresáře ``current/``.
 
 Tabulka výsledků obsahuje tyto sloupce.
 

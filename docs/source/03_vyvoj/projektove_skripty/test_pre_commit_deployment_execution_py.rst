@@ -43,6 +43,10 @@ Třídy
 
       Neúspěch nelze přepsat zprávou o dokončení ani koncovým exit 0.
 
+   .. py:method:: test_production_script_checks_each_required_step_without_fail_fast()
+
+      Bez set -e zastaví produkci chyba sítě či pomocného souboru, prune jen varuje.
+
    .. py:method:: test_swarm_diagnostic_and_shared_dependency_are_required()
 
       Chyba Swarmu vypíše příčinu a chybějící pomocný soubor zastaví nasazení.

@@ -3,6 +3,7 @@
 import io
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import time
@@ -37,7 +38,8 @@ class ExecutionTests(unittest.TestCase):
         :param counts: Počty testů.
         :return: Adresář pokusu a záznam výsledku.
         """
-        directory, identity = protocol.create_attempt(self.root, identity)
+        identity = protocol.attempt_identity(identity)
+        directory = protocol.prepare_current(self.root)
         if state != "error":
             protocol.write_summary(directory, *counts)
         metadata = dict(total=sum(counts), passed=counts[0], failed=counts[1], skipped=0, expected_failures=0)
@@ -108,7 +110,7 @@ class ExecutionTests(unittest.TestCase):
             code = runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"])
         self.assertEqual(code, 1)
         execute.assert_not_called()
-        record = protocol.load_record(self.root / "runs/123-1", "123-1", "vsechny", "")
+        record = protocol.load_record(self.root / "current", "123-1", "vsechny", "")
         self.assertEqual(record["state"], "error")
         self.assertNotIn("test_summary.env", record["files"])
 
@@ -145,7 +147,7 @@ class ExecutionTests(unittest.TestCase):
             runner, "execute_tests", return_value=(1, "Traceback: startup failed\n")
         ), redirect_stderr(io.StringIO()):
             self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"]), 1)
-        record = protocol.load_record(self.root / "runs/123-1", "123-1", "vsechny", "")
+        record = protocol.load_record(self.root / "current", "123-1", "vsechny", "")
         self.assertEqual(record["state"], "error")
 
     def test_runner_diagnostics_hide_explicit_and_secret_backed_roots(self):
@@ -172,8 +174,8 @@ class ExecutionTests(unittest.TestCase):
                 if not configured:
                     args += ["--results-root", str(root)]
                 self.assertEqual(runner.main(args), 0)
-                record = protocol.load_record(root / "runs" / identity, identity, "vsechny", "")
-                self.assertEqual(protocol.validate_bundle(root / "runs" / identity, record), (1, 0))
+                record = protocol.load_record(root / "current", identity, "vsechny", "")
+                self.assertEqual(protocol.validate_bundle(root / "current", record), (1, 0))
                 self.assertIn(identity, stdout.getvalue())
                 diagnostics = stdout.getvalue() + stderr.getvalue() + json.dumps(record)
                 self.assertNotIn(str(root), diagnostics)
@@ -185,7 +187,7 @@ class ExecutionTests(unittest.TestCase):
         for stage, target, attribute in (
             ("initialization", runner, "configure_logging"),
             ("configuration", runner, "Path"),
-            ("attempt", protocol, "create_attempt"),
+            ("attempt", protocol, "prepare_current"),
         ):
             with self.subTest(stage=stage), patch.object(target, attribute, side_effect=OSError(sensitive)):
                 stdout, stderr = io.StringIO(), io.StringIO()
@@ -196,7 +198,7 @@ class ExecutionTests(unittest.TestCase):
                 diagnostics = stdout.getvalue() + stderr.getvalue()
                 self.assertNotIn("credential-canary", diagnostics)
                 self.assertNotIn(str(self.root), diagnostics)
-                self.assertFalse((self.root / "runs/private-attempt").exists())
+                self.assertFalse((self.root / "current").exists())
 
     def test_runner_error_stages_and_metadata_hide_sensitive_exceptions(self):
         """Provozní chyby zachovají fázi a nepropustí citlivý text do konzole ani JSON."""
@@ -248,7 +250,7 @@ class ExecutionTests(unittest.TestCase):
                 if mode == "neuspesne":
                     args.append("-f")
                 self.assertEqual(runner.main(args), 1)
-                directory = self.root / "runs" / identity
+                directory = self.root / "current"
                 record = protocol.load_record(directory, identity, mode, "")
                 self.assertEqual(record["state"], "error")
                 self.assertIn(f"({stage})", record["message"])
@@ -274,7 +276,7 @@ class ExecutionTests(unittest.TestCase):
         self.assertNotIn("credential-canary", diagnostics)
         self.assertNotIn(str(self.root), diagnostics)
         self.assertNotIn("Traceback", diagnostics)
-        self.assertFalse((self.root / "runs/safe-error/outcome.json").exists())
+        self.assertFalse((self.root / "current/outcome.json").exists())
 
     def test_runner_publishes_completed_pass_and_failure(self):
         """Dokončené testy zachovají skutečný status a zveřejní aktuální počty."""
@@ -288,7 +290,7 @@ class ExecutionTests(unittest.TestCase):
                 io.StringIO()
             ):
                 self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", identity]), code)
-            directory = self.root / "runs" / identity
+            directory = self.root / "current"
             record = protocol.load_record(directory, identity, "vsechny", "")
             self.assertEqual(protocol.validate_bundle(directory, record), counts)
 
@@ -301,7 +303,7 @@ class ExecutionTests(unittest.TestCase):
             [[1, "old", "sample.tests.one", "OK"], [2, "old", "sample.tests.two", "FAIL"]], columns=columns
         )
         current = pandas.DataFrame([[1, None, None, None], [2, "now", "sample.tests.two", "OK"]], columns=columns)
-        directory, _ = protocol.create_attempt(self.root, "123-1")
+        directory = protocol.prepare_current(self.root)
         previous.to_excel(self.root / "results.xlsx", index=False)
         current.to_excel(directory / "results.xlsx", index=False)
         merged = runner.selection_content(self.root, directory, "neuspesne")
@@ -325,9 +327,9 @@ class ExecutionTests(unittest.TestCase):
             self.assertEqual(runner.select_tests("konkretni", "42", previous), ["sample.tests.test_one"])
             with self.assertRaises(ValueError):
                 runner.select_tests("konkretni", "43", previous)
-        record = protocol.load_record(self.root / "runs/123-1", "123-1", "neuspesne", "")
+        record = protocol.load_record(self.root / "current", "123-1", "neuspesne", "")
         self.assertEqual(record["state"], "no-tests")
-        self.assertEqual(protocol.validate_bundle(self.root / "runs/123-1", record), (0, 0))
+        self.assertEqual(protocol.validate_bundle(self.root / "current", record), (0, 0))
         self.assertEqual(previous.read_bytes(), b"previous-input")
 
     def test_missing_and_malformed_selection_fail(self):
@@ -354,16 +356,78 @@ class ExecutionTests(unittest.TestCase):
             with patch.object(pandas, "read_excel", return_value=table), self.assertRaises(ValueError):
                 runner.select_tests("neuspesne", "", self.root / "results.xlsx")
 
-    def test_attempts_are_unique_and_cannot_escape(self):
-        """Opakování má jiný adresář; stejný pokus ani cesta se nepřepíše."""
-        first, _ = self.attempt()
-        second, _ = self.attempt("123-2")
-        self.assertNotEqual(first, second)
-        with self.assertRaises(FileExistsError):
-            protocol.create_attempt(self.root, "123-1")
+    def link_directory(self, link, target):
+        """Vytvoří symbolický odkaz, na Windows bez oprávnění junction.
+
+        :param link: Cesta vytvářeného odkazu.
+        :param target: Cílový adresář mimo kořen výsledků.
+        """
+        try:
+            link.symlink_to(target, target_is_directory=True)
+        except OSError:
+            if os.name != "nt":
+                raise
+            subprocess.run(
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    "New-Item -ItemType Junction -Path $env:FIXTURE_LINK -Target $env:FIXTURE_TARGET | Out-Null",
+                ],
+                env=dict(os.environ, FIXTURE_LINK=str(link), FIXTURE_TARGET=str(target)),
+                check=True,
+                capture_output=True,
+            )
+
+    def test_runs_rotate_current_into_previous(self):
+        """Nový běh začne prázdný, poslední zůstane v previous/ a starší zmizí."""
+        self.assertFalse((self.root / "current").exists())
+        (self.root / "results.xlsx").write_bytes(b"selection-input")
+        (self.root / "unrelated.txt").write_bytes(b"keep")
+        for identity in ("123-1", "123-2", "123-3"):
+            self.attempt(identity)
+        current = protocol.load_record(self.root / "current", "123-3", "vsechny", "")
+        previous = protocol.load_record(self.root / "previous", "123-2", "vsechny", "")
+        self.assertEqual((current["attempt_id"], previous["attempt_id"]), ("123-3", "123-2"))
+        self.assertEqual(
+            sorted(path.name for path in self.root.iterdir()),
+            ["current", "previous", "results.xlsx", "unrelated.txt"],
+        )
+        self.assertEqual((self.root / "results.xlsx").read_bytes(), b"selection-input")
+        self.assertEqual((self.root / "unrelated.txt").read_bytes(), b"keep")
+        self.assertEqual(list(protocol.prepare_current(self.root).iterdir()), [])
         for identity in ("../outside", "a/b", "$(bad)", "a\nb", ""):
             with self.subTest(identity=identity), self.assertRaises(ValueError):
                 protocol.validate_identity(identity)
+
+    def test_linked_result_directory_fails_without_touching_target(self):
+        """Odkaz místo current/ či previous/ zastaví běh a cíl odkazu zůstane netknutý."""
+        outside = self.root / "outside"
+        outside.mkdir()
+        (outside / "keep").write_bytes(b"external canary")
+        results = self.root / "results"
+        results.mkdir()
+        for name in ("current", "previous"):
+            with self.subTest(name=name):
+                link = results / name
+                self.link_directory(link, outside)
+                try:
+                    with self.assertRaises(ValueError):
+                        protocol.prepare_current(results)
+                    stdout, stderr = io.StringIO(), io.StringIO()
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
+                        code = runner.main(["--results-root", str(results), "--attempt-id", "123-1"])
+                    self.assertEqual(code, 1)
+                    self.assertIn("(attempt)", stderr.getvalue())
+                finally:
+                    # Windows removes directory symlinks and junctions as directories.
+                    if os.name == "nt":
+                        os.rmdir(link)
+                    else:
+                        link.unlink()
+                self.assertEqual(sorted(path.name for path in outside.iterdir()), ["keep"])
+                self.assertEqual((outside / "keep").read_bytes(), b"external canary")
 
     def test_stale_mixed_and_incomplete_results_are_rejected(self):
         """Platný starý souhrn, jiné identity i změněné soubory jsou odmítnuty."""
@@ -381,7 +445,8 @@ class ExecutionTests(unittest.TestCase):
 
     def test_required_workbook_and_interrupted_publication_fail(self):
         """Chybějící tabulka ani přerušený zápis nevytvoří dokončený výsledek."""
-        directory, identity = protocol.create_attempt(self.root, "123-1")
+        identity = "123-1"
+        directory = protocol.prepare_current(self.root)
         protocol.write_summary(directory, 1, 0)
         with self.assertRaises(ValueError):
             protocol.publish_outcome(
@@ -453,7 +518,7 @@ class ExecutionTests(unittest.TestCase):
             runner, "execute_tests", side_effect=execute
         ), redirect_stdout(io.StringIO()):
             self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"]), 0)
-        directory = self.root / "runs/123-1"
+        directory = self.root / "current"
         record = protocol.load_record(directory, "123-1", "vsechny", "")
         self.assertTrue(record["spreadsheet_required"])
         self.assertEqual(protocol.digest(previous), record["files"]["results.xlsx"])
@@ -461,7 +526,7 @@ class ExecutionTests(unittest.TestCase):
             runner, "execute_tests", return_value=(0, "Ran 1 test in 1s\n\nOK\n")
         ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-2"]), 1)
-        failed = protocol.load_record(self.root / "runs/123-2", "123-2", "vsechny", "")
+        failed = protocol.load_record(self.root / "current", "123-2", "vsechny", "")
         self.assertEqual(failed["state"], "error")
         self.assertEqual(protocol.digest(previous), record["files"]["results.xlsx"])
 
@@ -480,7 +545,7 @@ class ExecutionTests(unittest.TestCase):
             runner, "execute_tests", side_effect=partial_write
         ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-3"]), 1)
-        failed = protocol.load_record(self.root / "runs/123-3", "123-3", "vsechny", "")
+        failed = protocol.load_record(self.root / "current", "123-3", "vsechny", "")
         self.assertEqual(failed["state"], "error")
         self.assertEqual(protocol.digest(previous), record["files"]["results.xlsx"])
 
@@ -545,7 +610,7 @@ class ExecutionTests(unittest.TestCase):
                 io.StringIO()
             ):
                 code = runner.main(["--results-root", str(self.root), "--attempt-id", identity])
-            directory = self.root / "runs" / identity
+            directory = self.root / "current"
             record = protocol.load_record(directory, identity, "vsechny", "")
             self.assertEqual(record["version"], 2)
             outputs, summary = self.root / f"outputs-{index}", self.root / f"summary-{index}"
@@ -569,8 +634,8 @@ class ExecutionTests(unittest.TestCase):
                 self.assertIn(f"| Přeskočeno | {skipped} |", report_text)
                 self.assertIn(f"| Očekávaná selhání | {xfail} |", report_text)
 
-    def test_counter_consistency_and_legacy_rejection(self):
-        """Neplatné typy, kategorie či stará verze neprojdou do nového výsledku."""
+    def test_counter_consistency_and_unsupported_version_rejection(self):
+        """Neplatné typy, kategorie či jiná verze formátu neprojdou do výsledku."""
         directory, record = self.attempt()
         for key, value in (("total", True), ("passed", -1), ("skipped", False), ("total", 2)):
             candidate = dict(record, counts=dict(record["counts"], **{key: value}))
@@ -585,10 +650,6 @@ class ExecutionTests(unittest.TestCase):
         path.write_text(json.dumps(legacy), encoding="utf-8")
         with self.assertRaises(ValueError):
             protocol.load_record(directory, "123-1", "vsechny", "")
-        owned = protocol.load_record(directory, "123-1", "vsechny", "", allow_legacy=True)
-        self.assertEqual(owned["version"], 1)
-        with self.assertRaises(ValueError):
-            protocol.validate_bundle(directory, owned)
 
     def test_all_mode_aliases_and_mutual_exclusion_remain_compatible(self):
         """Bez příznaku i s -a/--all se volí vsechny a konfliktní režimy se odmítnou."""

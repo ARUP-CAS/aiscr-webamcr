@@ -212,8 +212,7 @@ def main(argv=None):
     :param argv: Volitelné argumenty příkazové řádky.
     :return: Nula při úspěchu či výslovném no-op, jinak jedna.
     """
-    from test_run_results import create_attempt, publish_outcome, write_summary
-    from test_run_retention import AttemptLease
+    from test_run_results import attempt_identity, prepare_current, publish_outcome, write_summary
 
     parser = argparse.ArgumentParser()
     modes = parser.add_mutually_exclusive_group()
@@ -227,7 +226,6 @@ def main(argv=None):
     mode = "neuspesne" if args.fail else "konkretni" if args.test is not None else "vsechny"
     number = str(args.test) if args.test is not None else ""
     directory = None
-    lease = None
     status = 1
     previous_output = os.environ.get("AMCR_TEST_OUTPUT_DIR")
     stage = "initialization"
@@ -241,8 +239,8 @@ def main(argv=None):
             args.results_root = TEST_SCREENSHOT_PATH
         root = Path(args.results_root)
         stage = "attempt"
-        lease = AttemptLease(root, args.attempt_id, create_attempt)
-        directory, identity = lease.directory, lease.identity
+        identity = attempt_identity(args.attempt_id)
+        directory = prepare_current(root)
         print(f"Pokus testů: {identity}")
         stage = "selection"
         labels = select_tests(mode, number, root / "results.xlsx")
@@ -294,18 +292,6 @@ def main(argv=None):
             os.environ.pop("AMCR_TEST_OUTPUT_DIR", None)
         else:
             os.environ["AMCR_TEST_OUTPUT_DIR"] = previous_output
-        if lease is not None:
-            try:
-                lease.close()
-            except Exception:
-                message = "Chyba testovacího běhu (retention)"
-                print(message, file=sys.stderr)
-                if status == 0:
-                    try:
-                        publish_outcome(directory, identity, mode, number, "error", 1, message=message)
-                    except Exception:
-                        print("Zveřejnění chybového výsledku selhalo (publication)", file=sys.stderr)
-                status = 1
     return status
 
 

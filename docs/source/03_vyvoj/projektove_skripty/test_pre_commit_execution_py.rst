@@ -89,9 +89,20 @@ Třídy
 
       Chybějící nebo neplatný vstup výběru není no-op.
 
-   .. py:method:: test_attempts_are_unique_and_cannot_escape()
+   .. py:method:: link_directory()
 
-      Opakování má jiný adresář; stejný pokus ani cesta se nepřepíše.
+      Vytvoří symbolický odkaz, na Windows bez oprávnění junction.
+
+      :param link: Cesta vytvářeného odkazu.
+      :param target: Cílový adresář mimo kořen výsledků.
+
+   .. py:method:: test_runs_rotate_current_into_previous()
+
+      Nový běh začne prázdný, poslední zůstane v previous/ a starší zmizí.
+
+   .. py:method:: test_linked_result_directory_fails_without_touching_target()
+
+      Odkaz místo current/ či previous/ zastaví běh a cíl odkazu zůstane netknutý.
 
    .. py:method:: test_stale_mixed_and_incomplete_results_are_rejected()
 
@@ -121,9 +132,9 @@ Třídy
 
       Skips a očekávaná selhání nezvýší PASSED ani nezničí platný zero/zero běh.
 
-   .. py:method:: test_counter_consistency_and_legacy_rejection()
+   .. py:method:: test_counter_consistency_and_unsupported_version_rejection()
 
-      Neplatné typy, kategorie či stará verze neprojdou do nového výsledku.
+      Neplatné typy, kategorie či jiná verze formátu neprojdou do výsledku.
 
    .. py:method:: test_all_mode_aliases_and_mutual_exclusion_remain_compatible()
 

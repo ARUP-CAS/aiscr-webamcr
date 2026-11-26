@@ -196,7 +196,7 @@ jobs:
           set -euo pipefail
           [[ "$ATTEMPT_ID" =~ ^[0-9]+-[0-9]+$ ]] || exit 1
           result_dir="./test-results/$ATTEMPT_ID"
-          remote_dir="/opt/selenium_test/runs/$ATTEMPT_ID"
+          remote_dir="/opt/selenium_test/current"
           mkdir -p ./test-results
           mkdir "$result_dir"
           scp "amcr@$DEPLOYMENT_SERVER:$remote_dir/outcome.json" "$result_dir/outcome.json"

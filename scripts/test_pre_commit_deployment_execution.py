@@ -155,6 +155,21 @@ exit 0
                 if failure.startswith(("build", "pull")):
                     self.assertNotIn("stack deploy", self.trace.read_text(encoding="utf-8"))
 
+    def test_production_script_checks_each_required_step_without_fail_fast(self):
+        """Bez set -e zastaví produkci chyba sítě či pomocného souboru, prune jen varuje."""
+        args = ["GitHub", "-t", "1.2.3"]
+        result = self.execute("prod_deploy.sh", args, NETWORK_PRESENT="1", FAIL_DOCKER="network create")
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("stack deploy", self.trace.read_text(encoding="utf-8"))
+        result = self.execute("prod_deploy.sh", args, FAIL_DOCKER="image prune")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("WARNING: unused image pruning failed", result.stdout)
+        self.assertIn("stack deploy", self.trace.read_text(encoding="utf-8"))
+        (self.root / "scripts/deployment_helpers.sh").unlink()
+        result = self.execute("prod_deploy.sh", args)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.trace.read_text(encoding="utf-8"), "")
+
     def test_swarm_diagnostic_and_shared_dependency_are_required(self):
         """Chyba Swarmu vypíše příčinu a chybějící pomocný soubor zastaví nasazení."""
         for script, args in (("test_deploy.sh", ["-q"]), ("prod_deploy.sh", ["GitHub", "-t", "1.2.3"])):
