@@ -18,6 +18,12 @@ sys.path.insert(0, str(ROOT / "webclient"))
 import run_tests as runner  # noqa: E402
 import test_run_results as protocol  # noqa: E402
 
+# Skutečné názvy Selenium testů s českými písmeny; výběr i zveřejnění je musí přijmout.
+NON_ASCII_TESTS = (
+    "ez.tests.test_selenium.AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001",
+    "dokument.tests.test_selenium.AkceDokumenty.test_162_smazání_dokumentu_p_001",
+)
+
 
 class ExecutionTests(unittest.TestCase):
     """Ověří procesní stav, dokončený výstup a oddělené výsledky pokusů."""
@@ -26,6 +32,22 @@ class ExecutionTests(unittest.TestCase):
         """Připraví pouze dočasné soubory bez Django či služeb."""
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory(dir=os.environ.get("TEST_TEMP_ROOT")))).resolve()
         self.enterContext(patch.object(runner, "configure_logging"))
+        # Zpráva s kořenem výsledků a příkazem workflow za zalomením řádku.
+        self.sensitive = f"{self.root}{os.sep}private\n::warning::canary"
+        self.cause = f"OSError: <results-root>{os.sep}private ::warning::canary"
+
+    def assert_sanitised_cause(self, text, stage, cause):
+        """Ověří očištěnou příčinu bez kořene výsledků, tracebacku a příkazu workflow.
+
+        :param text: Vypsaná nebo zaznamenaná diagnostika.
+        :param stage: Očekávaná fáze selhání.
+        :param cause: Očekávaný typ a očištěná zpráva výjimky.
+        """
+        self.assertIn(f"Chyba testovacího běhu ({stage}): {cause}", text)
+        self.assertNotIn(str(self.root), text)
+        self.assertNotIn(self.root.as_posix(), text)
+        self.assertNotIn("Traceback", text)
+        self.assertFalse([line for line in text.splitlines() if line.startswith("::")], text)
 
     def attempt(self, identity="123-1", mode="vsechny", number="", state="completed", code=0, counts=(1, 0)):
         """Připraví úplný výsledek přes produkční publikační funkci.
@@ -151,58 +173,97 @@ class ExecutionTests(unittest.TestCase):
         self.assertEqual(record["state"], "error")
 
     def test_runner_diagnostics_hide_explicit_and_secret_backed_roots(self):
-        """Pokus lze sledovat podle identity bez zveřejnění cesty z konfigurace."""
+        """Pokus lze sledovat podle identity bez cesty z konfigurace, i když selže."""
         for configured in (False, True):
-            with self.subTest(secret_backed=configured), ExitStack() as stack:
-                root = self.root / f"sensitive-output-root-{configured}"
-                identity = f"safe-{configured}"
-                stdout, stderr = io.StringIO(), io.StringIO()
-                stack.enter_context(patch.dict(os.environ))
-                os.environ.pop("AMCR_TEST_RESULTS_ROOT", None)
-                stack.enter_context(
-                    patch.dict(
-                        sys.modules,
-                        {"webclient.settings.dev_test": SimpleNamespace(TEST_SCREENSHOT_PATH=str(root))},
+            for fails in (False, True):
+                with self.subTest(secret_backed=configured, fails=fails), ExitStack() as stack:
+                    root = self.root / f"sensitive-output-root-{configured}-{fails}"
+                    identity = f"safe-{configured}-{fails}"
+                    stdout, stderr = io.StringIO(), io.StringIO()
+                    stack.enter_context(patch.dict(os.environ))
+                    os.environ.pop("AMCR_TEST_RESULTS_ROOT", None)
+                    stack.enter_context(
+                        patch.dict(
+                            sys.modules,
+                            {"webclient.settings.dev_test": SimpleNamespace(TEST_SCREENSHOT_PATH=str(root))},
+                        )
                     )
-                )
-                stack.enter_context(patch.object(runner, "select_tests", return_value=["sample.tests.one"]))
-                stack.enter_context(patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)))
-                stack.enter_context(patch.object(runner, "execute_tests", return_value=(0, "Ran 1 test in 0s\n\nOK\n")))
-                stack.enter_context(redirect_stdout(stdout))
-                stack.enter_context(redirect_stderr(stderr))
-                args = ["--attempt-id", identity]
-                if not configured:
-                    args += ["--results-root", str(root)]
-                self.assertEqual(runner.main(args), 0)
-                record = protocol.load_record(root / "current", identity, "vsechny", "")
-                self.assertEqual(protocol.validate_bundle(root / "current", record), (1, 0))
-                self.assertIn(identity, stdout.getvalue())
-                diagnostics = stdout.getvalue() + stderr.getvalue() + json.dumps(record)
-                self.assertNotIn(str(root), diagnostics)
-                self.assertNotIn("sensitive-output-root", diagnostics)
+                    stack.enter_context(patch.object(runner, "select_tests", return_value=["sample.tests.one"]))
+                    stack.enter_context(
+                        patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0))
+                    )
+                    failure = OSError(f"{root}{os.sep}current{os.sep}test_output.log: disk full")
+                    stack.enter_context(
+                        patch.object(
+                            runner,
+                            "execute_tests",
+                            side_effect=failure if fails else None,
+                            return_value=(0, "Ran 1 test in 0s\n\nOK\n"),
+                        )
+                    )
+                    stack.enter_context(redirect_stdout(stdout))
+                    stack.enter_context(redirect_stderr(stderr))
+                    args = ["--attempt-id", identity]
+                    if not configured:
+                        args += ["--results-root", str(root)]
+                    self.assertEqual(runner.main(args), int(fails))
+                    record = protocol.load_record(root / "current", identity, "vsechny", "")
+                    self.assertEqual(protocol.validate_bundle(root / "current", record), None if fails else (1, 0))
+                    self.assertIn(identity, stdout.getvalue())
+                    diagnostics = stdout.getvalue() + stderr.getvalue() + json.dumps(record)
+                    self.assertNotIn(str(root), diagnostics)
+                    self.assertNotIn("sensitive-output-root", diagnostics)
+                    if fails:
+                        cause = f"OSError: <results-root>{os.sep}current{os.sep}test_output.log: disk full"
+                        self.assertEqual(record["message"], f"Chyba testovacího běhu (execution): {cause}")
+                        self.assert_sanitised_cause(stderr.getvalue(), "execution", cause)
 
-    def test_failures_before_attempt_creation_hide_sensitive_exceptions(self):
-        """Chyba inicializace, konfigurace či adresáře nezveřejní hodnotu výjimky."""
-        sensitive = f"{self.root}/private-root\ncredential-canary"
+    def test_failures_before_attempt_creation_report_sanitised_cause(self):
+        """Chyba inicializace, konfigurace či adresáře uvede příčinu bez kořene výsledků."""
         for stage, target, attribute in (
             ("initialization", runner, "configure_logging"),
             ("configuration", runner, "Path"),
             ("attempt", protocol, "prepare_current"),
         ):
-            with self.subTest(stage=stage), patch.object(target, attribute, side_effect=OSError(sensitive)):
+            with self.subTest(stage=stage), patch.object(target, attribute, side_effect=OSError(self.sensitive)):
                 stdout, stderr = io.StringIO(), io.StringIO()
                 with redirect_stdout(stdout), redirect_stderr(stderr):
                     code = runner.main(["--results-root", str(self.root), "--attempt-id", "private-attempt"])
                 self.assertEqual(code, 1)
-                self.assertIn(f"({stage})", stderr.getvalue())
-                diagnostics = stdout.getvalue() + stderr.getvalue()
-                self.assertNotIn("credential-canary", diagnostics)
-                self.assertNotIn(str(self.root), diagnostics)
+                self.assert_sanitised_cause(stdout.getvalue() + stderr.getvalue(), stage, self.cause)
                 self.assertFalse((self.root / "current").exists())
 
-    def test_runner_error_stages_and_metadata_hide_sensitive_exceptions(self):
-        """Provozní chyby zachovají fázi a nepropustí citlivý text do konzole ani JSON."""
-        sensitive = f"{self.root}/private-root\ncredential-canary"
+    def test_cause_replaces_configured_absolute_and_resolved_root(self):
+        """Kořen zadaný jinou cestou se nahradí ve všech tvarech, v nichž se ve zprávě objeví."""
+        (self.root / "alias").mkdir()
+        configured = (self.root / "alias" / "..").as_posix()
+        failure = OSError(f"{configured}/current | {self.root}{os.sep}current | {self.root.as_posix()}/current")
+        stderr = io.StringIO()
+        with patch.object(runner, "select_tests", side_effect=failure), redirect_stdout(io.StringIO()), redirect_stderr(
+            stderr
+        ):
+            self.assertEqual(runner.main(["--results-root", configured, "--attempt-id", "safe-forms"]), 1)
+        cause = f"OSError: <results-root>/current | <results-root>{os.sep}current | <results-root>/current"
+        record = protocol.load_record(self.root / "current", "safe-forms", "vsechny", "")
+        self.assertEqual(record["message"], f"Chyba testovacího běhu (selection): {cause}")
+        self.assert_sanitised_cause(stderr.getvalue() + record["message"], "selection", cause)
+        self.assertNotIn("alias", stderr.getvalue() + record["message"])
+
+    def test_outcome_message_is_one_bounded_line(self):
+        """Zpráva výsledku je jeden tisknutelný řádek v limitu, jinak výsledek neprojde."""
+        line = protocol.bounded_message("a\nb\r\x1bc d" + "x" * protocol.MESSAGE_LIMIT)
+        self.assertTrue(line.startswith("a b c dxx"), line)
+        self.assertEqual(len(line), protocol.MESSAGE_LIMIT)
+        self.assertTrue(line.endswith("…") and line.isprintable())
+        _, record = self.attempt(state="error", code=1)
+        self.assertEqual(protocol.validate_record(dict(record, message=line), "123-1", "vsechny", "")["message"], line)
+        for message in ("first\nsecond", "tab\tseparated", "x" * (protocol.MESSAGE_LIMIT + 1)):
+            with self.subTest(message=message[:16]), self.assertRaises(ValueError):
+                protocol.validate_record(dict(record, message=message), "123-1", "vsechny", "")
+
+    def test_runner_error_stages_and_metadata_report_sanitised_cause(self):
+        """Provozní chyby uvedou fázi, typ a očištěnou zprávu v konzoli i v JSON."""
+        sensitive = self.sensitive
         publish = protocol.publish_outcome
 
         def fail_completed_publication(*args, **kwargs):
@@ -253,29 +314,24 @@ class ExecutionTests(unittest.TestCase):
                 directory = self.root / "current"
                 record = protocol.load_record(directory, identity, mode, "")
                 self.assertEqual(record["state"], "error")
-                self.assertIn(f"({stage})", record["message"])
-                self.assertIn(f"({stage})", stderr.getvalue())
+                self.assertEqual(record["message"], f"Chyba testovacího běhu ({stage}): {self.cause}")
                 diagnostics = stdout.getvalue() + stderr.getvalue() + (directory / "outcome.json").read_text()
-                self.assertNotIn("credential-canary", diagnostics)
+                self.assert_sanitised_cause(stderr.getvalue(), stage, self.cause)
                 self.assertNotIn(str(self.root), diagnostics)
                 self.assertNotIn("Traceback", diagnostics)
                 self.assertIsNone(protocol.validate_bundle(directory, record))
 
-    def test_failed_error_publication_does_not_escape_or_disclose_exception(self):
-        """Druhá chyba publikace zachová neúspěch bez tracebacku s citlivou cestou."""
+    def test_failed_error_publication_reports_both_causes_without_traceback(self):
+        """Druhá chyba publikace zachová neúspěch a uvede obě očištěné příčiny bez tracebacku."""
         stdout, stderr = io.StringIO(), io.StringIO()
-        sensitive = f"{self.root}/private-root\ncredential-canary"
-        with patch.object(runner, "select_tests", side_effect=OSError(sensitive)), patch.object(
-            protocol, "publish_outcome", side_effect=OSError(sensitive)
+        with patch.object(runner, "select_tests", side_effect=OSError(self.sensitive)), patch.object(
+            protocol, "publish_outcome", side_effect=OSError(self.sensitive)
         ), redirect_stdout(stdout), redirect_stderr(stderr):
             code = runner.main(["--results-root", str(self.root), "--attempt-id", "safe-error"])
         self.assertEqual(code, 1)
-        self.assertIn("(selection)", stderr.getvalue())
-        self.assertIn("(publication)", stderr.getvalue())
         diagnostics = stdout.getvalue() + stderr.getvalue()
-        self.assertNotIn("credential-canary", diagnostics)
-        self.assertNotIn(str(self.root), diagnostics)
-        self.assertNotIn("Traceback", diagnostics)
+        self.assert_sanitised_cause(diagnostics, "selection", self.cause)
+        self.assertIn(f"Zveřejnění chybového výsledku selhalo (publication): {self.cause}", diagnostics)
         self.assertFalse((self.root / "current/outcome.json").exists())
 
     def test_runner_publishes_completed_pass_and_failure(self):
@@ -300,15 +356,15 @@ class ExecutionTests(unittest.TestCase):
 
         columns = ["index", "date", "test name", "result"]
         previous = pandas.DataFrame(
-            [[1, "old", "sample.tests.one", "OK"], [2, "old", "sample.tests.two", "FAIL"]], columns=columns
+            [[1, "old", "sample.tests.one", "OK"], [2, "old", NON_ASCII_TESTS[0], "FAIL"]], columns=columns
         )
-        current = pandas.DataFrame([[1, None, None, None], [2, "now", "sample.tests.two", "OK"]], columns=columns)
+        current = pandas.DataFrame([[1, None, None, None], [2, "now", NON_ASCII_TESTS[0], "OK"]], columns=columns)
         directory = protocol.prepare_current(self.root)
         previous.to_excel(self.root / "results.xlsx", index=False)
         current.to_excel(directory / "results.xlsx", index=False)
         merged = runner.selection_content(self.root, directory, "neuspesne")
         table = pandas.read_excel(io.BytesIO(merged))
-        self.assertEqual(list(table["test name"]), ["sample.tests.one", "sample.tests.two"])
+        self.assertEqual(list(table["test name"]), ["sample.tests.one", NON_ASCII_TESTS[0]])
         self.assertEqual(list(table["result"]), ["OK", "OK"])
 
     def test_selection_preserves_previous_workbook_and_reports_noop(self):
@@ -351,10 +407,27 @@ class ExecutionTests(unittest.TestCase):
             [[1.5, "", "sample.tests.one", "FAIL"]],
             [[1, "", "sample.tests.one", "OK"], [1, "", "sample.tests.two", "FAIL"]],
             [[1, "", "sample.tests.one", "OK"], [2, "", "sample.tests.one", "FAIL"]],
+            [[1, "", "single", "OK"]],
+            [[1, "", "sample..one", "OK"]],
+            [[1, "", "sample.tests.1one", "OK"]],
+            [[1, "", "sample.tests.test-one", "OK"]],
+            [[1, "", "sample.tests.test one", "OK"]],
         ):
             table = pandas.DataFrame(rows, columns=columns)
             with patch.object(pandas, "read_excel", return_value=table), self.assertRaises(ValueError):
                 runner.select_tests("neuspesne", "", self.root / "results.xlsx")
+
+    def test_selection_accepts_identifier_names_with_non_ascii_letters(self):
+        """Název, jehož každá tečkovaná část je identifikátor, projde i s českými písmeny."""
+        import pandas
+
+        path = self.root / "results.xlsx"
+        pandas.DataFrame(
+            [[117, "", NON_ASCII_TESTS[0], "FAIL"], [162, "", NON_ASCII_TESTS[1], "OK"]],
+            columns=["index", "date", "test name", "result"],
+        ).to_excel(path, index=False)
+        self.assertEqual(runner.select_tests("neuspesne", "", path), [NON_ASCII_TESTS[0]])
+        self.assertEqual(runner.select_tests("konkretni", "162", path), [NON_ASCII_TESTS[1]])
 
     def link_directory(self, link, target):
         """Vytvoří symbolický odkaz, na Windows bez oprávnění junction.
@@ -509,7 +582,7 @@ class ExecutionTests(unittest.TestCase):
             :return: Dokončený souhrn.
             """
             self.assertEqual(Path(os.environ["AMCR_TEST_OUTPUT_DIR"]), directory)
-            pandas.DataFrame([[1, "now", labels[0], "OK"]], columns=columns).to_excel(
+            pandas.DataFrame([[117, "now", NON_ASCII_TESTS[0], "OK"]], columns=columns).to_excel(
                 directory / "results.xlsx", index=False
             )
             return 0, "Ran 1 test in 1s\n\nOK\n"
@@ -625,7 +698,8 @@ class ExecutionTests(unittest.TestCase):
                 self.assertIsNone(record["counts"])
                 self.assertIn("stav: `error`", report_text)
                 self.assertNotIn("| Stav | Počet |", report_text)
-                self.assertEqual(annotations, [])
+                self.assertEqual(annotations, ["::error::" + record["message"]])
+                self.assertIn("(summary): ValueError: ", record["message"])
             else:
                 passed, failed, skipped, xfail = expected
                 self.assertEqual((code, status), (native, native))

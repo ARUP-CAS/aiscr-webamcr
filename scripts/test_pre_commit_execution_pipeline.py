@@ -8,6 +8,9 @@ import yaml
 
 from scripts import test_pre_commit_deployment_execution as deployment_fixtures
 from scripts.test_pre_commit_actions_trust import ROOT, SSHTestCase
+from scripts.test_pre_commit_execution import NON_ASCII_TESTS
+
+NON_ASCII_TEST = NON_ASCII_TESTS[0]
 
 
 class ExecutionPipelineTests(SSHTestCase):
@@ -101,7 +104,7 @@ exec "$PYTHON_TEST_EXE" "$@"
             "import pandas\n"
             "directory = Path(os.environ['AMCR_TEST_OUTPUT_DIR'])\n"
             "if case != 'workbook':\n"
-            "    pandas.DataFrame([[42, 'now', 'sample.tests.test_selenium.Test.test_42', 'FAIL' if case == 'test-failure' else 'OK']],\n"
+            f"    pandas.DataFrame([[117, 'now', {NON_ASCII_TEST!r}, 'FAIL' if case == 'test-failure' else 'OK']],\n"
             "                     columns=['index', 'date', 'test name', 'result']).to_excel(directory / 'results.xlsx', index=False)\n"
             "total, status = {'mixed-counts': (3, 'OK (skipped=1, expected failures=1)'),\n"
             "                 'expected-failures': (2, 'OK (expected failures=2)'),\n"
@@ -230,9 +233,9 @@ exec "$PYTHON_TEST_EXE" "$@"
                 pandas.DataFrame(
                     [
                         [
-                            9 if case == "unknown" else 42,
+                            9 if case == "unknown" else 117,
                             "old",
-                            "sample.tests.test_selenium.Test.test_42",
+                            NON_ASCII_TEST,
                             "OK" if case == "no-tests" else "FAIL",
                         ]
                     ],
@@ -245,7 +248,7 @@ exec "$PYTHON_TEST_EXE" "$@"
                     ATTEMPT_ID=identity,
                     NASADIT=deploy,
                     TEST_MOD=mode,
-                    TEST_CISLO="42" if mode == "konkretni" else "",
+                    TEST_CISLO="117" if mode == "konkretni" else "",
                     SERVER_ROOT=self.deployment.root.as_posix(),
                     DEP_SCRIPT="scripts/ci_deployment/deploy_test_server.sh",
                     TEST_SCRIPT="scripts/start_selenium_tests.sh",
@@ -387,6 +390,11 @@ exec "$PYTHON_TEST_EXE" "$@"
                 if case == "all-skipped":
                     self.assertIn("stav: `error`", report)
                     self.assertNotIn("| Stav | Počet |", report)
+                if case in ("startup", "migration", "workbook", "unknown", "all-skipped"):
+                    annotations = [line for line in result.stdout.splitlines() if line.startswith("::")]
+                    self.assertEqual(len(annotations), 1, result.stdout)
+                    self.assertTrue(annotations[0].startswith("::error::Chyba testovacího běhu ("), annotations)
+                    self.assertIn("Příčina: ` Chyba testovacího běhu (", report)
                 if case == "test-failure":
                     self.assertNotEqual(remote.returncode, 0)
                     self.assertIn("| ❌ Selhalo | 1 |", report)

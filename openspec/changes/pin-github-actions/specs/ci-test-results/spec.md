@@ -129,7 +129,9 @@ selection workbook and SHALL NOT delete anything outside the results root.
 Failed-only and numbered runs SHALL select tests from the previous root
 workbook, independently of the current run's output. A failed-only run with
 no remaining failures SHALL publish an explicit successful no-op. Missing or
-unreadable input and an unknown test number SHALL fail the run.
+unreadable input and an unknown test number SHALL fail the run. Selection
+and publication SHALL accept a test name when every dotted part is a Python
+identifier, including identifiers with non-ASCII letters.
 
 #### Scenario: Previous results select a new run
 
@@ -148,6 +150,12 @@ unreadable input and an unknown test number SHALL fail the run.
 - **GIVEN** a missing or unreadable workbook, or a numbered test absent from it
 - **WHEN** selection is attempted
 - **THEN** the run publishes an error outcome and fails
+
+#### Scenario: Test names contain non-ASCII letters
+
+- **GIVEN** a previous or newly written workbook with test names such as `ez.tests.test_selenium.AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001`
+- **WHEN** selection or publication validates the workbook
+- **THEN** the names are accepted, and a name with a dotted part that is not an identifier is still rejected
 
 ### Requirement: Test runner outcomes reflect actual execution
 
@@ -236,12 +244,14 @@ it.
 - **WHEN** the current row is written
 - **THEN** it records FAIL, not ERROR
 
-### Requirement: Runner diagnostics do not disclose configured paths
+### Requirement: Runner diagnostics report the cause without configured paths
 
-Runner messages and outcome text SHALL identify the run attempt and a fixed
-failure stage only. They SHALL NOT include configured filesystem paths or
-raw exception text. If publishing an error outcome also fails, the runner
-SHALL exit nonzero without an uncaught traceback.
+A runner failure SHALL be reported with the run attempt, stage, exception
+type and message. The message SHALL have the configured results root
+replaced by a placeholder in its configured, absolute and resolved forms,
+control characters turned into spaces and a bounded length. The runner SHALL
+print this cause to stderr and record it as the outcome message. Outcome
+validation SHALL reject a message that is not one bounded line.
 
 #### Scenario: The output root comes from secret-backed settings
 
@@ -249,11 +259,35 @@ SHALL exit nonzero without an uncaught traceback.
 - **WHEN** a run completes or fails
 - **THEN** console output and the outcome identify the run without printing the root
 
-#### Scenario: A failure carries sensitive exception text
+#### Scenario: A failure message contains the results root
 
-- **GIVEN** any runner stage raises an exception containing a sensitive value
+- **GIVEN** a runner stage raises an exception whose message contains the results root in its configured or resolved form
 - **WHEN** the runner reports the failure
-- **THEN** stderr and the outcome name only the stage, and the run fails
+- **THEN** stderr and the outcome show the stage, the exception type and the message with the root replaced by the placeholder, and the run fails
+
+#### Scenario: Publishing the error outcome fails
+
+- **GIVEN** the runner cannot publish its error outcome
+- **WHEN** it finishes
+- **THEN** it prints the cause, exits nonzero and shows no uncaught traceback
+
+### Requirement: The workflow shows the cause of an error outcome
+
+For a downloaded error outcome, the workflow SHALL show the recorded cause in
+its step summary and as one error annotation, escaped as workflow-command
+data, and the step SHALL fail.
+
+#### Scenario: An error outcome reaches the workflow
+
+- **GIVEN** a downloaded error outcome with a recorded cause
+- **WHEN** the workflow reports it
+- **THEN** the step summary and one error annotation show the cause, and the step fails
+
+#### Scenario: A cause contains workflow-command text
+
+- **GIVEN** an exception message with a line break followed by workflow-command syntax
+- **WHEN** the runner records the cause and the workflow reports it
+- **THEN** the cause stays on one line and the only workflow command emitted for it is the single error annotation
 
 ### Requirement: DEV tests and deployments do not overlap
 

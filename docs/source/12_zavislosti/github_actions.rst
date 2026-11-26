@@ -245,11 +245,18 @@ běžný běh znamenají chybu. Jen režim neúspěšných testů s platným př
 vstupem a prázdným výběrem smí skončit jako výslovné ``no-tests``. Chybějící
 tabulka nebo nenalezené číslo testu jsou chyby, nikoli úspěšné prázdné běhy.
 
-Vlastní diagnostika runneru uvádí ověřenou identitu pokusu a pevně pojmenovanou
-fázi selhání. Nevypisuje nakonfigurovaný kořen výsledků ani nezpracovaný text
-výjimky; totéž platí pro zprávu v ``outcome.json``. Pokud selže i zveřejnění
-chybového výsledku, runner vrátí neúspěch a pevnou zprávu bez tracebacku.
-Zachycený výstup samotných testů se tím nefiltruje.
+Vlastní diagnostika runneru uvádí ověřenou identitu pokusu, pevně pojmenovanou
+fázi selhání, typ výjimky a její zprávu, například
+``Chyba testovacího běhu (publication): ValueError: …``. Nakonfigurovaný kořen
+výsledků se ve zprávě nahradí značkou ``<results-root>`` v zadaném, absolutním
+i vyřešeném tvaru, řídicí znaky včetně zalomení řádku se nahradí mezerou
+a délka je omezená. Stejný jednořádkový text runner zapíše do ``outcome.json``.
+Workflow u chybového výsledku zobrazí příčinu v souhrnu kroku a jako jednu
+chybovou anotaci zakódovanou jako data příkazu workflow, takže text výjimky
+nemůže spustit jiný příkaz. Pokud selže i zveřejnění chybového výsledku,
+runner vypíše obě příčiny a vrátí neúspěch bez tracebacku. Repozitář je
+veřejný, takže zprávy výjimek jsou v logu viditelné; nahrazuje se jen kořen
+výsledků. Zachycený výstup samotných testů se tím nefiltruje.
 
 Každý pokus má identitu ``<github.run_id>-<github.run_attempt>``; samostatné
 spuštění vygeneruje lokální identitu. Na začátku běhu runner přesune adresář

@@ -189,10 +189,39 @@ The runner:
 
 Skips and expected failures are counted separately, and the outcome counts
 must add up to the total. Failed-only selection with no failures is the only
-successful run with no tests executed. Runner messages name the run ID and a
-fixed stage, never paths or exception text. Selenium tests register driver
-cleanup when the driver is created, and classify each workbook row from
-their own result.
+successful run with no tests executed. Selection and publication accept a
+test name when every dotted part is a Python identifier
+(`str.isidentifier()`), so Czech letters in Selenium method names are valid.
+The names reach `manage.py test` as separate arguments without a shell.
+Selenium tests register driver cleanup when the driver is created, and
+classify each workbook row from their own result.
+
+### Runner diagnostics
+
+A runner failure is reported as
+`Chyba testovacího běhu (<stage>): <type>: <message>`. Before the message is
+printed or recorded:
+
+- the configured results root is replaced by `<results-root>` in its
+  configured, absolute and resolved forms;
+- control characters, including line breaks, become spaces;
+- the length is capped.
+
+The runner prints this line to stderr and stores it as the outcome
+`message`. Outcome validation accepts only one bounded line. For an error
+outcome, `scripts/collect_test_results.py` adds the cause to the step summary
+and emits one `::error::` annotation, escaping `%`, CR and LF as
+workflow-command data.
+
+Alternatives considered:
+
+- **Fixed stage only.** This was the earlier decision, taken after CodeQL
+  alert 7461 flagged a printed results path. The first DEV run that reached
+  publication (run 45895898223) failed as `publication` without a cause.
+  Diagnosing it needed the result artifact and a local reproduction.
+- **Own validation messages only, exception type otherwise.** Nothing could
+  leak, but library failures lose their detail. This is the fallback if
+  hosted CodeQL flags the sanitised text.
 
 ### Deployment failures, readiness and script hygiene
 
@@ -250,6 +279,21 @@ issue. The hosted pre-commit job at `de9a4fc8d` showed a false
 and report output reach the job log. This Low finding was introduced by this
 PR and is fixed here as a further author exception (task 7.4).
 
+The DEV run at `de9a4fc8d` (run 45895898223) passed readiness and executed
+the tests, then found two more problems:
+
+- **Test names.** Selection and publication rejected the 17 Selenium tests
+  whose names contain Czech letters, so every full run ends as an error.
+  This PR introduced the ASCII-only name check, so the freeze keeps the High
+  fix here (task 7.5).
+- **Diagnostics.** The stage-only message hid that cause. Reporting the cause
+  is a deliberate author exception, made in the same revision (task 7.6).
+
+The run's 68 failures in `test_organizace_mapper` and
+`test_run_data_import_organizace` predate this PR. These #4450 tests insert
+fixed `heslar_nazev` keys into the reused DEV database. They are deferred to
+[ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465).
+
 ## Risks / Trade-offs
 
 - **Activation blocks unprepared refs.** Activating enforcement stops
@@ -271,13 +315,26 @@ PR and is fixed here as a further author exception (task 7.4).
   readiness before production.
 - **Dependabot inventory lags.** A Dependabot diff can update pins before the
   inventory. → The next normal refresh corrects it.
+- **A sanitised cause could still carry a path.** A path in a form the
+  sanitiser does not recognise could appear in a message. → The root is
+  replaced in three forms, fixtures cover a secret-backed root and a resolved
+  root, and hosted CodeQL checks the flow. If CodeQL flags it, fall back to
+  the runner's own messages and the exception type.
+- **DEV stays red until #4465.** The #4450 tests fail against the reused DEV
+  database. → A DEV run is accepted on its outcome and the location of its
+  failures (migration step 1), not on a green result.
 
 ## Migration Plan
 
 1. Before merge, after separate approval, dispatch `Run tests` from the PR
    branch with deployment enabled. This covers stdin, deployment, readiness
    and the new result directories. Then run it with deployment disabled.
-   Record run URLs, revisions and attempt IDs.
+   Record run URLs, revisions and attempt IDs. Until
+   [ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465)
+   changes the #4450 tests, such a run fails on them. It is accepted when it
+   ends `completed`, publishes its counts, replaces the root workbook and
+   fails only in `test_organizace_mapper` and
+   `test_run_data_import_organizace`.
 2. A colleague reviews the PR and merges it into `test`. The PR description
    gives a reading order and flags the production script changes.
 3. The first TEST deployment of a release containing this change is the
@@ -326,6 +383,7 @@ round before. Pre-commit and CodeQL passed on each delivered head from
 | 9 | `e0831d563` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6069580737) | 0 | 1 (O16; O15 deferred) | No new findings |
 | DEV run | `e0831d563` | [job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45771045340/job/139747914273), attempt 2 | 1 (host Python) | 0 | Readiness check must run on Python 3.6 |
 | CI | `de9a4fc8d` | [pre-commit job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45895469093/job/140168151293) | 1 (leaked annotation) | 0 | Test output captured and asserted |
+| DEV run | `de9a4fc8d` | [job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45895898223/job/140169581355), attempt 2 | 1 (test names) | 0 | Readiness passed; non-ASCII names rejected at publication; cause reporting added; #4450 failures deferred to #4465 |
 | Simplification | `f11aa5629` | Exploration on 2026-11-26 | - | - | Retention replaced, v1 code and `set -e` removed, specs split |
 
 ## Sources

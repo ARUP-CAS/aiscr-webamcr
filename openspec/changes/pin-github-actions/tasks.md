@@ -8,8 +8,8 @@ Approach: [design.md](design.md).
 
 Groups 1-4 summarize the work delivered in `0735cb560`..`f11aa5629`. The
 round-by-round history is in [design.md](design.md#review-history). Groups 5
-and 6 are the simplification revision. Group 7 covers the first live DEV run,
-review round nine and a leaked test annotation in hosted pre-commit.
+and 6 are the simplification revision. Group 7 covers the first two live DEV
+runs, review round nine and a leaked test annotation in hosted pre-commit.
 
 ## 1. Action pins and inventory
 
@@ -62,19 +62,29 @@ review round nine and a leaked test annotation in hosted pre-commit.
   Inspect the diff to confirm only the planned files changed.
 - [x] 6.2 Update the single rolling usage entry for this change with runtime and model metadata, results and limits. No hub asset change or sync is planned; any future sync needs a reviewed dry run before a separately approved apply.
 
-## 7. Live DEV run and review round nine
+## 7. Live DEV runs and review round nine
 
 - [x] 7.1 Make `scripts/check_stack_ready.py` run on the deployment host's Python 3.6, as found by the [DEV run](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45771045340/job/139747914273): pass the inspection deadline explicitly instead of through `contextvars`, and call `subprocess.run` with `stdout` and `stderr` pipes and `universal_newlines` instead of `capture_output` and `text`. Record the 3.6 floor in the module docstring. Adapt `scripts/test_pre_commit_stack_ready.py` and add a guard that parses the script with the Python 3.6 grammar and rejects later standard-library modules and `subprocess.run` arguments. Verify with the stack-ready and deployment fixtures on Windows and isolated Linux. Optionally, with separate approval, run the script in a `python:3.6-slim` container without Docker and confirm that it reports the inspection failure instead of an import error or `TypeError`. The DEV rerun in the workflow follow-up is the live confirmation.
 - [x] 7.2 Correct the manual Compose section of `docs/source/02_instalace_nasazeni/nasazovani.rst` (round-nine observation O16, a deliberate exception to the scope freeze): `amcr_image`, `redis_image` and `proxy_image` select the images with registry and tag, and `IMAGE_TAG` only passes the version to the application containers. Verify with a strict Sphinx build of the page.
 - [x] 7.3 Repeat the 6.1 checks, regenerate the script documentation with the existing generators, and update the rolling usage entry.
 - [x] 7.4 Capture runner and report output in `scripts/test_pre_commit_execution.py`, so no fixture line reaches the CI log, where `::error::Selhalo 1 testů` became a false annotation in the [pre-commit job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45895469093/job/140168151293) (a deliberate exception to the scope freeze). Assert that the report prints the annotation only when tests failed. Verify that both `scripts` suites leave stdout empty on Windows and isolated Linux.
+- [x] 7.5 In `select_tests` of `webclient/run_tests.py`, accept a test name when every dotted part is a Python identifier (`str.isidentifier()`), replacing the ASCII-only pattern. In the [DEV run](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45895898223/job/140169581355), that pattern rejected the 17 Selenium tests with Czech letters in their names, so every full run ended as an error at publication. Use a real non-ASCII name, such as `ez.tests.test_selenium.AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001`, in the selection, publication and pipeline fixtures, and keep rejecting a name with a non-identifier part. Verify that the new fixtures fail against the current pattern and pass after the change, on Windows and isolated Linux.
+- [ ] 7.6 Report the failure cause as described in [design.md](design.md#runner-diagnostics), a deliberate exception to the scope freeze:
+  - in `webclient/run_tests.py`, print and record `Chyba testovacího běhu (<stage>): <type>: <message>`, with the results root replaced in its configured, absolute and resolved forms, control characters turned into spaces and the length bounded;
+  - in `webclient/test_run_results.py`, accept only a single bounded message line;
+  - in `scripts/collect_test_results.py`, show the cause of an error outcome in the step summary and as one escaped `::error::` annotation;
+  - replace the stage-only fixtures with fixtures for a secret-backed root, a message containing the configured and resolved root, workflow-command text in the cause and a failing error publication;
+  - update the diagnostics paragraph in `docs/source/12_zavislosti/github_actions.rst`.
+
+  Verify on Windows and isolated Linux. After push, the hosted CodeQL run must report no `py/clear-text-logging-sensitive-data` alert; otherwise fall back to the runner's own messages and the exception type.
+- [x] 7.7 Repeat the 6.1 checks, regenerate the script documentation with the existing generators, and update the rolling usage entry.
 
 ## Workflow follow-up
 
 These steps are outside this change's completion and each needs its own approval.
 
 - Update the PR title and description: add a reading order (workflows and pins, runner and results, deployment scripts, generated docs, OpenSpec) and an explicit note on the `scripts/prod_deploy.sh` changes.
-- Before merge, dispatch `Run tests` from the PR branch with deployment enabled, then with deployment disabled. Record run URLs, revisions and attempt IDs.
+- Before merge, dispatch `Run tests` from the PR branch with deployment enabled, then with deployment disabled. Record run URLs, revisions and attempt IDs. Until [ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465) lands, accept a run by the bar in [design.md](design.md#migration-plan): `completed`, counts published, root workbook replaced, failures only in the #4450 modules.
 - After merge into `test`, the first TEST deployment of a release containing this change is the first live run of `prod_deploy.sh`. Verify the deployed version and stack readiness before any production deployment.
 - File follow-up issues for pre-existing review observations deferred by the scope freeze. Optionally, add Selenium screenshots to the workflow artifact.
 - Observe a Dependabot PR that updates both a SHA and its release comment.

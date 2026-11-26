@@ -71,7 +71,9 @@ def select_tests(mode, number, spreadsheet):
                 continue
             if result not in ("OK", "FAIL", "ERROR") or not isinstance(name, str):
                 raise ValueError("Neplatný řádek výsledků")
-            if not re.fullmatch(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+", name, re.ASCII):
+            # Názvy Selenium testů obsahují i česká písmena; stačí platný identifikátor v každé části.
+            parts = name.split(".")
+            if len(parts) < 2 or not all(part.isidentifier() for part in parts):
                 raise ValueError("Neplatný název testu")
             if name in names:
                 raise ValueError("Duplicitní název testu")
@@ -206,13 +208,40 @@ def selection_content(root, directory, mode):
     return output.getvalue()
 
 
+def describe_failure(exc, results_root):
+    """Popíše výjimku typem a zprávou bez nakonfigurovaného kořene výsledků.
+
+    Kořen se ve zprávě nahradí značkou ``<results-root>`` v zadaném,
+    absolutním i vyřešeném tvaru, každý s oběma oddělovači cest. Delší tvary
+    se nahrazují dříve, aby z nich nezůstala část kratšího tvaru.
+
+    :param exc: Zachycená výjimka.
+    :param results_root: Nakonfigurovaný kořen výsledků, nebo None, pokud ještě není znám.
+    :return: Typ a očištěná zpráva výjimky, ještě nesjednocená na jeden řádek.
+    """
+    text = str(exc)
+    if results_root is not None:
+        forms = {str(results_root), os.path.abspath(results_root)}
+        try:
+            forms.add(str(Path(results_root).resolve()))
+        except (OSError, RuntimeError):
+            pass
+        forms |= {form.replace("\\", "/") for form in forms}
+        for form in sorted({form.rstrip("/\\") or form for form in forms if form}, key=len, reverse=True):
+            text = text.replace(form, "<results-root>")
+    return f"{type(exc).__name__}: {text}" if text else type(exc).__name__
+
+
 def main(argv=None):
     """Vybere testy a zveřejní výsledek pouze po ověření dokončeného pokusu.
+
+    Při chybě vypíše a zaznamená fázi, typ výjimky a její zprávu bez
+    nakonfigurovaného kořene výsledků, sjednocené na jeden omezený řádek.
 
     :param argv: Volitelné argumenty příkazové řádky.
     :return: Nula při úspěchu či výslovném no-op, jinak jedna.
     """
-    from test_run_results import attempt_identity, prepare_current, publish_outcome, write_summary
+    from test_run_results import attempt_identity, bounded_message, prepare_current, publish_outcome, write_summary
 
     parser = argparse.ArgumentParser()
     modes = parser.add_mutually_exclusive_group()
@@ -277,14 +306,15 @@ def main(argv=None):
                 counts=counts,
             )
             status = returncode
-    except Exception:
-        message = f"Chyba testovacího běhu ({stage})"
+    except Exception as exc:
+        message = bounded_message(f"Chyba testovacího běhu ({stage}): {describe_failure(exc, args.results_root)}")
         print(message, file=sys.stderr)
         if directory is not None:
             try:
                 publish_outcome(directory, identity, mode, number, "error", 1, message=message)
-            except Exception:
-                print("Zveřejnění chybového výsledku selhalo (publication)", file=sys.stderr)
+            except Exception as publication_exc:
+                cause = describe_failure(publication_exc, args.results_root)
+                print(bounded_message(f"Zveřejnění chybového výsledku selhalo (publication): {cause}"), file=sys.stderr)
         status = 1
     finally:
         logger.info("amcr_test_runner.end")

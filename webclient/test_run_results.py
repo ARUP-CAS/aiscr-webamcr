@@ -24,6 +24,21 @@ FIELDS = {
 }
 COUNT_FIELDS = {"total", "passed", "failed", "skipped", "expected_failures"}
 OUTCOME_LIMIT = 16384
+MESSAGE_LIMIT = 500
+
+
+def bounded_message(text):
+    """Převede diagnostiku na jeden řádek tisknutelných znaků v limitu záznamu.
+
+    Řídicí a jiné netisknutelné znaky včetně zalomení řádků nahradí mezerou,
+    sloučí po sobě jdoucí mezery a delší text zkrátí na ``MESSAGE_LIMIT``
+    znaků se znakem ``…`` na konci.
+
+    :param text: Libovolná diagnostika.
+    :return: Text, který projde kontrolou zprávy ve ``validate_record``.
+    """
+    line = " ".join("".join(char if char.isprintable() else " " for char in text).split())
+    return line if len(line) <= MESSAGE_LIMIT else line[: MESSAGE_LIMIT - 1] + "…"
 
 
 def validate_identity(identity):
@@ -179,7 +194,10 @@ def validate_record(record, identity, mode, number):
         raise ValueError("Neplatný stav výsledku")
     if type(record["exit_code"]) is not int or not 0 <= record["exit_code"] <= 255:
         raise ValueError("Neplatný návratový kód")
-    if type(record["spreadsheet_required"]) is not bool or not isinstance(record["message"], str):
+    message = record["message"]
+    if type(record["spreadsheet_required"]) is not bool or not isinstance(message, str):
+        raise ValueError("Neplatná metadata výsledku")
+    if len(message) > MESSAGE_LIMIT or not message.isprintable():
         raise ValueError("Neplatná metadata výsledku")
     files = record["files"]
     if not isinstance(files, dict) or not set(files) <= FILES:

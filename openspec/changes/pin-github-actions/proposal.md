@@ -44,6 +44,9 @@ trustworthy.
 - Read the downloaded summary as data instead of executing it.
 - Fail on migration errors, crashes, incomplete output and zero executed tests.
   Report skips and expected failures separately from passes.
+- Report why a failed run failed: the runner names the stage, the exception
+  type and its message with configured result paths removed, and the
+  workflow shows that cause in its summary and as an annotation.
 - Bind published results to the GitHub run attempt. Each run empties a
   `current/` result directory and keeps the preceding run in `previous/`. The
   workflow rejects a missing or mismatched outcome.

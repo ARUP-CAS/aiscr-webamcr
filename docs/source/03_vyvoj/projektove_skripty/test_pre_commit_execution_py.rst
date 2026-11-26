@@ -21,6 +21,14 @@ Třídy
 
       Připraví pouze dočasné soubory bez Django či služeb.
 
+   .. py:method:: assert_sanitised_cause()
+
+      Ověří očištěnou příčinu bez kořene výsledků, tracebacku a příkazu workflow.
+
+      :param text: Vypsaná nebo zaznamenaná diagnostika.
+      :param stage: Očekávaná fáze selhání.
+      :param cause: Očekávaný typ a očištěná zpráva výjimky.
+
    .. py:method:: attempt()
 
       Připraví úplný výsledek přes produkční publikační funkci.
@@ -59,19 +67,27 @@ Třídy
 
    .. py:method:: test_runner_diagnostics_hide_explicit_and_secret_backed_roots()
 
-      Pokus lze sledovat podle identity bez zveřejnění cesty z konfigurace.
+      Pokus lze sledovat podle identity bez cesty z konfigurace, i když selže.
 
-   .. py:method:: test_failures_before_attempt_creation_hide_sensitive_exceptions()
+   .. py:method:: test_failures_before_attempt_creation_report_sanitised_cause()
 
-      Chyba inicializace, konfigurace či adresáře nezveřejní hodnotu výjimky.
+      Chyba inicializace, konfigurace či adresáře uvede příčinu bez kořene výsledků.
 
-   .. py:method:: test_runner_error_stages_and_metadata_hide_sensitive_exceptions()
+   .. py:method:: test_cause_replaces_configured_absolute_and_resolved_root()
 
-      Provozní chyby zachovají fázi a nepropustí citlivý text do konzole ani JSON.
+      Kořen zadaný jinou cestou se nahradí ve všech tvarech, v nichž se ve zprávě objeví.
 
-   .. py:method:: test_failed_error_publication_does_not_escape_or_disclose_exception()
+   .. py:method:: test_outcome_message_is_one_bounded_line()
 
-      Druhá chyba publikace zachová neúspěch bez tracebacku s citlivou cestou.
+      Zpráva výsledku je jeden tisknutelný řádek v limitu, jinak výsledek neprojde.
+
+   .. py:method:: test_runner_error_stages_and_metadata_report_sanitised_cause()
+
+      Provozní chyby uvedou fázi, typ a očištěnou zprávu v konzoli i v JSON.
+
+   .. py:method:: test_failed_error_publication_reports_both_causes_without_traceback()
+
+      Druhá chyba publikace zachová neúspěch a uvede obě očištěné příčiny bez tracebacku.
 
    .. py:method:: test_runner_publishes_completed_pass_and_failure()
 
@@ -88,6 +104,10 @@ Třídy
    .. py:method:: test_missing_and_malformed_selection_fail()
 
       Chybějící nebo neplatný vstup výběru není no-op.
+
+   .. py:method:: test_selection_accepts_identifier_names_with_non_ascii_letters()
+
+      Název, jehož každá tečkovaná část je identifikátor, projde i s českými písmeny.
 
    .. py:method:: link_directory()
 

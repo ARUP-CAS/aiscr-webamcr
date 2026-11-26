@@ -11,9 +11,26 @@ Ověří stažené výsledky konkrétního pokusu před publikací do GitHub Act
 Funkce
 ------
 
+.. py:function:: command_data(text)
+
+   Zakóduje text jako data příkazu workflow, aby nemohl začít další příkaz.
+
+   :param text: Zobrazovaná diagnostika.
+   :return: Text s ``%``, CR a LF zakódovanými podle pravidel GitHub Actions.
+
+.. py:function:: code_span(text)
+
+   Vloží text do kódového úseku Markdownu bez ohledu na obsažené zpětné apostrofy.
+
+   :param text: Jednořádkový text.
+   :return: Kódový úsek s oddělovačem delším než nejdelší běh apostrofů v textu.
+
 .. py:function:: report(directory, identity, mode, number, output_path, summary_path)
 
    Zveřejní pouze úplný aktuální výsledek a zachová neúspěch procesu.
+
+   U chybového výsledku uvede zaznamenanou příčinu v souhrnu kroku
+   a v jediné chybové anotaci zakódované jako data příkazu workflow.
 
    :param directory: Adresář staženého pokusu.
    :param identity: Očekávaná identita.

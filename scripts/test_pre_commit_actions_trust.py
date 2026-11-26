@@ -548,6 +548,38 @@ class SummaryResultTests(SSHTestCase):
         self.assertNotIn("| Stav | Počet |", report)
         self.assert_rejected(b"PASSED=0\nFAILED=0\n")
 
+    def test_error_cause_is_reported_once_as_escaped_data(self):
+        """Příčina chyby je v souhrnu i v jediné anotaci a nespustí další příkaz workflow."""
+
+        def set_message(message):
+            """Vrátí mutaci, která do vzdáleného výsledku zapíše danou příčinu.
+
+            :param message: Zapisovaná zpráva výsledku.
+            :return: Funkce měnící ``outcome.json`` před stažením.
+            """
+
+            def edit():
+                """Přepíše zprávu ve vzdáleném ``outcome.json``."""
+                path = self.remote_results / "outcome.json"
+                record = json.loads(path.read_text(encoding="utf-8"))
+                record["message"] = message
+                path.write_text(json.dumps(record), encoding="utf-8")
+
+            return edit
+
+        cause = "Chyba testovacího běhu (publication): ValueError: 100% hotovo ``kód`` ::warning::canary"
+        result = self.execute_result(b"", state="error", code=1, edit=set_message(cause))
+        self.assertEqual(result.returncode, 1, result.stderr)
+        commands = [line for line in (result.stdout + result.stderr).splitlines() if line.startswith("::")]
+        self.assertEqual(commands, ["::error::" + cause.replace("%", "%25")])
+        report = self.summary.read_text(encoding="utf-8")
+        self.assertIn(f"Příčina: ``` {cause} ```", report)
+        result = self.execute_result(b"", state="error", code=1, edit=set_message("first\n::warning::canary"))
+        self.assertNotEqual(result.returncode, 0)
+        output = result.stdout + result.stderr
+        self.assertFalse([line for line in output.splitlines() if line.startswith("::warning::")], output)
+        self.assertEqual(self.summary.read_text(encoding="utf-8"), "existing-summary\n")
+
     def test_malformed_binary_and_command_summaries_publish_nothing(self):
         """Celé neplatné souhrny i příkazové canary jsou data a nezveřejní nic."""
         for content in (

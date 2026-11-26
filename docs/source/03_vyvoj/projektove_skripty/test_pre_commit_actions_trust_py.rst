@@ -205,6 +205,10 @@ Třídy
 
       No-op nemá starý artefakt; chyba nikdy nemá úspěšné nulové počty.
 
+   .. py:method:: test_error_cause_is_reported_once_as_escaped_data()
+
+      Příčina chyby je v souhrnu i v jediné anotaci a nespustí další příkaz workflow.
+
    .. py:method:: test_malformed_binary_and_command_summaries_publish_nothing()
 
       Celé neplatné souhrny i příkazové canary jsou data a nezveřejní nic.

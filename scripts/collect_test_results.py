@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -9,8 +10,30 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "webclient"))
 from test_run_results import load_record, validate_bundle  # noqa: E402
 
 
+def command_data(text):
+    """Zakóduje text jako data příkazu workflow, aby nemohl začít další příkaz.
+
+    :param text: Zobrazovaná diagnostika.
+    :return: Text s ``%``, CR a LF zakódovanými podle pravidel GitHub Actions.
+    """
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def code_span(text):
+    """Vloží text do kódového úseku Markdownu bez ohledu na obsažené zpětné apostrofy.
+
+    :param text: Jednořádkový text.
+    :return: Kódový úsek s oddělovačem delším než nejdelší běh apostrofů v textu.
+    """
+    fence = "`" * (max((len(run) for run in re.findall("`+", text)), default=0) + 1)
+    return f"{fence} {text} {fence}"
+
+
 def report(directory, identity, mode, number, output_path, summary_path):
     """Zveřejní pouze úplný aktuální výsledek a zachová neúspěch procesu.
+
+    U chybového výsledku uvede zaznamenanou příčinu v souhrnu kroku
+    a v jediné chybové anotaci zakódované jako data příkazu workflow.
 
     :param directory: Adresář staženého pokusu.
     :param identity: Očekávaná identita.
@@ -23,6 +46,9 @@ def report(directory, identity, mode, number, output_path, summary_path):
     record = load_record(directory, identity, mode, number)
     counts = validate_bundle(directory, record)
     summary = f"## 🧪 Výsledky testů\n\nPokus: `{identity}`; stav: `{record['state']}`.\n"
+    cause = (record["message"] or "Chyba testovacího běhu") if record["state"] == "error" else None
+    if cause is not None:
+        summary += f"\nPříčina: {code_span(cause)}\n"
     if counts is not None:
         passed, failed = counts
         summary += f"\n| Stav | Počet |\n|------|-------|\n| ✅ Prošlo | {passed} |\n| ❌ Selhalo | {failed} |\n"
@@ -34,6 +60,8 @@ def report(directory, identity, mode, number, output_path, summary_path):
         stream.write(summary)
     if counts is not None and counts[1] > 0:
         print(f"::error::Selhalo {counts[1]} testů")
+    if cause is not None:
+        print(f"::error::{command_data(cause)}")
     return record["exit_code"]
 
 
