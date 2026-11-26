@@ -16,6 +16,18 @@ repos:
       - id: flake8
   - repo: local
     hooks:
+      - id: permission-policy
+        name: Permission policy and route coverage
+        entry: >-
+          uv run --no-project --isolated --python 3.13
+          --with-requirements webclient/requirements.txt --
+          python webclient/manage.py check_permission_policy
+          --settings=webclient.settings.permissions_check
+        language: python
+        additional_dependencies: [uv==0.13.7]
+        pass_filenames: false
+        always_run: true
+        require_serial: true
       - id: container-image-reference-parity
         name: Container image reference parity (Dockerfile + compose)
         entry: python scripts/check_container_image_reference_parity.py --fix

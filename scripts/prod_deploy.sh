@@ -49,8 +49,11 @@ check_create_network () {
     docker network inspect ${network_name} > /dev/null 2>&1
     network_status=$?
     if [ ${network_status} -eq 1  ]; then
-      er "docker network create -d overlay --attachable ${network_name}"
-      echo_dec "Network ${network_name} created"
+      if er "docker network create -d overlay --attachable ${network_name}"; then
+        echo_dec "Network ${network_name} created"
+      else
+        return 1
+      fi
     else
        echo_dec "Network ${network_name} already exists"
     fi
@@ -87,18 +90,21 @@ run_default ()
    do_manual_checks
 
    # Check network exists
-   check_create_network
+   check_create_network || return 1
 
    #Update images
-   er "${cmd_pull_images}"
-   if [ $? -gt 0 ]; then
+   if ! er "${cmd_pull_images}"; then
 	echo_dec "${msg_pull_fail} with TAG: ${IMAGE_TAG} => EXITING"
-	exit
+	return 1
    fi
 
-      er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
-      ${cmd_deploy_base} ${compose_prod} ${stack_name}" && \
-      echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+   if er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
+      ${cmd_deploy_base} ${compose_prod} ${stack_name}"; then
+      echo_dec "$msg_success"
+   else
+      echo_dec "${msg_fail_build}"
+      return 1
+   fi
 }
 
 Help ()
@@ -253,8 +259,12 @@ while getopts "hxu:t:i" option; do
          prune_images
          echo_dec "Remove docker stack: ${stack_name}"
          if check_stack_exists; then
-            er "${cmd_stack_rm}" && \
-            echo_dec "Stack ${stack_name} removal successful" || echo_dec "Stack ${stack_name} removal FAILED"
+            if er "${cmd_stack_rm}"; then
+                echo_dec "Stack ${stack_name} removal successful"
+            else
+                echo_dec "Stack ${stack_name} removal FAILED"
+                exit 1
+            fi
          else
              echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"
         fi
@@ -279,7 +289,7 @@ while getopts "hxu:t:i" option; do
         echo "OPTION: -t with ${IMAGE_TAG}"
         option_passed=true
         prune_images
-        run_default b
+        run_default b || exit 1
 	      ;;
       i)
         option_passed=true

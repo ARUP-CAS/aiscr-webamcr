@@ -34,6 +34,7 @@ Dokumentace modulu core.
    news_feed
    news_feed_config
    news_feed_scheduler
+   permission_validation
    repository_connector
    services
    setting_models

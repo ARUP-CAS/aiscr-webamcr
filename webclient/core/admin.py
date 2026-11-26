@@ -6,6 +6,7 @@ import string
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from core.permission_validation import PermissionPolicyError
 from core.services import PermissionService
 from django.conf import settings
 from django.contrib import admin, messages
@@ -22,7 +23,7 @@ from uzivatel.models import User
 
 from .connectors import RedisConnector
 from .constants import ROLE_NASTAVENI_ODSTAVKY
-from .exceptions import WrongCSVError, WrongSheetError
+from .exceptions import WrongCSVError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .import_maintenance import (
     MaintenanceImportConflict,
@@ -297,29 +298,9 @@ class PermissionAdmin(admin.ModelAdmin):
             docfile = request.FILES["file"]
             try:
                 sheet, missing = PermissionService().run(docfile)
-            except WrongCSVError as err:
-                logger.error("core.admin.permissionAdmin.wrongCSVConfiguration.error", extra={"error": err})
-                self.message_user(
-                    request,
-                    _("core.admin.permissionAdmin.wrongCSVConfiguration.error"),
-                    messages.ERROR,
-                )
-                return redirect(reverse("admin:core_permissions_changelist"))
-            except WrongSheetError as err:
-                logger.error("core.admin.permissionAdmin.wrongSheetConfiguration.error", extra={"error": err})
-                self.message_user(
-                    request,
-                    _("core.admin.permissionAdmin.wrongSheetConfiguration.error"),
-                    messages.ERROR,
-                )
-                return redirect(reverse("admin:core_permissions_changelist"))
-            except ValueError as err:
-                logger.error("core.admin.permissionAdmin.ValueError.error", extra={"error": err})
-                self.message_user(
-                    request,
-                    _("core.admin.permissionAdmin.wrongSheet.error"),
-                    messages.ERROR,
-                )
+            except PermissionPolicyError as err:
+                logger.error("core.admin.permissionAdmin.invalid_policy", extra={"error": str(err)})
+                self.message_user(request, str(err), messages.ERROR)
                 return redirect(reverse("admin:core_permissions_changelist"))
             cache.set("import_missing_results", missing, 120)
             json_sheet = sheet.to_json(orient="records")
@@ -400,13 +381,9 @@ class PermissionAdmin(admin.ModelAdmin):
             )
         try:
             sheet, missing_urls = PermissionService().run(permission_file)
-        except WrongCSVError as err:
-            logger.error("core.admin.permissionAdmin.wrongCSVConfiguration.error", extra={"error": err})
-            self.message_user(
-                request,
-                _("core.admin.permissionAdmin.wrongCSVConfiguration.error"),
-                messages.ERROR,
-            )
+        except PermissionPolicyError as err:
+            logger.error("core.admin.permissionAdmin.invalid_policy", extra={"error": str(err)})
+            self.message_user(request, str(err), messages.ERROR)
             return redirect(reverse("admin:core_permissions_changelist"))
         table = sheet.to_dict(orient="records")
         model = self.model

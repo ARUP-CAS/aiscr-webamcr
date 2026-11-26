@@ -117,6 +117,9 @@ RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/
     usermod -aG sudo user
 
 WORKDIR /code
+# Ověřit matici v zabaleném runtime obrazu před jeho publikací, bez služeb a tajemství.
+RUN python3 manage.py check_permission_policy --settings=webclient.settings.permissions_check
+
 COPY --chown=user:user ./locale /default_locale
 COPY --chown=user:user ./scripts /scripts
 COPY --chown=user:user ./proxy/custom_html /custom_html

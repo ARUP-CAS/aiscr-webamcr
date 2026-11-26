@@ -60,6 +60,10 @@ Třídy
 
       Skutečný hook shell předá posledních osmdesát řádků i původní kód selhání.
 
+   .. py:method:: test_permission_check_has_native_libraries_before_hooks()
+
+      CI připraví nativní knihovny před instalací závislostí a spuštěním všech hooků.
+
    .. py:method:: publication_fixture()
 
       Shellové funkce zajistí, že publikace neprovede skutečný zápis do Gitu či GitHubu.

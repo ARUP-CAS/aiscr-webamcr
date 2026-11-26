@@ -148,6 +148,29 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - Maximální počet zpracovaných souborů.
 
 
+``check_permission_policy``
+---------------------------
+
+.. automodule:: core.management.commands.check_permission_policy
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--file``
+     - ``Path``
+     - ``None``
+     - Cesta k úplné CSV nebo XLSX matici; výchozí je verzovaný CSV soubor.
+
+
 ``check_pian_properties``
 -------------------------
 
