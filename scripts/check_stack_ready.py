@@ -1,4 +1,10 @@
-"""Ověří požadované služby a skutečné zdraví kontejnerů cílového stacku."""
+"""Ověří požadované služby a skutečné zdraví kontejnerů cílového stacku.
+
+Nasazovací wrappery spouštějí skript systémovým ``python3`` nasazovacího
+serveru, který má Python 3.6. Skript proto smí používat jen moduly
+standardní knihovny a parametry ``subprocess.run`` dostupné v Pythonu 3.6;
+tuto spodní hranici hlídá ``scripts/test_pre_commit_stack_ready.py``.
+"""
 
 import argparse
 import json
@@ -6,36 +12,43 @@ import re
 import subprocess
 import sys
 import time
-from contextvars import ContextVar
-
-INSPECTION_DEADLINE = ContextVar("inspection_deadline", default=None)
 
 
-def docker(*args):
+def docker(*args, deadline=None):
     """Spustí pouze čtecí Docker CLI a odmítne neúplné inspekce.
 
     :param args: Argumenty čtecího příkazu.
+    :param deadline: Hodnota ``time.monotonic()``, do které musí inspekce
+        skončit; ``None`` omezí příkaz jen vlastním limitem 30 sekund.
     :return: Úplný standardní výstup.
+    :raises TimeoutError: Pokud termín inspekce již uplynul.
     """
-    deadline = INSPECTION_DEADLINE.get()
     remaining = 30 if deadline is None else min(30, deadline - time.monotonic())
     if remaining <= 0:
         raise TimeoutError("Vypršel limit inspekce stacku")
-    result = subprocess.run(["docker", *args], capture_output=True, text=True, check=True, timeout=remaining)
+    result = subprocess.run(
+        ["docker", *args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        check=True,
+        timeout=remaining,
+    )
     return result.stdout
 
 
-def expected_services(compose_files):
+def expected_services(compose_files, deadline=None):
     """Vybere názvy služeb z kanonického sloučeného výstupu Docker CLI.
 
     :param compose_files: Compose soubory skutečně použité k nasazení.
+    :param deadline: Termín inspekce předaný příkazu Docker CLI.
     :return: Neprázdná množina názvů služeb.
     :raises ValueError: Při chybějící nebo nerozpoznatelné sekci služeb.
     """
     command = ["stack", "config", "--skip-interpolation"]
     for path in compose_files:
         command.extend(["--compose-file", path])
-    config = docker(*command)
+    config = docker(*command, deadline=deadline)
     services = set()
     inside = False
     indent = None
@@ -54,27 +67,38 @@ def expected_services(compose_files):
     return services
 
 
-def inspect_json(kind, names):
+def inspect_json(kind, names, deadline=None):
     """Ověří úplnost strukturované inspekce konkrétních objektů.
 
     :param kind: Typ objektu Docker.
     :param names: Jednoznačně vybrané názvy nebo ID.
+    :param deadline: Termín inspekce předaný příkazu Docker CLI.
     :return: Seznam inspektovaných objektů.
+    :raises ValueError: Pokud inspekce nevrátí právě jeden objekt pro každý název.
     """
-    values = json.loads(docker("inspect", "--type", kind, *names))
+    values = json.loads(docker("inspect", "--type", kind, *names, deadline=deadline))
     if not isinstance(values, list) or len(values) != len(names):
         raise ValueError("Neúplná inspekce Docker")
     return values
 
 
-def readiness(stack, services):
+def readiness(stack, services, deadline=None):
     """Zkontroluje aktivní úlohy a zdraví pouze požadovaných služeb.
 
     :param stack: Přesný název cílového stacku.
     :param services: Požadované služby z Compose konfigurace.
+    :param deadline: Termín inspekce předaný každému příkazu Docker CLI.
     :return: Dvojice připravenosti a diagnostiky.
     """
-    rows = docker("service", "ls", "--filter", f"label=com.docker.stack.namespace={stack}", "--format", "{{json .}}")
+    rows = docker(
+        "service",
+        "ls",
+        "--filter",
+        f"label=com.docker.stack.namespace={stack}",
+        "--format",
+        "{{json .}}",
+        deadline=deadline,
+    )
     replicas = {}
     for line in rows.splitlines():
         row = json.loads(line)
@@ -84,7 +108,7 @@ def readiness(stack, services):
     required = {f"{stack}_{name}" for name in services}
     if not required <= replicas.keys():
         return False, "Chybí požadované služby: " + ", ".join(sorted(required - replicas.keys()))
-    specs = inspect_json("service", sorted(required))
+    specs = inspect_json("service", sorted(required), deadline)
     if {item["Spec"]["Name"] for item in specs} != required:
         raise ValueError("Inspekce neodpovídá požadovaným službám")
     for service in specs:
@@ -110,10 +134,12 @@ def readiness(stack, services):
             return False, f"{name}: repliky {running}/{desired}"
         if "Replicated" in mode and desired != mode["Replicated"].get("Replicas", 1):
             return False, f"{name}: neodpovídá požadovanému počtu replik"
-        ids = docker("service", "ps", "--no-trunc", "-q", "--filter", "desired-state=running", name).split()
+        ids = docker(
+            "service", "ps", "--no-trunc", "-q", "--filter", "desired-state=running", name, deadline=deadline
+        ).split()
         if len(ids) != desired or len(set(ids)) != desired:
             return False, f"{name}: chybí aktivní úlohy"
-        tasks = inspect_json("task", ids)
+        tasks = inspect_json("task", ids, deadline)
         for task in tasks:
             if task["ServiceID"] != service["ID"]:
                 raise ValueError("Úloha patří jiné službě")
@@ -122,7 +148,7 @@ def readiness(stack, services):
             container = task["Status"].get("ContainerStatus", {}).get("ContainerID")
             if not container:
                 return False, f"{name}: chybí kontejner"
-            state = inspect_json("container", [container])[0]["State"]
+            state = inspect_json("container", [container], deadline)[0]["State"]
             if state["Status"] != "running" or state.get("Health", {}).get("Status", "healthy") != "healthy":
                 return False, f"{name}: kontejner není zdravý"
     return True, "Požadované služby stacku jsou připraveny"
@@ -140,20 +166,16 @@ def wait_ready(stack, compose_files, timeout=600, interval=20):
     if timeout < 0 or interval <= 0:
         raise ValueError("Neplatný limit čekání")
     deadline = time.monotonic() + timeout
-    token = INSPECTION_DEADLINE.set(deadline)
-    try:
-        services = expected_services(compose_files)
-        while True:
-            ready, message = readiness(stack, services)
-            print(message, flush=True)
-            if ready:
-                return 0
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                return 1
-            time.sleep(min(interval, remaining))
-    finally:
-        INSPECTION_DEADLINE.reset(token)
+    services = expected_services(compose_files, deadline)
+    while True:
+        ready, message = readiness(stack, services, deadline)
+        print(message, flush=True)
+        if ready:
+            return 0
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return 1
+        time.sleep(min(interval, remaining))
 
 
 def main(argv=None):

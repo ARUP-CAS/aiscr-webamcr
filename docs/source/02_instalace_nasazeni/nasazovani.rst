@@ -208,7 +208,7 @@ Manuální nasazení pomocí docker-compose souborů
 ================================================
 Při specifických způsobech nasazení, kdy výše uvedené automatizační skripty neodpovídají požadovanému scénáři, je možné využít existujících docker-compose souborů a celou akci provést manuálně.
 
-* `./docker-compose.yml` - obsahuje služby potřebné pro běh aplikace WebAMČR, (**nutnost existence systémové proměnné IMAGE_TAG, která definuje požadovanou verzi aplikace WebAMČR, která má být stažena z docker-hub repozitáře, tj. latest, nebo v0.3.0 apod.**)
+* `./docker-compose.yml` - obsahuje služby potřebné pro běh aplikace WebAMČR. **Obrazy vybírají proměnné prostředí** ``amcr_image`` pro služby web, celery_worker a celery_beat a ``redis_image`` pro službu redis, vždy s úplným názvem obrazu včetně registru a tagu, např. ``ghcr.io/arup-cas/aiscr-webamcr:<tag>``. Proměnná ``IMAGE_TAG`` obraz nevybírá, pouze předává verzi aplikace do kontejnerů web, celery_worker a celery_beat. Hodnoty pro GitHub Container Registry i Docker Hub nastavuje podporovaný skript ``scripts/prod_deploy.sh``.
  
  * web - aplikace WebAMČR
  * sidecar - pomocná služba pro zálohování locale na lokální úložiště
@@ -222,7 +222,7 @@ Při specifických způsobech nasazení, kdy výše uvedené automatizační skr
  * kibana - grafické prostředí pro logovací službu
  * selenium - testovací služba
  
-* `./docker-compose-proxy.yml` - obsahuje služby potřebné pro běh proxy serveru NGINX, port je nastaven na 8080, služby:
+* `./docker-compose-proxy.yml` - obsahuje služby potřebné pro běh proxy serveru NGINX, port je nastaven na 8080, obraz vybírá proměnná prostředí ``proxy_image`` s úplným názvem obrazu včetně registru a tagu, služby:
  
  * proxy - proxy server NGINX
 

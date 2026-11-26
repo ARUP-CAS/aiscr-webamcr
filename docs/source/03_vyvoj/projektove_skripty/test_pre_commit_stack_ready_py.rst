@@ -26,6 +26,7 @@ Třídy
       Vrátí jen očekávané čtecí odpovědi, jiné volání odmítne.
 
       :param args: Argumenty kontrolovaného příkazu.
+      :param deadline: Termín inspekce, který volání zaznamená k ověření.
       :return: Odpověď Docker CLI.
 
    .. py:method:: test_ready_target_ignores_unrelated_containers()
@@ -55,6 +56,50 @@ Třídy
    .. py:method:: test_stuck_inspection_respects_the_same_deadline()
 
       Zablokovaný Docker CLI má časový limit, který nepřekročí celkové čekání.
+
+   .. py:method:: test_deadline_is_passed_explicitly_to_every_inspection()
+
+      Termín z čekání dostane každý příkaz a samostatné volání žádný stav nezdědí.
+
+
+.. py:class:: Python36CompatibilityTests
+
+   Ověří spodní hranici Pythonu 3.6, se kterou skript běží na nasazovacím serveru.
+
+   **Metody:**
+
+   .. py:method:: test_script_uses_only_python36_grammar_modules_and_run_arguments()
+
+      Skutečný skript projde kontrolou a obsahuje kontrolované volání subprocess.run.
+
+   .. py:method:: test_guard_rejects_later_modules_and_run_arguments()
+
+      Kontrola zachytí konstrukce, které na Pythonu 3.6 selžou při importu nebo volání.
+
+   .. py:method:: test_guard_rejects_later_grammar()
+
+      Syntaxe novější než Python 3.6, kterou ast rozpozná, selže už při parsování.
+
+
+Funkce
+------
+
+.. py:function:: python36_violations(source)
+
+   Najde konstrukce, které systémový Python 3.6 nasazovacího serveru nespustí.
+
+   Gramatiku kontroluje ``ast.parse`` s ``feature_version=(3, 6)``. Podle
+   dokumentace modulu ``ast`` jde o přibližnou kontrolu a novější interprety
+   ji omezují na nejstarší gramatiku, kterou ještě podporují; odmítne tak
+   například přiřazovací výrazy, parametry jen pozičně nebo ``match``.
+   Importy musí patřit do ``PYTHON36_MODULES`` a volání ``subprocess.run``
+   (i přes alias modulu nebo ``from subprocess import run``) smí používat jen
+   parametry z ``PYTHON36_RUN_KEYWORDS`` bez rozbalení ``**``.
+
+   :param source: Zdrojový text kontrolovaného skriptu.
+   :return: Dvojice seznamu diagnostik ve tvaru ``řádek: popis`` a počtu
+       zkontrolovaných volání ``subprocess.run``.
+   :raises SyntaxError: Při syntaxi, kterou ``ast`` pro Python 3.6 odmítne.
 
 Zdrojový kód
 ------------

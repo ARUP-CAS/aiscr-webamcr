@@ -239,6 +239,14 @@ introduced it and it is Critical or High. Everything else goes to a
 follow-up issue. Eight review rounds showed that accepting every pre-existing
 observation keeps generating new code to review.
 
+The first live DEV run at `e0831d563` found a High defect this PR
+introduced: the readiness check fails on the host's Python 3.6, which stops
+every DEV and TEST deployment. The freeze keeps it in this PR (task 7.1).
+The round-nine deployment-guide correction O16 is a deliberate author
+exception, made in the same revision (task 7.2). Round-nine observation O15,
+the OpenVPN configuration taken from the selected tag, goes to a follow-up
+issue.
+
 ## Risks / Trade-offs
 
 - **Activation blocks unprepared refs.** Activating enforcement stops
@@ -297,9 +305,9 @@ safe; an older runner ignores `current/` and `previous/`.
 ## Review history
 
 Per-item evidence and dispositions are in the linked reviews and in the git
-history of this file. Every round from 5 to 8 confirmed all repairs from the
+history of this file. Every round from 5 to 9 confirmed all repairs from the
 round before. Pre-commit and CodeQL passed on each delivered head from
-`d90182be3` to `0bae037a9`.
+`d90182be3` to `e0831d563`.
 
 | Round | Reviewed head | Source | Introduced | Pre-existing fixed | Main outcome |
 | --- | --- | --- | --- | --- | --- |
@@ -312,6 +320,8 @@ round before. Pre-commit and CodeQL passed on each delivered head from
 | 6 | `5dc50a879` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6053375832) | 5 | 1 | Lock marker, artifact contents, container lookup |
 | 7 | `244db4ac5` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6061348584) | 1 | 2 | Lease markers, request validation |
 | 8 | `0bae037a9` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6066800751) | 3 (docs) | 1 | Guides aligned |
+| 9 | `e0831d563` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6069580737) | 0 | 1 (O16; O15 deferred) | No new findings |
+| DEV run | `e0831d563` | [job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45771045340/job/139747914273), attempt 2 | 1 (host Python) | 0 | Readiness check must run on Python 3.6 |
 | Simplification | `f11aa5629` | Exploration on 2026-11-26 | - | - | Retention replaced, v1 code and `set -e` removed, specs split |
 
 ## Sources

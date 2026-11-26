@@ -50,7 +50,14 @@ SHALL keep the previous record. No automatic rollback is performed.
 Readiness SHALL require every required service of the target stack to have
 running tasks that are healthy where a health check exists. Missing services,
 unhealthy or non-running tasks and failed inspections SHALL NOT count as
-ready. Waiting SHALL end at a deadline with failure.
+ready. Waiting SHALL end at a deadline with failure. The readiness check
+SHALL run under the deployment host's `python3`, version 3.6 or later.
+
+#### Scenario: The deployment host provides Python 3.6
+
+- **GIVEN** a deployment host whose `python3` is version 3.6
+- **WHEN** a deployment wrapper runs the readiness check
+- **THEN** the check evaluates the stack instead of failing on an unavailable module or argument
 
 #### Scenario: A required task is unhealthy
 
