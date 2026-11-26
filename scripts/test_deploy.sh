@@ -7,25 +7,6 @@ source "$(dirname "${BASH_SOURCE[0]}")/deployment_helpers.sh"
 ###########
 #USAGE: deployment based on local repository
 
-ask_continue () {
-    while true; do
-        
-        read -p "$1 (y or n): " input        
-        case $input in
-            [yY]*)
-                echo '---Continuing!'
-                break
-                ;;
-            [nN]*)
-                echo '***So do THAT, exiting!'
-                exit 1
-                ;;
-             *)
-                echo '***Invalid input' >&2
-        esac
-    done
-}
-
 actualize_repo ()
 {
 

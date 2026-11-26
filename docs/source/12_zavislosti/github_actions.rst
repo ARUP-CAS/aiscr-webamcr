@@ -267,8 +267,10 @@ neaktivity. Zámek držený procesem chrání živý pokus při samostatném spu
 i v kontejneru; aktuální pokus je chráněn i během závěrečného úklidu.
 Runner odmítne existující identitu před úklidem a pro nový pokus získá
 platný zámek před vytvořením jeho adresáře.
-Kořenový zámek se při prvním spuštění zveřejní až s úplným markerem.
-Souběžné procesy pak používají stejný soubor zámku.
+Kořenový zámek, zámek nového pokusu i zámek doplněný pro ověřený
+terminální záznam verze 1 se zveřejní atomicky až po zápisu a synchronizaci
+úplného markeru. Existující soubor zámku přitom zůstane zachován.
+Souběžné procesy používají stejný kořenový zámek.
 Předběžný i závěrečný úklid zasahuje pouze do vlastněných přímých adresářů
 pod ``runs/``. Neznámé vlastnictví, odkazy a junction hranice se zachovají
 s diagnostikou; výběrová tabulka v kořeni ani nesouvisející data se nemažou.

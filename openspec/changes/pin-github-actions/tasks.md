@@ -159,6 +159,18 @@ record one finding and two advisory dispositions.
 - [x] 11.3 Implement advisory R7-O13 by validating the whole production request before setup and dispatch. Cover an unknown option alone and after a valid mode, missing tag arguments, invalid source, unexpected operands, and early help. Verify nonzero invalid-input status and the absence of side effects. Preserve valid source and tag selection, tagged deployment and update, tag listing, stack removal, operation ordering, and no-argument guidance using isolated stubs.
 - [x] 11.4 Verify the three dispositions with focused retention and deployment regressions on Windows and isolated Linux, and run the relevant existing suites, compilation, full pre-commit, strict affected documentation builds, and strict and aggregate OpenSpec validation. Regenerate affected references through their existing generators and confirm idempotency. Preserve the 59 completed tasks and close the single round-seven usage entry with actual evidence. Check a sync dry run before any separately authorized future apply.
 
+## 12. Round-eight review remediation
+
+The [round-eight review of ARUP-CAS/aiscr-webamcr#4544](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6066800751)
+and the [design ledger](design.md#round-eight-review-capture-2026-11-26)
+record three documentation findings and one advisory disposition.
+
+- [x] 12.1 Repair R8-F1 in the deployment runbook. Align the overview, table, workflow walkthrough, section and summary with explicit tagged deployment, the GitHub Container Registry default and Docker Hub opt-in. Explain image publication separately from manual workflow dispatch and identify `deploy_server.sh` from the selected release tag. Check each example against the current workflow, wrapper or standalone parser.
+- [x] 12.2 Repair R8-F2 in the authored Actions dependency guide. State that the complete, synced marker is published atomically for the root lock, newly created attempt leases and eligible legacy backfill, while an existing marker is preserved. Check the wording against all three creation paths.
+- [x] 12.3 Repair R8-F3 in the authored Selenium launch guide. Document the interactive `origin/main` update, background launch log, per-attempt output log, workbook and screenshots, and the root workbook's selection role. Verify the paths against the launcher, runner and DEV volume mount.
+- [x] 12.4 Implement advisory R8-O14 by removing the unused `ask_continue` definition from `test_deploy.sh`. Verify the actual `actualize_repo` prompt and existing quiet, build, removal and help behavior with the existing isolated deployment fixtures.
+- [x] 12.5 Verify all four dispositions. Run Bash syntax and the focused deployment fixtures, refresh affected references through the existing generators, and run full pre-commit, strict and aggregate OpenSpec validation and diff checks. Build the affected authored documentation and references with strict Sphinx, and compare full-page diagnostics against the unchanged generated Selenium catalog baseline. Preserve the 63 completed tasks and close the single round-eight usage entry with actual evidence. Check a sync dry run before any separately authorized future sync apply.
+
 ## Workflow follow-up
 
 These operations remain follow-up to the driving issue. They are outside this
@@ -175,4 +187,5 @@ PR's implementation scope and do not block completion of this OpenSpec change.
 - **Round-four hosted evidence:** Pre-commit and CodeQL succeeded on group 8 delivery commit `d90182be3`. The round-five review confirms the fourteen repairs and records R4-O4's alias disposition. Review replies and GitHub thread resolution are distinct actions.
 - **Round-five hosted evidence:** Pre-commit and CodeQL succeeded on group 9 delivery commit `5dc50a879`. The round-six review confirms the nine round-five repairs.
 - **Round-six hosted evidence** Pre-commit and CodeQL passed on group 10 delivery commit `244db4ac5`. The round-seven review confirms all six round-six repairs.
-- **Round-seven hosted acceptance** After separately authorized delivery of group 11, verify pre-commit and CodeQL on the delivered commit. Review-thread actions and live retention or deployment/test controls require separate authorization.
+- **Round-seven hosted evidence** Pre-commit and CodeQL passed on group 11 delivery commit `0bae037a9`. Round eight confirms all three repairs and the corresponding threads are resolved.
+- **Round-eight hosted acceptance** Verify pre-commit and CodeQL after separately authorized delivery of group 12. Review-thread actions and live deployment or test controls require separate authorization.

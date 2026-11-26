@@ -966,6 +966,69 @@ three dispositions. Group 11 records the work in the repository-owned
 runner, scripts, tests and affected documentation. Delivery, live
 operations and review-thread writes retain their separate approvals.
 
+## Round-eight review capture (2026-11-26)
+
+The [round-eight review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6066800751)
+examined `0bae037a92d767c2025f9b08f37ca53a643fbbae` against `test`
+(`d327f2caff9cb0e6ffadb8325defcd948bbaa13f`). All three round-seven
+threads are resolved and all six hosted checks passed on this head, including
+[pre-commit](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45694687919/job/139488885994)
+and [CodeQL](https://github.com/ARUP-CAS/aiscr-webamcr/runs/139489165124).
+
+| Review item | Agreed disposition | Task |
+| --- | --- | --- |
+| [R8-F1, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4702411261) | Align the deployment overview, workflow walkthrough and command examples with tagged deployment and the actual registry selection. | 12.1 |
+| [R8-F2, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4702411269) | Describe atomic publication for the root lock, new attempt markers and eligible legacy backfill. | 12.2 |
+| [R8-F3, Low](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4702411271) | Correct the Selenium launch log, per-attempt results, root selection workbook and interactive update branch. | 12.3 |
+| [R8-O14, advisory](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#discussion_r4702411415) | `fix-in-pr`. Remove the unused `ask_continue` definition from the standalone test deployment script. | 12.4 |
+
+### Reconcile deployment instructions with the entry points
+
+In `docs/source/02_instalace_nasazeni/nasazovani.rst`, describe release
+image publication to both registries and the separate manual deployment
+workflow. The workflow dispatch selects an environment, release tag and
+source. It calls `scripts/ci_deployment/deploy_server.sh` from the selected
+tag and passes the selected source and image tag. Reflect that dispatch
+and the GitHub Container Registry default in the overview and walkthrough.
+Use `./scripts/prod_deploy.sh -t <tag>` for the default manual invocation
+and `./scripts/prod_deploy.sh dockerhub -t <tag>` for Docker Hub. Reconcile
+the section heading, table, examples and summary with those two routes.
+Retain the existing explanation of bare-command guidance and help.
+
+### Explain lease publication and locate Selenium evidence
+
+In the authored retention narrative of
+`docs/source/12_zavislosti/github_actions.rst`, explain that the canonical
+root, new attempt and eligible legacy v1 lease markers are published
+atomically after a complete marker is written and synced. Publication
+preserves any existing marker.
+
+In the authored launch section of
+`docs/source/09_testovani/selenium_testy.rst`, describe the interactive
+update to `origin/main` and the background wrapper's
+`/opt/selenium_test/run.log`. Point operators to
+`/opt/selenium_test/runs/<attempt>/` for the runner's `test_output.log`,
+workbook and screenshots when produced. Describe the root
+`/opt/selenium_test/results.xlsx` as the rolling selection input.
+
+### Remove the unused test deployment prompt helper
+
+The `ask_continue` definition in `scripts/test_deploy.sh` is present at the
+PR base and the current head without a caller. The CI wrapper executes
+the script as an entry point. Its interactive repository-update path
+runs through `actualize_repo`, which supplies the prompt for default
+and explicit build deployment. Remove the unused definition and verify
+the existing active modes and prompt with the deployment fixtures.
+
+The guides and script belong to this repository. Validate the changed
+authored text and generated references using the existing tooling. The
+round-seven full-page build recorded thirteen diagnostics in the
+unchanged generated Selenium catalog. Verify the full-page diagnostics
+against that baseline and run a strict build of the affected authored
+sections and reference pages. The user approved this planning capture
+and then invoked `openspec-apply-change` for group 12. Delivery and live
+operations require separate approval.
+
 ## Risks / Trade-offs
 
 - Repository-wide activation can block workflows on unprepared refs. During

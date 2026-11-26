@@ -273,6 +273,21 @@ deployment setup. Preserve the supported operations and their order for
 requests without help. Both advisories remain `fix-in-pr` within the
 repository-owned automation scope.
 
+## Round-eight review capture (2026-11-26)
+
+The user approved capture of the
+[round-eight review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6066800751)
+at `0bae037a92d767c2025f9b08f37ca53a643fbbae`. Group 12 covers three
+documentation findings and one pre-existing `fix-in-pr` advisory. The
+[design ledger](design.md#round-eight-review-capture-2026-11-26) links each
+disposition to its task.
+
+Bring the deployment runbook, retention guidance and Selenium guide into
+line with the existing automation. Remove the unused `ask_continue` helper
+from test deployment, preserving the active repository-update prompt.
+The capability delta already describes the runtime contracts these repairs
+document.
+
 ## Follow-up outside this change
 
 After merge, follow up the DEV SSH/SCP run, an actual Dependabot SHA/comment
