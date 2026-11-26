@@ -106,7 +106,7 @@ class ExecutionTests(unittest.TestCase):
         """Chyba migrace nepustí testy a nevytvoří úspěšné nulové počty."""
         with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=7)), patch.object(
             runner, "execute_tests"
-        ) as execute, redirect_stderr(io.StringIO()):
+        ) as execute, redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             code = runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"])
         self.assertEqual(code, 1)
         execute.assert_not_called()
@@ -145,7 +145,7 @@ class ExecutionTests(unittest.TestCase):
         """Chyba startu procesu dostane error místo completed s nulou."""
         with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
             runner, "execute_tests", return_value=(1, "Traceback: startup failed\n")
-        ), redirect_stderr(io.StringIO()):
+        ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"]), 1)
         record = protocol.load_record(self.root / "current", "123-1", "vsechny", "")
         self.assertEqual(record["state"], "error")
@@ -614,7 +614,10 @@ class ExecutionTests(unittest.TestCase):
             record = protocol.load_record(directory, identity, "vsechny", "")
             self.assertEqual(record["version"], 2)
             outputs, summary = self.root / f"outputs-{index}", self.root / f"summary-{index}"
-            status = report(directory, identity, "vsechny", "", outputs, summary)
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                status = report(directory, identity, "vsechny", "", outputs, summary)
+            annotations = [line for line in stdout.getvalue().splitlines() if line.startswith("::error::")]
             self.assertEqual(outputs.read_text(encoding="utf-8"), "ARTIFACTS=true\n")
             report_text = summary.read_text(encoding="utf-8")
             if expected is None:
@@ -622,9 +625,11 @@ class ExecutionTests(unittest.TestCase):
                 self.assertIsNone(record["counts"])
                 self.assertIn("stav: `error`", report_text)
                 self.assertNotIn("| Stav | Počet |", report_text)
+                self.assertEqual(annotations, [])
             else:
                 passed, failed, skipped, xfail = expected
                 self.assertEqual((code, status), (native, native))
+                self.assertEqual(annotations, [f"::error::Selhalo {failed} testů"] if failed else [])
                 self.assertEqual(
                     record["counts"],
                     dict(total=total, passed=passed, failed=failed, skipped=skipped, expected_failures=xfail),

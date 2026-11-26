@@ -8,8 +8,8 @@ Approach: [design.md](design.md).
 
 Groups 1-4 summarize the work delivered in `0735cb560`..`f11aa5629`. The
 round-by-round history is in [design.md](design.md#review-history). Groups 5
-and 6 are the simplification revision. Group 7 covers the first live DEV run
-and review round nine.
+and 6 are the simplification revision. Group 7 covers the first live DEV run,
+review round nine and a leaked test annotation in hosted pre-commit.
 
 ## 1. Action pins and inventory
 
@@ -67,6 +67,7 @@ and review round nine.
 - [x] 7.1 Make `scripts/check_stack_ready.py` run on the deployment host's Python 3.6, as found by the [DEV run](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45771045340/job/139747914273): pass the inspection deadline explicitly instead of through `contextvars`, and call `subprocess.run` with `stdout` and `stderr` pipes and `universal_newlines` instead of `capture_output` and `text`. Record the 3.6 floor in the module docstring. Adapt `scripts/test_pre_commit_stack_ready.py` and add a guard that parses the script with the Python 3.6 grammar and rejects later standard-library modules and `subprocess.run` arguments. Verify with the stack-ready and deployment fixtures on Windows and isolated Linux. Optionally, with separate approval, run the script in a `python:3.6-slim` container without Docker and confirm that it reports the inspection failure instead of an import error or `TypeError`. The DEV rerun in the workflow follow-up is the live confirmation.
 - [x] 7.2 Correct the manual Compose section of `docs/source/02_instalace_nasazeni/nasazovani.rst` (round-nine observation O16, a deliberate exception to the scope freeze): `amcr_image`, `redis_image` and `proxy_image` select the images with registry and tag, and `IMAGE_TAG` only passes the version to the application containers. Verify with a strict Sphinx build of the page.
 - [x] 7.3 Repeat the 6.1 checks, regenerate the script documentation with the existing generators, and update the rolling usage entry.
+- [x] 7.4 Capture runner and report output in `scripts/test_pre_commit_execution.py`, so no fixture line reaches the CI log, where `::error::Selhalo 1 testů` became a false annotation in the [pre-commit job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45895469093/job/140168151293) (a deliberate exception to the scope freeze). Assert that the report prints the annotation only when tests failed. Verify that both `scripts` suites leave stdout empty on Windows and isolated Linux.
 
 ## Workflow follow-up
 
