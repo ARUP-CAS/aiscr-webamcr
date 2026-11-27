@@ -24,7 +24,9 @@ Třídy
       :param remote: Použít vzdálenou větev vytváření driveru.
       :param write_error: Simulovat chybu zápisu tabulky.
       :param read_error: Simulovat chybu čtení tabulky.
-      :param setup_error: Simulovat chybu po vytvoření driveru.
+      :param setup_error: Místo chyby setUp: ``clone`` při klonování databáze, ``driver`` při vytváření
+          driveru, ``after`` po jeho vytvoření, nebo None bez chyby.
+      :param setup_skip: Přeskočit test výjimkou SkipTest na začátku setUp.
       :param body_error: Simulovat assertion failure aktuálního testu.
       :param base_error: Simulovat chybu základního teardown.
       :return: Případ, driver, zapsané řádky a seznam událostí.
@@ -40,6 +42,14 @@ Třídy
    .. py:method:: test_setup_failure_after_creation_releases_session()
 
       Pozdější chyba setUp uvolní již vytvořenou session.
+
+   .. py:method:: test_setup_failure_records_one_error_row()
+
+      Chyba setUp před vytvořením driveru, při něm i po něm zapíše jediný řádek ERROR.
+
+   .. py:method:: test_setup_skip_writes_no_row()
+
+      Test přeskočený v setUp nezapíše řádek ani chybu.
 
    .. py:method:: test_workbook_error_is_not_masked_by_base_teardown_error()
 

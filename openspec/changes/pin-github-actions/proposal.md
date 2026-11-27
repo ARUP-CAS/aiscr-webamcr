@@ -55,6 +55,9 @@ trustworthy.
 - Run only Selenium tests on DEV, so every test a DEV run executes records a
   workbook row. Unit and import tests belong to the Django test CI proposed
   in [ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465).
+- Record an ERROR row for a Selenium test whose setup fails, and end a run
+  as an error when a failed test still has no row, so a failed-only run
+  cannot pass by missing it.
 - Release Selenium drivers when workbook writing fails, and classify each
   workbook row by that test's own result.
 - Serialize DEV tests and DEV deployments in one concurrency group.

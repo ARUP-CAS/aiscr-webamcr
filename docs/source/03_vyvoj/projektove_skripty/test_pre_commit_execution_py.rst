@@ -144,6 +144,14 @@ Třídy
 
       Selenium běh vyžaduje tabulku tohoto pokusu, nikoli starou kopii.
 
+   .. py:method:: test_failures_without_workbook_rows_end_as_error()
+
+      Neúspěch bez řádku v tabulce ukončí každý režim chybou a kořenovou tabulku nenahradí.
+
+   .. py:method:: test_full_run_failure_rows_feed_failed_only_selection()
+
+      Úplný běh se shodnými řádky FAIL a ERROR se zveřejní a další běh neúspěšných je spustí.
+
    .. py:method:: test_summary_validation_is_non_evaluating()
 
       Celý souhrn má právě dva desetinné záznamy a nepřipouští příkazy.

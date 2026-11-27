@@ -227,7 +227,9 @@ Alternatives considered:
 
 The DEV default selection holds only the 11 Selenium modules. Their test
 classes derive from `BaseSeleniumTestClass`, which records a workbook row for
-each test, so failed-only and numbered selection see every DEV result. This
+each test, so failed-only and numbered selection see every DEV result
+([next section](#every-failed-test-keeps-a-workbook-row) covers tests whose
+setup fails). This
 matches the split in
 [ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465):
 its inventory excludes the Selenium modules as the DEV workflow's and assigns
@@ -255,6 +257,46 @@ Alternatives considered:
   reused-database failures on DEV.
 - **Rerun every untracked module in each failed-only run.** This restores
   correctness but keeps mixed reporting on DEV.
+
+### Every failed test keeps a workbook row
+
+`BaseSeleniumTestClass` writes the workbook row only in `tearDown`. unittest
+does not call `tearDown` when `setUp` raises, so a test whose Fedora reset,
+database clone or `webdriver.Remote` call fails has no row. A full run still
+completes and replaces the root workbook, and a failed-only run that follows
+can publish the successful no-op. A failed `setUpClass` in one class of a
+multi-class run, or a failed workbook write, loses rows the same way.
+
+Two layers close this:
+
+1. **The test records its own setup error.** Before any setup step, `setUp`
+   registers a cleanup. When `tearDown` has not started and this test is
+   among the result's errors, the cleanup writes an ERROR row. The container
+   runs Python 3.12, where unittest runs cleanups after a failed `setUp` and
+   has already added the error to the result. The row write moves out of
+   `_record_test_result` into a function that does not use the driver,
+   because the driver may not exist or may already be released. No Selenium
+   subclass overrides `setUp`, so one cleanup covers every DEV test.
+2. **The runner checks that failures and rows agree.** Before publishing a
+   completed outcome, the runner compares the FAIL and ERROR rows in
+   `current/results.xlsx` with the `FAILED` count parsed from unittest. When
+   they differ, it publishes an error outcome that states the counts and
+   leaves the root workbook unchanged. `prepare_current` empties `current/`
+   for every run, so the check holds in all three modes.
+
+Layer 1 handles the likely case, an infrastructure error during setup, as an
+ordinary ERROR row that the next failed-only run selects. Layer 2 turns the
+rare remaining cases into a visible error instead of a false pass.
+
+Alternatives considered:
+
+- **Layer 1 only.** A failed class setup or workbook write still loses rows.
+- **Layer 2 only.** Every setup error turns a full run into an error that
+  publishes no workbook, so the most likely failure becomes the most
+  disruptive.
+- **Let the runner add missing rows from the verbose test output.** The row
+  format would then have two writers, and the runner would depend on the
+  output format of unittest.
 
 ### Deployment failures, readiness and script hygiene
 
@@ -354,6 +396,21 @@ deliberate author exceptions, fixed in the same revision (tasks 7.9 and
 regenerates 99 signatures on 28 pages, each only adding missing
 parameters.
 
+Round eleven (review at `64cdbd48b`) confirmed these repairs and found one
+Medium item this PR introduced: the Selenium-only guarantee does not cover a
+test whose `setUp` fails, so a failed-only run can still publish the
+successful no-op. The freeze would send a Medium finding to a follow-up
+issue; fixing it here is a deliberate author exception, because it is the
+false pass task 7.8 set out to remove
+([Every failed test keeps a workbook row](#every-failed-test-keeps-a-workbook-row),
+tasks 7.12 and 7.13). F1 is still not addressed in code, and round eleven
+noted that #4570 does not mention it yet. Revising #4570 is follow-up.
+
+The single-test DEV run at `64cdbd48b` (run 45999248513) stopped at
+readiness in attempt 1, when `swarm_webamcr_web` stayed at 0/1 replicas. No
+change in this revision touches deployment or startup, so this was the DEV
+environment. Attempt 2 passed deployment, readiness, test 1 and publication.
+
 ## Risks / Trade-offs
 
 - **Activation blocks unprepared refs.** Activating enforcement stops
@@ -385,6 +442,12 @@ parameters.
   `heslar.tests.test_organization_import_guard`. → Ask its owner to add them
   to its inventory when rebasing (workflow follow-up). On DEV they only
   failed against the reused database.
+- **The row check also stops runs for class-level errors.** A failed
+  `setUpClass` or `tearDownClass`, or a test that unittest counts twice,
+  makes the FAIL and ERROR rows differ from `FAILED`, and the run ends as an
+  error. → The cause states both counts, and the root workbook keeps the
+  previous run for selection. `_quit_driver` swallows its own errors, so the
+  current base class has no path that counts one test twice.
 
 ## Migration Plan
 
@@ -392,7 +455,9 @@ parameters.
    branch with deployment enabled. This covers stdin, deployment, readiness
    and the new result directories. Then run it with deployment disabled.
    Record run URLs, revisions and attempt IDs. Both runs are expected to
-   pass, because DEV runs only Selenium tests.
+   pass, because DEV runs only Selenium tests. The single-test run 45999248513
+   already passed deployment, readiness and publication at `64cdbd48b`; the
+   full runs remain.
 2. A colleague reviews the PR and merges it into `test`. The PR description
    gives a reading order and flags the production script changes.
 3. The first TEST deployment of a release containing this change is the
@@ -423,7 +488,7 @@ safe; an older runner ignores `current/` and `previous/`.
 ## Review history
 
 Per-item evidence and dispositions are in the linked reviews and in the git
-history of this file. Every round from 5 to 10 confirmed all repairs from the
+history of this file. Every round from 5 to 11 confirmed all repairs from the
 round before. Pre-commit and CodeQL passed on each delivered head from
 `d90182be3` to `e0831d563`.
 
@@ -445,6 +510,8 @@ round before. Pre-commit and CodeQL passed on each delivered head from
 | DEV run | `5932d146c` | [run 45911203331](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45911203331), attempt 1 | 0 | 0 | Completed; 17 non-ASCII names accepted; only the #4450 modules failed |
 | DEV run | `bca3b69d6` | [job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45959732625/job/140374449093), attempt 1, failed-only | 1 (false pass) | 0 | No-op success despite 68 untracked failures; DEV becomes Selenium-only |
 | 10 | `bca3b69d6` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6085012707) | 2 (Low) | 2 (O17, O18; O15 in #4570) | ssh-agent block to #4570; usage sentence; guide paths; generator signatures |
+| DEV run | `64cdbd48b` | [run 45999248513](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45999248513), test 1 only | 0 | 0 | Attempt 1 stopped at readiness (DEV environment); [attempt 2](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45999248513/job/140546677814) passed |
+| 11 | `64cdbd48b` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6089472584) | 1 (Medium) | 0 (F1 and O15 in #4570) | Setup errors record a row; failures without a row end as an error |
 | Simplification | `f11aa5629` | Exploration on 2026-11-26 | - | - | Retention replaced, v1 code and `set -e` removed, specs split |
 
 ## Sources

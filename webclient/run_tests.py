@@ -176,18 +176,26 @@ def execute_tests(labels, directory, file_logging=False):
     return returncode, "".join(parts)
 
 
-def selection_content(root, directory, mode):
+def selection_content(root, directory, mode, failed):
     """Připraví kompatibilní tabulku bez ztráty dříve známých testů.
+
+    Tabulka pokusu musí mít tolik řádků FAIL a ERROR, kolik neúspěšných testů
+    hlásí unittest. Jinak by neúspěšný test bez řádku příští běh neúspěšných
+    testů nevybral.
 
     :param root: Kořen předchozího vstupu výběru.
     :param directory: Výstup aktuálního pokusu.
     :param mode: Režim právě dokončeného výběru.
+    :param failed: Počet neúspěšných testů ze souhrnu unittest.
     :return: Bajty tabulky nebo None, pokud testy tabulku nevytvářejí.
+    :raises ValueError: Při neplatné tabulce nebo počtu jejích neúspěšných řádků jiném než ``failed``.
     """
     current = directory / "results.xlsx"
     if not current.exists():
         return None
-    select_tests("neuspesne", "", current)
+    unsuccessful = len(select_tests("neuspesne", "", current))
+    if unsuccessful != failed:
+        raise ValueError(f"Neúspěšné testy v tabulce výsledků ({unsuccessful}) neodpovídají souhrnu testů ({failed})")
     if mode == "vsechny":
         return current.read_bytes()
     import pandas
@@ -298,7 +306,7 @@ def main(argv=None):
                 "completed",
                 returncode,
                 spreadsheet_required,
-                selection_data=selection_content(root, directory, mode),
+                selection_data=selection_content(root, directory, mode, failed),
                 counts=counts,
             )
             status = returncode

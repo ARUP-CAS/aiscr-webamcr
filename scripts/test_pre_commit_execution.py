@@ -363,7 +363,7 @@ class ExecutionTests(unittest.TestCase):
         directory = protocol.prepare_current(self.root)
         previous.to_excel(self.root / "results.xlsx", index=False)
         current.to_excel(directory / "results.xlsx", index=False)
-        merged = runner.selection_content(self.root, directory, "neuspesne")
+        merged = runner.selection_content(self.root, directory, "neuspesne", 0)
         table = pandas.read_excel(io.BytesIO(merged))
         self.assertEqual(list(table["test name"]), ["sample.tests.one", NON_ASCII_TESTS[0]])
         self.assertEqual(list(table["result"]), ["OK", "OK"])
@@ -654,6 +654,105 @@ class ExecutionTests(unittest.TestCase):
         failed = protocol.load_record(self.root / "current", "123-3", "vsechny", "")
         self.assertEqual(failed["state"], "error")
         self.assertEqual(protocol.digest(previous), record["files"]["results.xlsx"])
+
+    def test_failures_without_workbook_rows_end_as_error(self):
+        """Neúspěch bez řádku v tabulce ukončí každý režim chybou a kořenovou tabulku nenahradí."""
+        import pandas
+
+        columns = ["index", "date", "test name", "result"]
+        names = ("core.tests.test_selenium.CoreSeleniumTest.test_001_prihlaseni", NON_ASCII_TESTS[0])
+        previous = self.root / "results.xlsx"
+        output = io.BytesIO()
+        pandas.DataFrame([[1, "old", names[0], "FAIL"], [2, "old", names[1], "OK"]], columns=columns).to_excel(
+            output, index=False
+        )
+        before = output.getvalue()
+
+        def execute(labels, directory, file_logging):
+            """Zapíše jen úspěšný řádek, ačkoli unittest hlásí chybu bez řádku.
+
+            :param labels: Výběr testů.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim logování.
+            :return: Neúspěšný úplný souhrn testů.
+            """
+            pandas.DataFrame([[2, "now", names[1], "OK"]], columns=columns).to_excel(
+                directory / "results.xlsx", index=False
+            )
+            return 1, "Ran 2 tests in 1s\n\nFAILED (errors=1)\n"
+
+        for attempt, (arguments, mode, number) in enumerate(
+            (([], "vsechny", ""), (["-f"], "neuspesne", ""), (["-t", "1"], "konkretni", "1")), start=1
+        ):
+            with self.subTest(mode=mode):
+                identity = f"123-{attempt}"
+                previous.write_bytes(before)
+                with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+                    runner, "execute_tests", side_effect=execute
+                ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                    self.assertEqual(
+                        runner.main([*arguments, "--results-root", str(self.root), "--attempt-id", identity]), 1
+                    )
+                record = protocol.load_record(self.root / "current", identity, mode, number)
+                self.assertEqual(record["state"], "error")
+                self.assertIn(
+                    "(publication): ValueError: Neúspěšné testy v tabulce výsledků (0) neodpovídají souhrnu testů (1)",
+                    record["message"],
+                )
+                self.assertEqual(previous.read_bytes(), before)
+
+    def test_full_run_failure_rows_feed_failed_only_selection(self):
+        """Úplný běh se shodnými řádky FAIL a ERROR se zveřejní a další běh neúspěšných je spustí."""
+        import pandas
+
+        columns = ["index", "date", "test name", "result"]
+        names = (
+            "core.tests.test_selenium.CoreSeleniumTest.test_001_prihlaseni",
+            NON_ASCII_TESTS[0],
+            NON_ASCII_TESTS[1],
+        )
+        selected = []
+
+        def execute_full(labels, directory, file_logging):
+            """Zapíše jeden FAIL, jeden ERROR a jeden OK v souladu se souhrnem.
+
+            :param labels: Výběr testů.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim logování.
+            :return: Neúspěšný úplný souhrn testů.
+            """
+            rows = [[1, "now", names[0], "FAIL"], [2, "now", names[1], "ERROR"], [3, "now", names[2], "OK"]]
+            pandas.DataFrame(rows, columns=columns).to_excel(directory / "results.xlsx", index=False)
+            return 1, "Ran 3 tests in 1s\n\nFAILED (failures=1, errors=1)\n"
+
+        def execute_failed(labels, directory, file_logging):
+            """Zaznamená výběr a oba vybrané testy nyní projdou.
+
+            :param labels: Výběr testů.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim logování.
+            :return: Úspěšný úplný souhrn testů.
+            """
+            selected.extend(labels)
+            rows = [[1, "now", names[0], "OK"], [2, "now", names[1], "OK"]]
+            pandas.DataFrame(rows, columns=columns).to_excel(directory / "results.xlsx", index=False)
+            return 0, "Ran 2 tests in 1s\n\nOK\n"
+
+        for arguments, identity, execute, code in (
+            ([], "123-1", execute_full, 1),
+            (["-f"], "123-2", execute_failed, 0),
+        ):
+            with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+                runner, "execute_tests", side_effect=execute
+            ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                self.assertEqual(
+                    runner.main([*arguments, "--results-root", str(self.root), "--attempt-id", identity]), code
+                )
+            mode = "neuspesne" if arguments else "vsechny"
+            self.assertEqual(protocol.load_record(self.root / "current", identity, mode, "")["state"], "completed")
+        self.assertEqual(selected, list(names[:2]))
+        table = pandas.read_excel(self.root / "results.xlsx")
+        self.assertEqual(list(table["result"]), ["OK", "OK", "OK"])
 
     def test_summary_validation_is_non_evaluating(self):
         """Celý souhrn má právě dva desetinné záznamy a nepřipouští příkazy."""

@@ -181,6 +181,27 @@ tests outside Selenium SHALL NOT run in the DEV test workflow.
 - **WHEN** the regression suite runs
 - **THEN** it fails and names the module
 
+### Requirement: Every failed test of a completed run has a workbook row
+
+A Selenium test whose setup fails SHALL record an ERROR workbook row without
+using the driver, because its teardown does not run. A run SHALL publish a
+completed outcome only when the FAIL and ERROR rows written to its workbook
+match its `FAILED` count. Otherwise it SHALL publish an error outcome that
+states the mismatch and SHALL leave the root selection workbook unchanged.
+
+#### Scenario: Setup fails
+
+- **GIVEN** a Selenium test whose setup raises before, during or after driver creation
+- **WHEN** the test finishes
+- **THEN** the workbook has one ERROR row for that test and the setup error remains the reported error
+- **AND** a driver that was created is released exactly once
+
+#### Scenario: A failure has no workbook row
+
+- **GIVEN** a run in which unittest counts a failure or error that has no FAIL or ERROR row, such as a failed class setup or a failed workbook write
+- **WHEN** the runner publishes its outcome
+- **THEN** it publishes an error outcome stating the mismatch and the root selection workbook is unchanged
+
 ### Requirement: Test runner outcomes reflect actual execution
 
 The runner SHALL check migration and test process results and read the
