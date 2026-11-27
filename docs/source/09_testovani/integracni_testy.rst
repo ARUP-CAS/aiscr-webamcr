@@ -132,12 +132,12 @@ V běžícím vývojovém Dockeru spusťte oba moduly::
        --testrunner django.test.runner.DiscoverRunner --verbosity=2 --debug-mode
 
 Před příkazem povolte přepínač v připojené konfiguraci přes ``get_secret``.
-Při úplném Selenium běhu přes ``webclient/run_tests.py`` jsou oba moduly součástí výběru
-testů proti Fedoře z ``webclient.settings.dev_test``. Runner přepínač nepřepisuje; používá
-jeho hodnotu z Django settings. I v tomto běhu platí
-společná kontrola prostředí: pokud je ``SITE_URL`` lokální a testovací proces má
-``DEBUG=False``, Fedora testy se přeskočí. Pro jejich ruční lokální spuštění použijte
-uvedený příkaz s ``--debug-mode``. Samotný přepínač pravidla adresy a DEBUG neobchází.
+Oba moduly se spouštějí jen tímto ručním příkazem. Úplný běh přes
+``webclient/run_tests.py`` na DEV obsahuje jen Selenium testy, protože běhy neúspěšných
+a číslovaných testů vybírají z tabulky jejich výsledků a tyto moduly do ní řádky
+nezapisují. Společná kontrola prostředí platí i při ručním spuštění: pokud je ``SITE_URL``
+lokální a testovací proces má ``DEBUG=False``, Fedora testy se přeskočí, proto příkaz
+používá ``--debug-mode``. Samotný přepínač pravidla adresy a DEBUG neobchází.
 
 Vyhodnocení výsledků testu
 --------------------------

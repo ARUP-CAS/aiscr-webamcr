@@ -6,7 +6,7 @@ Modul translation.
 Funkce
 ------
 
-.. py:function:: format_message(message_id)
+.. py:function:: format_message(message_id, **params)
 
    Přeloží zprávu s pojmenovanými zástupnými znaky a dosadí do ní parametry.
 

@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: neident_akce_post_save(sender, instance)
+.. py:function:: neident_akce_post_save(sender, instance, **kwargs)
 
    Uloží metadata nadřazeného dokumentu po uložení neidentifikované akce.
 
@@ -14,7 +14,7 @@ Funkce
    :param instance: Ukládaná instance neidentifikované akce.
    :param kwargs: Další parametry signálu.
 
-.. py:function:: neident_akce_post_delete(sender, instance)
+.. py:function:: neident_akce_post_delete(sender, instance, **kwargs)
 
    Aktualizuje metadata nadřazeného dokumentu po smazání neidentifikované akce.
 

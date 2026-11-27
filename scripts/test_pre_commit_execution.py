@@ -1,5 +1,6 @@
 """Regrese skutečných výsledků runneru a protokolu jednotlivých pokusů."""
 
+import ast
 import io
 import json
 import os
@@ -416,6 +417,38 @@ class ExecutionTests(unittest.TestCase):
             table = pandas.DataFrame(rows, columns=columns)
             with patch.object(pandas, "read_excel", return_value=table), self.assertRaises(ValueError):
                 runner.select_tests("neuspesne", "", self.root / "results.xlsx")
+
+    def test_dev_defaults_record_a_workbook_row_for_every_test(self):
+        """Výchozí DEV výběr obsahuje jen moduly, jejichž testy zapisují řádek tabulky výběru."""
+        untracked = []
+        for label in runner.DEFAULT_TESTS:
+            path = (ROOT / "webclient" / Path(*label.split("."))).with_suffix(".py")
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            classes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
+
+            def writes_rows(node, seen=()):
+                """Zjistí, zda třída dědí od BaseSeleniumTestClass přímo nebo přes třídu modulu.
+
+                :param node: Ověřovaná třída.
+                :param seen: Již procházené třídy modulu, které brání zacyklení.
+                :return: True, pokud test zapisuje řádek tabulky výsledků.
+                """
+                for base in node.bases:
+                    name = getattr(base, "id", getattr(base, "attr", None))
+                    if name == "BaseSeleniumTestClass":
+                        return True
+                    if name in classes and name not in seen and writes_rows(classes[name], (*seen, name)):
+                        return True
+                return False
+
+            for node in classes.values():
+                tests = [
+                    item for item in node.body if isinstance(item, ast.FunctionDef) and item.name.startswith("test")
+                ]
+                if tests and not writes_rows(node):
+                    untracked.append(f"{label}.{node.name}")
+        self.assertTrue(runner.DEFAULT_TESTS)
+        self.assertEqual(untracked, [], "Výchozí DEV moduly s testy, které nezapisují tabulku výběru")
 
     def test_selection_accepts_identifier_names_with_non_ascii_letters(self):
         """Název, jehož každá tečkovaná část je identifikátor, projde i s českými písmeny."""

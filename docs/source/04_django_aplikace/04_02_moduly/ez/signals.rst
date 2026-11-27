@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: create_ez_vazby(sender, instance)
+.. py:function:: create_ez_vazby(sender, instance, **kwargs)
 
    Metoda pro vytvoření historických vazeb externího zdroje.
 
@@ -16,7 +16,7 @@ Funkce
    :param instance: Instance externího zdroje, pro niž se vytváří historická vazba při prvním uložení.
    :param kwargs: Dodatečné argumenty předávané signálem Django.
 
-.. py:function:: externi_zdroj_save_metadata(sender, instance)
+.. py:function:: externi_zdroj_save_metadata(sender, instance, **kwargs)
 
    Po uložení externího zdroje invaliduje cache a uloží metadata do Fedory, pokud není potlačen signál.
 
@@ -24,7 +24,7 @@ Funkce
    :param instance: Uložená instance externího zdroje, jejíž metadata se synchronizují s úložištěm.
    :param kwargs: Dodatečné argumenty předávané signálem Django.
 
-.. py:function:: delete_externi_zdroj_repository_container(sender, instance)
+.. py:function:: delete_externi_zdroj_repository_container(sender, instance, **kwargs)
 
    Odstraní externi zdroj repository container.
 

@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: pes_save(sender, instance)
+.. py:function:: pes_save(sender, instance, **kwargs)
 
    Provádí operaci pes save.
 
@@ -14,7 +14,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``on_commit()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pes_save``.
 
-.. py:function:: pes_delete(sender, instance)
+.. py:function:: pes_delete(sender, instance, **kwargs)
 
    Provádí operaci pes delete.
 

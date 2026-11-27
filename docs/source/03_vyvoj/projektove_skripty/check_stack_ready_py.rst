@@ -16,7 +16,7 @@ tuto spodní hranici hlídá ``scripts/test_pre_commit_stack_ready.py``.
 Funkce
 ------
 
-.. py:function:: docker()
+.. py:function:: docker(*args, deadline)
 
    Spustí pouze čtecí Docker CLI a odmítne neúplné inspekce.
 

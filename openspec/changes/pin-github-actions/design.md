@@ -223,6 +223,39 @@ Alternatives considered:
   leak, but library failures lose their detail. This is the fallback if
   hosted CodeQL flags the sanitised text.
 
+### DEV runs only Selenium tests
+
+The DEV default selection holds only the 11 Selenium modules. Their test
+classes derive from `BaseSeleniumTestClass`, which records a workbook row for
+each test, so failed-only and numbered selection see every DEV result. This
+matches the split in
+[ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465):
+its inventory excludes the Selenium modules as the DEV workflow's and assigns
+unit and import modules to its `fast` and `database` jobs, each with its own
+summary and log artifact. A regression test fails when a default module
+contains a test class outside `BaseSeleniumTestClass`.
+
+Removed from DEV:
+
+- the four #4450 unit and import modules
+  (`core.tests.test_organization_ownership`,
+  `core.tests.test_mappers.test_organizace_mapper`,
+  `cron.tests.test_run_data_import_organizace` and
+  `heslar.tests.test_organization_import_guard`). #4465 assigns two of them
+  to its `database` job; the other two postdate its branch;
+- the two Fedora integration modules. They need a deployed Fedora, are
+  skipped on DEV because the integration flag is off, and #4465 excludes
+  them. They now run only through the manual Docker command in the
+  integration-test guide; a separate DEV step for them is follow-up.
+
+Alternatives considered:
+
+- **Two DEV suites with their own steps and summaries.** This changes the
+  result format and the workflow, duplicates #4465, and keeps the
+  reused-database failures on DEV.
+- **Rerun every untracked module in each failed-only run.** This restores
+  correctness but keeps mixed reporting on DEV.
+
 ### Deployment failures, readiness and script hygiene
 
 Every required operation in `test_deploy.sh`, `prod_deploy.sh`,
@@ -294,6 +327,33 @@ The run's 68 failures in `test_organizace_mapper` and
 fixed `heslar_nazev` keys into the reused DEV database. They are deferred to
 [ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465).
 
+A failed-only DEV run at `bca3b69d6` (run 45959732625) then reported success
+without running a test. The workbook lists only Selenium tests, so the 68
+failures of the previous full run were invisible to selection, and the run
+published the explicit successful no-op. Before this PR the same run failed
+only because the workflow read the previous run's stale summary. This PR
+made the no-op explicit, so the freeze keeps this High false pass here. DEV
+now runs only Selenium tests, in line with #4465 (task 7.8).
+
+Round ten (review at `bca3b69d6`) found two Low items this PR introduced:
+
+- **Duplicated ssh-agent key-load block.** `deployment.yml` and
+  `run-tests.yml` carry the same block, and only `deployment.yml` sets the
+  `~/.ssh` and `known_hosts` permissions. This is maintenance only and joins
+  the SSH and VPN hardening already tracked in
+  [ARUP-CAS/aiscr-webamcr#4570](https://github.com/ARUP-CAS/aiscr-webamcr/issues/4570),
+  together with O15.
+- **Stale usage sentence.** The usage entry still calls the committed 7.6
+  checkbox uncommitted. The close-out corrects it (task 7.11).
+
+Its pre-existing observations O17 (wrong `git_prod_deploy.sh` paths in the
+deployment guide) and O18 (the documentation generator drops `*args`,
+keyword-only and `**kwargs` parameters from function signatures) are
+deliberate author exceptions, fixed in the same revision (tasks 7.9 and
+7.10). The generator fix also feeds the Django module pages, so it
+regenerates 99 signatures on 28 pages, each only adding missing
+parameters.
+
 ## Risks / Trade-offs
 
 - **Activation blocks unprepared refs.** Activating enforcement stops
@@ -320,21 +380,19 @@ fixed `heslar_nazev` keys into the reused DEV database. They are deferred to
   replaced in three forms, fixtures cover a secret-backed root and a resolved
   root, and hosted CodeQL checks the flow. If CodeQL flags it, fall back to
   the runner's own messages and the exception type.
-- **DEV stays red until #4465.** The #4450 tests fail against the reused DEV
-  database. → A DEV run is accepted on its outcome and the location of its
-  failures (migration step 1), not on a green result.
+- **The tests removed from DEV have no hosted run until #4465 lands.** #4465's
+  branch predates `core.tests.test_organization_ownership` and
+  `heslar.tests.test_organization_import_guard`. → Ask its owner to add them
+  to its inventory when rebasing (workflow follow-up). On DEV they only
+  failed against the reused database.
 
 ## Migration Plan
 
 1. Before merge, after separate approval, dispatch `Run tests` from the PR
    branch with deployment enabled. This covers stdin, deployment, readiness
    and the new result directories. Then run it with deployment disabled.
-   Record run URLs, revisions and attempt IDs. Until
-   [ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465)
-   changes the #4450 tests, such a run fails on them. It is accepted when it
-   ends `completed`, publishes its counts, replaces the root workbook and
-   fails only in `test_organizace_mapper` and
-   `test_run_data_import_organizace`.
+   Record run URLs, revisions and attempt IDs. Both runs are expected to
+   pass, because DEV runs only Selenium tests.
 2. A colleague reviews the PR and merges it into `test`. The PR description
    gives a reading order and flags the production script changes.
 3. The first TEST deployment of a release containing this change is the
@@ -365,7 +423,7 @@ safe; an older runner ignores `current/` and `previous/`.
 ## Review history
 
 Per-item evidence and dispositions are in the linked reviews and in the git
-history of this file. Every round from 5 to 9 confirmed all repairs from the
+history of this file. Every round from 5 to 10 confirmed all repairs from the
 round before. Pre-commit and CodeQL passed on each delivered head from
 `d90182be3` to `e0831d563`.
 
@@ -384,6 +442,9 @@ round before. Pre-commit and CodeQL passed on each delivered head from
 | DEV run | `e0831d563` | [job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45771045340/job/139747914273), attempt 2 | 1 (host Python) | 0 | Readiness check must run on Python 3.6 |
 | CI | `de9a4fc8d` | [pre-commit job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45895469093/job/140168151293) | 1 (leaked annotation) | 0 | Test output captured and asserted |
 | DEV run | `de9a4fc8d` | [job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45895898223/job/140169581355), attempt 2 | 1 (test names) | 0 | Readiness passed; non-ASCII names rejected at publication; cause reporting added; #4450 failures deferred to #4465 |
+| DEV run | `5932d146c` | [run 45911203331](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45911203331), attempt 1 | 0 | 0 | Completed; 17 non-ASCII names accepted; only the #4450 modules failed |
+| DEV run | `bca3b69d6` | [job](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45959732625/job/140374449093), attempt 1, failed-only | 1 (false pass) | 0 | No-op success despite 68 untracked failures; DEV becomes Selenium-only |
+| 10 | `bca3b69d6` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6085012707) | 2 (Low) | 2 (O17, O18; O15 in #4570) | ssh-agent block to #4570; usage sentence; guide paths; generator signatures |
 | Simplification | `f11aa5629` | Exploration on 2026-11-26 | - | - | Retention replaced, v1 code and `set -e` removed, specs split |
 
 ## Sources

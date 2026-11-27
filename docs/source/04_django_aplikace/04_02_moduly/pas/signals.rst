@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: create_dokument_vazby(sender, instance)
+.. py:function:: create_dokument_vazby(sender, instance, **kwargs)
 
    Metoda pro vytvoření historických a souborových vazeb samostatnýho náleze.
 
@@ -16,7 +16,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``pk``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_dokument_vazby``.
 
-.. py:function:: save_metadata_samostatny_nalez(sender, instance, created)
+.. py:function:: save_metadata_samostatny_nalez(sender, instance, created, **kwargs)
 
    Uloží metadata samostatny nalez.
 
@@ -25,7 +25,7 @@ Funkce
    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_samostatny_nalez``.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_samostatny_nalez``.
 
-.. py:function:: dokument_delete_container_soubor_vazby(sender, instance)
+.. py:function:: dokument_delete_container_soubor_vazby(sender, instance, **kwargs)
 
    Před smazáním samostatného nálezu označí záznam ve Fedoře jako smazaný a odstraní jeho soubory a historii v DB.
 
@@ -37,7 +37,7 @@ Funkce
    :param instance: Mazaný samostatný nález; používá se jeho ``active_transaction``, ``soubory`` a ``historie``.
    :param kwargs: Dodatečné argumenty předané Django signálem.
 
-.. py:function:: samostatny_nalez_delete_update_projekt(sender, instance)
+.. py:function:: samostatny_nalez_delete_update_projekt(sender, instance, **kwargs)
 
    Po smazání samostatného nálezu přegeneruje metadata projektu ve Fedoře a případně uzavře transakci.
 
@@ -52,7 +52,7 @@ Funkce
        a ``close_active_transaction_when_finished``.
    :param kwargs: Dodatečné argumenty předané Django signálem.
 
-.. py:function:: save_uzivatel_spoluprce(sender, instance)
+.. py:function:: save_uzivatel_spoluprce(sender, instance, **kwargs)
 
    Uloží uzivatel spoluprce.
 
@@ -60,7 +60,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_uzivatel_spoluprce``.
 
-.. py:function:: delete_uzivatel_spoluprce_connections(sender, instance)
+.. py:function:: delete_uzivatel_spoluprce_connections(sender, instance, **kwargs)
 
    Odstraní uzivatel spoluprce connections.
 

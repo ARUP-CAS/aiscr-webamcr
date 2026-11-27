@@ -24,7 +24,7 @@ Třídy
 Funkce
 ------
 
-.. py:function:: log_msg(message)
+.. py:function:: log_msg(message, *, verbose_only, verbose)
 
    Vypíše jeden řádek na stderr s prefixem pro grep v CI.
 

@@ -52,6 +52,9 @@ trustworthy.
   workflow rejects a missing or mismatched outcome.
 - Keep the previous workbook as selection input for failed-only and numbered
   runs.
+- Run only Selenium tests on DEV, so every test a DEV run executes records a
+  workbook row. Unit and import tests belong to the Django test CI proposed
+  in [ARUP-CAS/aiscr-webamcr#4465](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4465).
 - Release Selenium drivers when workbook writing fails, and classify each
   workbook row by that test's own result.
 - Serialize DEV tests and DEV deployments in one concurrency group.

@@ -105,6 +105,10 @@ Třídy
 
       Chybějící nebo neplatný vstup výběru není no-op.
 
+   .. py:method:: test_dev_defaults_record_a_workbook_row_for_every_test()
+
+      Výchozí DEV výběr obsahuje jen moduly, jejichž testy zapisují řádek tabulky výběru.
+
    .. py:method:: test_selection_accepts_identifier_names_with_non_ascii_letters()
 
       Název, jehož každá tečkovaná část je identifikátor, projde i s českými písmeny.

@@ -1224,11 +1224,40 @@ def extract_docstrings(source_file: Path) -> Tuple[Optional[str], List[Dict[str,
         elif isinstance(node, ast.FunctionDef):
             # Pouze funkce nejvyšší úrovně (ne metody).
             docstring = ast.get_docstring(node) or "Popis není k dispozici."
-            # Získá signaturu funkce.
-            args = [arg.arg for arg in node.args.args]
-            functions.append({"name": node.name, "docstring": docstring, "args": args, "lineno": node.lineno})
+            functions.append(
+                {
+                    "name": node.name,
+                    "docstring": docstring,
+                    "args": _signature_parameters(node.args),
+                    "lineno": node.lineno,
+                }
+            )
 
     return module_doc, classes, functions
+
+
+def _signature_parameters(arguments: ast.arguments) -> List[str]:
+    """Vrátí parametry funkce v pořadí signatury bez výchozích hodnot.
+
+    Zachová pouze poziční parametry s oddělovačem ``/``, ``*args``, holou
+    ``*`` před pouze pojmenovanými parametry bez ``*args`` a ``**kwargs``,
+    aby direktiva ``py:function`` odpovídala skutečné signatuře.
+
+    :param arguments: Uzel ``ast.arguments`` dokumentované funkce.
+    :return: Položky signatury v pořadí zdrojového kódu.
+    """
+    parameters = [arg.arg for arg in arguments.posonlyargs]
+    if arguments.posonlyargs:
+        parameters.append("/")
+    parameters += [arg.arg for arg in arguments.args]
+    if arguments.vararg:
+        parameters.append(f"*{arguments.vararg.arg}")
+    elif arguments.kwonlyargs:
+        parameters.append("*")
+    parameters += [arg.arg for arg in arguments.kwonlyargs]
+    if arguments.kwarg:
+        parameters.append(f"**{arguments.kwarg.arg}")
+    return parameters
 
 
 def _looks_like_sphinx_fieldlist(docstring: str) -> bool:

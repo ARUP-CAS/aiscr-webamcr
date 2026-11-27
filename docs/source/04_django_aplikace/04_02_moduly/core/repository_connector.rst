@@ -1165,7 +1165,7 @@ Funkce
 
    :return: Nakonfigurovaná ``requests.Session`` instance.
 
-.. py:function:: _get_fedora_session()
+.. py:function:: _get_fedora_session(*, admin)
 
    Vrátí Fedora session pro aktuální vlákno a zadanou identitu.
 

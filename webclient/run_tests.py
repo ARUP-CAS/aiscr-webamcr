@@ -12,6 +12,8 @@ from threading import Lock, Thread
 
 SETTINGS = "webclient.settings.dev_test"
 logger = logging.getLogger("webamcr.test_runner")
+# DEV spouští jen Selenium testy: každý zapíše řádek tabulky, ze které vybírají běhy
+# neúspěšných a číslovaných testů. Ostatní testy patří do samostatného Django CI.
 DEFAULT_TESTS = [
     "core.tests.test_selenium",
     "core.tests.test_selenium_distribuce",
@@ -24,12 +26,6 @@ DEFAULT_TESTS = [
     "ez.tests.test_selenium",
     "uzivatel.tests.test_selenium",
     "heslar.tests.test_selenium",
-    "core.tests.test_fedora_integration_child_walk",
-    "core.tests.test_fedora_integration_paradata",
-    "core.tests.test_organization_ownership",
-    "core.tests.test_mappers.test_organizace_mapper",
-    "cron.tests.test_run_data_import_organizace",
-    "heslar.tests.test_organization_import_guard",
 ]
 
 

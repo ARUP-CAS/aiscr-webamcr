@@ -116,7 +116,7 @@ Třídy
 Funkce
 ------
 
-.. py:function:: vprint()
+.. py:function:: vprint(*args, **kwargs)
 
    Vypíše zprávu pouze ve verbose režimu.
 
@@ -302,6 +302,17 @@ Funkce
 
    :param source_file: Cesta ke zdrojovému souboru.
    :return: tuple: (docstring modulu nebo None, třídy, funkce); třídy a funkce jsou seznamy slovníků.
+
+.. py:function:: _signature_parameters(arguments)
+
+   Vrátí parametry funkce v pořadí signatury bez výchozích hodnot.
+
+   Zachová pouze poziční parametry s oddělovačem ``/``, ``*args``, holou
+   ``*`` před pouze pojmenovanými parametry bez ``*args`` a ``**kwargs``,
+   aby direktiva ``py:function`` odpovídala skutečné signatuře.
+
+   :param arguments: Uzel ``ast.arguments`` dokumentované funkce.
+   :return: Položky signatury v pořadí zdrojového kódu.
 
 .. py:function:: _looks_like_sphinx_fieldlist(docstring)
 

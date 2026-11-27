@@ -15,7 +15,7 @@ Metadata workflow a diagnostický text se předávají pouze přes proměnné pr
 Funkce
 ------
 
-.. py:function:: git_output()
+.. py:function:: git_output(*args)
 
    Načte údaje indexu bez shellové interpolace a závislosti na locale.
 

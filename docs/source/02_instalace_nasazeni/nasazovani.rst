@@ -164,9 +164,9 @@ Aplikace poběží na portu **8080**.
 =============================================
 Skriptované nasazení z lokálního repozitáře
 =============================================
-V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat zdrojový kód přímo v lokální repozitáři a následně spustit automatizační skript `./logs/git_prod_deploy`, který se postará o vytvoření docker obrazů lokálně na základě zdrojových souborů lokálního repozitáře.
+V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat zdrojový kód přímo v lokální repozitáři a následně spustit automatizační skript `./scripts/git_prod_deploy.sh`, který se postará o vytvoření docker obrazů lokálně na základě zdrojových souborů lokálního repozitáře.
 Tento skript loguje průběh do souboru `logs/git_prod_deploy`, vytváří lokálně docker obrazy, jež jsou následně nasazeny pomocí docker-compose, tj. **NEPOUŽÍVÁ SE swarm-mode**. Aplikace WebAMČR je v tomto případě přístupná na portu **8081**.
-Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``logs/git_prod_deploy.sh -h``.
+Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``./scripts/git_prod_deploy.sh -h``.
 
 **Předpoklady**: existující a aktualizované soubory s tzv. secrets, které obsahují nezbytné autentizační a konfigurační údaje viz `git_docker-compose.yml`, kde se předpokládá existence těch souborů:
 

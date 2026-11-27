@@ -37,6 +37,7 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    test_deploy_sh
    test_generate_github_actions_py
    test_generate_js_libraries_py
+   test_generate_script_signatures_py
    test_pre_commit_actions_trust_py
    test_pre_commit_deployment_execution_py
    test_pre_commit_execution_pipeline_py

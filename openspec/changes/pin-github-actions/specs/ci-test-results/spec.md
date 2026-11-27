@@ -157,6 +157,30 @@ identifier, including identifiers with non-ASCII letters.
 - **WHEN** selection or publication validates the workbook
 - **THEN** the names are accepted, and a name with a dotted part that is not an identifier is still rejected
 
+### Requirement: DEV test runs contain only workbook-tracked Selenium tests
+
+The DEV test runner's default selection SHALL contain only modules whose test
+classes record a workbook row for every test. Unit, import and integration
+tests outside Selenium SHALL NOT run in the DEV test workflow.
+
+#### Scenario: A full DEV run selects its tests
+
+- **GIVEN** a full DEV run
+- **WHEN** the runner selects its default tests
+- **THEN** every selected module is a Selenium module whose test classes derive from the workbook-writing base class
+
+#### Scenario: Failed-only follows a run with failures
+
+- **GIVEN** a completed full run in which tests failed
+- **WHEN** a failed-only run selects from the root workbook
+- **THEN** every failed test of that run is selected and the run does not publish the successful no-op
+
+#### Scenario: A non-Selenium module is added to the DEV defaults
+
+- **GIVEN** a default module with a test class that does not record workbook rows
+- **WHEN** the regression suite runs
+- **THEN** it fails and names the module
+
 ### Requirement: Test runner outcomes reflect actual execution
 
 The runner SHALL check migration and test process results and read the

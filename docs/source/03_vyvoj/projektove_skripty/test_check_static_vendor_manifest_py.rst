@@ -10,7 +10,7 @@ Funkce
 
    Popis není k dispozici.
 
-.. py:function:: _library()
+.. py:function:: _library(**overrides)
 
    Popis není k dispozici.
 
