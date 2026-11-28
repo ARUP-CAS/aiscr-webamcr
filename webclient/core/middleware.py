@@ -4,6 +4,7 @@ import re
 from core.connectors import RedisConnector
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
+from core.translation import reload_translation_catalogs_if_changed
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.utils import OperationalError
@@ -187,6 +188,35 @@ class InactiveUserMiddleware:
             return redirect("django_authentication_login")
 
         return None
+
+
+class TranslationCatalogReloadMiddleware:
+    """
+    Middleware, které na začátku požadavku ověří změnu runtime překladových katalogů.
+
+    Musí být v ``MIDDLEWARE`` bezprostředně před ``django.middleware.locale.LocaleMiddleware``, aby se
+    případné nové načtení katalogů provedlo dřív, než se aktivuje jazyk požadavku. Díky
+    tomu se úpravy překladů na serveru (Rosetta, import katalogu, obnova zálohy) i nové
+    katalogy z nasazení projeví ve workerech uWSGI bez restartu aplikace.
+    """
+
+    def __init__(self, get_response):
+        """
+        Inicializuje middleware.
+
+        :param get_response: Callable z middleware řetězce, který zpracuje požadavek a vrátí response.
+        """
+        self.get_response = get_response
+
+    def __call__(self, request):
+        """
+        Ověří runtime katalogy (s omezením četnosti) a předá požadavek dál.
+
+        :param request: HTTP požadavek ze strany klienta.
+        :return: HTTP response vygenerovaná zbytkem řetězce middleware.
+        """
+        reload_translation_catalogs_if_changed()
+        return self.get_response(request)
 
 
 class StatusMessageMiddleware:

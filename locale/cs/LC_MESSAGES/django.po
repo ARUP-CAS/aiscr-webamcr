@@ -4434,6 +4434,10 @@ msgid "core.message_constants.translationUploadSucces.text"
 msgstr "Soubor s překlady úspěšně importován."
 
 #: core/message_constants.py:257
+msgid "core.message_constants.translationUploadError.text"
+msgstr "Soubor s překlady se nepodařilo importovat."
+
+#: core/message_constants.py:257
 msgid "core.message_constants.translationDeleteCannotMain.text"
 msgstr "Používaný autoritní soubor s překlady nelze smazat."
 

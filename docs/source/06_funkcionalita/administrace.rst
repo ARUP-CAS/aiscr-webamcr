@@ -171,4 +171,41 @@ Rosetta (Translations)
 * Obsahuje samostatný soubor s definicí pro každý jazyk aplikace
 * Po kliknutí na soubor jazyka se zobrazí editovací tabulka v které je možné editovat překlad
 * Po uložení překladu se automaticky pregenerují soubory pro překlad, které používá aplikace
-* Překlady je možné importovat a exportovat pomocí standardních PO souborů
+* Překlady je možné importovat a exportovat pomocí standardních PO souborů; import nejdřív připraví
+  zálohu původního souboru, nový ``.po`` i ``.mo`` a teprve pak je jednotlivě nahradí. Chyba při
+  přípravě ponechá oba katalogy i seznam záloh beze změny. Každý soubor se nahradí v jednom kroku,
+  takže aplikace nenačte rozepsaný soubor z tohoto importu
+* Náhrada katalogů netvoří společnou transakci. Při chybě během přejmenování může zůstat zveřejněná
+  záloha nebo nové ``.po`` s původním ``.mo``; aplikace pak překládá podle původního ``.mo``.
+  Import zobrazí chybu a odstraní zbývající dočasné soubory. Automatická obnova při ukončení procesu
+  není zaručena
+* Uložený, importovaný nebo ze zálohy obnovený překlad v katalozích aplikace (``LOCALE_PATHS``, runtime
+  volume ``/vol/web/locale``) se přebírá bez restartu. Každý webový proces kontroluje změny na začátku
+  požadavku a worker Celery na začátku úlohy, nejvýše jednou za výchozích 60 sekund. Platná změna se
+  převezme při další způsobilé kontrole; nečinný proces čeká na další požadavek či úlohu. E-mailová část
+  platí, jakmile služby Celery běží s verzí obsahující tuto kontrolu (nasazení, které aktualizuje jen
+  web a proxy, Celery neaktualizuje – viz
+  `ARUP-CAS/aiscr-webamcr#4541 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/4541>`_)
+* Při chybě načítání, chybějícím katalogu nebo zjištěné změně souborů během načítání proces ponechá
+  dříve načtené překlady. Porovnání metadat před načtením a po něm omezuje souběh se zápisem, ale
+  nezaručuje konzistentní snímek: změna tam a zpět se shodnými metadaty může uniknout
+* Pro stejný neúspěšný stav se zapíše jedno varování. Změněný otisk souborů dovolí nový pokus při další
+  běžné kontrole; nezměněný neúspěšný stav se znovu zkusí nejdříve za pět minut od posledního pokusu.
+  Opakovaná selhání stejného stavu už nevarují. Tato pevná prodleva umožňuje zotavení z přechodné chyby
+  čtení i bez dalšího zápisu; každý proces při trvajícím nezměněném chybném stavu spotřebuje nejvýše
+  jeden pokus za pět minut.
+  K prodlevě se může přidat čekání na běžný interval kontroly a na požadavek či úlohu. Nově spuštěnému
+  procesu, který platný katalog dříve nenačetl, mechanismus nezaručí dostupnost starých překladů
+* Katalogy Djanga a knihoven třetích stran, které Rosetta také zobrazuje, jsou součástí image; jejich
+  změna se projeví až s novou image
+* Totéž platí po nasazení nové verze: procesy, které katalogy načetly ještě před jejich aktualizací,
+  převezmou nové katalogy automaticky a překlady přidané ve verzi se zobrazí bez druhého restartu
+* Úprava provedená v běžící aplikaci platí jen do dalšího nasazení nebo restartu webového kontejneru,
+  kdy katalogy nahradí obsah z repozitáře (postup přenosu úpravy do repozitáře popisuje
+  :doc:`preklady`)
+* Interval kontroly změn určuje nastavení ``TRANSLATION_CATALOG_CHECK_INTERVAL`` (výchozí 60 sekund);
+  hodnota ``None`` vypne kontrolu a Django zachová běžné načítání překladů až při použití a jejich
+  ukládání v procesu. Změna nastavení vyžaduje doručení konfigurace do procesů; přepínač nemá vlastní
+  proměnnou prostředí pro změnu za běhu
+* Akce pro restart aplikace zůstává k dispozici jako záložní možnost pro okamžité projevení změn ve webové
+  aplikaci

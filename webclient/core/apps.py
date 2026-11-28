@@ -14,7 +14,15 @@ class CoreConfig(AppConfig):
     name = "core"
 
     def ready(self):
-        """Registruje signály modulu core při startu aplikace."""
+        """
+        Registruje signály modulu core při startu aplikace.
+
+        Kromě signálů modelů připojí kontrolu runtime překladových katalogů na signál Celery
+        ``task_prerun``, aby úlohy překládaly podle aktuálních katalogů bez restartu workeru.
+        """
         super(CoreConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import core.signals
+        from core.translation import connect_translation_catalog_signals
+
+        connect_translation_catalog_signals()

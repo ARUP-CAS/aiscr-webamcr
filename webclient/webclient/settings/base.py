@@ -242,6 +242,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.InactiveUserMiddleware",
     "django_auto_logout.middleware.auto_logout",
+    # Musí předcházet LocaleMiddleware: případné nové načtení katalogů proběhne před aktivací jazyka.
+    "core.middleware.TranslationCatalogReloadMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     "core.middleware.PermissionMiddleware",
@@ -411,6 +413,14 @@ FORMAT_MODULE_PATH = ["webclient.formats"]
 USE_TZ = True
 
 LOCALE_PATHS = ["/vol/web/locale"]
+
+# Interval (v sekundách), po kterém každý proces znovu ověří, zda se změnily runtime
+# překladové katalogy (`django.mo` v LOCALE_PATHS), a případně je znovu načte bez restartu.
+# Výchozích 60 sekund drží režii nízkou ve všech workerech uWSGI i Celery. Po chybě se
+# stejný otisk zkusí nejdříve za 300 sekund; převzetí čeká i na další požadavek či úlohu.
+# 0 = ověřit při každém požadavku a úloze, None = vypnout kontrolu a ponechat běžné lazy
+# načítání a cachování překladů v Djangu. Nastavení nemá vlastní proměnnou prostředí.
+TRANSLATION_CATALOG_CHECK_INTERVAL = 60
 
 ROSETTA_SHOW_AT_ADMIN_PANEL = False
 ROSETTA_WSGI_AUTO_RELOAD = False

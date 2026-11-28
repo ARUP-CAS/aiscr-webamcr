@@ -41,9 +41,24 @@ Služba ``sidecar`` zůstává beze změny a průběžně synchronizuje obsah vo
 #. Po nasazení ověřte, že se katalog zobrazuje v Rosettě pouze jednou a že
    aplikace používá nově zacommitované hodnoty.
 
-Import nového souboru v Rosettě před uložením přejmenuje původní katalog na
-``django_backup_DDMMYYYYHHMMSS.po``. Zálohy vytvořené Rosettou i entrypointem
-zůstávají na runtime volume a do repozitáře se nepřenášejí.
+Import nového souboru v Rosettě nejdřív připraví zálohu (kopii původního katalogu
+``django_backup_DDMMYYYYHHMMSS.po``), nový ``.po`` i zkompilovaný ``.mo`` v dočasných
+souborech vedle katalogu a teprve pak je bezprostředně po sobě přejmenuje na cílové
+soubory. Pokud se nahraný soubor nepodaří načíst nebo se cokoli z přípravy nezdaří,
+katalog ani seznam záloh se nezmění a administrace zobrazí chybovou hlášku.
+
+Každé přejmenování je atomické samostatně; dvojice katalogů netvoří společnou
+transakci. Selže-li publikace zálohy, katalogy i seznam záloh zůstanou beze změny.
+Selže-li náhrada ``.po``, záloha už zůstává zveřejněná. Selže-li až náhrada ``.mo``,
+zůstane nové ``.po``, původní ``.mo`` a záloha původního ``.po``. Běžící aplikace
+nadále překládá podle původního ``.mo``. Při zachycené chybě se zbývající dočasné
+soubory smažou a administrace zobrazí chybu; obnova po ukončení procesu není
+zaručena. Zálohy vytvořené Rosettou i entrypointem zůstávají na runtime volume
+a do repozitáře se nepřenášejí.
+
+Převzetí změn běžícími procesy a prodlevu opakovaných pokusů po chybě popisuje
+část Rosetta v :doc:`administrace`. Kontrola nezaručuje konzistentní snímek
+souběžně měněných souborů ani okamžité zotavení po přechodné chybě čtení.
 
 Text odstávky
 -------------

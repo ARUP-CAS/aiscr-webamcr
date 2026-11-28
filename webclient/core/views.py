@@ -3,12 +3,10 @@ import logging
 import math
 import os
 import re
-import tempfile
 import unicodedata
 import zipfile
 from datetime import datetime
 from io import BytesIO
-from pathlib import Path
 
 import pandas
 from adb.models import Adb
@@ -41,6 +39,7 @@ from core.message_constants import (
     TRANSLATION_DELETE_CANNOT_MAIN,
     TRANSLATION_DELETE_ERROR,
     TRANSLATION_DELETE_SUCCESS,
+    TRANSLATION_UPLOAD_ERROR,
     TRANSLATION_UPLOAD_SUCCESS,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
@@ -63,7 +62,7 @@ from core.soubor_naming import (
     get_next_soubor_name,
     get_soubor_suffix,
 )
-from core.translation import format_message
+from core.translation import format_message, import_translation_catalog
 from core.utils import (
     SessionIdentifier,
     check_import_report_directory,
@@ -2493,46 +2492,30 @@ class TranslationImportView(RosettaFileLevelMixinWithBackup, FormView):
 
     def form_valid(self, form):
         """
-        Provádí operaci form valid.
+        Importuje nahraný katalog ``.po`` do runtime katalogu zvoleného jazyka.
 
-        :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
+        Nejdřív vyhodnotí ``po_file_path``, které ověří jazyk a právo uživatele ho překládat
+        (jinak vyvolá ``Http404``), a teprve potom předá nahraný soubor funkci
+        ``import_translation_catalog`` (záloha, atomická náhrada ``.po`` a ``.mo``). Chybu
+        importu zapíše podrobně do logu a zobrazí pevnou přeloženou hlášku bez textu
+        výjimky a cest k souborům; úspěch oznámí hláškou.
 
-            :return: Vrací výsledek volání ``redirect()``.
+        :param form: Validní ``TranslationImportForm``; nahraný soubor je v ``cleaned_data["file"]``.
+        :return: Přesměrování na seznam katalogů (``rosetta-file-list``).
+        :raises Http404: Pokud jazyk neexistuje nebo ho uživatel nesmí překládat.
         """
-        # Vyhodnotí oprávnění k jazyku (404) dřív, než se nahraný soubor zkopíruje a naparsuje.
-        current_po_path = Path(self.po_file_path)
         new_pofile = form.cleaned_data["file"]
-        tmp_path = None
+        # Cesta ke katalogu se vyhodnotí jako první: ověří jazyk a právo uživatele ho překládat
+        # (jinak Http404) dřív, než se nahraný soubor zapíše nebo načte.
+        po_file_path = self.po_file_path
         try:
-            # Zapíše nahraný InMemoryUploadedFile do dočasného souboru a předá jeho cestu nástroji pofile.
-            tmp = tempfile.NamedTemporaryFile(delete=False)
-            tmp_path = tmp.name
-            for chunk in new_pofile.chunks():
-                tmp.write(chunk)
-            tmp.flush()
-            tmp.close()
-            po_file = pofile(tmp_path)
-            # Dočasný soubor smaže až po načtení obsahu knihovnou polib.
-            try:
-                os.unlink(tmp_path)
-            except Exception:
-                pass
+            # Záloha a atomická náhrada .po i .mo; nahraný soubor se zapíše jen jednou. Běžící
+            # procesy nenačtou rozepsaný katalog a změnu převezmou při další kontrole katalogů.
+            import_translation_catalog(po_file_path, new_pofile)
         except Exception as e:
-            # Úklid při chybě.
-            if tmp_path:
-                try:
-                    os.unlink(tmp_path)
-                except Exception:
-                    pass
             logger.error("core.views.TranslationImportView.form_valid", extra={"error": str(e)})
-            messages.add_message(self.request, messages.ERROR, str(e))
+            messages.add_message(self.request, messages.ERROR, TRANSLATION_UPLOAD_ERROR)
             return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
-        p = current_po_path
-        date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M%S")
-        p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
-        self.handle_uploaded_file(new_pofile)
-        po_filepath, ext = os.path.splitext(self.po_file_path)
-        po_file.save_as_mofile(po_filepath + ".mo")
         messages.add_message(self.request, messages.SUCCESS, TRANSLATION_UPLOAD_SUCCESS)
         return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
 
@@ -2557,16 +2540,6 @@ class TranslationImportView(RosettaFileLevelMixinWithBackup, FormView):
             }
         )
         return context
-
-    def handle_uploaded_file(self, f):
-        """
-        Zpracuje uploaded file.
-
-        :param f: Pomocný stream/objekt používaný interně funkcí.
-        """
-        with open(self.po_file_path, "wb+") as destination:
-            for chunk in f.chunks():
-                destination.write(chunk)
 
 
 class TranslationFileListWithBackupView(TranslationFileListView):
