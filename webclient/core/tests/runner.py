@@ -66,17 +66,24 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
 
     def _exc_info_to_string(self, err, test):
         """
-        Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu.
+        Získá text informací z výjimky z předka a na začátek přidá číslo testu, pokud je známo.
+
+        Chyba třídní přípravy přichází jako ``_ErrorHolder`` bez atributu
+        ``progress_index``; takový záznam se vypíše bez čísla testu místo
+        přerušení celého výsledku výjimkou ``AttributeError``.
 
         :param err: Parametr ``err`` předává se do volání ``_exc_info_to_string()``.
-        :param test: Parametr ``test`` předává se do volání ``_exc_info_to_string()``, ``format()``, pracuje se s atributy ``progress_index``.
+        :param test: Parametr ``test`` předává se do volání ``_exc_info_to_string()``;
+            číslo testu se čte z atributu ``progress_index``, pokud existuje.
         :return: Vrací proměnná ``info``.
         """
 
         info = super(CustomTextTestResult, self)._exc_info_to_string(err, test)
 
         if self.showAll:
-            info = "Test number: {index}\n{info}".format(index=test.progress_index, info=info)
+            progress = getattr(test, "progress_index", "")
+            if progress:
+                info = "Test number: {index}\n{info}".format(index=progress, info=info)
 
         return info
 

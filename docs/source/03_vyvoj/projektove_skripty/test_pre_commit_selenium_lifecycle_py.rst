@@ -59,6 +59,25 @@ Třídy
 
       Cizí ERROR ani FAIL nezmění vlastní výsledek aktuálního testu.
 
+
+.. py:class:: CustomResultTests
+
+   Ověří číslování výsledků u chyb, které nemají vlastní testovací případ.
+
+   **Metody:**
+
+   .. py:method:: custom_result()
+
+      Načte produkční ``CustomTextTestResult`` přes AST bez Django nastavení.
+
+   .. py:method:: test_class_setup_error_keeps_the_result_usable()
+
+      Chyba setUpClass nemá číslo testu a nesmí přerušit zápis výsledku.
+
+   .. py:method:: test_numbered_failure_keeps_its_prefix()
+
+      Běžný neúspěšný test si ponechá číslo z průběhu běhu.
+
 Zdrojový kód
 ------------
 

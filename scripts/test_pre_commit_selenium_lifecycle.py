@@ -1,6 +1,8 @@
 """Ověří skutečné metody Selenium lifecycle bez databází, prohlížeče či Fedory."""
 
 import ast
+import io
+import itertools
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -229,3 +231,54 @@ class SeleniumLifecycleTests(unittest.TestCase):
                 case.run(result)
                 self.assertEqual(len(rows), 1)
                 self.assertEqual(rows[0][3], "ERROR" if fails == "error" else "FAIL" if fails else "OK")
+
+
+class CustomResultTests(unittest.TestCase):
+    """Ověří číslování výsledků u chyb, které nemají vlastní testovací případ."""
+
+    def custom_result(self):
+        """Načte produkční ``CustomTextTestResult`` přes AST bez Django nastavení."""
+        source = (ROOT / "webclient" / "core" / "tests" / "runner.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        node = next(
+            item for item in tree.body if isinstance(item, ast.ClassDef) and item.name == "CustomTextTestResult"
+        )
+        namespace = {"itertools": itertools, "unittest": unittest}
+        exec(compile(ast.Module(body=[node], type_ignores=[]), "runner.py", "exec"), namespace)
+        return namespace["CustomTextTestResult"]
+
+    def test_class_setup_error_keeps_the_result_usable(self):
+        """Chyba setUpClass nemá číslo testu a nesmí přerušit zápis výsledku."""
+        stream = unittest.runner._WritelnDecorator(io.StringIO())
+        result = self.custom_result()(stream, descriptions=False, verbosity=2)
+        result.test_case_count = 1
+
+        class Broken(unittest.TestCase):
+            """Selže při třídní přípravě."""
+
+            @classmethod
+            def setUpClass(cls):
+                raise RuntimeError("class setup failed")
+
+            def test_one(self):
+                pass
+
+        unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromTestCase(Broken)]).run(result)
+        self.assertEqual(len(result.errors), 1)
+        self.assertIn("class setup failed", result.errors[0][1])
+
+    def test_numbered_failure_keeps_its_prefix(self):
+        """Běžný neúspěšný test si ponechá číslo z průběhu běhu."""
+        stream = unittest.runner._WritelnDecorator(io.StringIO())
+        result = self.custom_result()(stream, descriptions=False, verbosity=2)
+        result.test_case_count = 1
+
+        class Failing(unittest.TestCase):
+            """Selže v těle testu."""
+
+            def test_one(self):
+                self.fail("body failed")
+
+        unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromTestCase(Failing)]).run(result)
+        self.assertEqual(len(result.failures), 1)
+        self.assertTrue(result.failures[0][1].startswith("Test number: [1/1] "))
