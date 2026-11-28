@@ -46,6 +46,20 @@ class RunDataImportDokumentAutorTest(RunDataImportMapperTestBase):
         self.dokument.refresh_from_db()
         self.assertIsNone(self.dokument.autori_snapshot)
 
+    def test_history_note_lists_files_separated_by_comma_and_space(self):
+        """Historie dokumentu dotčeného dvěma soubory uvede jejich názvy oddělené čárkou a mezerou."""
+        osoba_payload = {
+            "__file_name": "dokumenty_osoby",
+            "dokument": self.dokument.ident_cely,
+            "osoba": self.osoba.ident_cely,
+        }
+        fake_redis, _ = self.run_import_records(FILE_KEY, [self._base_payload(), osoba_payload])
+
+        self.assert_import_success(fake_redis)
+        self.assertTrue(
+            Historie.objects.filter(vazba=self.dokument.historie, poznamka="dokumenty_autori, dokumenty_osoby").exists()
+        )
+
     def test_update_is_rejected(self):
         """Ověřuje, že UPDATE import záznamu dokument autor je odmítnut."""
         DokumentAutor.objects.create(dokument=self.dokument, autor=self.osoba, poradi=1)

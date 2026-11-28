@@ -2808,7 +2808,7 @@ def run_data_import(job_id, user_id, lock_token):
                     typ_zmeny=IMPORT,
                     uzivatel=transaction_user,
                     vazba=historie_vazba,
-                    poznamka=",".join(sorted(files)),
+                    poznamka=", ".join(sorted(files)),
                 )
                 history_record.save()
                 history_result_value = translation_value(
