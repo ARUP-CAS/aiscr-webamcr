@@ -1150,6 +1150,14 @@ Třídy
       :param record: Záznam, který se bude mazat.
       :param fedora_transaction: Transakce Fedory pro mazání, kterou datová fáze nastaví i mazanému záznamu.
 
+   .. py:method:: after_record_change()
+
+      Zpracuje důsledky uložení nebo smazání záznamu v datové fázi importu, hned po ``save()``/``delete()``.
+
+      Výchozí implementace nedělá nic.
+
+      :param record: Uložený nebo smazaný záznam.
+
    .. py:method:: validate_model_records()
 
       Ověří záznamy řádku sestavené ``create_records`` proti pravidlům modelu a databáze.
@@ -1987,6 +1995,12 @@ Třídy
       :param record: Záznam ``DokumentAutor`` po importu.
       :return: Seznam s navázaným dokumentem.
 
+   .. py:method:: after_record_change()
+
+      Po uložení nebo smazání vazby přepočítá snapshoty dokumentu.
+
+      :param record: Uložená nebo smazaná vazba ``DokumentAutor``.
+
    .. py:method:: get_record_history()
 
       Vrátí dokument jako cíl pro historii vazby autora.
@@ -2044,6 +2058,12 @@ Třídy
 
       :param record: Záznam ``DokumentOsoba`` po importu.
       :return: Seznam s navázaným dokumentem.
+
+   .. py:method:: after_record_change()
+
+      Po uložení nebo smazání vazby přepočítá snapshoty dokumentu.
+
+      :param record: Uložená nebo smazaná vazba ``DokumentOsoba``.
 
    .. py:method:: get_record_history()
 
@@ -2350,6 +2370,12 @@ Třídy
       :param record: Záznam ``ExterniZdrojAutor`` po importu.
       :return: Seznam s navázaným externím zdrojem.
 
+   .. py:method:: after_record_change()
+
+      Po uložení nebo smazání vazby přepočítá snapshoty externího zdroje.
+
+      :param record: Uložená nebo smazaná vazba ``ExterniZdrojAutor``.
+
    .. py:method:: get_record_history()
 
       Vrátí externí zdroj jako cíl pro historii vazby autora.
@@ -2378,6 +2404,12 @@ Třídy
 
       :param record: Záznam ``ExterniZdrojEditor`` po importu.
       :return: Seznam s navázaným externím zdrojem.
+
+   .. py:method:: after_record_change()
+
+      Po uložení nebo smazání vazby přepočítá snapshoty externího zdroje.
+
+      :param record: Uložená nebo smazaná vazba ``ExterniZdrojEditor``.
 
    .. py:method:: get_record_history()
 
@@ -3031,3 +3063,15 @@ Třídy
       :param record: Záznam ``Historie`` po importu.
       :return: Seznam objektů navázaných přes ``vazba``, jejichž identifikátory je třeba aktualizovat.
 
+
+Funkce
+------
+
+.. py:function:: _refresh_snapshots(parent, field_names)
+
+   Přepočítá snapshoty nadřazeného záznamu po změně jeho vazeb a uloží jen tato pole.
+
+   Ukládá přes ``QuerySet.update``, aby se nespustily signály nadřazeného záznamu (Fedoru aktualizuje import).
+
+   :param parent: Nadřazený záznam s metodou ``set_snapshots`` (``Dokument`` nebo ``ExterniZdroj``).
+   :param field_names: Názvy polí snapshotů, která se mají uložit.

@@ -2163,6 +2163,17 @@ class ImportModelMapper(ABC):
         """
         pass
 
+    @staticmethod
+    def after_record_change(record) -> None:
+        """
+        Zpracuje důsledky uložení nebo smazání záznamu v datové fázi importu, hned po ``save()``/``delete()``.
+
+        Výchozí implementace nedělá nic.
+
+        :param record: Uložený nebo smazaný záznam.
+        """
+        pass
+
     def validate_model_records(self, records, performed_action, batch_state: dict) -> None:
         """
         Ověří záznamy řádku sestavené ``create_records`` proti pravidlům modelu a databáze.
@@ -4230,6 +4241,19 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             cast.delete()
 
 
+def _refresh_snapshots(parent, field_names: tuple) -> None:
+    """
+    Přepočítá snapshoty nadřazeného záznamu po změně jeho vazeb a uloží jen tato pole.
+
+    Ukládá přes ``QuerySet.update``, aby se nespustily signály nadřazeného záznamu (Fedoru aktualizuje import).
+
+    :param parent: Nadřazený záznam s metodou ``set_snapshots`` (``Dokument`` nebo ``ExterniZdroj``).
+    :param field_names: Názvy polí snapshotů, která se mají uložit.
+    """
+    parent.set_snapshots()
+    type(parent).objects.filter(pk=parent.pk).update(**{name: getattr(parent, name) for name in field_names})
+
+
 @ImportModelMapper.register("dokumenty_autori")
 class DokumentAutorMapper(ImportModelMapper):
     """Mapovač pro model DokumentAutor."""
@@ -4263,6 +4287,15 @@ class DokumentAutorMapper(ImportModelMapper):
         :return: Seznam s navázaným dokumentem.
         """
         return [record.dokument]
+
+    @staticmethod
+    def after_record_change(record: DokumentAutor) -> None:
+        """
+        Po uložení nebo smazání vazby přepočítá snapshoty dokumentu.
+
+        :param record: Uložená nebo smazaná vazba ``DokumentAutor``.
+        """
+        _refresh_snapshots(record.dokument, ("autori_snapshot", "osoby_snapshot"))
 
     @staticmethod
     def get_record_history(record: DokumentAutor):
@@ -4355,6 +4388,15 @@ class DokumentOsobaMapper(ImportModelMapper):
         :return: Seznam s navázaným dokumentem.
         """
         return [record.dokument]
+
+    @staticmethod
+    def after_record_change(record: DokumentOsoba) -> None:
+        """
+        Po uložení nebo smazání vazby přepočítá snapshoty dokumentu.
+
+        :param record: Uložená nebo smazaná vazba ``DokumentOsoba``.
+        """
+        _refresh_snapshots(record.dokument, ("autori_snapshot", "osoby_snapshot"))
 
     @staticmethod
     def get_record_history(record: DokumentOsoba):
@@ -4897,6 +4939,15 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
         return [record.externi_zdroj]
 
     @staticmethod
+    def after_record_change(record: ExterniZdrojAutor) -> None:
+        """
+        Po uložení nebo smazání vazby přepočítá snapshoty externího zdroje.
+
+        :param record: Uložená nebo smazaná vazba ``ExterniZdrojAutor``.
+        """
+        _refresh_snapshots(record.externi_zdroj, ("autori_snapshot", "editori_snapshot"))
+
+    @staticmethod
     def get_record_history(record: ExterniZdrojAutor):
         """
         Vrátí externí zdroj jako cíl pro historii vazby autora.
@@ -4940,6 +4991,15 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
         :return: Seznam s navázaným externím zdrojem.
         """
         return [record.externi_zdroj]
+
+    @staticmethod
+    def after_record_change(record: ExterniZdrojEditor) -> None:
+        """
+        Po uložení nebo smazání vazby přepočítá snapshoty externího zdroje.
+
+        :param record: Uložená nebo smazaná vazba ``ExterniZdrojEditor``.
+        """
+        _refresh_snapshots(record.externi_zdroj, ("autori_snapshot", "editori_snapshot"))
 
     @staticmethod
     def get_record_history(record: ExterniZdrojEditor):

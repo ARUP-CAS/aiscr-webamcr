@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from core.forms import ImportDataAdminForm
 from cron.tests._run_data_import_mapper_base import JOB_ID, RunDataImportMapperTestBase
-from dokument.models import DokumentAutor
+from dokument.models import Dokument, DokumentAutor
 from historie.models import Historie
 
 FILE_KEY = "dokumenty_autori"
@@ -22,6 +22,29 @@ class RunDataImportDokumentAutorTest(RunDataImportMapperTestBase):
 
         self.assert_import_success(fake_redis)
         self.assertTrue(DokumentAutor.objects.filter(dokument=self.dokument, autor=self.osoba).exists())
+
+    def test_insert_fills_autori_snapshot(self):
+        """INSERT autora doplní snapshot autorů dokumentu."""
+        fake_redis, _ = self.run_import(FILE_KEY, self._base_payload())
+
+        self.assert_import_success(fake_redis)
+        self.dokument.refresh_from_db()
+        self.assertEqual(self.dokument.autori_snapshot, self.osoba.vypis_cely)
+
+    def test_delete_clears_autori_snapshot(self):
+        """DELETE posledního autora vyprázdní snapshot autorů dokumentu."""
+        DokumentAutor.objects.create(dokument=self.dokument, autor=self.osoba, poradi=1)
+        Dokument.objects.filter(pk=self.dokument.pk).update(autori_snapshot=self.osoba.vypis_cely)
+
+        fake_redis, _ = self.run_import(
+            FILE_KEY,
+            {"dokument": self.dokument.ident_cely, "autor": self.osoba.ident_cely},
+            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+        )
+
+        self.assert_import_success(fake_redis)
+        self.dokument.refresh_from_db()
+        self.assertIsNone(self.dokument.autori_snapshot)
 
     def test_update_is_rejected(self):
         """Ověřuje, že UPDATE import záznamu dokument autor je odmítnut."""

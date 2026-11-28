@@ -2466,6 +2466,7 @@ def run_data_import(job_id, user_id, lock_token):
                                                 record.save(update_fields=update_fields)
                                         else:
                                             record.save()
+                                        mapper_class.after_record_change(record)
                                         record_saved = mapper_class.load_record_from_db(record)
                                         pending_fedora_update.append((mapper_class, record_saved or record))
                                         for related_target in mapper_class.get_related_update_targets(record):
@@ -2501,6 +2502,7 @@ def run_data_import(job_id, user_id, lock_token):
                                     mapper_class.before_record_delete(record, fedora_transaction)
                                     record.active_transaction = fedora_transaction
                                     record.delete()
+                                    mapper_class.after_record_change(record)
                         # Defer the real commit until the database transaction has committed
                         # mirrors the Soubor delete deferral below.
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
