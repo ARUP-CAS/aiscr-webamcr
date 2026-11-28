@@ -891,6 +891,7 @@ Třídy
       :param value: Identifikátor záznamu — string ve formátu ``"<prefix>-<číslo>"`` nebo číslo.
       :return: Původní identifikátor po případné konverzi na int.
       :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
+      :raises ImportDataError: Vyvolá se, pokud textová hodnota nemá tvar ``<prefix>-<číslice>`` nebo ``<číslice>``.
 
 
 .. py:class:: ImportModelMapper

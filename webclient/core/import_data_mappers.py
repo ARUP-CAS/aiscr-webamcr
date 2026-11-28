@@ -1566,9 +1566,13 @@ class GenericForeignKeyImportField(LookupImportField):
         :param value: Identifikátor záznamu — string ve formátu ``"<prefix>-<číslo>"`` nebo číslo.
         :return: Původní identifikátor po případné konverzi na int.
         :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
+        :raises ImportDataError: Vyvolá se, pokud textová hodnota nemá tvar ``<prefix>-<číslice>`` nebo ``<číslice>``.
         """
-        if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
-            value = int(match.group(1))
+        if isinstance(value, str):
+            if match := re.fullmatch(r"(?:\w+-)?(\d+)", value.strip()):
+                value = int(match.group(1))
+            else:
+                raise ImportDataError(_("core_admin.ImportDataError.message.invalid_integer_value") + ": " + value)
 
         for current_class in self.lookup_model_class_list:
             try:
