@@ -5,8 +5,9 @@ from unittest.mock import patch
 from core.constants import D_STAV_ZAPSANY
 from core.forms import ImportDataAdminForm
 from cron.tests._run_data_import_mapper_base import JOB_ID, RunDataImportMapperTestBase
-from dokument.models import Dokument, DokumentExtraData
+from dokument.models import Dokument, DokumentCast, DokumentExtraData
 from historie.models import Historie
+from neidentakce.models import NeidentAkce
 
 FILE_KEY = "dokumenty"
 
@@ -73,6 +74,36 @@ class RunDataImportDokumentTest(RunDataImportMapperTestBase):
 
         self.assert_import_success(fake_redis)
         self.assertFalse(Dokument.objects.filter(pk=dokument.pk).exists())
+
+    def test_delete_dokument_with_cast_linked_to_az_updates_az(self):
+        """DELETE dokumentu s částí navázanou na AZ smaže části s transakcí importu a AZ zařadí do Fedory."""
+        dokument = self._create_dokument("C-FD-991000006")
+        cast = DokumentCast(ident_cely="C-FD-991000006-D01", dokument=dokument, archeologicky_zaznam=self.az)
+        cast.suppress_signal = True
+        cast.save()
+        neident_akce = NeidentAkce(dokument_cast=cast)
+        neident_akce.suppress_signal = True
+        neident_akce.save()
+        save_metadata_calls = []
+
+        def save_metadata_requiring_transaction(record, fedora_transaction=None, *args, **kwargs):
+            # Stejná podmínka jako ModelWithMetadata._get_fedora_transaction.
+            if fedora_transaction is None and record.active_transaction is None:
+                raise ValueError("No Fedora transaction")
+            save_metadata_calls.append(record)
+
+        fake_redis, _ = self.run_import(
+            FILE_KEY,
+            {"ident_cely": dokument.ident_cely},
+            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+            save_metadata_side_effect=save_metadata_requiring_transaction,
+        )
+
+        self.assert_import_success(fake_redis)
+        self.assertFalse(Dokument.objects.filter(pk=dokument.pk).exists())
+        self.assertFalse(DokumentCast.objects.filter(pk=cast.pk).exists())
+        self.assertFalse(NeidentAkce.objects.filter(pk=cast.pk).exists())
+        self.assertIn(self.az.ident_cely, {getattr(record, "ident_cely", None) for record in save_metadata_calls})
 
     def test_delete_commits_fedora_only_after_the_database_commit(self):
         """Mazání dokumentu se ve Fedoře nesmí potvrdit dřív, než je potvrzená databázová transakce."""

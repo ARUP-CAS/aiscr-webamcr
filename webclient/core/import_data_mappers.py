@@ -2123,6 +2123,19 @@ class ImportModelMapper(ABC):
         """
         return []
 
+    @staticmethod
+    def before_record_delete(record, fedora_transaction):
+        """
+        Připraví smazání záznamu v datové fázi importu těsně před voláním ``record.delete()``.
+
+        Slouží mapperům, jejichž záznam kaskádně maže objekty se signály volajícími Fedoru; takové objekty
+        je nutné smazat explicitně s transakcí importu. Výchozí implementace nedělá nic.
+
+        :param record: Záznam, který se bude mazat.
+        :param fedora_transaction: Transakce Fedory pro mazání, kterou datová fáze nastaví i mazanému záznamu.
+        """
+        pass
+
 
 class GeometryTransformMixin:
     """
@@ -4007,6 +4020,29 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             return record
         else:
             return record.dokument
+
+    @staticmethod
+    def before_record_delete(record, fedora_transaction):
+        """
+        Před smazáním dokumentu smaže jeho části s transakcí importu, stejně jako mazání v aplikaci.
+
+        Kaskádně mazaná část dokumentu nemá transakci Fedory a její signál by při aktualizaci navázaného
+        archeologického záznamu nebo projektu selhal. Neidentifikovaná akce části se maže s potlačeným
+        signálem, který by jinak po commitu zapsal metadata mazaného dokumentu.
+
+        :param record: Mazaný ``Dokument`` nebo ``DokumentExtraData``; části se mažou jen u dokumentu.
+        :param fedora_transaction: Transakce Fedory pro mazání, do níž se zaznamenají navázané záznamy.
+        """
+        if not isinstance(record, Dokument):
+            return
+        for cast in record.casti.all():
+            cast: DokumentCast
+            if hasattr(cast, "neident_akce"):
+                cast.neident_akce.suppress_signal = True
+                cast.neident_akce.delete()
+            cast.suppress_dokument_signal = True
+            cast.active_transaction = fedora_transaction
+            cast.delete()
 
 
 @ImportModelMapper.register("dokumenty_autori")

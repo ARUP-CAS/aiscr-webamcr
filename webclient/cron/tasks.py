@@ -2479,6 +2479,7 @@ def run_data_import(job_id, user_id, lock_token):
                                     if history_target is not None and history_target is not record:
                                         add_updated_history(mapper_class, history_target, record_id)
                                     deleted_records[(record.__class__, record.pk)] = getattr(record, "ident_cely", None)
+                                    mapper_class.before_record_delete(record, fedora_transaction)
                                     record.active_transaction = fedora_transaction
                                     record.delete()
                         # Defer the real commit until the database transaction has committed

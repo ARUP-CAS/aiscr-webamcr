@@ -1126,6 +1126,16 @@ Třídy
       :param record: Záznam zpracovaný importem (instance po ``record_postprocessing``).
       :return: Seznam dotčených záznamů, výchozí implementace vrací prázdný seznam.
 
+   .. py:method:: before_record_delete()
+
+      Připraví smazání záznamu v datové fázi importu těsně před voláním ``record.delete()``.
+
+      Slouží mapperům, jejichž záznam kaskádně maže objekty se signály volajícími Fedoru; takové objekty
+      je nutné smazat explicitně s transakcí importu. Výchozí implementace nedělá nic.
+
+      :param record: Záznam, který se bude mazat.
+      :param fedora_transaction: Transakce Fedory pro mazání, kterou datová fáze nastaví i mazanému záznamu.
+
 
 .. py:class:: GeometryTransformMixin
 
@@ -1880,6 +1890,17 @@ Třídy
 
       :param record: Záznam ``Dokument`` nebo ``DokumentExtraData`` po importu.
       :return: Přímo dokument nebo dokument navázaný přes extra data.
+
+   .. py:method:: before_record_delete()
+
+      Před smazáním dokumentu smaže jeho části s transakcí importu, stejně jako mazání v aplikaci.
+
+      Kaskádně mazaná část dokumentu nemá transakci Fedory a její signál by při aktualizaci navázaného
+      archeologického záznamu nebo projektu selhal. Neidentifikovaná akce části se maže s potlačeným
+      signálem, který by jinak po commitu zapsal metadata mazaného dokumentu.
+
+      :param record: Mazaný ``Dokument`` nebo ``DokumentExtraData``; části se mažou jen u dokumentu.
+      :param fedora_transaction: Transakce Fedory pro mazání, do níž se zaznamenají navázané záznamy.
 
 
 .. py:class:: DokumentAutorMapper
