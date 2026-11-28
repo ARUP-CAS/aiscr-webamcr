@@ -3,7 +3,9 @@
 from unittest.mock import patch
 
 from core.forms import ImportDataAdminForm
+from core.import_data_mappers import KomponentaMapper
 from cron.tests._run_data_import_mapper_base import JOB_ID, RunDataImportMapperTestBase
+from dokument.models import Dokument
 from historie.models import Historie
 from komponenta.models import Komponenta
 
@@ -23,6 +25,22 @@ class RunDataImportKomponentaTest(RunDataImportMapperTestBase):
             "presna_datace": "Datace",
             "poznamka": "Komponenta",
         }
+
+    def test_komponenta_on_dokument_cast_targets_dokument(self):
+        """Komponenta na části dokumentu navázané na AZ zapisuje historii i Fedoru k dokumentu, ne k AZ."""
+        komponenta = Komponenta(
+            ident_cely="C-FD-991000001-K001",
+            komponenta_vazby=self.dokument_cast.komponenty,
+            obdobi=self.extra_heslars["obdobi"],
+            areal=self.extra_heslars["areal"],
+            jistota=True,
+        )
+        komponenta.suppress_signal = True
+        komponenta.save()
+
+        self.assertEqual(self.dokument_cast.archeologicky_zaznam, self.az)
+        self.assertEqual(KomponentaMapper.get_record_history(komponenta), self.dokument)
+        self.assertEqual(KomponentaMapper.fedora_update_targets(komponenta), {(Dokument, self.dokument.pk)})
 
     def test_import_komponenta(self):
         """Ověřuje, že INSERT import vytvoří záznam komponenta."""

@@ -4636,15 +4636,12 @@ class KomponentaMapper(ImportModelMapper):
         Vrátí záznamy dotčené změnou komponenty podle typu navázaného objektu.
 
         :param record: Záznam ``Komponenta`` po importu.
-        :return: Seznam archeologických záznamů nebo dokumentů odvozených z vazby komponenty.
+        :return: Seznam s dokumentem části dokumentu, nebo s archeologickým záznamem dokumentační jednotky.
         """
         record_list = []
         navazany_objekt = record.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
-            if navazany_objekt.archeologicky_zaznam:
-                record_list.append(navazany_objekt.archeologicky_zaznam)
-            elif navazany_objekt.dokument:
-                record_list.append(navazany_objekt.dokument)
+            record_list.append(navazany_objekt.dokument)
         elif isinstance(navazany_objekt, DokumentacniJednotka):
             record_list.append(navazany_objekt.archeologicky_zaznam)
         return record_list
@@ -4655,14 +4652,11 @@ class KomponentaMapper(ImportModelMapper):
         Vrátí objekt, do jehož historie se má změna komponenty propsat.
 
         :param record: Záznam ``Komponenta`` po importu.
-        :return: Archeologický záznam nebo dokument odvozený z vazby komponenty.
+        :return: Dokument části dokumentu, nebo archeologický záznam dokumentační jednotky.
         """
         navazany_objekt = record.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
-            if navazany_objekt.archeologicky_zaznam:
-                return navazany_objekt.archeologicky_zaznam
-            elif navazany_objekt.dokument:
-                return navazany_objekt.dokument
+            return navazany_objekt.dokument
         elif isinstance(navazany_objekt, DokumentacniJednotka):
             return navazany_objekt.archeologicky_zaznam
 

@@ -2217,14 +2217,14 @@ Třídy
       Vrátí záznamy dotčené změnou komponenty podle typu navázaného objektu.
 
       :param record: Záznam ``Komponenta`` po importu.
-      :return: Seznam archeologických záznamů nebo dokumentů odvozených z vazby komponenty.
+      :return: Seznam s dokumentem části dokumentu, nebo s archeologickým záznamem dokumentační jednotky.
 
    .. py:method:: get_record_history()
 
       Vrátí objekt, do jehož historie se má změna komponenty propsat.
 
       :param record: Záznam ``Komponenta`` po importu.
-      :return: Archeologický záznam nebo dokument odvozený z vazby komponenty.
+      :return: Dokument části dokumentu, nebo archeologický záznam dokumentační jednotky.
 
 
 .. py:class:: KomponentaAktivitaMapper
