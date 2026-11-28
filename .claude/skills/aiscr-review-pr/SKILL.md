@@ -12,7 +12,7 @@ author: AIS CR (Archaeological Information System of the Czech Republic) <https:
 <!-- SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- aiscr:compiled=aiscr-review-pr -->
-<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
+<!-- delivery-version: a9e7178f2056994b3ac481702b0ec38cdb13c576 2026-11-28T16:49:05+01:00 -->
 
 <!-- aiscr:entry-scope -->
 
@@ -77,8 +77,8 @@ Hub-cockpit scope resolutions run as bridge operations naming the target; a miss
 
 ### Identity and approval model
 
-- Interactive posts use the reviewer's stored `gh` identity; an ambient `GH_TOKEN` cannot be proved and is rejected.
-  Unset it for the invocation and rely on stored `gh` authentication.
+- Interactive posts use the reviewer's stored `gh` identity.
+  The engine drops an ambient `GH_TOKEN` or `GITHUB_TOKEN` from its own environment and states the stored login it posts as. It stops when no stored login answers.
 - Automated/CI posts require `--mode automated`, a recognized CI marker, and `GH_TOKEN` for a GitHub App or Actions bot; they use `COMMENT` only, never auto-merge, and leave disposition to a human.
 - Vendor-operated bot reviews are auxiliary evidence and never establish AIS CR review lineage or human approval.
 
@@ -86,17 +86,17 @@ A posting run selects `--mode interactive` or `--mode automated` explicitly; env
 
 | Mode | Identity | Required environment | Allowed review event | Approval rule |
 | --- | --- | --- | --- | --- |
-| `interactive` | Reviewer's stored personal `gh` authentication | Recognized CI variables absent; `GH_TOKEN` absent | `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` | Exact rendered digest must be supplied at post time. |
+| `interactive` | Reviewer's stored personal `gh` authentication | Recognized CI variables absent; an ambient `GH_TOKEN` or `GITHUB_TOKEN` is ignored | `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` | Exact rendered digest must be supplied at post time. |
 | `automated` | GitHub Actions or GitHub App installation identity | Recognized CI variable present; `GH_TOKEN` present | `COMMENT` only | Non-blocking automation; human disposition remains authoritative. |
 
-Interactive posting rejects any ambient `GH_TOKEN`, including a personal PAT, because the script cannot prove ownership; unset it and use stored `gh` authentication.
+In interactive mode an ambient token is never the posting identity, whoever owns it, a personal PAT included.
+The engine removes `GH_TOKEN` and `GITHUB_TOKEN` from its own environment before its first `gh` call, so no unset step precedes the command:
 
 ```powershell
-Remove-Item Env:GH_TOKEN
 python .agents/scripts/github/github_pr_review.py post 123 --mode interactive --review-bundle review-bundle.json --approval-view review-approval.md --approved-digest <digest>
 ```
 
-The interactive identity gate rejects an ambient `GH_TOKEN` and may not be bypassed by relocating it into another environment variable; a subshell may isolate the token only for other tooling.
+The interactive identity is the stored login the engine states. Relocating a token into another environment variable to post under it is routing around that gate. A subshell may still isolate a token for other tooling.
 
 <!-- aiscr:ground -->
 The event is a reviewer decision in interactive mode:
@@ -714,7 +714,7 @@ No exceptions.
 | "That thread is outdated, but it is still the match, so reply without saying so." | Declare `stale_thread_reuse_reason` in the findings ledger. |
 | "The same line already has a thread, but this is a new finding so I will open a new root." | Reply to the existing thread. A new `inline-root` at that path and line is refused. |
 | "I missed an inline root; I will post another review round." | Use `repair`. A clerical correction is not a new verdict. |
-| "My personal PAT is in `GH_TOKEN`, so interactive mode should accept it." | Unset `GH_TOKEN` for this invocation and use stored `gh` authentication. |
+| "My personal PAT is in `GH_TOKEN`, so interactive mode should accept it." | Interactive mode ignores it and posts as the stored `gh` login it states; posting under a token is automated mode in CI only. |
 | "The line moved, so this is a new finding." | Match normalized issue meaning after path-and-line matching fails. |
 | "The inline call returned 422; retry it unchanged." | Move the finding to the body, rerender, and obtain fresh approval. |
 | "The main review posted, so cleanup can run before replies finish." | Retain the run directory until every approved write succeeds and all posting decisions are final. |

@@ -1,6 +1,6 @@
 # Kilo Code configuration
 
-<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
+<!-- delivery-version: a9e7178f2056994b3ac481702b0ec38cdb13c576 2026-11-28T16:49:05+01:00 -->
 
 This directory is the **committed hub-root Kilo Code delivery surface** for the AIS CR management hub.
 It carries generated rules and subagents plus the project configuration that loads them.

@@ -24,7 +24,7 @@ It is **committed directly** in this repository and is a **preserve-only managed
 
 ## Local OpenSpec entry points
 
-Copilot-specific OpenSpec prompts are delivered under `.github/prompts/opsx-*.prompt.md`, and the `openspec-*` skills in the shared `.agents/skills/` tree.
+OpenSpec is delivered as `openspec-*` skills in the shared `.agents/skills/` tree.
 Validate OpenSpec edits with `npm run openspec:validate`; shared OpenSpec gating is in the generated orientation below and the delivered `aiscr-planning-core` reader.
 
 ## Ecosystem-wide workflows (hub)
@@ -88,7 +88,7 @@ Do not assume every workflow is mirrored in this repository; use the management 
 - **Instructions:** the generated instruction files under `.github/instructions/*.instructions.md` are split one per governance topic but each declares `applyTo: "**/*"` — the split is an authoring convenience, not selective loading.
   This digest is the Copilot entry point for governance context.
 - **Skills:** `aiscr-*` workflows are delivered under `.agents/skills/aiscr-*/SKILL.md`, which the Copilot CLI and the cloud coding agent read at repository scope (gated by manifest locus).
-  OpenSpec prompts are generated under `.github/prompts/opsx-*.prompt.md`, and the `openspec-*` skills land in the same shared tree.
+  OpenSpec emits its `openspec-*` skills into the shared `.agents/skills/` tree, which Copilot reads directly; the CLI emits no prompt files in its current major version.
   Copilot selects skills autonomously from their descriptions and documents no field that disables that, so the guard on this surface is each body's own Iron Laws and approval gates rather than frontmatter.
 - **Sibling-owned content:** repo identity, repo-specific notes, and the enrolled-workflow list live outside the generated blocks of this digest and are preserved on refresh.
 

@@ -1,6 +1,6 @@
 # AIS CR ecosystem map
 
-<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
+<!-- delivery-version: a9e7178f2056994b3ac481702b0ec38cdb13c576 2026-11-28T16:49:05+01:00 -->
 
 Canonical human-readable list of the AIS CR repositories managed by sync policy: which owns which subject area, and what each is built on.
 
@@ -30,7 +30,7 @@ The `sync registry` column records whether a repository is a delivery target of 
 | aiscr-qgis-amcr-viewer | plugin | QGIS plugin for AMČR Digital Archive data, Python | yes | [aiscr-qgis-amcr-viewer](https://github.com/ARUP-CAS/aiscr-qgis-amcr-viewer) |
 | aiscr-qgis-pian-exporter | plugin | QGIS plugin preparing spatial data for AMČR imports, Python | yes | [aiscr-qgis-pian-exporter](https://github.com/ARUP-CAS/aiscr-qgis-pian-exporter) |
 | aiscr-gis-convert | webapp | GIS data converter for AMČR, Node / React | yes | [aiscr-gis-convert](https://github.com/ARUP-CAS/aiscr-gis-convert) |
-| aiscr-cva-annotation-game | webapp | Archaeotag crowdsourced photo annotation, SvelteKit / PostgreSQL | yes | [aiscr-cva-annotation-game](https://github.com/ARUP-CAS/aiscr-cva-annotation-game) |
+| aiscr-archaeotag | webapp | Archaeotag crowdsourced photo annotation, SvelteKit / PostgreSQL | yes | [aiscr-archaeotag](https://github.com/ARUP-CAS/aiscr-archaeotag) |
 | aiscr-aonline | webapp | Archeologie online, Java / Solr | yes | [aiscr-aonline](https://github.com/ARUP-CAS/aiscr-aonline) |
 | aiscr-atr | service | Automatic text recognition (OCR/HTR) service | yes | [aiscr-atr](https://github.com/ARUP-CAS/aiscr-atr) |
 | aiscr-detect-artefact | service | Artefact detection in photos (computer vision) service | yes | [aiscr-detect-artefact](https://github.com/ARUP-CAS/aiscr-detect-artefact) |

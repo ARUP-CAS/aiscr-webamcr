@@ -20,8 +20,8 @@ readers under `.gemini/context/`.
 
 ## Local OpenSpec entry points
 
-OpenSpec skills are delivered in the shared `.agents/skills/openspec-*/` tree and
-commands under `.gemini/commands/opsx/`. Use `npm run openspec:validate` after
+OpenSpec skills are delivered in the shared `.agents/skills/openspec-*/` tree.
+Use `npm run openspec:validate` after
 editing OpenSpec artifacts; shared OpenSpec gating remains in the generated
 orientation below and the delivered rule readers.
 
@@ -76,7 +76,7 @@ Do not assume every workflow is mirrored in this repository; use the management 
 **Governance context:** `.gemini/context/<stem>.md` — delivered rule readers.
 Loading them takes **both** settings keys: `context.includeDirectories` registers the directory as a trusted root, and `context.fileName` must name each reader; the generator emits both.
 **Project config:** `.gemini/settings.json` (tools, sandbox, model, hooks, MCP, context).
-**Skills:** the shared `.agents/skills/` tree, resolved ahead of a product-local one; OpenSpec entry points are delivered there and under `.gemini/commands/opsx/` where enrolled.
+**Skills:** the shared `.agents/skills/` tree, resolved ahead of a product-local one; OpenSpec entry points are delivered there as `openspec-*` skills, which Gemini CLI reads directly.
 **Hooks:** under `hooks` in `settings.json` ([Hooks](https://geminicli.com/docs/hooks/)).
 **Subagents:** custom agents as Markdown with YAML frontmatter under `.gemini/agents/*.md` ([Subagents](https://geminicli.com/docs/core/subagents/)).
 **MCP:** `mcpServers` in `settings.json`.

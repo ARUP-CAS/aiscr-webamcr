@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "./.agents/hooks/aiscr-guard --product cursor",
+        "timeout": 30,
+        "failClosed": true
+      }
+    ]
+  }
+}

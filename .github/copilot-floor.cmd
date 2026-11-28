@@ -1,4 +1,4 @@
-REM delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
+REM delivery-version: a9e7178f2056994b3ac481702b0ec38cdb13c576 2026-11-28T16:49:05+01:00
 
 @echo off
 rem GitHub Copilot CLI wrapper carrying the AIS CR irreversible-operation floor.
@@ -62,5 +62,24 @@ copilot ^
   --deny-tool="write(.agents/scripts/validate_toolchain_pin_drift.py)" ^
   --deny-tool="write(.agents/canonical_configs/command_deny_floor.toml)" ^
   --deny-tool="write(.agents/canonical_configs/command_allowlist.toml)" ^
+  --deny-tool="write(.kilo/plugin/*)" ^
+  --deny-tool="write(.kilocode/plugin/*)" ^
+  --deny-tool="write(.agents/scripts/run_operator_patch.py)" ^
+  --deny-tool="write(.agents/scripts/sibling/sibling_repo_write.py)" ^
+  --deny-tool="write(.agents/scripts/validate_command_deny_floor_alignment.py)" ^
+  --deny-tool="write(.agents/scripts/validate_permission_rule_syntax.py)" ^
+  --deny-tool="write(.agents/scripts/lib/command_surface_model.py)" ^
+  --deny-tool="write(.agents/scripts/lib/codex_rule_readback.py)" ^
+  --deny-tool="write(.agents/hooks/*)" ^
+  --deny-tool="write(.codex/hooks.json)" ^
+  --deny-tool="write(.cursor/hooks.json)" ^
+  --deny-tool="write(.cursor/permissions.json)" ^
+  --deny-tool="write(.github/hooks/*)" ^
+  --deny-tool="write(.agents/scripts/check_tool_call_guard.py)" ^
+  --deny-tool="write(.agents/scripts/lib/protected_paths.py)" ^
+  --deny-tool="write(.agents/canonical_configs/templates/workstation_safety/*)" ^
+  --deny-tool="write(.agents/scripts/validate_command_allowlist_alignment.py)" ^
+  --deny-tool="write(.agents/scripts/validate_workspace_safety_registry.py)" ^
+  --deny-tool="write(.agents/scripts/lib/workspace_safety_registry.py)" ^
   %*
 exit /b %errorlevel%

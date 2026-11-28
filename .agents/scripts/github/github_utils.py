@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 # SPDX-License-Identifier: MIT
-# delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00
+# delivery-version: a9e7178f2056994b3ac481702b0ec38cdb13c576 2026-11-28T16:49:05+01:00
 
 """Shared GitHub write machinery for posting engines.
 
@@ -37,13 +37,16 @@ from typing import Any, NamedTuple, NoReturn
 _SCRIPTS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
-from lib.log_utils import log_error  # noqa: E402
+from lib.log_utils import log_error, log_info  # noqa: E402
 from lib.proc_utils import run_diagnostic, run_exact  # noqa: E402
 
 from github import github_references  # noqa: E402
 
 MODES = ("interactive", "automated")
 CI_ENV_VARS = ("CI", "GITHUB_ACTIONS")
+#: The variables ``gh`` reads a github.com token from, in its own order. Interactive posting drops them, so every ``gh``
+#: call this process starts uses the operator's stored authentication.
+GH_TOKEN_VARIABLES = ("GH_TOKEN", "GITHUB_TOKEN")
 
 # GitHub renders the core Mermaid build only; families that need a third-party
 # plugin cannot render there and are refused. `zenuml` is the only such family.
@@ -434,12 +437,17 @@ def env_is_set(name: str) -> bool:
 
 
 def validate_write_environment(mode: str, subcommand: str) -> None:
-    """Enforce the explicit posting identity mode before any GitHub write."""
+    """Enforce the explicit posting identity mode before any GitHub write.
+
+    Interactive posting runs under the operator's stored ``gh`` authentication, the identity the operator approves the
+    content under. An ambient token would silently replace that identity, so it is dropped from this process's
+    environment rather than refused. When one was dropped, the stored login is looked up and stated, and a missing
+    stored login stops the run.
+    """
     if mode not in MODES:
         abort(f"unsupported mode '{mode}'; expected interactive or automated.")
 
     ci_variables = [name for name in CI_ENV_VARS if env_is_set(name)]
-    token_present = bool(os.environ.get("GH_TOKEN"))
 
     if mode == "interactive":
         if ci_variables:
@@ -447,13 +455,21 @@ def validate_write_environment(mode: str, subcommand: str) -> None:
                 f"'{subcommand}' in interactive mode is not allowed in a recognized "
                 f"CI environment ({', '.join(ci_variables)})."
             )
-        if token_present:
-            abort(
-                "interactive posting refuses ambient GH_TOKEN because its identity "
-                "cannot be verified. Unset GH_TOKEN for this invocation and retry "
-                "using stored gh authentication."
+        dropped = [name for name in GH_TOKEN_VARIABLES if os.environ.pop(name, None)]
+        if dropped:
+            answered, login = try_run(["gh", "api", "user", "--jq", ".login"])
+            if not answered or not login.strip():
+                abort(
+                    f"interactive posting ignores the ambient {', '.join(dropped)} and uses stored gh authentication, "
+                    "but no stored login answered. Run `gh auth login` in a terminal, then retry."
+                )
+            log_info(
+                f"interactive posting as {login.strip()} through stored gh authentication; the ambient "
+                f"{', '.join(dropped)} is ignored for this run"
             )
         return
+
+    token_present = bool(os.environ.get("GH_TOKEN"))
 
     if not ci_variables:
         abort(f"'{subcommand}' in automated mode requires a recognized CI environment ({', '.join(CI_ENV_VARS)}).")
