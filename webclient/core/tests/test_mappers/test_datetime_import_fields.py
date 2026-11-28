@@ -210,6 +210,13 @@ class DateTimeImportFieldTest(SimpleTestCase):
         with self.assertRaises(ImportDataError):
             field.value = "2026.13.31 13:45:59"
 
+    def test_value_setter_rejects_trailing_text(self):
+        """Ověřuje, že datetime s textem navíc vyvolá chybu místo oříznutí."""
+        field = DateTimeImportField()
+
+        with self.assertRaises(ImportDataError):
+            field.value = "2020-01-02 10:20:30junk"
+
 
 class IntegerImportFieldTest(SimpleTestCase):
     """Testy chování importního pole ``IntegerImportField``."""

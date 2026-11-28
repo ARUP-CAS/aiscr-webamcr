@@ -1095,9 +1095,9 @@ class DateTimeImportField(BaseImportField):
     """
 
     patterns = (
-        (re.compile(r"(\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%Y-%m-%d %H:%M:%S"),
-        (re.compile(r"(\d{4}\.\d{1,2}\.\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%Y.%m.%d %H:%M:%S"),
-        (re.compile(r"(\d{1,2}\.\d{1,2}\.\d{4} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%d.%m.%Y %H:%M:%S"),
+        (re.compile(r"(\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2})"), "%Y-%m-%d %H:%M:%S"),
+        (re.compile(r"(\d{4}\.\d{1,2}\.\d{1,2} \d{1,2}:\d{1,2}:\d{1,2})"), "%Y.%m.%d %H:%M:%S"),
+        (re.compile(r"(\d{1,2}\.\d{1,2}\.\d{4} \d{1,2}:\d{1,2}:\d{1,2})"), "%d.%m.%Y %H:%M:%S"),
     )
 
     @property
@@ -1140,7 +1140,7 @@ class DateTimeImportField(BaseImportField):
         if isinstance(value, str):
             try:
                 for pattern, datetime_format in self.patterns:
-                    if match := pattern.match(value):
+                    if match := pattern.fullmatch(value):
                         parsed_value = datetime.datetime.strptime(match.group(1), datetime_format)
                         return timezone.make_aware(parsed_value)
             except ValueError:
