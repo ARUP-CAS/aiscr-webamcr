@@ -1,7 +1,8 @@
 ---
 name: aiscr-write-incident-postmortem
-description: Use when the user asks to document an AIS CR service incident or postmortem.
-  Produce a Czech report from the structured template under .agents/reports/incidents/.
+description: Use when the user asks to document an AIS CR service incident or postmortem,
+  including one an AI agent caused or enabled. Produce a Czech report from the structured
+  template under .agents/reports/incidents/.
 license: CC-BY-4.0
 author: AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 ---
@@ -9,7 +10,7 @@ author: AIS CR (Archaeological Information System of the Czech Republic) <https:
 <!-- SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- aiscr:compiled=aiscr-write-incident-postmortem -->
-<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
+<!-- delivery-version: 190c5bcb61054e19937fa5deec1ac26575756bd6 2026-11-28T15:25:02+01:00 -->
 
 <!-- aiscr:entry-scope -->
 
@@ -49,6 +50,18 @@ Do not promote or implement spawned backlog inside this skill.
 
 1. `AGENTS.md` — governance and scope
 2. `.agents/canonical_configs/templates/documents/incident_postmortem.md` — the report's required section layout
+
+## When to use
+
+Use this workflow for a production or staging incident, and for one caused or materially enabled by an AI agent's action: an exposed credential, a destructive operation, an unintended external publication, or a write outside the approved scope.
+A usage-log entry or a change artifact may reference the report; it does not substitute for it.
+An agent-caused incident's report also:
+
+- names the agent runtime (product, and build and mode where known) under `Kontext`;
+- names under `Kořenová příčina` the control that should have refused or bounded the action, and whether it was absent, failed, or routed around;
+- makes each corrective action under `Následné akce` that changes a control name the control record or the requirement it changes.
+
+The tone stays non-blaming: the report names the control gap, not the operator who supervised the session.
 
 ## Steps
 
@@ -101,6 +114,11 @@ Do not promote or implement spawned backlog inside this skill.
    - Jak byl incident detekován?
    - Co v reakci fungovalo dobře?
    - Co nefungovalo dobře?
+
+   ### Agent (jen pokud incident způsobil nebo umožnil AI agent)
+   - Runtime agenta (produkt, verze, režim):
+   - Akce agenta, která incident způsobila nebo umožnila:
+   - Kontrola, která měla akci odmítnout nebo omezit, a co se s ní stalo (chyběla, selhala, byla obejita):
 
    ### Následné akce
    - Položky k dořešení (s vlastníky a případně termíny):
@@ -165,6 +183,7 @@ Before claiming this workflow complete:
 - [ ] No real PII, production URLs, or credentials in the report content.
 - [ ] Report written to `.agents/reports/incidents/INC-<date>-<short-name>.md` with correct naming.
 - [ ] Czech Markdown format confirmed per the template's section layout.
+- [ ] For an agent-caused incident: the runtime and the control are named, and each control-changing follow-up names its control record or requirement.
 - [ ] Report not pushed or shared externally without explicit user request.
 
 <!-- aiscr:endgen -->

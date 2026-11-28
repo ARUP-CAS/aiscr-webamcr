@@ -107,7 +107,10 @@ Which tree a product resolves is recorded in its `skills` row rather than derive
 **Baseline paths** for each assistant-integration root (rules, settings, agents, etc.) come from the hub's sibling registry and delivery profiles, and apply per root the same way.
 
 **Hub authority and reverse-flow handoff (sibling → hub):** Sibling-side workflows SHALL NOT write to hub paths or auto-invoke hub commands.
-When `aiscr-setup-governance` classifies a target-only pattern for reverse-flow output, it **drafts** a backlog body and **stops**; the user invokes `/aiscr-plan-idea <slug>` in the hub as a separate, explicit action.
+When `aiscr-setup-governance` classifies a target-only pattern for reverse-flow output, it drafts a backlog body and stops.
+The user invokes `/aiscr-plan-idea <slug>` in the hub as a separate, explicit action.
+For a recipient permission entry the operator marks safe and necessary, the workflow prepares an allowlist recommendation instead.
+The user invokes `/aiscr-setup-permissions` in the hub for that recommendation.
 Hub-required minimums (planning, usage logging, model logging, registry-driven sync) hold in every sibling regardless of target configuration; target-side overrides that weaken them are refused without an explicit hub-policy decision recorded outside the override file.
 Durable contract: `openspec/specs/ecosystem/repository-governance/spec.md` (Hub authority model, Reverse-flow architecture).
 
@@ -196,6 +199,12 @@ Before changing a canonical workflow or agent body, read its manifest locus: an 
 Hub-only procedure may remain in the committed hub rendering when it is fenced for removal from delivery. `validate_compiled_skill_references` checks named subagents against manifest locus and recipient expected bundles, alongside its path and command checks.
 Required review definitions and their dispatch companions are generated from one authored contract and travel with the caller; explicit enrollment covers the definitions as well as the workflow, while implicit natural-language delegation remains review-only — the check confirms the edit and does not replace reading the locus first.
 Durable contract: `openspec/specs/ecosystem/ecosystem-asset-classification/spec.md`.
+
+### Third-party skills
+
+A skill, rule pack, or instruction file authored outside the estate is admitted only pinned to an upstream commit, vendored into the receiving repository as a copy, and reviewed for what it would cause an agent to do; a later upstream revision is a new admission with its own review.
+Loading one from its origin at run time is not an admission.
+The requirement is owned by `agent/agent-operation-safety`.
 
 ### Markdown vs structured format
 
@@ -295,7 +304,7 @@ The section below names this runtime's effective command settings.
 Read the native configuration named above, both of its sides, before composing commands: the **allow entries are the working set** — the shapes that compose cleanly — and the deny entries are the refusal side, for some runtimes a single catch-all refusing everything no allow entry matches.
 A catch-all deny is the floor that gives the allowlist its meaning, so the deny side alone is not evidence that commands are unavailable.
 A refusal is an outcome, not a defect — the command matched no allow entry, and the shape may be bounded deliberately — so work with the allowed shapes, or recommend an allowlist addition with its rationale for a genuinely needed low-threat shape (see the Commands section) rather than routing around the refusal.
-An axis the namespace declaration leaves unestablished is unknown, not permitted: establish it by probe when the work needs it and record the outcome on the declaration.
+An axis the namespace declaration leaves unestablished is unknown, not permitted: establish it by probe when the work needs it, and report the outcome in the session — it describes this workstation and is not recorded as a standing fact.
 
 ### Where the agent may read and write
 
@@ -322,7 +331,8 @@ Before performing any such action, the agent must:
 
 The reluctance and impact-statement requirement does **not** apply to the tools' own app directories:
 
-- The user-home configuration roots of the assistants in use — `~/.cursor/`, `~/.claude/`, `~/.codex/`, `~/.gemini/` — including their plans, temp files, hooks, sessions, and CLI state.
+- The user-home configuration roots of the assistants in use — `~/.cursor/`, `~/AppData/Roaming/Cursor/User/globalStorage/`, `~/.claude/`, `~/.config/kilo/`, `~/.local/share/kilo/`, `~/.codex/`, `~/.gemini/`, `~/.copilot/` — including their plans, temp files, hooks, sessions, and CLI state.
+  The Cursor editor's state store holds every conversation of every project, so it is read only to collect the session a proof probe ran in.
 
 The list covers the vendors whose configuration lives in a user-home directory; a vendor that keeps its surfaces in-repo needs no entry.
 
@@ -394,8 +404,8 @@ What no check can tell you is which namespace the runtime in front of *this* ses
 The first: an entry's presence in the allowlist does not mean the command was ever reachable — a product may expose more than one command namespace and close one of them on some platforms or under some sandbox settings, leaving every rule in it inert while the transfer that delivered them was correct.
 Establish which namespace you are in before treating a refusal as drift, and before proposing an addition to fix it.
 
-The second, and the costlier: before relying on the deny floor to admit a narrowly scoped destructive shape, confirm the containment exists in the namespace the runtime resolves — a twin in a namespace that runtime cannot enter is a separate control and earns no credit for the one in use.
-The per-namespace assessment lives on the control registry's rows; the alignment check covers allows and does not assess denies.
+The second, and the costlier: before relying on the deny floor to admit a narrowly scoped destructive shape, confirm in the session that the containment exists in the namespace the runtime resolves — a twin in a namespace that runtime cannot enter is a separate control and earns no credit for the one in use.
+Which namespace a runtime opens depends on workstation settings, so no committed surface records it; the alignment check covers allows and does not assess denies.
 Where the containment is missing, name it and let the operator decide rather than proceeding on the twin.
 
 ### Refusing well — offer a mechanically safer equivalent
@@ -406,17 +416,19 @@ This is model judgment and not a credited control: no registry row records it, a
 
 ### Protected configuration and no self-adaptation
 
-- The sibling bridge, ignore and attribute declarations, commit-hook and lint configuration, and `requirements-ci.txt` are protected control surfaces.
-  Their changes use the operator-patch handoff.
+- **The protected set is tiered by what a surface controls.**
+  The agent's own leash (kind A) and the instruments that measure or change it (kind B) change only through the operator-patch handoff.
+  General plumbing (kind C) — the sibling delivery engine and read surfaces, the ignore and attribute declarations, commit-hook and lint configuration, and `requirements-ci.txt` — changes by an ordinary edit whose diff the operator approves before it lands, and close-out lists every kind C path a change set touched.
+  The path list for each kind is owned by the `[[protected_path]]` table of the curated deny floor.
 - **Config protection:** Treat safety-related config as **protected**.
   Do not modify `~/.cursor/sandbox.json`, `~/.cursor/hooks.json`, safety-related keys in `~/.claude/settings.json` (sandbox, permissions.deny), or `~/.codex/config.toml` (sandbox mode, approval_policy) unless the user **strictly orders** it.
   Same for repo-level `.cursor/sandbox.json`, `.claude/settings.json` (sandbox/permissions), `.codex/config.toml` when they encode safety.
 - **No self-adaptation:** The agent must not change its own rules, sandbox settings, permission denies, or approval policy.
   Do not suggest or apply changes that weaken the workspace boundary or reduce config protection unless the user has **explicitly requested** that change.
 - **Know the protected set before editing, not by being refused.**
-  Check a target against the list above before the first write: a refusal is not guaranteed to arrive, because protection expressed in one tool namespace does not refuse a write reaching the same file through another.
+  Check a target against the protected set and its kind before the first write: a refusal is not guaranteed to arrive, because protection expressed in one tool namespace does not refuse a write reaching the same file through another.
   Not having been blocked carries no information and is never evidence a path is yours to edit; session-level guidance preferring one tool family does not extend to a protected surface.
-- **Operator-applied patch is the only sanctioned path past a self-protection refusal:** when a protected control surface refuses the agent's edit, the refusal remains the answer for the agent's own hands even under an operator order — the order authorizes the change, not the agent's write access.
+- **Operator-applied patch is the only sanctioned path past a self-protection refusal:** when a kind A or kind B surface refuses the agent's edit, the refusal remains the answer for the agent's own hands even under an operator order — the order authorizes the change, not the agent's write access.
   The sanctioned path is a staged operator patch: byte-verified full copies with a manifest of each source's path and content hash, staged edits and pre-tests, an operator apply only under an interactive-terminal gate with a typed confirmation naming the patch, the apply recorded in the manifest, then post-apply validation and stage cleanup by the staging session.
   A repository without the handoff tooling follows the same shape with staged copies and an operator review.
   The agent never applies such a patch itself: not by a direct edit, not by a script, not by moving the scratch copy over the original, and not by delegating to a subagent, which inherits the same refusal.
@@ -739,7 +751,7 @@ Named automated checks, approval gates, and obligations in referenced owning ste
   After replace-all, generated rewrites, or broad lint cleanup, scan the resulting diff for joined lines, stripped newlines, trailing whitespace, and unintended prose changes before running validators.
 - **Escalate, never route around.**
   When a control refuses an action, treat the refusal as the answer and escalate to the operator; do not reach the same governed effect by another route — a different tool, entry point, approval mode, or wrapper the control does not name.
-  A refused compound invocation is not decomposed into its permitted parts to get the rest through.
+  A refusal of a compound invocation refuses the piece it names, not the whole operation: run each other piece as its own call where the controls admit it, and drop or escalate the refused piece. Never reshape that piece, and never combine the other pieces to reach its effect.
   A route the control set does not cover is evidence the set is incomplete — a finding to record, never a technique to use.
   In any repository, the delivered vendor configuration is the route enumeration this default protects: what its deny rules, hooks, and permission files name must not be routed around.
 - **Prefer a mechanism over a conduct rule.**
@@ -1198,6 +1210,10 @@ The canonical entry shape definitions belong to the usage-log lifecycle capabili
 ### 5. Maintenance and future-proofing
 
 - Treat CI and validators as non-interactive enforcement of the same lifecycle rather than as a substitute for the log entry itself: a green suite does not discharge the logging obligation.
+- **The log records work; it does not evaluate people.**
+  Usage-log entries and other agent-derived reporting — overhead reports, workflow-run ledgers and comparable records — are not used to evaluate, rank or monitor individual people, or to allocate work to them on the basis of individual behaviour, unless a fresh classification of that use has been recorded first.
+  The boundary binds whoever proposes such a use, operator or agent, whether or not a report names a person; reporting that evaluates a workflow or a tool stays inside it.
+  The boundary is owned by the `agent/security-privacy-ai-usage` capability.
 - Maintenance style for the durable surfaces a session touches (holistic refactor over patch stacks) and the obligation to obtain a verified validator result in the current session are owned by `aiscr-quality-first-execution.md` — see its *Review and refactor before drafting-and-patching* and *Dedupe and simplify* defaults and Iron Law item 3.
 
 <!-- end:generated:aiscr-usage-logging -->

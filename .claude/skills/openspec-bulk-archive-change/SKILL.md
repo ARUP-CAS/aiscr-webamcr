@@ -9,7 +9,7 @@ metadata:
   version: "1.0"
 ---
 
-<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
+<!-- delivery-version: 190c5bcb61054e19937fa5deec1ac26575756bd6 2026-11-28T15:25:02+01:00 -->
 
 Archive multiple completed changes in a single operation.
 

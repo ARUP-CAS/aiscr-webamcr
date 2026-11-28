@@ -42,7 +42,22 @@
       ".gitattributes": "deny",
       ".pre-commit-config.yaml": "deny",
       "pyproject.toml": "deny",
-      "requirements-ci.txt": "deny"
+      "requirements-ci.txt": "deny",
+      ".kilo/plugin/*": "deny",
+      ".kilocode/plugin/*": "deny",
+      ".agents/scripts/run_operator_patch.py": "deny",
+      ".agents/scripts/sibling/sibling_repo_write.py": "deny",
+      ".agents/scripts/validate_command_deny_floor_alignment.py": "deny",
+      ".agents/scripts/validate_permission_rule_syntax.py": "deny",
+      ".agents/scripts/lib/command_surface_model.py": "deny",
+      ".agents/scripts/lib/codex_rule_readback.py": "deny",
+      ".agents/hooks/*": "deny",
+      ".codex/hooks.json": "deny",
+      ".cursor/hooks.json": "deny",
+      ".cursor/permissions.json": "deny",
+      ".github/hooks/*": "deny",
+      ".agents/scripts/check_tool_call_guard.py": "deny",
+      ".agents/scripts/lib/protected_paths.py": "deny"
     },
     "bash": {
       "*": "deny",
@@ -359,7 +374,16 @@
       "docker compose down* -v*": "deny",
       "docker compose down*--volumes*": "deny",
       "podman compose down* -v*": "deny",
-      "podman compose down*--volumes*": "deny"
+      "podman compose down*--volumes*": "deny",
+      "Out-String": "allow",
+      "Out-Null": "allow",
+      "ConvertFrom-Json": "allow",
+      "ConvertFrom-Json *": "allow",
+      "Get-Command *": "allow",
+      "Get-Location": "allow",
+      "Start-Sleep *": "allow",
+      "Write-Host *": "allow",
+      "copilot *--share-gist*": "deny"
     },
     "task": "allow",
     "external_directory": {

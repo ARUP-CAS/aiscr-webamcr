@@ -12,7 +12,7 @@ version: 1
 
 <!-- SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69> -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
-<!-- delivery-version: 4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f 2026-11-21T16:40:49+01:00 -->
+<!-- delivery-version: 190c5bcb61054e19937fa5deec1ac26575756bd6 2026-11-28T15:25:02+01:00 -->
 
 ## Scope
 
@@ -40,6 +40,7 @@ Where an input was not provided, omit the specific bullet or mark it explicitly 
 - Služba / repozitář.
 - Prostředí.
 - Další důležité pozadí (pokud je potřeba).
+- U incidentu, který způsobil nebo umožnil AI agent: runtime agenta (produkt, verze, režim).
 
 ## Dopad
 - Koho nebo čeho se incident týkal.
@@ -55,6 +56,7 @@ Where an input was not provided, omit the specific bullet or mark it explicitly 
 
 ### Známá fakta
 - Faktická tvrzení o příčině incidentu, podložená evidencí.
+- U incidentu, který způsobil nebo umožnil AI agent: kontrola, která měla akci odmítnout nebo omezit, a zda chyběla, selhala, nebo byla obejita.
 
 ### Hypotézy / Neznámé
 - Hypotézy, otevřené otázky nebo nejistoty, které je ještě třeba ověřit.
@@ -72,6 +74,7 @@ Where an input was not provided, omit the specific bullet or mark it explicitly 
 ## Následné akce
 - Kontrolní seznam kroků s vlastníky a případně termíny, například:
   - [ ] <akce> — Vlastník: <jméno>, Termín: <YYYY-MM-DD>
+- Akce, která mění kontrolu agenta, uvádí záznam kontroly nebo požadavek, který mění.
 
 ## Odkazy a reference
 - Související issue.
@@ -82,5 +85,6 @@ Where an input was not provided, omit the specific bullet or mark it explicitly 
 ## Content constraints
 
 - The report must be understandable to future readers who were not involved in the incident.
+- An incident an AI agent caused or materially enabled uses this same layout; the agent bullets above are what it adds.
 - Do not include unredacted PII or secrets.
   Prefer summaries or redacted descriptions over verbatim sensitive data or full log dumps.

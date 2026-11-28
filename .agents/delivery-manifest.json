@@ -3,667 +3,535 @@
     ".agents/canonical_configs/references/documentation_visual_conventions.md": {
       "asset": "reference-documentation-visual-conventions",
       "content_sha256": "5d1709aa4e27af08a68e6ca2646f0e6bbf934aa670138b3f057fe316f6af63fe",
-      "sha256": "9209a6795848cf2428063f3fb90b2418036f1355dd8273476f45bbc7e01715c6",
+      "sha256": "718fc89ccf6eababe20537592b508c86df4d83e295729c0ea0240dd593346256",
       "strategy": "copy"
     },
     ".agents/canonical_configs/references/ecosystem_map.md": {
       "asset": "reference-ecosystem-map",
-      "content_sha256": "237c9bc028c89951c18b5c2ee7aab79e4a06fbb6fb93da78b084aee8697def7d",
-      "sha256": "f7c4c662ee965897ece1b9a88b96feb3a4a86a7c02f9099e9ef8fd7a8c98dbbb",
+      "content_sha256": "19b018b403653908c972122f1c901ec3b515771ebfa465f1eb386cb7940d498c",
+      "sha256": "313d618048b1dc84846f78185f8c670ce495254fe7b89480519871a2e05e1aab",
       "strategy": "copy"
     },
     ".agents/canonical_configs/references/governance_by_tool.md": {
       "asset": "reference-governance-by-tool",
       "content_sha256": "7d09561574a9911464a067febe5470229ead7f283b01272d86d5b9d3ee855c66",
-      "sha256": "0b48ecc200d5dd9010b788e4e283bfb69c90083f5b47605e0cf91e4eae16bacf",
+      "sha256": "4445536d7b7a9ecb667601268e75424ae72ef15e5b88111b48ae4029b1ac8820",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/documents/incident_postmortem.md": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "1ae97597f46cb5982765d541c30609e3987c3cf4b4fbdb0864af69485861da73",
-      "sha256": "503e45a9216b1baec0feb17e33886343d2a5de580a8be6faa1650dbb6297fdb4",
+      "content_sha256": "f9746df10a3e5655850bdbba698f5b23969abaf6620ff96e532265591d9bb72c",
+      "sha256": "86d6c9f47a52ac1dcf89c2eadd9c7ac558d3ce9c3ff5f97bf841bc53d46c1b4b",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/documents/testing_scenario.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "a44e31b4a0b676d44d02ee336c5a4fa0191b74160dc464c7d9a8bfae8c0c32d0",
-      "sha256": "c6f0f3928c3467a91ca30fb33a35c795a82fe664a6037c6f52d112059c038a12",
+      "sha256": "7e5b709da6058456efeaf503ecb573b6c6ce53ca3b19a15101eb64fce9d36a9a",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/documents/testing_scenario_corpus_readme.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "e19309da30f827deb09ba4e87a9464f5391c88c97ba9a03cf122b5a5add38528",
-      "sha256": "4925ebe9fb5ecc17db5a6d2542a93ae5878d634903fc83ce932ddbbe19376081",
+      "sha256": "a72da24f3a2e6d2f8a5c673c804382e361fa3de440fae5cdbdfee76ae09cf49b",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/translation-revision.toml": {
       "asset": "aiscr-review-translations",
       "content_sha256": "08d0d6cc57ce4c6b1097b6cc71f51f32e895a522cb62bac3d4e27311ee3e72e3",
-      "sha256": "537e1c78a7777ccfc8834b9bed0e496ee2e5b3319fa8b064901adbbdffe7c973",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/README.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "7476097e5d631d7cc94a8dd399d4a8b2e561224bbfbeedb9fa25e35b34bba9a2",
-      "sha256": "e34b41b6c43f3f4ce29ce171b9086f01704a2f871119c5d21734899ffa31f747",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/claude_safety_snippet.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "65cd8d08c54e905a99e6470789dc21ea91c17c8e7910ce4893582810af83de58",
-      "sha256": "65cd8d08c54e905a99e6470789dc21ea91c17c8e7910ce4893582810af83de58",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/codex_user_config.toml": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "68f8aa742e6744c14111450e4899bd70362bc38f8597777fd760a3571a35c965",
-      "sha256": "8243ab3663810d998761d5a4d3412f2a9fe0c1a4df4a1d43a7b2195d69891b5b",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/codex_user_rules.rules": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "a321889b9cfe4603fed42552854de7ea0a4d7d0f489b4f2ab0b578b891d2d096",
-      "sha256": "b70e671eb7057bad68cc324f69fb4ac5021d6d1c1ca0aabb15c383e226263fc6",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/cursor_cli_config.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "35ba441ebb54dbed97cba0695993a7aeb57f64898d2bf5082c7a548fdfb24102",
-      "sha256": "35ba441ebb54dbed97cba0695993a7aeb57f64898d2bf5082c7a548fdfb24102",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/gemini_user_settings.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "400734f1c4a3afe47b4618149b89c5eff62530c4d8e1109c10cf406e2e72fdff",
-      "sha256": "400734f1c4a3afe47b4618149b89c5eff62530c4d8e1109c10cf406e2e72fdff",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/kilo_user_config.jsonc": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "4e66591fdbbc38a0bb09b06e6be6916eab746b7eb127031bf89909e4d8291cf9",
-      "sha256": "87f5147deb5c8549270f8d4462e4ec4781691b72ef8d1af11ba0f2a79b182bf6",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/README.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "6e2015702c03e1b03c216b3b100adc123c1b25f1801ca34b56740eee64763ae0",
-      "sha256": "a696b55adc6193530d5685e7bcd5240ca3d66a47f7be6f8581627af35b53723d",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/claude_safety_snippet.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "ba35652cc0933e354dd77465d7d71531ba2d8f0662bb75ee761de711673d733b",
-      "sha256": "ba35652cc0933e354dd77465d7d71531ba2d8f0662bb75ee761de711673d733b",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/cursor_cli_config.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "54a5230a59a212883990b6ad663f61343d5cec77c9f65cf39b4fe957d2ba253d",
-      "sha256": "54a5230a59a212883990b6ad663f61343d5cec77c9f65cf39b4fe957d2ba253d",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/gemini_user_settings.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "87e25c67f47db2cf611fd479ff10fa9f2f26155e34c56624787c2e178f22cd30",
-      "sha256": "87e25c67f47db2cf611fd479ff10fa9f2f26155e34c56624787c2e178f22cd30",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/kilo_user_config.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "aaf5746517a7303ad9ce700364c616d331ec8793710124d3602fa82892d0e62a",
-      "sha256": "aaf5746517a7303ad9ce700364c616d331ec8793710124d3602fa82892d0e62a",
+      "sha256": "c5574213b9db22bf05d4d6672f02f11116d0fa48fce0b1077c8c2aa29b2dd61f",
       "strategy": "copy"
     },
     ".agents/scripts/codebase_review.py": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "1197cda0816d88613f00559279e547007316e6d0337eb90f2fbe158a926bfb41",
-      "sha256": "8af38a0dfc9e2162b38b3f29e3781b05b1fedc993801f2ab021e262d4d5b2251",
+      "sha256": "2cbe268ebe32d3d4e74f653a6aab3d8244698a2975b0f1c4be5b9bba85c75186",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_issues.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "b070e1b703881cdef9390b56719ee7be26c0ae7debd75f36ec3ad3b4856ed54d",
-      "sha256": "b3f70b82d543ceb943d002dbd28a57f58d2438a3fed095b8c7404ae0ee60b419",
+      "sha256": "700f810ceda1c27c86c75ef1383c0fcc263df1bb9bcb8dbcc9a41a35c8583888",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_pr_review.py": {
       "asset": "aiscr-review-pr",
       "content_sha256": "058439fdd2575c4eb18659b0677e6e270efe16dae6908e509c2ba3912a1a2436",
-      "sha256": "b6622e074e0a7bed0ec69c5c4e8cb76cc3bf27bb294d7ac4bc2c23abb1e47c12",
+      "sha256": "e859743f4e7119a1f092f545c3342cb2f4567380356c9b5fa1f0c35e693568b3",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_references.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "dfc09c8713d6f0353ae2cbfbdd8c4a73e2e22193ea357da4b74bf490f14c5131",
-      "sha256": "30ab0fb5adb6399195e7b7fe753d36057360410fc61e407d0d0244f0dc902fa6",
+      "sha256": "7a91f5a37f8ddb73ccfecd0c57003c5ce56c7f192c046d1715b80e57cf7ddf9b",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_utils.py": {
       "asset": "aiscr-plan-from-issue",
-      "content_sha256": "549c17f24f56381d906134d73c173a71506467349e79db761ca6c7317661cef9",
-      "sha256": "740a52532953c02ff5889c8db7a0fa283b05325698495641e19af2a6a8cf5a2e",
+      "content_sha256": "4cf3142ec8e1cc7672ee8a38e8d2818e1ad66e157dfb83c6c9da8e7b941a7393",
+      "sha256": "ffe32c3b9b037b8873e958668a985dc5fdce781917352a0fbe33aa65bfdb490e",
       "strategy": "copy"
     },
     ".agents/scripts/lib/__init__.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "2c6ec18cc57167ed3d10dd974c6033f6bd44fb8b618c25589e4eaca4eeedbb2b",
-      "sha256": "05b5c1dcf03c7455d8f640a0a6f43759552793f15a79ca484d54ed64b95057ab",
+      "sha256": "036119092bf639c072cdb601a1be584bc701a1e31e9bb5e2a112227f676d335c",
       "strategy": "copy"
     },
     ".agents/scripts/lib/local_scratch_paths.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "ee092164037a33d6c6fbe9c4c8cbc05a61082691bc42d99e46b9937546f07eaa",
-      "sha256": "b27a06c7d51877d5e09e77f1cf50ff15ce0c9c85e7170f18e894632e9832f9dd",
+      "sha256": "7a31058fff57c9d3a87b5760bdefd26b9264e885275d5e3004ce85673236ed56",
       "strategy": "copy"
     },
     ".agents/scripts/lib/log_utils.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "7d798aa1db37a47c031b6d6e37f5015dc4baca862813c5ec9648a74113ebfd96",
-      "sha256": "0b477eb6b6570e25c23e9c4eae3cfd64e87a584c82d52c9d219d54a461111a43",
+      "sha256": "1e722557870bf8b356d1194cd64caeafd8a3a79f393ab6ff87b90d301cd84940",
       "strategy": "copy"
     },
     ".agents/scripts/lib/proc_utils.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "71a4b1fe508c3c564be6782abcee8200f6502438e2142e44f9e001297985e94f",
-      "sha256": "9edeb23d98a34b5896884c0da09658c30d63a4857b96f934f09666d62fb54ab9",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/redacting_reader.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "f96148688f25e2b58504b055b2c78e73df6886b0ea2ba06b8f6d57379d87a35b",
-      "sha256": "7350f2c12d90dc75274727f13a183460035815fa1ff84be3a152a1801855c3ea",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/repo_layout.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "46d0c31b16539ab6fb71f52fcdab6689c8ed0657838caeb75223eefb9370ed6c",
-      "sha256": "600fd25ce2528383f92bcf04a341d31b3d15d27179a028fcfac965dda107816e",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/requirements_subset_install.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "dadb9bf9371bec4667a73afbf87ff18770be4fbc8f52d5093f4126d1016a0622",
-      "sha256": "9536535f8ebe7e813d4b8397b487815fb262ae48dd42cb214736b5d547f6937d",
+      "sha256": "12ceebf8e0902fc02bcba3fa88bed54e89926ca3902594476ade9e331da64de9",
       "strategy": "copy"
     },
     ".agents/scripts/lib/runtime_env.py": {
       "asset": "aiscr-plan-from-issue",
-      "content_sha256": "bbde07d3024660ce6ca96961b9aadf7bff290fe53441e2a3f1c37b6ca7e7aac8",
-      "sha256": "8c10b521d9887c76e64ab87e258562ac0502fd6810c106e1743b52722723007b",
+      "content_sha256": "4bf9a07e02f72c5ed6752aa222db19de293c41ee075ebe3122eebe3b37c2ae27",
+      "sha256": "e62e86615099839aa3b63a7722790877e1414b035e4d25ce17a87e7adbadcb05",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/__init__.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "9267c1390978ea796ac493c82ed661933d75d26c004f45ad69c765bea3c7155f",
-      "sha256": "594724230bfc39add55a4f0eac2dee0c6125a3cb652566df10dc378e3d5aee48",
+      "sha256": "cca9f7b9eb8a6812a9c7227a1f3514b0277c85fe0198cf4854318508b5310db3",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/checks.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "64b3c1bae74478d92e59f95889a8d2c9e8b5748074ae151354bc94e59dde1d53",
-      "sha256": "7505f844def91933b9cbe37c0579f06ecf77d99cea70f932b9f04ba633fb59c0",
+      "sha256": "be2e5549cdd1f82db03b0220c61438b46d28a2666734b2fcb0504d8df567fcd6",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/ledger.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "c2522ea9410910e3f3424509ebfe784e658da6ab14d7ab5e7edfbf838748de3a",
-      "sha256": "dade9003f21dc10b9608b899e0ae81e7ad30a8ed7c35dfccc4faa4ba1113e91f",
+      "sha256": "06a1786903a3b98fe46d2cb535137f3ab286d20becb359065e065a1ac4c20bdd",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/ngx_catalogue.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "f83e3f9a0fc4887b76c884d7ca0e69685d165988f36e690a6000bfd17fda550b",
-      "sha256": "1ec1bc1eda50756b7c2a1a820c465d11a96e14f1756398981035bfebcd54e3c0",
+      "sha256": "bd2dd50564df220d6c8fa99477a2e6a542133a71f3091979843d18e949f90cdf",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/po_catalogue.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "3d738eba3ce4158cba24e5b06c6315fcb0da056cbb67c2fa805c60c33c99ea4f",
-      "sha256": "b212d8321b27d09b4ac97d659a4f7d1d32b9cb2c127272f4ae2645dce3073139",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/vendor_matrix_registry.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "dd0aaafc00b768368020fe3ca32be679f20a37d74ad58d6c216a3099cf58af29",
-      "sha256": "b4149a946de5d08094b7776e7e30f15b04529e46be349148c37a1e03fdafec51",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/workspace_safety_registry.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "8a864caec712041cacb8eeee9bd6beb8ba563826e594f79ccb93b041cfa4c066",
-      "sha256": "7c0521f95be80649a16edb218b7a3f04574f402e135efc035cdc06c07b9ea4d1",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/workstation_safety_requirements.txt": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "9af8813f327dfe2b5b1d491b953e2dd5939082d66c7dd8a481306547e0826551",
-      "sha256": "9af8813f327dfe2b5b1d491b953e2dd5939082d66c7dd8a481306547e0826551",
-      "strategy": "copy"
-    },
-    ".agents/scripts/report_workstation_safety_posture.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "e04a5d0b4410217b19a5ebf5faf7178d087c3f119f6ed14f481018844f67dfaa",
-      "sha256": "12a49a6bf623e31cad37892218cb9be9f7da0c7fe5e4755e73ec54f070b23612",
-      "strategy": "copy"
-    },
-    ".agents/scripts/setup_workstation_assistant_safety.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "495c3212ce1ba030745ed8391a21228874e1c4e2eba10df6140fb300f7b905bb",
-      "sha256": "ad79be35d524ab7904b46e70020749d38a906557c85705b6fd60842009bcf569",
+      "sha256": "f4fe1b112b2a0cbc41f4b341ad5df5ae55297ad4d3e6a64aa6704daed4b36519",
       "strategy": "copy"
     },
     ".agents/scripts/testing_scenario_corpus.py": {
       "asset": "aiscr-review-live",
       "content_sha256": "82068bfcded91ee54337ac9dc33a91049b603f3c0cef579102c8430b68fff4ab",
-      "sha256": "a54b8f596bc4d2e21afd37e8e12e5549991643bdd2c67b0c2bbe8f76576f50e7",
+      "sha256": "2d3b674c09338544632e00f3f757a177e116dd5d3abdb36f1cae008d06b73533",
       "strategy": "copy"
     },
     ".agents/scripts/translation_revision_portable.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "e7ccfa3ca9a876ab57122d6db30450c18e23685e1a5fdf2038f2c2c2badf7927",
-      "sha256": "f93964d772a04a594bef78ef2d06469dc26f0f23f7680f32bd6f264782a5c77e",
+      "sha256": "c39b72221bdc2325f83915df39f06199ed9794d8d14ad9091e5007f52288b71c",
       "strategy": "copy"
     },
     ".agents/scripts/validate_release_yml.py": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "27f97f012b257472ca0f90e05253f8f78be90f6db25c4d5ed25199fa5cb4ccf9",
-      "sha256": "0b3370bdeebc2a8d6dce2ee6daa9d3bb3cedf7057dd61f37c11e66faa79016d5",
-      "strategy": "copy"
-    },
-    ".agents/scripts/validate_workspace_safety_registry.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "3d353f604ce7f55b89545dacec8d0e29a5f728ed37e0a2f21175da3fbfeda96c",
-      "sha256": "ae40aeff05f143577490322f0c2e6e58533e176cc9bcb50f645fc727154e3005",
+      "sha256": "f4775472fcdd19f10942170f557666d599feacbf0e1821661f9ae5d6697db23e",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/common.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ef54202feec0ab9f6dd639679de1b9d698c3a2a007f9f7eaee6131828e29259b",
-      "sha256": "efa23b0983b01a4d6ebc9444c0dc9ea1ed538d48e614879cacbde54744f5c02b",
+      "sha256": "a862fe72a9262bc89d626e123057370d7f29546dd11bf1cfac6a76735f3a7903",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-drafting.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "071383fa805a5c76234bdddc1f2c997b74a23db29899490772acb45c077b9576",
-      "sha256": "cb2ae61ef5c4ebd2f8826a29576099c79517d1ac98af7cebe5697fc16234ffde",
+      "sha256": "d42f10a432a9c5fc4edcdf3816d5cc3414eb5a84cc13d8d021a9c8c8dcc53074",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-findings.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ce3ede70b7f2b6b212c8b0b3dcd0dd0ee5ac1856aa68f038656613b01cb14588",
-      "sha256": "184aff399fc1fb1d42d1080e4a22ea90eaeb570c669e7da378d01cdff10cd3f4",
+      "sha256": "ab37b351fbbeefc5e603f85326e94cd07fb658696a98b0760b4950e2e229cf4e",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-investigation.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "b879e7c8b92be26b1a535c889fa94b68d9ac5edd6fb89f8fb6cbbeb40e5b0c00",
-      "sha256": "d94148facedc1eeeb674f441a4a03946b633cc8dbd84387d0c3c01ce9d33787a",
+      "sha256": "c279bb9280b7156a5cc1f58bf7af64c1773ada2ef1cfb6bac6a96e22cc3955b3",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-survey.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ac6aad95478c836446ed9e173d0d268df952a3eda6c6fac61aa540c81399764b",
-      "sha256": "f02dcfbdc298bad8f5846788c2f6c1dce6609cb851dd9ca03e64477993a5f1b7",
+      "sha256": "0923cf7e12fc054db4ffa109d1a3ce07a7f40dd331f33902dacd98f30068acff",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-verification.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "c1afd7623d7ae170192435328a421a61af9103892423ac8e904a54ca2874f210",
-      "sha256": "c803b98753494ef253411a35d0a4f66fc26bf845074253b76465ee18858891a0",
+      "sha256": "2af24f95bf3404331327420838fe14724a39f5ab6dc608f439ce9d8b011ae9de",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-correctness.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "a74db476458cf7316a4fba9d7b10ef946c4068732f71b109f42a45e40972606d",
-      "sha256": "034f9d61bbd32eb2241ed6762cf1655ab86d376423a6cc934cf93887de342d1a",
+      "sha256": "02d453d1a11ee8970234808fb3406cecdfcac1b2ac170542d895f9bd9ea8f4ad",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-dead-code.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "a2831797814534c22db19a96cdfbd8df486d3e906d73252fe328fcc25b4d8ffc",
-      "sha256": "4cdb220bde69e304ae31adb0d94167113172c5087594b2febc62d608fb6d472c",
+      "sha256": "c220bb598afbe1fc7bf41d5743d6d83d2abe756819d95afdd758eadeaa9e28b4",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-deploy-safety.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "29251736d2a9246d6b4ff29f007a965128e3331191207898be2e40c6f3f04b4c",
-      "sha256": "0a2067cf5746a593c13f2bd802b45772dc12950d23d917ea24b5937ba825c9f6",
+      "sha256": "88962962d72d2bec73e76f4bf1e89b218fce5c8b853e414448e05d7c18ee6045",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-draft.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "fd09b10a0c3176288afcbd995ccf0c09f04a4da9d39a37c367e4dfbb8fe747ee",
-      "sha256": "80fcbdc604bddde3e3835691a1bf7184ddbcfd3a7fcefe5832d6856d3ec90e64",
+      "sha256": "eb4535f04477e9bb1f9c15fb97916452aae7a253df0626f1a5912507e89a77a3",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-duplication.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "5beeb63b39387df7323cd559e0900ad7eea1f685f00199ba15eaad7d6c1a921f",
-      "sha256": "5274c16639982d45a3c9dad9870aa668b4292b3a46746e200529f27c2247d552",
+      "sha256": "d018d7d4abc647a43539b4360053d76a4d1ee23843d82ff74cf97473a1a71137",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-integration.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "1876fbe1f2ad86f4541526f01b2aac4573ecf976b29be265cffcf56d7c5ec1ef",
-      "sha256": "e7078ea0f617dbb1846ba78694ef8bf91eb60c1ba8ae64aa4bccd0fc2b83603a",
+      "sha256": "ea040af9352272fe58ccce39e26df96f07a506df26a43674389ab64bd9f1d7da",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-investigate.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "1062f69a4c9ecf788ae1e9d8bb513cc4b8a704696337f5dbbdf709cf088459e7",
-      "sha256": "0f2b0cd19d95f20fc7240a4eff1d9ccd44938bd183fc5bd936b318c4aeeeced6",
+      "sha256": "be647b3c8f83547e2a3cdd16cd84d844fe95c339e7e4cbcd56afb585c7efd0b5",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-language.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ee3aba131ef92094b71c92cc97914b96777d4c1bccda97efa0ed40c8e6dd2721",
-      "sha256": "4bee6213f2ac4a89378fb7ec2661e5efa01aa2c81191d2192ea1a4fe00ffba97",
+      "sha256": "fee2a683a8e36b17fe6c5e9758eeaa33ef7a2b10d53308f7b05c23a7d7452538",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-performance.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "2b271ed43a76682f5fe4b519f9b7fba1775d996c3131a1ae1e32d2e39c0aa078",
-      "sha256": "59d5d4331a752ac99948c77364b8eafa755f9ddf36214ec5680e95a2c337a343",
+      "sha256": "a7fa23add8c53e4a976b581603349578278c8c006a8d3711db73bd6a38660757",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-security.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "eb9d85d47c722480e768a4c3e9d052179a062695c5903b69081adb6c56146f3c",
-      "sha256": "b7ae6eca06e05f6869d79fbd0db6556cb1e6f43f89f6d66de50ea69c50a64b34",
+      "sha256": "deb3d3f15494051f9accc1c7c2cd38157977cc98ce9fefde5305e5e64a9cd9bc",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-survey.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "19419b3243497825d4610df29b7f520b2f7d647c8fb4f741b882cbf8cf8b95a3",
-      "sha256": "6b7f2428cc566a23e16d20f319fe911bbd8cb3da2cd9ab56108d459f7c344a9e",
+      "sha256": "12e0955eddeed963eb8600dd8aae2fe9cf40c8608abbfd88b388bb9dab6fb576",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-verify.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "04b056d8ce113b4ce5f0598cd96b32ad4b31d422cb9492b37156bb5e5e2a67b8",
-      "sha256": "8caae5f34ede6e51a26721c8b034122094e0dd65d2b9ec763681cf518e9e5fbe",
+      "sha256": "425730cbaada9a2de1000040f5e33e49952d2a852d3c8a462273561140b2bcc0",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-plan-from-issue/SKILL.md": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "7e5b387ef503118f6a536a87fd33ad6dedd6c9668adf69d3444ac21246a842fa",
-      "sha256": "a1b54f00829788b17aecde75653ffd18ff33eb550dd5993b65cb08e497bb6b96",
+      "sha256": "2ec16f67cf01184b8d12eccb2ba5ea0f129e81a510dc9611c73cb49fde08624a",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-plan-issue/SKILL.md": {
       "asset": "aiscr-plan-issue",
       "content_sha256": "b2ed6a1766d0ed3baf24a2443cf1fe9e6887450540299e8b4b951b4ab40addfb",
-      "sha256": "60f06c313ed47a4a3d80655ed682d87a62c8734c10db81166567574abd2e542b",
+      "sha256": "e4c012e298777df7fe32bd8fad486a1f49d8303aad83a4a0bd756d5770e1afd2",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-api-doc/SKILL.md": {
       "asset": "aiscr-review-api-doc",
       "content_sha256": "fdb2d361d1ac933707a71131c91fdac477dedf8c6ba1a0fe8e448590be3a1818",
-      "sha256": "64f29c7463a85824c2857b8f10b4d2941598bea0f1cb97dd040017751dcae8a8",
+      "sha256": "f37f03d8cb3047c84dff43e99ff3c502355f290ce875469cd565e22b59aa750e",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-codebase/SKILL.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "779ad2d2dab71ebd92104c6944c01be1b9aa4441f7f7599c2b498316068ce09a",
-      "sha256": "9c59f55c9824bbdf10a4b2f1216d0aea1620ea18b146ceef0b7220558b445300",
+      "sha256": "a04c82bbf6403fc1f703a763fd6ffdeb3fab5f89b69cfbc02eb4b4d8afaf84c6",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-codebase/review-schemas.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "d4105297d4c488db37c549cc5a5fc1aab1f7125472f63b0645b2c3c5d19f57f2",
-      "sha256": "6c81c59e3e75e59825f4fbd7bc6fb6d3268c1466d91ba3ff97646ee3ab113eb0",
+      "sha256": "6b0ab5701620b4c745acb6715306b923c89f9f13098eebb439d4a1188015fbf0",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-codebase/review-tracks.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "5f99a8dbb6ccea3d1c8fe1582eb8f1825a9db4db5422aafb715977573a5b5d08",
-      "sha256": "003bbd06e2d5c622847269da1510c6f0b0f0e3578416ab61ff5cac27d56bae8f",
+      "sha256": "4f476aebfdbabde05ee57c99f27e30f8fa75176c93e6b1ebd444e52191520320",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-live/SKILL.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "0b7fa34e71641e5f2a77f768f78530c8301ee4b3cbaa15da1467e314ec462aba",
-      "sha256": "df32b947929370178f06b0f7d6392fab3a6462f4f837cbfa84053a2b90091e8c",
+      "sha256": "95f198771569411ad72d3b931fcd6730145145212a8d16ef1b2c2e7216415176",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-pr/SKILL.md": {
       "asset": "aiscr-review-pr",
-      "content_sha256": "db5c09f471f3bf068031f7e57721a37e7a5c1687f1b3a63b67a9cab9a1fe7ebc",
-      "sha256": "ac61222564ccf301b246722c768e19c6f3aa2893f1c3ea675cb080c544bc9d01",
+      "content_sha256": "e1c1db2fe0a5352262a3f9c0b3c5e9c7edeb1d4abe07154be5d1f0209852b2c0",
+      "sha256": "6307ac86be38156916860f7011fcbe24e904533cdea8f7ab320b5ed748679f8a",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-pr/review-formats.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "16e671891a89da4550616301eeec1f18df4a47e084ad086998364670b8a57388",
-      "sha256": "fc5464b14195fb6d43e29ebdd6261f44d40853d3f13779f518c5a09af48134d0",
+      "sha256": "79530828dd11bfc233505c3145a6a2b4cde93dccb11c71dbd28f1f7a3276f77b",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-pr/review-tracks.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "70c67e2adcaddd614350be098bd5f776fdf12786d6138cb503084036c473f112",
-      "sha256": "622ff5c8f4ee99129718945f28ace656149e6d309c3f918822130c060817d2e9",
+      "sha256": "8920a0cf6441e549acdd0d730e110833957e06c4c49dca81984d1cc1edaa6ee2",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-prod-ui/SKILL.md": {
       "asset": "aiscr-review-prod-ui",
       "content_sha256": "70607071d8e4b06ef2b946ad31f1a81e5702f6b2b1de5940d10ae18da6566bd0",
-      "sha256": "f6ebe26830dc21652821755bcf24608b3c33a09baf7fa88ef6f588924dbd2599",
+      "sha256": "f1eb66d3e86b5a04a10a198f23db02acd971f329c2003519061715a138ffcb5d",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-translations/SKILL.md": {
       "asset": "aiscr-review-translations",
       "content_sha256": "6a440697d276ebb0d49ca1c28504f4466d84db56c884d9101768de2ad7a601ce",
-      "sha256": "390b7bf967a92f853f6d44d3a7d0adbde2d52ea781aaebae714170e37c7ad8b7",
-      "strategy": "copy"
-    },
-    ".agents/skills/aiscr-setup-workstation-safety/SKILL.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "7a1ebff619aefefb0131572bbbb89a8100601c1afd672e2f726c6ff813128933",
-      "sha256": "964d42f18f352fe29b01aac586b2ae257c5708ae6d852e451d08e353c87ff13f",
+      "sha256": "a9abb54935f08a66d6fa84d67d291ed0067d1c3da31c7326ae343cb5eae9af87",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-write-incident-postmortem/SKILL.md": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "d59d65f2f6b29f71fb075a27167fb0ee194850e35bf11700f671ffd683dc6f4c",
-      "sha256": "8339129915b819d51b53781d12052db93968958882898352e68c80bce6a36dd5",
+      "content_sha256": "7922dcb7aae7c7c38371c9382c26ba108ca030bf9cabdfa99c0e4a0d90d4f7dd",
+      "sha256": "3a7da72a18b72929e279bf28c82c86c06d988100499a58e5867747e13387b9d2",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-write-release-notes/SKILL.md": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "29efef8d7054a9e9aaf0ea2a9325b0eea45d96c10c9ecd4315ce356af4c54d56",
-      "sha256": "aa9dbd41a3f47d2c5fb7fcff402ebd7c52198a168b878bf8a5db51d039f621c9",
+      "sha256": "5b6caeed6d43790d2c9c7eac5a3f86721c20dc9ee7943c5811666cf8b63c7f2c",
       "strategy": "copy"
     },
     ".agents/skills/openspec-apply-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "a8933b263ab01b4ce0a04ac805bd5321cadab78c84b6717b8617fea7eb2dc7dc",
-      "sha256": "846968936d33cdb3f285f2907e76eeea69422d36fd59ce82483d82de83d0ff63",
+      "sha256": "341717e9e0b34bb97c8ca06ddd381a329def9a3c9bc7deef8c2ab21b69f7ea05",
       "strategy": "copy"
     },
     ".agents/skills/openspec-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8ea5eb23ac050a781616c7b951228c9763f62fccb7e0a6537f286679f1c01a08",
-      "sha256": "eaeaaa052861a08344c1cf857e48537c0329101abb2017658fdc5ea642ecdf63",
+      "sha256": "c950c273ccba733374a34d7f231a394558a831f7cc6ab9c6597bde6cbfca6365",
       "strategy": "copy"
     },
     ".agents/skills/openspec-bulk-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ecdd713771651c50970c4ccf8167d5ecb0e2dbdffecc3f471f18123db31ab35c",
-      "sha256": "cc72082458df62f1c959521e82f23d60692e6c7fa595c5a2c8eb5a6a92892d41",
+      "sha256": "be54bf877171528ff798ce151ba13fbaaa08816b83dd573b2fe06a8f0bde6eb7",
       "strategy": "copy"
     },
     ".agents/skills/openspec-continue-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "66c2eba5d06c3650719bc2813e0a54c85761a1a08aea358bd0dbe0052fe7d7a6",
-      "sha256": "d287547c28ccea4caa97b764d687421e5333c2104051b4023346711bffd4c4fc",
+      "sha256": "af072ce40db371f24899db614619868f7e265c7dfc647f6b7438483ff5d66b2f",
       "strategy": "copy"
     },
     ".agents/skills/openspec-explore/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8eb7074d34277cf09e630ebd189a127154b8007d48445824b2c4c676806d501a",
-      "sha256": "7138e93f33f4b27bd89ae1f5dab8e637d3d1270ca3320e366a0d28e03b057939",
+      "sha256": "6a3b18acd93adb6f8fe1cc98110fd70c3784b4503d7bf38a13d8fb3e892046a7",
       "strategy": "copy"
     },
     ".agents/skills/openspec-ff-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "78a8fa3e1524cfe166ac67ec36954095d09fa2f6c0ee26400390d84c2656f022",
-      "sha256": "5f0c76435c0d11c77f6db016e667100020768f97fd1f2bf99c60b8acc2a6878e",
+      "sha256": "a682dc692afa0a0e058083db9b4dadd7daddaceaf937b6c078ecd8896672e1a9",
       "strategy": "copy"
     },
     ".agents/skills/openspec-new-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "fb538f6c146e3eb703c2418d0fa09b062afef61319f4230b79471f5b40f025de",
-      "sha256": "5cbe3207f3b0b8bea64ff376bd289346631c5454eee41daa26443e72fdd8ec16",
+      "sha256": "0d4e6134214c7c0e0435e97849a189e1c24b1465ffc9beb8b2f7bad17d40439b",
       "strategy": "copy"
     },
     ".agents/skills/openspec-onboard/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "cfca0c17fdcc439ef4c18c97916c8b6e4302affe02d5b6d1e212ace4dbea44aa",
-      "sha256": "3df37c2f70ffe3135b163e9249b0856617a258947be538c18cf964f9e398f27b",
+      "sha256": "16793d3a9059f50e120be32072b2f8e31d4647b42f0de8f403209c8bbd46f163",
       "strategy": "copy"
     },
     ".agents/skills/openspec-propose/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "e353e74472fdef44af4af2c646348085b5b87df60efe06949ca401ff00c972e6",
-      "sha256": "1f4c3ea99c7263d8592f973b9017c6bcdc0d2cb5783283fd055cb4d78af466ba",
+      "sha256": "7549d6924b055ad0e5ebb1ef75bff7d65957b28c7d72f3d9d6726a224da6d3bb",
       "strategy": "copy"
     },
     ".agents/skills/openspec-sync-specs/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "75556d2ca69892525698a0c681e0c3deead1e25f3b7b9be5449eaaf1621f026b",
-      "sha256": "89b8132ee2d3dba53db0cac06ca05943b11ea6aeb66a188f1212af4008f59dc0",
+      "sha256": "e0094ad43f04d3448bbf21a2fcb369ee0782baf0dff383779b1b4e5e6465317e",
       "strategy": "copy"
     },
     ".agents/skills/openspec-update-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ca7ef061078b2260be47c2654e7df29b4c81ac1173dc73cbd565c3ea40879e87",
-      "sha256": "292561996103db6ab6545eb877dbc0f78399b9a6e6d059e7641a3ee00c726791",
+      "sha256": "67686b8acdfb60091ac69f3d9fcfe999cd96b7a2515648ea413e7e32deca676e",
       "strategy": "copy"
     },
     ".agents/skills/openspec-verify-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "3b86fbb9734fdb6b942dd12d0afa4247457aa7f212bb48832eae133f5e66880a",
-      "sha256": "c98e69e0f6b4375eeb7506c51b03066d1c99507651db531de075c93f50540c80",
+      "sha256": "63a5c07430f99bfc48fb020dbf9fa861032f42190be08e0c1c00d14274de3009",
       "strategy": "copy"
     },
     ".claude/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "bf8d62dc93e190968622b996fa6e887d19a24fdc0f824041b1fc5a1aa49c4d20",
-      "sha256": "0586e5bf2bfca5021852cc921b8d055eda48856d60a66dc7dc0317842ae7cd3b",
+      "sha256": "8982e4dc53bbed0ea5d6eecbc5549e42898a52a848663376eb5d3bb91d93f0b4",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "9ba4ebfbac2869129836b7e9c06d9352b8db2304685639e94adc77b6bb7a0262",
-      "sha256": "cc784304b9f459d9e11bf547b85b67ebad8fbe3697b29696492201020471b450",
+      "sha256": "04391557065921674b47947af339aaf6a7731c426c73c48afc723dc41a7e12a6",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "049683ff1cbaccf812aa181ece0723092762a92eda59cea3e1c017fc87fc5834",
-      "sha256": "7886bfd4c5f33811e417962eacae4ae37a898dfbb9c3e7ed39dc665ec0f5c8e7",
+      "sha256": "8561763910ffcbe1d3d2c9c9f4d6c01bfd93c1c2c5f5c794add6208cf8b8336b",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "659e4a222e9da8c09fda1972d23a5aef36443cbd5ef8c8d2ed539855ed1b596a",
-      "sha256": "b8b14e2c292100e23ebeb92cc2b5b2213757bfd5a2945159986608c92597cdb2",
+      "sha256": "91c007fbb7e88e9c9807be0b5844800c3389594549ec4bb0242be3cdbe3645ed",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "a793e2990d6f20545c47622fee3489e9ddcc49bc98f4f673c773cb7ffaf3e259",
-      "sha256": "4e9a7a19cd0eea419d241c9d47c19dc1ba923e1337668f411ee1a07fb94b08b2",
+      "sha256": "fecc59fd1344082970d8b6001d5df0003cd29f3b49e5cc6ebb08b1592876d0a5",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "0643c53cadb98912d5b327937a7fd9789e464ee6a10bb72c3c4890d2a8ca7b7c",
-      "sha256": "336712f1d06ceb16bdd7de45f2d77d58519d14b850554b244de03d79d845ddc2",
+      "sha256": "2f1feb44360b97f9799851a6571377d916a6791a109349c543b43950dfc12faf",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "8246311e2c27ec81d71797dffeb487a4ec1b6ceb49c387dc38588c7e85894ef3",
-      "sha256": "b863fd2cbfb14f68cdd662191bb9e92d7399e54df1498c832217f6871d2cc823",
+      "sha256": "529697e70c3ff12e78e6de8dffa34a9347309aff2ed860b3b074534dcd416e04",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "f7f157f016504c61c282d1589c2c8ede15580c02900fa012734dccece7bd20c4",
-      "sha256": "a7c67e7a4539b20043c06ba05f53f08535cb79fcd64b11c7a1ca9ff6797c3f86",
+      "sha256": "d4b8418cea9a44b7ac2c00799a379571e9a7b0ff13df90370be6d5df0c2e037a",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "231090afa53d1a4b2c3f931d8f8bc85bbd484e600256267de6c7505f9bf1fe72",
-      "sha256": "f575b5bba9d321683c19f9f7a17c5996f21476e5e6c702782db93ef3418df1a4",
+      "sha256": "862f35370714b0e300e7257ebb02f63be607c84d93fc1920c6f33701aba00eb8",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "7b98c2f3846fb0623979e7ac7233cbe5e161ea4d9aefbda8b5db44c7bf4d8e5c",
-      "sha256": "112ddb5eb9e3dd1755538c37299834e878383a23f3f7524c3a2f0a2f64ce379a",
+      "sha256": "ce45b892d2f8eafd93df8089974212d9b970e31880f41a2a3b511352ee0f2558",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "202ecd8bf04aab531a4731ae05111bd72f67e986d97138d0f184236b6ca98d39",
-      "sha256": "18f37a576583c5bf13720dcdfc107c9e39f3a39a8855434911d617446e035d74",
+      "sha256": "9b174c5cac77da947fe23209a0ac81cb82ecc216a5961fbd2e37158216571e77",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-ecosystem-governance.md": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "5e31cf237aa92945901a9984bc3fdeb58f1fc28a53da75f8e59a0ef2d636b02d",
-      "sha256": "16348e6dc7b73647db1a6b1115724e607b30899d74715706d5c869456f449b9c",
+      "content_sha256": "3d70c5aac8a49dab4d3d917a429880e5237763d320e96b028e905493c28ef29c",
+      "sha256": "9ca5bc69d898cf2f56e625c04431895bdc490c44693dbcd8d25c939684c85463",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-model-logging.md": {
       "asset": "aiscr-model-logging",
       "content_sha256": "d42ce69f6ea1bef216914aeaf02c796063f8c6f4a8f14bf3369f425b88fca01a",
-      "sha256": "b81e08bc48727dd52809169ced9bf9ca7dd9f3e8ff9ecbf3b4eb7177987a23a1",
+      "sha256": "7eef0b40b005c82300a0dbb7f093e2537679b2275035752e3dcca7bf87c7fd58",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-openspec-posture.md": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "c17ce5a6b971afd0129582c914e570cff47ab95d5ecbe959c7d78b12c1813396",
-      "sha256": "c4f8ad8ce66f3ce19a6d93871e40ead79d85c32faa975fd100763e04b7618ab5",
+      "sha256": "cd0fa6129e7e02c3157fdcc76da7d9110f151c54ccc67ac4fd45dd240aae6b71",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-planning-core.md": {
       "asset": "aiscr-planning-core",
       "content_sha256": "f780c15b09f58cee487cefe4d02bb8560eb1f402619de5dac52c984cc9becb04",
-      "sha256": "bc98a941a4e0574570e98a7d8b0d424ed59ee4a17d0b93cb7fb66b1236cd8473",
+      "sha256": "ae1e1599eb38a699296d5f49dc4ddb75dcb5106e5eaa901aa7ea6adbdaa87760",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-quality-first-execution.md": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "e54a9c38935f537480f4b43473b80de6f9d56674d96bc6817e7e438f36e87229",
-      "sha256": "9d250d8a8a7a8d1c37ca0535514edf076674bb151b382fd4656d36d3a80c8bcc",
+      "content_sha256": "88fde2962b6ae3a676c46bd903a06484a782cb980a54b98f74281336867fd793",
+      "sha256": "ed09eaa7dfcfa2d842d1ab7d863b35bb7d97bb1c47d8654bfb0b86a2131879de",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-review-conduct.md": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "245282cb2f8d92a2e325cae9d839cba73d8cda71cdcfccdb08ef5ad4fa11f0ea",
-      "sha256": "955c29411741e045276c8d33bd30f9211c3c62ec8ef54c307dd8a6ef6ba5e6a1",
+      "sha256": "bef27d74690f83d70622c39dcf13976cd4b91c5d0948c6b5463e2ff3ec79669e",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-usage-logging.md": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "2effee28b3c07c1b57bb4220fcb73e696885d1d4a2d1991881f6c03dd1c2d918",
-      "sha256": "70babf23b9f733eab01c6ad139dd337ad4949c12d507cf4f9a50bb9546e5ffe6",
+      "content_sha256": "e10b1ee272c05b8e636baac19c19d140267cdceebf99c32068126968dd34ae23",
+      "sha256": "b2af0c15d74397e667f22ab2c973d902a3750e43f9f1e902b13f2f177deb8a3a",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-workspace-boundary-safety.md": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "b5b37b2d69100690f45e2c5f64d717d9e56764c7dd2e12105c833e4bb1f90841",
-      "sha256": "0020d70f758ab1299c416dce9fd64abd5749574707239d1d9e968b31a18f72ae",
+      "content_sha256": "58eef822e0c65de81b81b5eb395c1be8597eec1652f98d355379610eec11bfa1",
+      "sha256": "d44c92efe90fac365a655fef0b51955c25053ed9a2b26eaa20a06dfdeabe5f2f",
       "strategy": "copy"
     },
     ".claude/settings.json": {
       "asset": "sibling-vendor-runtime-settings",
       "hub_input": {
-        "//_comment": "Claude Code project settings for AIS CR. Governance: repo-root CLAUDE.md and AGENTS.md; reviewed sibling delivery uses sibling_governance_delivery.py. Sandbox keys are retained because they are correct wherever a sandbox runs (macOS/Linux/WSL2); excludedCommands carries the Windows interpreter shapes the vendor documents as the exclusion remedy. Both shell namespaces are reachable on native Windows when the machine-local sandbox permits unsandboxed commands, established on build 2.1.252; with that forbidden the PowerShell tool is closed outright and every PowerShell rule here is inert, so reachability is a machine-state fact and the control registry records it per state rather than as an estate claim.",
+        "//_comment": "Claude Code project settings for AIS CR. Governance: repo-root CLAUDE.md and AGENTS.md; reviewed sibling delivery uses sibling_governance_delivery.py. Sandbox keys are retained because they are correct wherever a sandbox runs (macOS/Linux/WSL2); excludedCommands carries the Windows interpreter shapes the vendor documents as the exclusion remedy. Whether a workstation opens the PowerShell tool namespace depends on its local sandbox settings and is not recorded in committed governance.",
         "permissions": {
           "additionalDirectories": [],
           "allow": [
@@ -785,6 +653,14 @@
             "PowerShell(Move-Item .agents\\* .agents\\*)",
             "PowerShell(New-Item *)",
             "PowerShell(Out-String *)",
+            "PowerShell(Out-String)",
+            "PowerShell(Out-Null)",
+            "PowerShell(ConvertFrom-Json)",
+            "PowerShell(ConvertFrom-Json *)",
+            "PowerShell(Get-Command *)",
+            "PowerShell(Get-Location)",
+            "PowerShell(Start-Sleep *)",
+            "PowerShell(Write-Host *)",
             "PowerShell(Remove-Item .venv/.cache/*)",
             "PowerShell(Remove-Item .venv\\.cache\\*)",
             "PowerShell(Remove-Item -LiteralPath .venv/.cache/*)",
@@ -951,12 +827,21 @@
             "Edit(/.agents/scripts/lib/workspace_safety_registry.py)",
             "Edit(/.agents/canonical_configs/command_deny_floor.toml)",
             "Edit(/.agents/canonical_configs/command_allowlist.toml)",
-            "Edit(/.agents/scripts/sibling/**)",
-            "Edit(/.gitignore)",
-            "Edit(/.gitattributes)",
-            "Edit(/.pre-commit-config.yaml)",
-            "Edit(/pyproject.toml)",
-            "Edit(/requirements-ci.txt)",
+            "Edit(/.kilo/plugin/**)",
+            "Edit(/.kilocode/plugin/**)",
+            "Edit(/.agents/scripts/run_operator_patch.py)",
+            "Edit(/.agents/scripts/sibling/sibling_repo_write.py)",
+            "Edit(/.agents/scripts/validate_command_deny_floor_alignment.py)",
+            "Edit(/.agents/scripts/validate_permission_rule_syntax.py)",
+            "Edit(/.agents/scripts/lib/command_surface_model.py)",
+            "Edit(/.agents/scripts/lib/codex_rule_readback.py)",
+            "Edit(/.agents/hooks/**)",
+            "Edit(/.codex/hooks.json)",
+            "Edit(/.cursor/hooks.json)",
+            "Edit(/.cursor/permissions.json)",
+            "Edit(/.github/hooks/**)",
+            "Edit(/.agents/scripts/check_tool_call_guard.py)",
+            "Edit(/.agents/scripts/lib/protected_paths.py)",
             "Bash(rm -rf /)",
             "Bash(rm -fr /)",
             "Bash(rm -rf /c)",
@@ -997,6 +882,8 @@
             "PowerShell(dd *)",
             "Bash(robocopy */MIR*)",
             "PowerShell(robocopy */MIR*)",
+            "Bash(copilot *--share-gist*)",
+            "PowerShell(copilot *--share-gist*)",
             "Bash(robocopy */PURGE*)",
             "PowerShell(robocopy */PURGE*)",
             "Bash(.venv/Scripts/python.exe .agents/scripts/run_operator_patch*)",
@@ -1111,535 +998,523 @@
     ".claude/skills/aiscr-plan-from-issue/SKILL.md": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "733379ca744ac131276dbd2966dc98820bbc3d6414b3a8e7541de2ded96c6146",
-      "sha256": "4e9ce432114f047b2eee3a59da37e540b510b7e69c9d727b563bb73ebbc0a563",
+      "sha256": "c109ffa5b5e9061ff0be19c2db81336cea4ef79d0212ba3e4d249e121ed98045",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-plan-issue/SKILL.md": {
       "asset": "aiscr-plan-issue",
       "content_sha256": "665ad5ee22884d19d1a2b53090c74179c1d3b7da987e09e25b6844fa2274f1c4",
-      "sha256": "dbe05114a44cd5133f290379409c678ea2c50344a24db441d4a8c3a902bf13c4",
+      "sha256": "df34349c5f55529ab48784e5e84527eae2e6af43032582109454bdbd1f54bec9",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-api-doc/SKILL.md": {
       "asset": "aiscr-review-api-doc",
       "content_sha256": "9f12610e188336e8a455bda9c3d48edf12289fd5510d02262cabf53a37bb875c",
-      "sha256": "4598e3aa64ad1721d714126e249085f6297b00ac8dbfc697a09a56a0945306b5",
+      "sha256": "fdfd39c3e1a6866b24fb7ed11f729986ee2ece93fc75e349c9ac6a282d51e114",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-codebase/SKILL.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "d81d11144d483e5d21591de7f48d1cdd84157b8c32564a2cf4f53ed0283cd824",
-      "sha256": "5bdd29f8e94a4269c27fde4948cdcfc8becb707ea9a8af8198131191641cb7d8",
+      "sha256": "631fb1de79943be231507dace6e8fb2ca4e3a3b66f3c7be438b753518b131cc9",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-codebase/review-schemas.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "d4105297d4c488db37c549cc5a5fc1aab1f7125472f63b0645b2c3c5d19f57f2",
-      "sha256": "6c81c59e3e75e59825f4fbd7bc6fb6d3268c1466d91ba3ff97646ee3ab113eb0",
+      "sha256": "6b0ab5701620b4c745acb6715306b923c89f9f13098eebb439d4a1188015fbf0",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-codebase/review-tracks.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "5f99a8dbb6ccea3d1c8fe1582eb8f1825a9db4db5422aafb715977573a5b5d08",
-      "sha256": "003bbd06e2d5c622847269da1510c6f0b0f0e3578416ab61ff5cac27d56bae8f",
+      "sha256": "4f476aebfdbabde05ee57c99f27e30f8fa75176c93e6b1ebd444e52191520320",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-live/SKILL.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "36bd275f2ee1cdf23b7ef0cd894e8b2f229df30f2ed6c1ab20587625535a874a",
-      "sha256": "3fe2ec37acd57bb96d18fe2286ee9ce1f4cb0406f59fb7d3b7f028408ebca48b",
+      "sha256": "fbd1eadc25979cf3988124ba1480714b55cc4e1f54b294095d78589aa117705e",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-pr/SKILL.md": {
       "asset": "aiscr-review-pr",
-      "content_sha256": "019cf3116b455eb8640a38e6dd348b2b059ae47a6e3d12a34abbcdbbb5d19bb9",
-      "sha256": "d6f7d605cf890fdfdc4f66970465b81fcf47ead450017a0e294702909b7859e9",
+      "content_sha256": "580110cf9c177cd8fd66dd6e5b3cb31e3b715a7997598a2aa8662911b070d587",
+      "sha256": "81a9e45ad740a4222459cf25f2f03f59f4385e528e060ebcee97e766abaeffaf",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-pr/review-formats.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "16e671891a89da4550616301eeec1f18df4a47e084ad086998364670b8a57388",
-      "sha256": "fc5464b14195fb6d43e29ebdd6261f44d40853d3f13779f518c5a09af48134d0",
+      "sha256": "79530828dd11bfc233505c3145a6a2b4cde93dccb11c71dbd28f1f7a3276f77b",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-pr/review-tracks.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "70c67e2adcaddd614350be098bd5f776fdf12786d6138cb503084036c473f112",
-      "sha256": "622ff5c8f4ee99129718945f28ace656149e6d309c3f918822130c060817d2e9",
+      "sha256": "8920a0cf6441e549acdd0d730e110833957e06c4c49dca81984d1cc1edaa6ee2",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-prod-ui/SKILL.md": {
       "asset": "aiscr-review-prod-ui",
       "content_sha256": "18760149166a023eaec3d495f8c65f7bb10502098181f7cb07866da54cc3e22f",
-      "sha256": "7cf12218b62de2ffd4be0472a7fbbe838730ac4c4831003ecde744d6f5b62a25",
+      "sha256": "787f5a2b8b7e709af92b1fcfba137a63a01fbd3aa8e05d90051015b95d720034",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-translations/SKILL.md": {
       "asset": "aiscr-review-translations",
       "content_sha256": "5b45600c91c43c79c5570b0b1a1a3d3e66a571799c1d722461abfa23c1358009",
-      "sha256": "afb6e7a9a0bf2b1c2d667309a9ab450f87a888ae4dd7092f794a1edb98982048",
-      "strategy": "copy"
-    },
-    ".claude/skills/aiscr-setup-workstation-safety/SKILL.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "03e3f5c07e9e896bc2a14f95836a43afb58b398d5d9dc30a41c9d2e5e3827956",
-      "sha256": "209c63638262c0b78596b2aec1459141d6b8ccc5d6549ab5e81e9685c5473938",
+      "sha256": "30ac9083a4ede18df01faa2b3a3110d71ca614817cd5b9cdb841e45e43156897",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-write-incident-postmortem/SKILL.md": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "06d7391c1ea7f11b7bfc6cb61d668b570876aa090daf9af60a15b1be11ebe575",
-      "sha256": "335d9850a3ddac71b562d315bc237f4f29e0cd1861f1382ab54451a0ff663de8",
+      "content_sha256": "9e7355c673831441c55139c320b06973687ca06ed3d6933aa25dc50a49c6732f",
+      "sha256": "cedc1d6950ac011c00ca5b121de09ec1e36f57d0fdb45d8cbf91d987dbc4215b",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-write-release-notes/SKILL.md": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "f3366153a74b06233bdc0c348f780ae87fe80beedfc9f953bc240e0df0fcc757",
-      "sha256": "ad7887118e7fb3732f37aa2dfb179cba8468b90f65f3c91278366770f79a3cdf",
+      "sha256": "0231371a3865fa5204029de8a087208584b04fe12dda93b39149166f4b68d602",
       "strategy": "copy"
     },
     ".claude/skills/openspec-apply-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "a8933b263ab01b4ce0a04ac805bd5321cadab78c84b6717b8617fea7eb2dc7dc",
-      "sha256": "846968936d33cdb3f285f2907e76eeea69422d36fd59ce82483d82de83d0ff63",
+      "sha256": "341717e9e0b34bb97c8ca06ddd381a329def9a3c9bc7deef8c2ab21b69f7ea05",
       "strategy": "copy"
     },
     ".claude/skills/openspec-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8ea5eb23ac050a781616c7b951228c9763f62fccb7e0a6537f286679f1c01a08",
-      "sha256": "eaeaaa052861a08344c1cf857e48537c0329101abb2017658fdc5ea642ecdf63",
+      "sha256": "c950c273ccba733374a34d7f231a394558a831f7cc6ab9c6597bde6cbfca6365",
       "strategy": "copy"
     },
     ".claude/skills/openspec-bulk-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ecdd713771651c50970c4ccf8167d5ecb0e2dbdffecc3f471f18123db31ab35c",
-      "sha256": "cc72082458df62f1c959521e82f23d60692e6c7fa595c5a2c8eb5a6a92892d41",
+      "sha256": "be54bf877171528ff798ce151ba13fbaaa08816b83dd573b2fe06a8f0bde6eb7",
       "strategy": "copy"
     },
     ".claude/skills/openspec-continue-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "66c2eba5d06c3650719bc2813e0a54c85761a1a08aea358bd0dbe0052fe7d7a6",
-      "sha256": "d287547c28ccea4caa97b764d687421e5333c2104051b4023346711bffd4c4fc",
+      "sha256": "af072ce40db371f24899db614619868f7e265c7dfc647f6b7438483ff5d66b2f",
       "strategy": "copy"
     },
     ".claude/skills/openspec-explore/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8eb7074d34277cf09e630ebd189a127154b8007d48445824b2c4c676806d501a",
-      "sha256": "7138e93f33f4b27bd89ae1f5dab8e637d3d1270ca3320e366a0d28e03b057939",
+      "sha256": "6a3b18acd93adb6f8fe1cc98110fd70c3784b4503d7bf38a13d8fb3e892046a7",
       "strategy": "copy"
     },
     ".claude/skills/openspec-ff-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "78a8fa3e1524cfe166ac67ec36954095d09fa2f6c0ee26400390d84c2656f022",
-      "sha256": "5f0c76435c0d11c77f6db016e667100020768f97fd1f2bf99c60b8acc2a6878e",
+      "sha256": "a682dc692afa0a0e058083db9b4dadd7daddaceaf937b6c078ecd8896672e1a9",
       "strategy": "copy"
     },
     ".claude/skills/openspec-new-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "fb538f6c146e3eb703c2418d0fa09b062afef61319f4230b79471f5b40f025de",
-      "sha256": "5cbe3207f3b0b8bea64ff376bd289346631c5454eee41daa26443e72fdd8ec16",
+      "sha256": "0d4e6134214c7c0e0435e97849a189e1c24b1465ffc9beb8b2f7bad17d40439b",
       "strategy": "copy"
     },
     ".claude/skills/openspec-onboard/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "cfca0c17fdcc439ef4c18c97916c8b6e4302affe02d5b6d1e212ace4dbea44aa",
-      "sha256": "3df37c2f70ffe3135b163e9249b0856617a258947be538c18cf964f9e398f27b",
+      "sha256": "16793d3a9059f50e120be32072b2f8e31d4647b42f0de8f403209c8bbd46f163",
       "strategy": "copy"
     },
     ".claude/skills/openspec-propose/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "e353e74472fdef44af4af2c646348085b5b87df60efe06949ca401ff00c972e6",
-      "sha256": "1f4c3ea99c7263d8592f973b9017c6bcdc0d2cb5783283fd055cb4d78af466ba",
+      "sha256": "7549d6924b055ad0e5ebb1ef75bff7d65957b28c7d72f3d9d6726a224da6d3bb",
       "strategy": "copy"
     },
     ".claude/skills/openspec-sync-specs/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "75556d2ca69892525698a0c681e0c3deead1e25f3b7b9be5449eaaf1621f026b",
-      "sha256": "89b8132ee2d3dba53db0cac06ca05943b11ea6aeb66a188f1212af4008f59dc0",
+      "sha256": "e0094ad43f04d3448bbf21a2fcb369ee0782baf0dff383779b1b4e5e6465317e",
       "strategy": "copy"
     },
     ".claude/skills/openspec-update-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ca7ef061078b2260be47c2654e7df29b4c81ac1173dc73cbd565c3ea40879e87",
-      "sha256": "292561996103db6ab6545eb877dbc0f78399b9a6e6d059e7641a3ee00c726791",
+      "sha256": "67686b8acdfb60091ac69f3d9fcfe999cd96b7a2515648ea413e7e32deca676e",
       "strategy": "copy"
     },
     ".claude/skills/openspec-verify-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "3b86fbb9734fdb6b942dd12d0afa4247457aa7f212bb48832eae133f5e66880a",
-      "sha256": "c98e69e0f6b4375eeb7506c51b03066d1c99507651db531de075c93f50540c80",
+      "sha256": "63a5c07430f99bfc48fb020dbf9fa861032f42190be08e0c1c00d14274de3009",
       "strategy": "copy"
     },
     ".codex/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "9601df1d33e432993dcdbb4dce99270e9688d8c49700d300d7d31187f86e2624",
-      "sha256": "a70504da1409d641be72939c1b51a25499430bbb6697ffd075331a0425a7a109",
+      "sha256": "1ee712f4537bf482fe3a77adacfd43c1496487d967beb77f2fb918604e0e5bdb",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-correctness.toml": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "4a7bfff177ada1d4d32565c25922a6c5aaf016a366675aebb05ecbacf61b7498",
-      "sha256": "62726f24d8d79c117428e4db88352705d0cc9c0c4ef56c88283585ead43f113d",
+      "sha256": "4b88761d578143a1f5354a2b6e3a3719e093c25136faeb198c088ab2b4cf83ce",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-dead-code.toml": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "327828716d9637c4dddba1a35a8c529a1ebb9c0cba3b5f96c84fb23147490efa",
-      "sha256": "e521c0b767fbeca3e23c99beabe87360e99b2220f15fd3b797566b0903e40826",
+      "sha256": "8aacc0351e7eecedc4422c3365093fc4b93a83d2eb2c880a91ba32a92c61e97b",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-deploy-safety.toml": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "db82c379b51d11814807a92ea60457f66a426ebf3df422fd0f00df318a88a9f7",
-      "sha256": "32fc42377769d287d5a4d94272a93b14983e977d99422bb216f164f161670ef9",
+      "sha256": "f87fa680a0bd5189606e213e29d7cb008fcb423fe7ae82e91a7133a7dae87e21",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-duplication.toml": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "53812686d7e568037beffba54ea7fc0fb7fbc942d7281c8a3810424eaa8577b2",
-      "sha256": "27c96d307416d2eb4b9a6107e8379b4c83f22d879a803abdde9ab64d0b2ca042",
+      "sha256": "0945fe726ea2e9a7b3805f91961dce417b8f3b9d59d3b7509ae1d5c61c0bdd68",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-integration.toml": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "5d7685e164fb43f21d740d3027d95cc48d6cdb6460cba49d2595334e6f102300",
-      "sha256": "3b3efee35a8e1f556afd11d8356aa3bf8ea670d6b3e9d0229e8638942be6fac6",
+      "sha256": "237b817f838e95a988ddd5ede11d1f5026f83e7234a14c937fc3819b198c4b76",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-performance.toml": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "54bf28d7e16de2d73e845a7857eec677701f20cd355379a07dfd16e27203c82b",
-      "sha256": "f7babc85ad34dc96d69a0b885e7f03290aa211b8bba85b9b2e5ec1a00b299c31",
+      "sha256": "c448d22884809f8689abb8c1b82217f3a68c7d7c7b4296b2e002e8468a8b9e05",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-security.toml": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "8d25e04ced30fb72421115f0f7b6881cdd81a2600ef64faf979ee25e8591659f",
-      "sha256": "22695f16304a55d28dc03d9f98c58d6c2f60689638788f0d5e599e437c714a9d",
+      "sha256": "1a527d96789e25efa661d9665cc2142ff6f1645877ea87a9a4060cf5204f3b31",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-investigate.toml": {
       "asset": "aiscr-investigate",
       "content_sha256": "c1f961be2a56763df5510421a51f9b903e06373ac5e8e89a47b4896df75c05db",
-      "sha256": "31c1c281cc49b7f1f5046e69e7cdd791831d50f1bdc5ba588ba39117042268e1",
+      "sha256": "61cbb695bc423abb5ce82b2b288bf58b2c4743c0430e0bada29af6625200fab2",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-survey.toml": {
       "asset": "aiscr-survey",
       "content_sha256": "10e2e995476f7f2db43850ff2013cab72876fe02f1a5b956880a29ebdf35ea65",
-      "sha256": "64eaeaa02a333b3c2ddf613ab5d73c1cfbe80582fee385e345e20775595b7ad6",
+      "sha256": "0f98552a5ec5afa2ab14aa32861ec4056b3cf5c64208c3b56350185ecf2d73c3",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-verify.toml": {
       "asset": "aiscr-verify",
       "content_sha256": "d59e24904eeb1ff7ecde9aede9de24c2757f743856e60cc521190c7f00c9853b",
-      "sha256": "c9c461c942c51224f090245f107023b1a526613aee1adfb4a9204e49ffb7f9d1",
+      "sha256": "3284a165acbad67a197919f6e1b5f6953b8f44ed8adf5ebe0c744e8962ee4706",
       "strategy": "copy"
     },
     ".codex/rules/safety-floor.rules": {
       "asset": "codex-safety-floor-execpolicy",
-      "content_sha256": "979e5447188a74cb6904ef0408cf6b4f09d5232ce86ed1ddeed8d6232aefe53e",
-      "sha256": "264a17d59f27d6b4ae5f51b746ada6d1681fa4ae9a24ebe82999be9aed728b43",
+      "content_sha256": "4a0dab02180befaa108d25c6c4ccc0d8ebe57c4062dbe316321b59cefc26308f",
+      "sha256": "edd40865220afb0a6e4145c55ebdaab7e2dd28f934a447ed1af997a04440a1b1",
       "strategy": "copy"
     },
     ".cursor/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "01a8fe63ecac75b1a435d87925b4257ff3015eac47284e4971120128991f50d6",
-      "sha256": "8744e89332e54cb7d3b6d04ab3bdad5e79baceb03f48014964f3606ecef2d850",
+      "sha256": "6022fb6871b1db2934f9f457b274099ac2bb61c7b25ca96cc757e762357e6b13",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "4bbd3c10a6cc9391794b87d48ddbba0184b9b0c98e554e110830169fdc3bfd13",
-      "sha256": "fe3b85b90b4f53bbe48a64a5842e9a3fb379c0f504958032b631ed87bd988715",
+      "sha256": "264ce2fb90782c87008c7948967c69ecd89d51f200702a8fd9bcf8c45d2e3e0e",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "68928c1595aa3577a48bbaeccde0bb9aa6f087b1573af9a88a1d6ab271697c25",
-      "sha256": "93f2086b5b41b06f91aa4840afc151e0a5b34d15af4ff10340245336d2a928f9",
+      "sha256": "40033075259745e7e1afbb0cbe0c3a9512132d7c9ffa1abf3a3020c0b6eef905",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "74b443f3ed3c0e5523ea502fc7674a7742d8f9c3f136a57bd1e3c73817923ddc",
-      "sha256": "ee56f20a1460e4adb9bb8e594b3d407fced88117ebf0bd07613dfeb3fd955d5e",
+      "sha256": "09dcb3d7e8f18a8551c304ce17d8b234e7f8e299ad5c213257b565a6134faa45",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "ba2d0bc94f86ac661f4735c545ee136648614a9e3b18def3f452c0b711a52b2d",
-      "sha256": "9e682a051dc1a98f8951c43e4ae13da9fd37131ecffc1ec1c35ebe1820ccf4d1",
+      "sha256": "b217dc6bee64ce50e88cd9c1163542e77bc33034ea1ca9ba913783f606885ae0",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "91fd2456822cce04e82bc8195c550104f0989d85bd19e7f8e6c75189155bee9b",
-      "sha256": "ac2f49d8a7b5540ba0c9931eb9fbf3e12b39560508d080d5bfa23f871603bddc",
+      "sha256": "62c0405ea189c2cbafc33b4b9509fdc5da3c4dd04b369a37ebfd72d4b261afc3",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "68d7f908827acb4aea2c23a6b809a11e31cbdb91404731b7eec7bf5cc8b284bf",
-      "sha256": "4b4536f0f224e86bf600894de40b81c5a8cb9d76862c6e0f42927807648162d3",
+      "sha256": "6709765ccd19fcb26c8ed0237c6fd32082db4f910ce35842f9b10a8e4fdf0e5d",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "bafebaba5982a4d4355f5060948c11e3c23758edd2376851d0558b2cb675bf80",
-      "sha256": "c08ae52a8f608abea04a8d8aea7a5bfa9727c1eabafb692b4dcec82823604ac3",
+      "sha256": "95c3e3f4db802306570e97dcec5bbd72b254dfadb597e7618525f8dac804f466",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "fb1f35b98b8c4a9f34f46e36aa6299ec22fb2ed4d0e3fdcba90f8ccfa1400e21",
-      "sha256": "b033951b37586f2aec8f67c55dd343beb3fde1ea3fdf48d51cf726d5b041ab29",
+      "sha256": "998c03102d253d29edc0050088c7c07a42a99a44d647224cbf9fda2c5c0bd925",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "b171ebd39a974678dfe92479ef2f2c35da39de1f29865f3e7772948ba6f45b76",
-      "sha256": "887706ad9380760d34a5099345b98669f48010a42f9523c619469487bc420bcf",
+      "sha256": "73252756fa35db054874f558278b6e87525ed0f52450992049ae9ce45f96bb9c",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "8de979bbb5a65003c78870d9b1ea9d3bf3a09f3cd5414db38dd8efece6b0ee6a",
-      "sha256": "e97abff69ca022263fa8eae2f60f181d82be07b444122e3366d6865876b832ab",
+      "sha256": "761089af5470e9fcdbe8b5ec80332882ee4cabdb8379e0ad8975a7708972e73c",
       "strategy": "copy"
     },
     ".cursor/cli.json": {
       "asset": "cursor-cli-permissions",
-      "content_sha256": "1cf851afbcaa8383cb8576f51c50900cd5dbb888e28be6b152dd30b0c2e3404d",
-      "sha256": "1cf851afbcaa8383cb8576f51c50900cd5dbb888e28be6b152dd30b0c2e3404d",
+      "content_sha256": "530c31e5af09fd5f72c5556c625835c73d32389e3c7e8759af9ac93c2e5c817d",
+      "sha256": "530c31e5af09fd5f72c5556c625835c73d32389e3c7e8759af9ac93c2e5c817d",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-ecosystem-governance.mdc": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "0e7da51f72ee3d032641267054314f9017ed6704a47aa9d6907a5d5074946329",
-      "sha256": "c36598f2a09d15602a968ef2c06a57a753b6e29abb0d3d22e19b898384ee75a1",
+      "content_sha256": "fc9cb815a5dcc8de65128f4930ca07950372115931164db2d57e6c9e64244cb8",
+      "sha256": "0a55d5b9ac0027d86112fcd33a4a3aa4fbc35eee4383046fd1d28cf7104b8630",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-model-logging.mdc": {
       "asset": "aiscr-model-logging",
       "content_sha256": "5773c2ddd265ff5b31bbff5e9746ec65a3c3f4253c930c782048c77ed64662ac",
-      "sha256": "58a5fcff7e2a9aad9740b6e0c94ec729344a802fe05bf2574e62e0d06e856edd",
+      "sha256": "511c03f02fcd13ed4991ba811a4fb058b3aeb3645892fcd1dff35d93c1dd6a1e",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-openspec-posture.mdc": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "c2946a055314e4ca8e2ab9746ff55485dc2508087814378867e380c41511307a",
-      "sha256": "5ad8b03565e8dd67dd7e5da38c303c68d4ccd718b314bc9388813da1f2f376c4",
+      "sha256": "047244d062c6f4964c7a860c643a9725404f5676ff531d6cdd3adc67fdd212be",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-planning-core.mdc": {
       "asset": "aiscr-planning-core",
       "content_sha256": "25b10c8a923c990fd71061dfb19bc6440dda8ac5642f684471c0a1e7feff9b31",
-      "sha256": "0ee70e6f2d353b7e49c826676cbc5ebeec02deacb44659217d50d71d261a90a1",
+      "sha256": "1db2bbc0dd8882be8522bf29cf472081754a94037b56448de314d235f650912f",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-quality-first-execution.mdc": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "3e41113b07accd84efde654884fb61339fbb8c4823de9ca6245303c8f61fb6e3",
-      "sha256": "fb6654296b8c74577f4d1e968aac059cc830cdd007d5c062700908bb4487ebc0",
+      "content_sha256": "e487c3f5561f260b851fcc1e56695cf085fe84f9beed62bee2d8fe100588196e",
+      "sha256": "eebfbaf83233f566d0c4b1d3ecc18c10701ba65e0871b152879778f220b21666",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-review-conduct.mdc": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "bf7f04736ee39b6c97697daba4095806566c8c735e1ada9375eff13fcc877667",
-      "sha256": "c46a3b738a4b69433d6c550514afceb2d8a302f3b35c45b50f94c483de5bd01b",
+      "sha256": "51e08ccef10c84ff87ba04b3f87696d0697bed61adae478deefd6c360a5828c8",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-usage-logging.mdc": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "b2b78a85d942179ddd3e1e6caf8c7f1c0434701e972b1ea02b2c61d637635415",
-      "sha256": "5aa994805992b4a753b535f53c5a9445c4643552d15b3090731bffb25019ad9b",
+      "content_sha256": "18fe099791bf8a49dd0d8d41feec1b1efce61a44fec59d3539b0a06bac134ac7",
+      "sha256": "bd9d3489ae5f89751eb36b430a4579cc7739269e83e3cd2535f65cb4dce2547f",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-workspace-boundary-safety.mdc": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "dd61f62725ca7be9bd541ed761973ab9e6702cf50c86bbe0c8b2ba0be5d4a30b",
-      "sha256": "c46c76bfd7ac511ffc7b72bca7508afdd11142053915157f872eb70252ca58b1",
+      "content_sha256": "c24a3649e3d68c7b4f0801b169433291c10abe5e9aa1f2054cbd767803f0fe60",
+      "sha256": "4183bb48c07230bad02f57116fd37d9ba5cd54405e94f0d0339e009c8316d44f",
       "strategy": "copy"
     },
     ".gemini/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "d86edb342c745b559a482ae2da31a803d2a734136ce20b8901d73ea7eedfbe67",
-      "sha256": "ea5e87245ef52125b2cae28c216aa253ccb10f7d99b73bf6447d62f03a215f24",
+      "sha256": "5c4018f992fefa1122f9dec42b81febe23c51d2219a8329337545ad68c8be8ab",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "be3a755a8daa42570204d63736a43b56e5edf6c132ef1bcd0defaffa4fde9de3",
-      "sha256": "43655df16b19464b952fda232d8eea646e17d134b93acd2df90c5b8c87120959",
+      "sha256": "aa37401d2fcf5f9dcaf8775363291204ee46de968e716cb962e2a86f5a16065f",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "646459837ce6ea4a80665fb6b928bbdb583cf60e363d7f7f3eecc0ee9b90c76b",
-      "sha256": "3ad65e36810b8a2c4c59e8b86fcfeefb3565dfceb5aa8e48d12c29cf1fc88a4b",
+      "sha256": "fc299bb6838dc2cb4f82aefb59cfe13a4913f109450a7e469637c3ed06d7d2ef",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "b078e7cee652bb20f26b49981cbd48c4b0011a910d7d86c390b01a83b9c052c1",
-      "sha256": "a8af8b629d1db94fdf45e58855f644b2d8b3dd363af6f3e1498f11f357167836",
+      "sha256": "3d150e6fc7d41f0c2f8dab5b4890d4ca5295f9ed4f49d498c6a4b1c407e0085a",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "79a1c52ec8ff9ebbf8410b4765cd05a2c0cabde6848fa86cab119f85cbe176eb",
-      "sha256": "f927ff69b578898beb565c4a05048afe5261d06d363408c1d4243558f1b1722a",
+      "sha256": "69f0239a4802c4c4e97ca695d8bfa441b0878d0fc8c72c9449a9cd96eaf66cf1",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "239eb7e9d3e98ca3847692a79b31dbc8ea8c09340088a016577c64f75671276e",
-      "sha256": "b3c2e3d1fc58c8d46df86073e4ac12084e6b8aef947d65a273dc4033b9d825be",
+      "sha256": "ff4faaa58b435ed34e0e0404039fbbb051c6a3773a8dbc9d662309ccadba0860",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "0a51dee13dc27bd0bd5a36254f33fe58e9a429f0448aaacaddf169bcc0d6c989",
-      "sha256": "f91afc2540cb57e7b24cea6a0046ddd4dd5c6f3e2b633abb0909879f793e8c5f",
+      "sha256": "ece29b2fff7b3883fcd1e36ddfabfcb59a01219eb5611645c3f963548c43788e",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "71fa991a8bf9ffddbdb2554f59b4de8a745afdffcdeeb78894bc1e8143d1ce8f",
-      "sha256": "34025a45064b80c148f104401e994147a9e92dea58cbc7998b5525f006444260",
+      "sha256": "562120f0958f51338976795341a4b0d91d8c14e84f841db13a6212b714b3660f",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "2bcd8ef4634b7f17d41d94bf00c121b2a889e6a396268668ead81ff5f7da9e2c",
-      "sha256": "a3ed92044efea5ab610ab22133950986d4d1381c8fd79059e1462916567f3952",
+      "sha256": "6cefb7821f5ca326aa96a4afdf3a42183baa02023524220da483a6ba97634efe",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "2f4210521fe66bccb583273a6d87d8198f339c0861df751dbfd5ad2a0b23acad",
-      "sha256": "6239662fcff25f1b5c41927d8f987f6909b3ad8738f6d3aa24c4e7e78fb313f3",
+      "sha256": "c0ea3d0276852c2be71e07b32dee74ff654cb4c627791872e24997a927fc3357",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "0e6e99d7d558b77a466e8c5cc7bef30b779251de8340c71756889f36ff152c00",
-      "sha256": "01fdc342c0b8b0d19b904afc8ee2cc45ad81db0614901d7c1ea0f8530ec4b0f8",
+      "sha256": "f66d9428df2a50ae50ca193afec3c0c72d416a6b8955cae5b136e8d7eee8fdde",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-plan-from-issue.toml": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "520c24344832f822e16e17127b56a25fc38339b6f97da8fdfd13871f936bf908",
-      "sha256": "223b35f588f4ad25dc5492e1f22e80eefb04beb749d465f49fc9ac0a720b9fa7",
+      "sha256": "5dc246929417e6bc11f9d90f2438445f9bf201e24dfc1c84478485819d1af6a8",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-plan-issue.toml": {
       "asset": "aiscr-plan-issue",
       "content_sha256": "0ebdd0475a5028eea8daed1f4ed8186da8db5e201e357d5945a92b701ececa17",
-      "sha256": "496d4c0ff72b9b9e5dcc444f8ba9ffe9c358b379b5f1504fe581762d1f215d81",
+      "sha256": "7a368fab3c3403eb83e2d9b95f7331ffaabda5a3479fcc25488cb00f538960e5",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-api-doc.toml": {
       "asset": "aiscr-review-api-doc",
       "content_sha256": "d36be78d3d3b9d69c4b00c2b14c0436b0000e41382c9f6c4b7c47b35fdf1b9f3",
-      "sha256": "e1e71abd782bab55bf8669919189bf34d257d2063d57c90895718bbdb7fb238f",
+      "sha256": "c9f7c858e4461051d2e91a71b38b8850fea3eecc9af80f86ecdcf6f49cc23c96",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-codebase.toml": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "88cda862457343a606abefb6a6a11c92091348f0983cb4a862bf397f208ee776",
-      "sha256": "e00f40397035d7a2399ea48146c179344830ce1787832cf2bd7619d39cb9c89f",
+      "sha256": "207b95e25a0ca83457b4aaf1396c838423dcc8838fabf801f256edccdaddba61",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-live.toml": {
       "asset": "aiscr-review-live",
       "content_sha256": "5aa707441b9f8f48563e6d1361adeaa1bfdca969a08288578f7d3d8f2a80b25c",
-      "sha256": "6890d6672fdde3d11aa1d1bfc7b99d6955958fa8ddde12808b20164e9ee27319",
+      "sha256": "48e921cc361bac2a1b10ee31afe36a185b3d56cc10490627963167d1ac6d1f74",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-pr.toml": {
       "asset": "aiscr-review-pr",
       "content_sha256": "e2414cf28f36a894d5c4097a66d18e2bf13583a10eaf081f87eb49f712dffbb5",
-      "sha256": "a29867ebbb4da80a67e69d166d4a0cf94a9e26599a44dd67734cea20b3bea0a4",
+      "sha256": "1424d6baad80563596ad62133644f0437f58b5b63eecacb6760da308f78a02e4",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-prod-ui.toml": {
       "asset": "aiscr-review-prod-ui",
       "content_sha256": "a0ebea1dba7b19aae2324bdee36cc4cddf76515abdeb46968617be304da2c2e1",
-      "sha256": "1bef4c36e3fd8d16ebc7727dc3c1cb208f078d7953e848ee2978ff75483b1a3b",
+      "sha256": "1f98f517a3e344359166daed737be7761f4bc49d51bd2883eeaa1b8340bee9c3",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-translations.toml": {
       "asset": "aiscr-review-translations",
       "content_sha256": "5a9730b6d9b98be9c3078d4f4bd5024aeb87bc13f307cbc9630505c13a9452b6",
-      "sha256": "af0112c1a43f0ca87b4c40428aa2493f33488651571605a130f39267816d4c1d",
-      "strategy": "copy"
-    },
-    ".gemini/commands/aiscr/aiscr-setup-workstation-safety.toml": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "069201edcffe1bb65b629c11d425ce8c01bb21bcd7a7a753685aa69f219ae8b2",
-      "sha256": "e7b6c882704882ca37be7732a6066bf4e59f459328bbbd4d39247262c92cd0b9",
+      "sha256": "0f6a57c8d687114742dda3eb3621cfa8d4a4fd9d778ac7bb8e7b1742596d056b",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-write-incident-postmortem.toml": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "e4e950782876cbc6a379d7d8cef3b7d9954daf09d0153a6642fdb3e670e50763",
-      "sha256": "c8403658708108b874e404e8cc727296f47a740af552ccee479840aa8e7c2e10",
+      "content_sha256": "f9ed142e945f0e06936e1cd4625ae43f4ed47233e559e48a0251f0694ed8cb32",
+      "sha256": "c6a1d8ec9f0d2e8319e641e68be88621abdf456ec5961041f70f1dd3e92175db",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-write-release-notes.toml": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "6a4f6989f577f5253b2390e39f1f1b0c0b9ce4c059c8e287f9163e8757544858",
-      "sha256": "d78edf43b9d05a7dbd5b53a003fb47613687c1279c998ac4155f332ced3fece4",
+      "sha256": "8c2ded93d3f21c4efa79b92e875a955a31fe95be9b1176912119cf99d92522e2",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-ecosystem-governance.md": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "867dfc3be9c5201da1d900dbecfb7a15b17d8d155fcaf46c72e700692bd269c2",
-      "sha256": "93c148352283688db33ab0a3424477e2ed837c612bf2b8a4fc7408ac49409c85",
+      "content_sha256": "f2d1cf6033180e889566c2f485aa4939fd1a504fe0aa2665f91a31b4c233f8ec",
+      "sha256": "aa14d3d5b46de754009756ee6bbf6b5649e5b5fe3754f4ce050db02dd52fa7c7",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-model-logging.md": {
       "asset": "aiscr-model-logging",
       "content_sha256": "446c4d6c64932fda2dcd8ba27e8180fc357169819540563cbe147210da82a6e8",
-      "sha256": "8939d6c6e0ddaa70e7fe0993238a49660e3dea81c73b20373591170a05fdbb81",
+      "sha256": "0fe12d8b9729813159746393526e3b80df2899e8e84eade394d8c670baa0cf24",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-openspec-posture.md": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "ace20c0d7304dc835b3db9bb5b60e2aa7ea862be36cf3d27ead04d37e22190ef",
-      "sha256": "f46fc242835f97e9d25836b61dd3c988e9eacdeec5c3b24a866d2c42df057413",
+      "sha256": "fdef46168af2b883320b8b03b3157464bd67575bd240bdb966e22a1b1c9c17f8",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-planning-core.md": {
       "asset": "aiscr-planning-core",
       "content_sha256": "7fba4a09ac062961ff584bf8604501f398233cf36dc6a4d6ef63c3c731f043e5",
-      "sha256": "b843e437889a4c225769754a9d495b0bbf21b676d33a8bc0cdcb8451118dcdd0",
+      "sha256": "fba973f62135ae66d88544260e46a8ecc7ab758953638661f082a77722aa2aca",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-quality-first-execution.md": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "8a14b1c09733a9b6b950c2bede50585024971937ff8a95ca6e56c656ad3f2630",
-      "sha256": "bae46556a22c12747b312652981417b9c88d259136cae4bfdd6ac35a536b2cf4",
+      "content_sha256": "125d015f0f178697a688937f123a0d2090453fd9e0cfcd35300e2a6b6783e48a",
+      "sha256": "1e5e76351ab0f405b37dc005c90a6a5d865f79130c7269986c0b8b1ecb205dee",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-review-conduct.md": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "b9e71c5090cd5ae40cb6b5b13f8b816d36d038b83785b19ef4da55cc6efd89eb",
-      "sha256": "9e3171708abf460fba4d822387cb08871f71fddcb5fa2d0e0d88c245a25c848c",
+      "sha256": "9e48d9b589ed1275d179c51fcd6e25a2bcd115cee70dedcd5b9ec5a976f677fc",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-usage-logging.md": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "436f4646167e645e4c254fd7fd369792d7678552a862c75ce599d6ebe2dfc806",
-      "sha256": "a1c0db256a7bea8996666026a22c1746f900f873dc8ec6852c1f61bb6a456675",
+      "content_sha256": "d1b07b6a297afc1c989bf71b9720f4b5f208d246cfed02edb21cc0ec3ee4ed25",
+      "sha256": "c188318444e7f7cfae213f01cf05083c39e5dfd0327b663469c0de19fbb9363a",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-workspace-boundary-safety.md": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "469f646b1cbc6076358dccc022479c8f56b17d1c0905e9193d87574e8adb6546",
-      "sha256": "0901dffb183234746ba9319ca40314cbdf66a0bf8a782d997b1c318177168f8d",
+      "content_sha256": "6e4b67d3fba6476ae9982491985e45829735da16664f1acc0bd0b690c84ed52a",
+      "sha256": "45e952601644bac7367fde43272287737e0160c7fd64b8ee67458692a08912c7",
       "strategy": "copy"
     },
     ".gemini/settings.json": {
@@ -1694,8 +1569,8 @@
     },
     ".github/copilot-floor.cmd": {
       "asset": "copilot-floor-wrapper",
-      "content_sha256": "f46c408e9395e396b12a67f796ec751a9feff6d3a6b5992b2de89c8e4d554b5d",
-      "sha256": "747e58256b28673419d376614d51dad7793a588022dd071fa9543a4beb2fc4ed",
+      "content_sha256": "6993dfcc083e7d07a77d43bfcdb7430e078ec9224ddac1ef10c0d55eee8bf83f",
+      "sha256": "2d85d681ea42be7543259df456e971c7a76afa31cfc0257ea044d413158b8815",
       "strategy": "copy"
     },
     ".github/copilot-instructions.md": {
@@ -1706,116 +1581,116 @@
     },
     ".github/instructions/aiscr-ecosystem-governance.instructions.md": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "d57e0a031845510c1766a43107ad02262dd7cfb21cca7ecbb5cc137e730bec86",
-      "sha256": "e9f973d10aaef8850e6f4b1465f3cb00499bb14bb3d8630fd097638cfb0378b0",
+      "content_sha256": "85a86536882feeccd3bb1d9f1bcafdb57b3803457597a7aec97f3c056685fe4e",
+      "sha256": "315f304a84dfffd0551c0f5d03d42f1cf0f26a6b203c0bb7f6faf086c59546bb",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-model-logging.instructions.md": {
       "asset": "aiscr-model-logging",
       "content_sha256": "3b96bf8491f9d087fb59b7afea8a9b7bd7da2c8eb5ea08b865f5c2efa0cf7116",
-      "sha256": "8e9a28afd5975a1b79225294ef961a96ab94675fdf937ff5f1ea21c101a8c2b8",
+      "sha256": "c4afd05116f648a2d830bfabad4bfb7f6b360c10b52351fc9ac98dc749d0338b",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-openspec-posture.instructions.md": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "d15403e80d021f164bdb2e1eb17d8ed680829a3cdf97e0641e878f300b9371af",
-      "sha256": "5915a1d772c5d8a4692efab9b9f2738d2e375e442df470f6924a189c4bcf1db2",
+      "sha256": "a769ec1f1c7c0063b17a111261cdb25cf7c98f7e7de3398bca23196a2222a457",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-planning-core.instructions.md": {
       "asset": "aiscr-planning-core",
       "content_sha256": "c880504a55463c6dd1d8df5e404e44e87eb133f9c0354d5b7f1bb960bec6733c",
-      "sha256": "61e325bd6b95bb2e538870086ad446cccc23162d4457f6f946f061ec8c19272b",
+      "sha256": "27a064ae15831e45ac8675f177718e5dc6b5a623e9f7e7cd99f327486ab03942",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-quality-first-execution.instructions.md": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "3d0320dd95f30293572216ffde9ee1015e86e1a83a39c9606371ec2542aca187",
-      "sha256": "404c64b185b86b3e144b639770122607311bb27b7b52b22e16b4736b862e727c",
+      "content_sha256": "7f92424224189f59ede125a557c90a56e3231c35225d519a60236f4504bdfae0",
+      "sha256": "df1adeee6c141a5439a0ab43cef373a96ee19540b34af2288151d3ba6be81819",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-review-conduct.instructions.md": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "2a92af250883adfed0597ed2e338e94e3d7bdc0f5be3a1cabaf2d0ca25d2d039",
-      "sha256": "8541069b392b583e276740a219139166161bc43976c908cd5a2fbf415cf894bb",
+      "sha256": "55885a0f92ac94d5759d3427d649174f03e2e7a57a478f564af7fe60467143e4",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-usage-logging.instructions.md": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "b5f9e52a31a3180a5ed461cea00193f65fcf003e56a7752d8338df0f5a88ac54",
-      "sha256": "da161d4eb294211cd494bee63c92048b75450f4be1ebb11fcddefadc20cf47b6",
+      "content_sha256": "52e8a96d5fa1754e72c761a1199eee154f8538a73f9538fa7da7ff1aa760630a",
+      "sha256": "42727a320e6806d1329b5326489de0c2382591145061079733e31a310e6d3101",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-workspace-boundary-safety.instructions.md": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "3e988b303f9a1bb2e135fd4e3058eb1e6c676a75b44b62d8076ba6db393128d7",
-      "sha256": "6f5307fb2c1bdd621892b245aa83ac95b26f7c3a24fc12a85663c6f3ab8f3d88",
+      "content_sha256": "8a53afc13e1454b0c83c4f0591110d02e4c6aa96c989a5b51402f493fb6ac26c",
+      "sha256": "ec499c98bd1144354cd3b655472406cd44ba93ee4453e1c200b092acb6ca4d05",
       "strategy": "copy"
     },
     ".kilo/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "f4c839b10a7103021c4659ff0216ed0bd1d6e5dcdb77352943fd051fda9a10f0",
-      "sha256": "1bca06bddc9041ec7635c33774ccdb80f914b129ac0fb5038872d077878d283e",
+      "sha256": "c5749c67b142167bd331fd0d0fccaaf497c161b4037396bc36c0a021adf39ca7",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "16185de1b86b4bba945918b2c16efd5e93f2ed680194c3e311e6d15f5283c368",
-      "sha256": "73510b56c3193a8c4d2bb9ef538016816440750b7c61236e2dd34f94ef22a2bd",
+      "sha256": "62de0a5cbbb23bc8e890e419ce00fa13232eedcd109724c1d22018aa886dfced",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "feb333f896e4e436d9df7533b54ff6fb6e7e65e0dd02f514a744bb590853654b",
-      "sha256": "5cfe54c1f5f32a29877a38b9c551a4ea07e73c1ca277bf60071313585043b5ae",
+      "sha256": "8245ef5296ba456117a75a38f32616871a2d3717c40e979a604416a3c8ff665e",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "b29b88b34e2b572e18e61878ed5092bf18ed7ceed10ba28c5039a4921bfca921",
-      "sha256": "11f8d738f2213069b644fee29d16c565d7f13731134a24856f5e221105c48edc",
+      "sha256": "11890a269e9c5cb95d6ab9eff5328973a24ba66dd04586b668cdebb2619ecf63",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "a47ee9d43a58e0b87a7df26f8913899c924405705904ea0888c0fccbc6d90a39",
-      "sha256": "ed730e9162b8339d08654f9fa6b75a9ca094ef4aa39fce7f486dbe8e726c077b",
+      "sha256": "e81fa9fefc0b02f23bb2a337291b741a8f1521f9844b2e3f5d46137f390d64bc",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "80ee03e8ed68a19fd96cd25532ffb2987b6323727cef40a0e38c4338504b051d",
-      "sha256": "998bf88bb59c47dedeb8f9473ee7417dc53e92c724e9649cc8c59fe6512b63df",
+      "sha256": "ebdcb446ec9588a9c4e2d5fb204f5ba5f125606a3d2c72b3605d69b3f488604b",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "aa0574528495aa2ef418cd591f2d6aec3d4961ee18053a772e65c46bbaf189fb",
-      "sha256": "5cd0b386695ef7fe24f23d56d080a924cc13efa81719e236fda20774eb4047b3",
+      "sha256": "596249fba14471334743c304e2ae9f16a11bcd7add5c7991a1d322ccd29a9d9e",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "7ab220bc113f0b700e8b4d82eb256749fb58e5f0fc2925e99d0a0f75db19d7bd",
-      "sha256": "d28f322084588f6d886bd8844c4a83f265f6d37f584e8b602ef69c6c5ff556f4",
+      "sha256": "ab2a253232465392df8e6f793cb31eceaf0965e3300f22e197e75bd960c0d4ac",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "3583b44908c55392ce0e2a09f22237815d6760e8d7bbb8bfa6aab662c8e6a48c",
-      "sha256": "23b985a1596cdccfe95603e505f3337e2642dadd5dfc58d1a8268fa3f4e33ea4",
+      "sha256": "95899c6ff71dd890abdcc718439f14d3f627e4fb96bc4110116938a3321877b1",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "bf11d47479cd47a1bd070b64b5d101b317bf7ff02ffeabc835eff6efcc2c2f85",
-      "sha256": "bfebe09ef956354452e10550dee94478ea5683844b3bc71e83f28beb76c554e0",
+      "sha256": "da51da4a3fa060200714be07725eb4d11af7a5c28f72cff97794b71e454c0dc0",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "7a8fb47bf217a6410e9a2f8e3515999d2a7c0ca5f9b17f6116be26b9a80898d7",
-      "sha256": "866bdbb1e50b5106a061b411761b0d917f025a0af1c21ee5b2576eb57bbb9bd2",
+      "sha256": "89d67b7dac7839bd59b648fb5de59034eb894a19a7a2730d018e5c53a7ff348f",
       "strategy": "copy"
     },
     ".kilo/kilo.jsonc": {
@@ -1882,6 +1757,8 @@
             "Clear-Disk*": "deny",
             "Clear-RecycleBin*": "deny",
             "Compare-Object *": "allow",
+            "ConvertFrom-Json": "allow",
+            "ConvertFrom-Json *": "allow",
             "Copy-Item * .venv/.cache/*": "allow",
             "Copy-Item * .venv\\.cache\\*": "allow",
             "Copy-Item */..*": "deny",
@@ -1892,10 +1769,12 @@
             "Format-Volume*": "deny",
             "Format-Wide *": "allow",
             "Get-ChildItem *": "allow",
+            "Get-Command *": "allow",
             "Get-Content *": "allow",
             "Get-Date*": "allow",
             "Get-FileHash *": "allow",
             "Get-Item *": "allow",
+            "Get-Location": "allow",
             "Get-Member *": "allow",
             "Get-Variable*": "allow",
             "Group-Object *": "allow",
@@ -1909,6 +1788,8 @@
             "Move-Item .agents/* .agents/*": "allow",
             "Move-Item .agents\\* .agents\\*": "allow",
             "New-Item *": "allow",
+            "Out-Null": "allow",
+            "Out-String": "allow",
             "Out-String *": "allow",
             "Remove-Item */..*": "deny",
             "Remove-Item *:\\ *": "deny",
@@ -1922,8 +1803,10 @@
             "Select-String *": "allow",
             "Set-Location *": "allow",
             "Sort-Object *": "allow",
+            "Start-Sleep *": "allow",
             "Test-Path *": "allow",
             "Where-Object *": "allow",
+            "Write-Host *": "allow",
             "Write-Output *": "allow",
             "ag *": "allow",
             "bcdedit*": "deny",
@@ -1940,6 +1823,7 @@
             "cmake *": "allow",
             "codex execpolicy check*": "allow",
             "composer *": "allow",
+            "copilot *--share-gist*": "deny",
             "cp * .venv/.cache/*": "allow",
             "curl \"http*": "allow",
             "curl *": "allow",
@@ -2150,25 +2034,34 @@
             ".agents/canonical_configs/command_allowlist.toml": "deny",
             ".agents/canonical_configs/command_deny_floor.toml": "deny",
             ".agents/canonical_configs/templates/workstation_safety/*": "deny",
+            ".agents/hooks/*": "deny",
+            ".agents/scripts/check_tool_call_guard.py": "deny",
+            ".agents/scripts/lib/codex_rule_readback.py": "deny",
+            ".agents/scripts/lib/command_surface_model.py": "deny",
+            ".agents/scripts/lib/protected_paths.py": "deny",
             ".agents/scripts/lib/vendor_matrix_registry.py": "deny",
             ".agents/scripts/lib/workspace_safety_registry.py": "deny",
-            ".agents/scripts/sibling/*": "deny",
+            ".agents/scripts/run_operator_patch.py": "deny",
+            ".agents/scripts/sibling/sibling_repo_write.py": "deny",
             ".agents/scripts/validate_agent_tool_feature_matrix.py": "deny",
             ".agents/scripts/validate_command_allowlist_alignment.py": "deny",
+            ".agents/scripts/validate_command_deny_floor_alignment.py": "deny",
+            ".agents/scripts/validate_permission_rule_syntax.py": "deny",
             ".agents/scripts/validate_tool_parity.py": "deny",
             ".agents/scripts/validate_toolchain_pin_drift.py": "deny",
             ".agents/scripts/validate_workspace_safety_registry.py": "deny",
             ".claude/settings.json": "deny",
+            ".codex/hooks.json": "deny",
             ".codex/rules/*": "deny",
             ".cursor/cli.json": "deny",
+            ".cursor/hooks.json": "deny",
+            ".cursor/permissions.json": "deny",
             ".gemini/settings.json": "deny",
-            ".gitattributes": "deny",
             ".github/copilot-floor.cmd": "deny",
-            ".gitignore": "deny",
+            ".github/hooks/*": "deny",
             ".kilo/kilo.jsonc": "deny",
-            ".pre-commit-config.yaml": "deny",
-            "pyproject.toml": "deny",
-            "requirements-ci.txt": "deny"
+            ".kilo/plugin/*": "deny",
+            ".kilocode/plugin/*": "deny"
           },
           "external_directory": {
             "*": "deny"
@@ -2201,1326 +2094,1194 @@
       "copy_applied": false,
       "expected": true,
       "strategy": "preserve-only"
+    },
+    "SECURITY.md": {
+      "asset": "security-reporting-policy",
+      "content_sha256": "31dda57e50bb0bb0d7dfdd70463c0ec9b8dd7aac18749d8fb574cad9ae80a742",
+      "sha256": "7a0cb275920efdf20d953592ba7859fb4874fbc37530d929685528166569df91",
+      "strategy": "copy"
     }
   },
-  "committed_at": "2026-11-21T16:40:49+01:00",
+  "committed_at": "2026-11-28T15:25:02+01:00",
   "files": {
     ".agents/canonical_configs/references/documentation_visual_conventions.md": {
       "asset": "reference-documentation-visual-conventions",
       "content_sha256": "5d1709aa4e27af08a68e6ca2646f0e6bbf934aa670138b3f057fe316f6af63fe",
-      "sha256": "9209a6795848cf2428063f3fb90b2418036f1355dd8273476f45bbc7e01715c6",
+      "sha256": "718fc89ccf6eababe20537592b508c86df4d83e295729c0ea0240dd593346256",
       "strategy": "copy"
     },
     ".agents/canonical_configs/references/ecosystem_map.md": {
       "asset": "reference-ecosystem-map",
-      "content_sha256": "237c9bc028c89951c18b5c2ee7aab79e4a06fbb6fb93da78b084aee8697def7d",
-      "sha256": "f7c4c662ee965897ece1b9a88b96feb3a4a86a7c02f9099e9ef8fd7a8c98dbbb",
+      "content_sha256": "19b018b403653908c972122f1c901ec3b515771ebfa465f1eb386cb7940d498c",
+      "sha256": "313d618048b1dc84846f78185f8c670ce495254fe7b89480519871a2e05e1aab",
       "strategy": "copy"
     },
     ".agents/canonical_configs/references/governance_by_tool.md": {
       "asset": "reference-governance-by-tool",
       "content_sha256": "7d09561574a9911464a067febe5470229ead7f283b01272d86d5b9d3ee855c66",
-      "sha256": "0b48ecc200d5dd9010b788e4e283bfb69c90083f5b47605e0cf91e4eae16bacf",
+      "sha256": "4445536d7b7a9ecb667601268e75424ae72ef15e5b88111b48ae4029b1ac8820",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/documents/incident_postmortem.md": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "1ae97597f46cb5982765d541c30609e3987c3cf4b4fbdb0864af69485861da73",
-      "sha256": "503e45a9216b1baec0feb17e33886343d2a5de580a8be6faa1650dbb6297fdb4",
+      "content_sha256": "f9746df10a3e5655850bdbba698f5b23969abaf6620ff96e532265591d9bb72c",
+      "sha256": "86d6c9f47a52ac1dcf89c2eadd9c7ac558d3ce9c3ff5f97bf841bc53d46c1b4b",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/documents/testing_scenario.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "a44e31b4a0b676d44d02ee336c5a4fa0191b74160dc464c7d9a8bfae8c0c32d0",
-      "sha256": "c6f0f3928c3467a91ca30fb33a35c795a82fe664a6037c6f52d112059c038a12",
+      "sha256": "7e5b709da6058456efeaf503ecb573b6c6ce53ca3b19a15101eb64fce9d36a9a",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/documents/testing_scenario_corpus_readme.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "e19309da30f827deb09ba4e87a9464f5391c88c97ba9a03cf122b5a5add38528",
-      "sha256": "4925ebe9fb5ecc17db5a6d2542a93ae5878d634903fc83ce932ddbbe19376081",
+      "sha256": "a72da24f3a2e6d2f8a5c673c804382e361fa3de440fae5cdbdfee76ae09cf49b",
       "strategy": "copy"
     },
     ".agents/canonical_configs/templates/translation-revision.toml": {
       "asset": "aiscr-review-translations",
       "content_sha256": "08d0d6cc57ce4c6b1097b6cc71f51f32e895a522cb62bac3d4e27311ee3e72e3",
-      "sha256": "537e1c78a7777ccfc8834b9bed0e496ee2e5b3319fa8b064901adbbdffe7c973",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/README.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "7476097e5d631d7cc94a8dd399d4a8b2e561224bbfbeedb9fa25e35b34bba9a2",
-      "sha256": "e34b41b6c43f3f4ce29ce171b9086f01704a2f871119c5d21734899ffa31f747",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/claude_safety_snippet.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "65cd8d08c54e905a99e6470789dc21ea91c17c8e7910ce4893582810af83de58",
-      "sha256": "65cd8d08c54e905a99e6470789dc21ea91c17c8e7910ce4893582810af83de58",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/codex_user_config.toml": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "68f8aa742e6744c14111450e4899bd70362bc38f8597777fd760a3571a35c965",
-      "sha256": "8243ab3663810d998761d5a4d3412f2a9fe0c1a4df4a1d43a7b2195d69891b5b",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/codex_user_rules.rules": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "a321889b9cfe4603fed42552854de7ea0a4d7d0f489b4f2ab0b578b891d2d096",
-      "sha256": "b70e671eb7057bad68cc324f69fb4ac5021d6d1c1ca0aabb15c383e226263fc6",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/cursor_cli_config.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "35ba441ebb54dbed97cba0695993a7aeb57f64898d2bf5082c7a548fdfb24102",
-      "sha256": "35ba441ebb54dbed97cba0695993a7aeb57f64898d2bf5082c7a548fdfb24102",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/gemini_user_settings.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "400734f1c4a3afe47b4618149b89c5eff62530c4d8e1109c10cf406e2e72fdff",
-      "sha256": "400734f1c4a3afe47b4618149b89c5eff62530c4d8e1109c10cf406e2e72fdff",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/kilo_user_config.jsonc": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "4e66591fdbbc38a0bb09b06e6be6916eab746b7eb127031bf89909e4d8291cf9",
-      "sha256": "87f5147deb5c8549270f8d4462e4ec4781691b72ef8d1af11ba0f2a79b182bf6",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/README.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "6e2015702c03e1b03c216b3b100adc123c1b25f1801ca34b56740eee64763ae0",
-      "sha256": "a696b55adc6193530d5685e7bcd5240ca3d66a47f7be6f8581627af35b53723d",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/claude_safety_snippet.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "ba35652cc0933e354dd77465d7d71531ba2d8f0662bb75ee761de711673d733b",
-      "sha256": "ba35652cc0933e354dd77465d7d71531ba2d8f0662bb75ee761de711673d733b",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/cursor_cli_config.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "54a5230a59a212883990b6ad663f61343d5cec77c9f65cf39b4fe957d2ba253d",
-      "sha256": "54a5230a59a212883990b6ad663f61343d5cec77c9f65cf39b4fe957d2ba253d",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/gemini_user_settings.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "87e25c67f47db2cf611fd479ff10fa9f2f26155e34c56624787c2e178f22cd30",
-      "sha256": "87e25c67f47db2cf611fd479ff10fa9f2f26155e34c56624787c2e178f22cd30",
-      "strategy": "copy"
-    },
-    ".agents/canonical_configs/templates/workstation_safety/schemas/kilo_user_config.schema.json": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "aaf5746517a7303ad9ce700364c616d331ec8793710124d3602fa82892d0e62a",
-      "sha256": "aaf5746517a7303ad9ce700364c616d331ec8793710124d3602fa82892d0e62a",
+      "sha256": "c5574213b9db22bf05d4d6672f02f11116d0fa48fce0b1077c8c2aa29b2dd61f",
       "strategy": "copy"
     },
     ".agents/scripts/codebase_review.py": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "1197cda0816d88613f00559279e547007316e6d0337eb90f2fbe158a926bfb41",
-      "sha256": "8af38a0dfc9e2162b38b3f29e3781b05b1fedc993801f2ab021e262d4d5b2251",
+      "sha256": "2cbe268ebe32d3d4e74f653a6aab3d8244698a2975b0f1c4be5b9bba85c75186",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_issues.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "b070e1b703881cdef9390b56719ee7be26c0ae7debd75f36ec3ad3b4856ed54d",
-      "sha256": "b3f70b82d543ceb943d002dbd28a57f58d2438a3fed095b8c7404ae0ee60b419",
+      "sha256": "700f810ceda1c27c86c75ef1383c0fcc263df1bb9bcb8dbcc9a41a35c8583888",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_pr_review.py": {
       "asset": "aiscr-review-pr",
       "content_sha256": "058439fdd2575c4eb18659b0677e6e270efe16dae6908e509c2ba3912a1a2436",
-      "sha256": "b6622e074e0a7bed0ec69c5c4e8cb76cc3bf27bb294d7ac4bc2c23abb1e47c12",
+      "sha256": "e859743f4e7119a1f092f545c3342cb2f4567380356c9b5fa1f0c35e693568b3",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_references.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "dfc09c8713d6f0353ae2cbfbdd8c4a73e2e22193ea357da4b74bf490f14c5131",
-      "sha256": "30ab0fb5adb6399195e7b7fe753d36057360410fc61e407d0d0244f0dc902fa6",
+      "sha256": "7a91f5a37f8ddb73ccfecd0c57003c5ce56c7f192c046d1715b80e57cf7ddf9b",
       "strategy": "copy"
     },
     ".agents/scripts/github/github_utils.py": {
       "asset": "aiscr-plan-from-issue",
-      "content_sha256": "549c17f24f56381d906134d73c173a71506467349e79db761ca6c7317661cef9",
-      "sha256": "740a52532953c02ff5889c8db7a0fa283b05325698495641e19af2a6a8cf5a2e",
+      "content_sha256": "4cf3142ec8e1cc7672ee8a38e8d2818e1ad66e157dfb83c6c9da8e7b941a7393",
+      "sha256": "ffe32c3b9b037b8873e958668a985dc5fdce781917352a0fbe33aa65bfdb490e",
       "strategy": "copy"
     },
     ".agents/scripts/lib/__init__.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "2c6ec18cc57167ed3d10dd974c6033f6bd44fb8b618c25589e4eaca4eeedbb2b",
-      "sha256": "05b5c1dcf03c7455d8f640a0a6f43759552793f15a79ca484d54ed64b95057ab",
+      "sha256": "036119092bf639c072cdb601a1be584bc701a1e31e9bb5e2a112227f676d335c",
       "strategy": "copy"
     },
     ".agents/scripts/lib/local_scratch_paths.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "ee092164037a33d6c6fbe9c4c8cbc05a61082691bc42d99e46b9937546f07eaa",
-      "sha256": "b27a06c7d51877d5e09e77f1cf50ff15ce0c9c85e7170f18e894632e9832f9dd",
+      "sha256": "7a31058fff57c9d3a87b5760bdefd26b9264e885275d5e3004ce85673236ed56",
       "strategy": "copy"
     },
     ".agents/scripts/lib/log_utils.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "7d798aa1db37a47c031b6d6e37f5015dc4baca862813c5ec9648a74113ebfd96",
-      "sha256": "0b477eb6b6570e25c23e9c4eae3cfd64e87a584c82d52c9d219d54a461111a43",
+      "sha256": "1e722557870bf8b356d1194cd64caeafd8a3a79f393ab6ff87b90d301cd84940",
       "strategy": "copy"
     },
     ".agents/scripts/lib/proc_utils.py": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "71a4b1fe508c3c564be6782abcee8200f6502438e2142e44f9e001297985e94f",
-      "sha256": "9edeb23d98a34b5896884c0da09658c30d63a4857b96f934f09666d62fb54ab9",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/redacting_reader.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "f96148688f25e2b58504b055b2c78e73df6886b0ea2ba06b8f6d57379d87a35b",
-      "sha256": "7350f2c12d90dc75274727f13a183460035815fa1ff84be3a152a1801855c3ea",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/repo_layout.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "46d0c31b16539ab6fb71f52fcdab6689c8ed0657838caeb75223eefb9370ed6c",
-      "sha256": "600fd25ce2528383f92bcf04a341d31b3d15d27179a028fcfac965dda107816e",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/requirements_subset_install.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "dadb9bf9371bec4667a73afbf87ff18770be4fbc8f52d5093f4126d1016a0622",
-      "sha256": "9536535f8ebe7e813d4b8397b487815fb262ae48dd42cb214736b5d547f6937d",
+      "sha256": "12ceebf8e0902fc02bcba3fa88bed54e89926ca3902594476ade9e331da64de9",
       "strategy": "copy"
     },
     ".agents/scripts/lib/runtime_env.py": {
       "asset": "aiscr-plan-from-issue",
-      "content_sha256": "bbde07d3024660ce6ca96961b9aadf7bff290fe53441e2a3f1c37b6ca7e7aac8",
-      "sha256": "8c10b521d9887c76e64ab87e258562ac0502fd6810c106e1743b52722723007b",
+      "content_sha256": "4bf9a07e02f72c5ed6752aa222db19de293c41ee075ebe3122eebe3b37c2ae27",
+      "sha256": "e62e86615099839aa3b63a7722790877e1414b035e4d25ce17a87e7adbadcb05",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/__init__.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "9267c1390978ea796ac493c82ed661933d75d26c004f45ad69c765bea3c7155f",
-      "sha256": "594724230bfc39add55a4f0eac2dee0c6125a3cb652566df10dc378e3d5aee48",
+      "sha256": "cca9f7b9eb8a6812a9c7227a1f3514b0277c85fe0198cf4854318508b5310db3",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/checks.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "64b3c1bae74478d92e59f95889a8d2c9e8b5748074ae151354bc94e59dde1d53",
-      "sha256": "7505f844def91933b9cbe37c0579f06ecf77d99cea70f932b9f04ba633fb59c0",
+      "sha256": "be2e5549cdd1f82db03b0220c61438b46d28a2666734b2fcb0504d8df567fcd6",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/ledger.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "c2522ea9410910e3f3424509ebfe784e658da6ab14d7ab5e7edfbf838748de3a",
-      "sha256": "dade9003f21dc10b9608b899e0ae81e7ad30a8ed7c35dfccc4faa4ba1113e91f",
+      "sha256": "06a1786903a3b98fe46d2cb535137f3ab286d20becb359065e065a1ac4c20bdd",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/ngx_catalogue.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "f83e3f9a0fc4887b76c884d7ca0e69685d165988f36e690a6000bfd17fda550b",
-      "sha256": "1ec1bc1eda50756b7c2a1a820c465d11a96e14f1756398981035bfebcd54e3c0",
+      "sha256": "bd2dd50564df220d6c8fa99477a2e6a542133a71f3091979843d18e949f90cdf",
       "strategy": "copy"
     },
     ".agents/scripts/lib/translation/po_catalogue.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "3d738eba3ce4158cba24e5b06c6315fcb0da056cbb67c2fa805c60c33c99ea4f",
-      "sha256": "b212d8321b27d09b4ac97d659a4f7d1d32b9cb2c127272f4ae2645dce3073139",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/vendor_matrix_registry.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "dd0aaafc00b768368020fe3ca32be679f20a37d74ad58d6c216a3099cf58af29",
-      "sha256": "b4149a946de5d08094b7776e7e30f15b04529e46be349148c37a1e03fdafec51",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/workspace_safety_registry.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "8a864caec712041cacb8eeee9bd6beb8ba563826e594f79ccb93b041cfa4c066",
-      "sha256": "7c0521f95be80649a16edb218b7a3f04574f402e135efc035cdc06c07b9ea4d1",
-      "strategy": "copy"
-    },
-    ".agents/scripts/lib/workstation_safety_requirements.txt": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "9af8813f327dfe2b5b1d491b953e2dd5939082d66c7dd8a481306547e0826551",
-      "sha256": "9af8813f327dfe2b5b1d491b953e2dd5939082d66c7dd8a481306547e0826551",
-      "strategy": "copy"
-    },
-    ".agents/scripts/report_workstation_safety_posture.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "e04a5d0b4410217b19a5ebf5faf7178d087c3f119f6ed14f481018844f67dfaa",
-      "sha256": "12a49a6bf623e31cad37892218cb9be9f7da0c7fe5e4755e73ec54f070b23612",
-      "strategy": "copy"
-    },
-    ".agents/scripts/setup_workstation_assistant_safety.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "495c3212ce1ba030745ed8391a21228874e1c4e2eba10df6140fb300f7b905bb",
-      "sha256": "ad79be35d524ab7904b46e70020749d38a906557c85705b6fd60842009bcf569",
+      "sha256": "f4fe1b112b2a0cbc41f4b341ad5df5ae55297ad4d3e6a64aa6704daed4b36519",
       "strategy": "copy"
     },
     ".agents/scripts/testing_scenario_corpus.py": {
       "asset": "aiscr-review-live",
       "content_sha256": "82068bfcded91ee54337ac9dc33a91049b603f3c0cef579102c8430b68fff4ab",
-      "sha256": "a54b8f596bc4d2e21afd37e8e12e5549991643bdd2c67b0c2bbe8f76576f50e7",
+      "sha256": "2d3b674c09338544632e00f3f757a177e116dd5d3abdb36f1cae008d06b73533",
       "strategy": "copy"
     },
     ".agents/scripts/translation_revision_portable.py": {
       "asset": "aiscr-review-translations",
       "content_sha256": "e7ccfa3ca9a876ab57122d6db30450c18e23685e1a5fdf2038f2c2c2badf7927",
-      "sha256": "f93964d772a04a594bef78ef2d06469dc26f0f23f7680f32bd6f264782a5c77e",
+      "sha256": "c39b72221bdc2325f83915df39f06199ed9794d8d14ad9091e5007f52288b71c",
       "strategy": "copy"
     },
     ".agents/scripts/validate_release_yml.py": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "27f97f012b257472ca0f90e05253f8f78be90f6db25c4d5ed25199fa5cb4ccf9",
-      "sha256": "0b3370bdeebc2a8d6dce2ee6daa9d3bb3cedf7057dd61f37c11e66faa79016d5",
-      "strategy": "copy"
-    },
-    ".agents/scripts/validate_workspace_safety_registry.py": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "3d353f604ce7f55b89545dacec8d0e29a5f728ed37e0a2f21175da3fbfeda96c",
-      "sha256": "ae40aeff05f143577490322f0c2e6e58533e176cc9bcb50f645fc727154e3005",
+      "sha256": "f4775472fcdd19f10942170f557666d599feacbf0e1821661f9ae5d6697db23e",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/common.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ef54202feec0ab9f6dd639679de1b9d698c3a2a007f9f7eaee6131828e29259b",
-      "sha256": "efa23b0983b01a4d6ebc9444c0dc9ea1ed538d48e614879cacbde54744f5c02b",
+      "sha256": "a862fe72a9262bc89d626e123057370d7f29546dd11bf1cfac6a76735f3a7903",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-drafting.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "071383fa805a5c76234bdddc1f2c997b74a23db29899490772acb45c077b9576",
-      "sha256": "cb2ae61ef5c4ebd2f8826a29576099c79517d1ac98af7cebe5697fc16234ffde",
+      "sha256": "d42f10a432a9c5fc4edcdf3816d5cc3414eb5a84cc13d8d021a9c8c8dcc53074",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-findings.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ce3ede70b7f2b6b212c8b0b3dcd0dd0ee5ac1856aa68f038656613b01cb14588",
-      "sha256": "184aff399fc1fb1d42d1080e4a22ea90eaeb570c669e7da378d01cdff10cd3f4",
+      "sha256": "ab37b351fbbeefc5e603f85326e94cd07fb658696a98b0760b4950e2e229cf4e",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-investigation.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "b879e7c8b92be26b1a535c889fa94b68d9ac5edd6fb89f8fb6cbbeb40e5b0c00",
-      "sha256": "d94148facedc1eeeb674f441a4a03946b633cc8dbd84387d0c3c01ce9d33787a",
+      "sha256": "c279bb9280b7156a5cc1f58bf7af64c1773ada2ef1cfb6bac6a96e22cc3955b3",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-survey.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ac6aad95478c836446ed9e173d0d268df952a3eda6c6fac61aa540c81399764b",
-      "sha256": "f02dcfbdc298bad8f5846788c2f6c1dce6609cb851dd9ca03e64477993a5f1b7",
+      "sha256": "0923cf7e12fc054db4ffa109d1a3ce07a7f40dd331f33902dacd98f30068acff",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/contract-verification.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "c1afd7623d7ae170192435328a421a61af9103892423ac8e904a54ca2874f210",
-      "sha256": "c803b98753494ef253411a35d0a4f66fc26bf845074253b76465ee18858891a0",
+      "sha256": "2af24f95bf3404331327420838fe14724a39f5ab6dc608f439ce9d8b011ae9de",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-correctness.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "a74db476458cf7316a4fba9d7b10ef946c4068732f71b109f42a45e40972606d",
-      "sha256": "034f9d61bbd32eb2241ed6762cf1655ab86d376423a6cc934cf93887de342d1a",
+      "sha256": "02d453d1a11ee8970234808fb3406cecdfcac1b2ac170542d895f9bd9ea8f4ad",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-dead-code.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "a2831797814534c22db19a96cdfbd8df486d3e906d73252fe328fcc25b4d8ffc",
-      "sha256": "4cdb220bde69e304ae31adb0d94167113172c5087594b2febc62d608fb6d472c",
+      "sha256": "c220bb598afbe1fc7bf41d5743d6d83d2abe756819d95afdd758eadeaa9e28b4",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-deploy-safety.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "29251736d2a9246d6b4ff29f007a965128e3331191207898be2e40c6f3f04b4c",
-      "sha256": "0a2067cf5746a593c13f2bd802b45772dc12950d23d917ea24b5937ba825c9f6",
+      "sha256": "88962962d72d2bec73e76f4bf1e89b218fce5c8b853e414448e05d7c18ee6045",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-draft.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "fd09b10a0c3176288afcbd995ccf0c09f04a4da9d39a37c367e4dfbb8fe747ee",
-      "sha256": "80fcbdc604bddde3e3835691a1bf7184ddbcfd3a7fcefe5832d6856d3ec90e64",
+      "sha256": "eb4535f04477e9bb1f9c15fb97916452aae7a253df0626f1a5912507e89a77a3",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-duplication.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "5beeb63b39387df7323cd559e0900ad7eea1f685f00199ba15eaad7d6c1a921f",
-      "sha256": "5274c16639982d45a3c9dad9870aa668b4292b3a46746e200529f27c2247d552",
+      "sha256": "d018d7d4abc647a43539b4360053d76a4d1ee23843d82ff74cf97473a1a71137",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-integration.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "1876fbe1f2ad86f4541526f01b2aac4573ecf976b29be265cffcf56d7c5ec1ef",
-      "sha256": "e7078ea0f617dbb1846ba78694ef8bf91eb60c1ba8ae64aa4bccd0fc2b83603a",
+      "sha256": "ea040af9352272fe58ccce39e26df96f07a506df26a43674389ab64bd9f1d7da",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-investigate.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "1062f69a4c9ecf788ae1e9d8bb513cc4b8a704696337f5dbbdf709cf088459e7",
-      "sha256": "0f2b0cd19d95f20fc7240a4eff1d9ccd44938bd183fc5bd936b318c4aeeeced6",
+      "sha256": "be647b3c8f83547e2a3cdd16cd84d844fe95c339e7e4cbcd56afb585c7efd0b5",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-language.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "ee3aba131ef92094b71c92cc97914b96777d4c1bccda97efa0ed40c8e6dd2721",
-      "sha256": "4bee6213f2ac4a89378fb7ec2661e5efa01aa2c81191d2192ea1a4fe00ffba97",
+      "sha256": "fee2a683a8e36b17fe6c5e9758eeaa33ef7a2b10d53308f7b05c23a7d7452538",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-performance.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "2b271ed43a76682f5fe4b519f9b7fba1775d996c3131a1ae1e32d2e39c0aa078",
-      "sha256": "59d5d4331a752ac99948c77364b8eafa755f9ddf36214ec5680e95a2c337a343",
+      "sha256": "a7fa23add8c53e4a976b581603349578278c8c006a8d3711db73bd6a38660757",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-security.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "eb9d85d47c722480e768a4c3e9d052179a062695c5903b69081adb6c56146f3c",
-      "sha256": "b7ae6eca06e05f6869d79fbd0db6556cb1e6f43f89f6d66de50ea69c50a64b34",
+      "sha256": "deb3d3f15494051f9accc1c7c2cd38157977cc98ce9fefde5305e5e64a9cd9bc",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-survey.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "19419b3243497825d4610df29b7f520b2f7d647c8fb4f741b882cbf8cf8b95a3",
-      "sha256": "6b7f2428cc566a23e16d20f319fe911bbd8cb3da2cd9ab56108d459f7c344a9e",
+      "sha256": "12e0955eddeed963eb8600dd8aae2fe9cf40c8608abbfd88b388bb9dab6fb576",
       "strategy": "copy"
     },
     ".agents/skills/_dispatch/lens-verify.md": {
       "asset": "aiscr-dispatch-library",
       "content_sha256": "04b056d8ce113b4ce5f0598cd96b32ad4b31d422cb9492b37156bb5e5e2a67b8",
-      "sha256": "8caae5f34ede6e51a26721c8b034122094e0dd65d2b9ec763681cf518e9e5fbe",
+      "sha256": "425730cbaada9a2de1000040f5e33e49952d2a852d3c8a462273561140b2bcc0",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-plan-from-issue/SKILL.md": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "7e5b387ef503118f6a536a87fd33ad6dedd6c9668adf69d3444ac21246a842fa",
-      "sha256": "a1b54f00829788b17aecde75653ffd18ff33eb550dd5993b65cb08e497bb6b96",
+      "sha256": "2ec16f67cf01184b8d12eccb2ba5ea0f129e81a510dc9611c73cb49fde08624a",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-plan-issue/SKILL.md": {
       "asset": "aiscr-plan-issue",
       "content_sha256": "b2ed6a1766d0ed3baf24a2443cf1fe9e6887450540299e8b4b951b4ab40addfb",
-      "sha256": "60f06c313ed47a4a3d80655ed682d87a62c8734c10db81166567574abd2e542b",
+      "sha256": "e4c012e298777df7fe32bd8fad486a1f49d8303aad83a4a0bd756d5770e1afd2",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-api-doc/SKILL.md": {
       "asset": "aiscr-review-api-doc",
       "content_sha256": "fdb2d361d1ac933707a71131c91fdac477dedf8c6ba1a0fe8e448590be3a1818",
-      "sha256": "64f29c7463a85824c2857b8f10b4d2941598bea0f1cb97dd040017751dcae8a8",
+      "sha256": "f37f03d8cb3047c84dff43e99ff3c502355f290ce875469cd565e22b59aa750e",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-codebase/SKILL.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "779ad2d2dab71ebd92104c6944c01be1b9aa4441f7f7599c2b498316068ce09a",
-      "sha256": "9c59f55c9824bbdf10a4b2f1216d0aea1620ea18b146ceef0b7220558b445300",
+      "sha256": "a04c82bbf6403fc1f703a763fd6ffdeb3fab5f89b69cfbc02eb4b4d8afaf84c6",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-codebase/review-schemas.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "d4105297d4c488db37c549cc5a5fc1aab1f7125472f63b0645b2c3c5d19f57f2",
-      "sha256": "6c81c59e3e75e59825f4fbd7bc6fb6d3268c1466d91ba3ff97646ee3ab113eb0",
+      "sha256": "6b0ab5701620b4c745acb6715306b923c89f9f13098eebb439d4a1188015fbf0",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-codebase/review-tracks.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "5f99a8dbb6ccea3d1c8fe1582eb8f1825a9db4db5422aafb715977573a5b5d08",
-      "sha256": "003bbd06e2d5c622847269da1510c6f0b0f0e3578416ab61ff5cac27d56bae8f",
+      "sha256": "4f476aebfdbabde05ee57c99f27e30f8fa75176c93e6b1ebd444e52191520320",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-live/SKILL.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "0b7fa34e71641e5f2a77f768f78530c8301ee4b3cbaa15da1467e314ec462aba",
-      "sha256": "df32b947929370178f06b0f7d6392fab3a6462f4f837cbfa84053a2b90091e8c",
+      "sha256": "95f198771569411ad72d3b931fcd6730145145212a8d16ef1b2c2e7216415176",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-pr/SKILL.md": {
       "asset": "aiscr-review-pr",
-      "content_sha256": "db5c09f471f3bf068031f7e57721a37e7a5c1687f1b3a63b67a9cab9a1fe7ebc",
-      "sha256": "ac61222564ccf301b246722c768e19c6f3aa2893f1c3ea675cb080c544bc9d01",
+      "content_sha256": "e1c1db2fe0a5352262a3f9c0b3c5e9c7edeb1d4abe07154be5d1f0209852b2c0",
+      "sha256": "6307ac86be38156916860f7011fcbe24e904533cdea8f7ab320b5ed748679f8a",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-pr/review-formats.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "16e671891a89da4550616301eeec1f18df4a47e084ad086998364670b8a57388",
-      "sha256": "fc5464b14195fb6d43e29ebdd6261f44d40853d3f13779f518c5a09af48134d0",
+      "sha256": "79530828dd11bfc233505c3145a6a2b4cde93dccb11c71dbd28f1f7a3276f77b",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-pr/review-tracks.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "70c67e2adcaddd614350be098bd5f776fdf12786d6138cb503084036c473f112",
-      "sha256": "622ff5c8f4ee99129718945f28ace656149e6d309c3f918822130c060817d2e9",
+      "sha256": "8920a0cf6441e549acdd0d730e110833957e06c4c49dca81984d1cc1edaa6ee2",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-prod-ui/SKILL.md": {
       "asset": "aiscr-review-prod-ui",
       "content_sha256": "70607071d8e4b06ef2b946ad31f1a81e5702f6b2b1de5940d10ae18da6566bd0",
-      "sha256": "f6ebe26830dc21652821755bcf24608b3c33a09baf7fa88ef6f588924dbd2599",
+      "sha256": "f1eb66d3e86b5a04a10a198f23db02acd971f329c2003519061715a138ffcb5d",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-review-translations/SKILL.md": {
       "asset": "aiscr-review-translations",
       "content_sha256": "6a440697d276ebb0d49ca1c28504f4466d84db56c884d9101768de2ad7a601ce",
-      "sha256": "390b7bf967a92f853f6d44d3a7d0adbde2d52ea781aaebae714170e37c7ad8b7",
-      "strategy": "copy"
-    },
-    ".agents/skills/aiscr-setup-workstation-safety/SKILL.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "7a1ebff619aefefb0131572bbbb89a8100601c1afd672e2f726c6ff813128933",
-      "sha256": "964d42f18f352fe29b01aac586b2ae257c5708ae6d852e451d08e353c87ff13f",
+      "sha256": "a9abb54935f08a66d6fa84d67d291ed0067d1c3da31c7326ae343cb5eae9af87",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-write-incident-postmortem/SKILL.md": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "d59d65f2f6b29f71fb075a27167fb0ee194850e35bf11700f671ffd683dc6f4c",
-      "sha256": "8339129915b819d51b53781d12052db93968958882898352e68c80bce6a36dd5",
+      "content_sha256": "7922dcb7aae7c7c38371c9382c26ba108ca030bf9cabdfa99c0e4a0d90d4f7dd",
+      "sha256": "3a7da72a18b72929e279bf28c82c86c06d988100499a58e5867747e13387b9d2",
       "strategy": "copy"
     },
     ".agents/skills/aiscr-write-release-notes/SKILL.md": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "29efef8d7054a9e9aaf0ea2a9325b0eea45d96c10c9ecd4315ce356af4c54d56",
-      "sha256": "aa9dbd41a3f47d2c5fb7fcff402ebd7c52198a168b878bf8a5db51d039f621c9",
+      "sha256": "5b6caeed6d43790d2c9c7eac5a3f86721c20dc9ee7943c5811666cf8b63c7f2c",
       "strategy": "copy"
     },
     ".agents/skills/openspec-apply-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "a8933b263ab01b4ce0a04ac805bd5321cadab78c84b6717b8617fea7eb2dc7dc",
-      "sha256": "846968936d33cdb3f285f2907e76eeea69422d36fd59ce82483d82de83d0ff63",
+      "sha256": "341717e9e0b34bb97c8ca06ddd381a329def9a3c9bc7deef8c2ab21b69f7ea05",
       "strategy": "copy"
     },
     ".agents/skills/openspec-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8ea5eb23ac050a781616c7b951228c9763f62fccb7e0a6537f286679f1c01a08",
-      "sha256": "eaeaaa052861a08344c1cf857e48537c0329101abb2017658fdc5ea642ecdf63",
+      "sha256": "c950c273ccba733374a34d7f231a394558a831f7cc6ab9c6597bde6cbfca6365",
       "strategy": "copy"
     },
     ".agents/skills/openspec-bulk-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ecdd713771651c50970c4ccf8167d5ecb0e2dbdffecc3f471f18123db31ab35c",
-      "sha256": "cc72082458df62f1c959521e82f23d60692e6c7fa595c5a2c8eb5a6a92892d41",
+      "sha256": "be54bf877171528ff798ce151ba13fbaaa08816b83dd573b2fe06a8f0bde6eb7",
       "strategy": "copy"
     },
     ".agents/skills/openspec-continue-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "66c2eba5d06c3650719bc2813e0a54c85761a1a08aea358bd0dbe0052fe7d7a6",
-      "sha256": "d287547c28ccea4caa97b764d687421e5333c2104051b4023346711bffd4c4fc",
+      "sha256": "af072ce40db371f24899db614619868f7e265c7dfc647f6b7438483ff5d66b2f",
       "strategy": "copy"
     },
     ".agents/skills/openspec-explore/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8eb7074d34277cf09e630ebd189a127154b8007d48445824b2c4c676806d501a",
-      "sha256": "7138e93f33f4b27bd89ae1f5dab8e637d3d1270ca3320e366a0d28e03b057939",
+      "sha256": "6a3b18acd93adb6f8fe1cc98110fd70c3784b4503d7bf38a13d8fb3e892046a7",
       "strategy": "copy"
     },
     ".agents/skills/openspec-ff-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "78a8fa3e1524cfe166ac67ec36954095d09fa2f6c0ee26400390d84c2656f022",
-      "sha256": "5f0c76435c0d11c77f6db016e667100020768f97fd1f2bf99c60b8acc2a6878e",
+      "sha256": "a682dc692afa0a0e058083db9b4dadd7daddaceaf937b6c078ecd8896672e1a9",
       "strategy": "copy"
     },
     ".agents/skills/openspec-new-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "fb538f6c146e3eb703c2418d0fa09b062afef61319f4230b79471f5b40f025de",
-      "sha256": "5cbe3207f3b0b8bea64ff376bd289346631c5454eee41daa26443e72fdd8ec16",
+      "sha256": "0d4e6134214c7c0e0435e97849a189e1c24b1465ffc9beb8b2f7bad17d40439b",
       "strategy": "copy"
     },
     ".agents/skills/openspec-onboard/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "cfca0c17fdcc439ef4c18c97916c8b6e4302affe02d5b6d1e212ace4dbea44aa",
-      "sha256": "3df37c2f70ffe3135b163e9249b0856617a258947be538c18cf964f9e398f27b",
+      "sha256": "16793d3a9059f50e120be32072b2f8e31d4647b42f0de8f403209c8bbd46f163",
       "strategy": "copy"
     },
     ".agents/skills/openspec-propose/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "e353e74472fdef44af4af2c646348085b5b87df60efe06949ca401ff00c972e6",
-      "sha256": "1f4c3ea99c7263d8592f973b9017c6bcdc0d2cb5783283fd055cb4d78af466ba",
+      "sha256": "7549d6924b055ad0e5ebb1ef75bff7d65957b28c7d72f3d9d6726a224da6d3bb",
       "strategy": "copy"
     },
     ".agents/skills/openspec-sync-specs/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "75556d2ca69892525698a0c681e0c3deead1e25f3b7b9be5449eaaf1621f026b",
-      "sha256": "89b8132ee2d3dba53db0cac06ca05943b11ea6aeb66a188f1212af4008f59dc0",
+      "sha256": "e0094ad43f04d3448bbf21a2fcb369ee0782baf0dff383779b1b4e5e6465317e",
       "strategy": "copy"
     },
     ".agents/skills/openspec-update-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ca7ef061078b2260be47c2654e7df29b4c81ac1173dc73cbd565c3ea40879e87",
-      "sha256": "292561996103db6ab6545eb877dbc0f78399b9a6e6d059e7641a3ee00c726791",
+      "sha256": "67686b8acdfb60091ac69f3d9fcfe999cd96b7a2515648ea413e7e32deca676e",
       "strategy": "copy"
     },
     ".agents/skills/openspec-verify-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "3b86fbb9734fdb6b942dd12d0afa4247457aa7f212bb48832eae133f5e66880a",
-      "sha256": "c98e69e0f6b4375eeb7506c51b03066d1c99507651db531de075c93f50540c80",
+      "sha256": "63a5c07430f99bfc48fb020dbf9fa861032f42190be08e0c1c00d14274de3009",
       "strategy": "copy"
     },
     ".claude/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "bf8d62dc93e190968622b996fa6e887d19a24fdc0f824041b1fc5a1aa49c4d20",
-      "sha256": "0586e5bf2bfca5021852cc921b8d055eda48856d60a66dc7dc0317842ae7cd3b",
+      "sha256": "8982e4dc53bbed0ea5d6eecbc5549e42898a52a848663376eb5d3bb91d93f0b4",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "9ba4ebfbac2869129836b7e9c06d9352b8db2304685639e94adc77b6bb7a0262",
-      "sha256": "cc784304b9f459d9e11bf547b85b67ebad8fbe3697b29696492201020471b450",
+      "sha256": "04391557065921674b47947af339aaf6a7731c426c73c48afc723dc41a7e12a6",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "049683ff1cbaccf812aa181ece0723092762a92eda59cea3e1c017fc87fc5834",
-      "sha256": "7886bfd4c5f33811e417962eacae4ae37a898dfbb9c3e7ed39dc665ec0f5c8e7",
+      "sha256": "8561763910ffcbe1d3d2c9c9f4d6c01bfd93c1c2c5f5c794add6208cf8b8336b",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "659e4a222e9da8c09fda1972d23a5aef36443cbd5ef8c8d2ed539855ed1b596a",
-      "sha256": "b8b14e2c292100e23ebeb92cc2b5b2213757bfd5a2945159986608c92597cdb2",
+      "sha256": "91c007fbb7e88e9c9807be0b5844800c3389594549ec4bb0242be3cdbe3645ed",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "a793e2990d6f20545c47622fee3489e9ddcc49bc98f4f673c773cb7ffaf3e259",
-      "sha256": "4e9a7a19cd0eea419d241c9d47c19dc1ba923e1337668f411ee1a07fb94b08b2",
+      "sha256": "fecc59fd1344082970d8b6001d5df0003cd29f3b49e5cc6ebb08b1592876d0a5",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "0643c53cadb98912d5b327937a7fd9789e464ee6a10bb72c3c4890d2a8ca7b7c",
-      "sha256": "336712f1d06ceb16bdd7de45f2d77d58519d14b850554b244de03d79d845ddc2",
+      "sha256": "2f1feb44360b97f9799851a6571377d916a6791a109349c543b43950dfc12faf",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "8246311e2c27ec81d71797dffeb487a4ec1b6ceb49c387dc38588c7e85894ef3",
-      "sha256": "b863fd2cbfb14f68cdd662191bb9e92d7399e54df1498c832217f6871d2cc823",
+      "sha256": "529697e70c3ff12e78e6de8dffa34a9347309aff2ed860b3b074534dcd416e04",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "f7f157f016504c61c282d1589c2c8ede15580c02900fa012734dccece7bd20c4",
-      "sha256": "a7c67e7a4539b20043c06ba05f53f08535cb79fcd64b11c7a1ca9ff6797c3f86",
+      "sha256": "d4b8418cea9a44b7ac2c00799a379571e9a7b0ff13df90370be6d5df0c2e037a",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "231090afa53d1a4b2c3f931d8f8bc85bbd484e600256267de6c7505f9bf1fe72",
-      "sha256": "f575b5bba9d321683c19f9f7a17c5996f21476e5e6c702782db93ef3418df1a4",
+      "sha256": "862f35370714b0e300e7257ebb02f63be607c84d93fc1920c6f33701aba00eb8",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "7b98c2f3846fb0623979e7ac7233cbe5e161ea4d9aefbda8b5db44c7bf4d8e5c",
-      "sha256": "112ddb5eb9e3dd1755538c37299834e878383a23f3f7524c3a2f0a2f64ce379a",
+      "sha256": "ce45b892d2f8eafd93df8089974212d9b970e31880f41a2a3b511352ee0f2558",
       "strategy": "copy"
     },
     ".claude/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "202ecd8bf04aab531a4731ae05111bd72f67e986d97138d0f184236b6ca98d39",
-      "sha256": "18f37a576583c5bf13720dcdfc107c9e39f3a39a8855434911d617446e035d74",
+      "sha256": "9b174c5cac77da947fe23209a0ac81cb82ecc216a5961fbd2e37158216571e77",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-ecosystem-governance.md": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "5e31cf237aa92945901a9984bc3fdeb58f1fc28a53da75f8e59a0ef2d636b02d",
-      "sha256": "16348e6dc7b73647db1a6b1115724e607b30899d74715706d5c869456f449b9c",
+      "content_sha256": "3d70c5aac8a49dab4d3d917a429880e5237763d320e96b028e905493c28ef29c",
+      "sha256": "9ca5bc69d898cf2f56e625c04431895bdc490c44693dbcd8d25c939684c85463",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-model-logging.md": {
       "asset": "aiscr-model-logging",
       "content_sha256": "d42ce69f6ea1bef216914aeaf02c796063f8c6f4a8f14bf3369f425b88fca01a",
-      "sha256": "b81e08bc48727dd52809169ced9bf9ca7dd9f3e8ff9ecbf3b4eb7177987a23a1",
+      "sha256": "7eef0b40b005c82300a0dbb7f093e2537679b2275035752e3dcca7bf87c7fd58",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-openspec-posture.md": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "c17ce5a6b971afd0129582c914e570cff47ab95d5ecbe959c7d78b12c1813396",
-      "sha256": "c4f8ad8ce66f3ce19a6d93871e40ead79d85c32faa975fd100763e04b7618ab5",
+      "sha256": "cd0fa6129e7e02c3157fdcc76da7d9110f151c54ccc67ac4fd45dd240aae6b71",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-planning-core.md": {
       "asset": "aiscr-planning-core",
       "content_sha256": "f780c15b09f58cee487cefe4d02bb8560eb1f402619de5dac52c984cc9becb04",
-      "sha256": "bc98a941a4e0574570e98a7d8b0d424ed59ee4a17d0b93cb7fb66b1236cd8473",
+      "sha256": "ae1e1599eb38a699296d5f49dc4ddb75dcb5106e5eaa901aa7ea6adbdaa87760",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-quality-first-execution.md": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "e54a9c38935f537480f4b43473b80de6f9d56674d96bc6817e7e438f36e87229",
-      "sha256": "9d250d8a8a7a8d1c37ca0535514edf076674bb151b382fd4656d36d3a80c8bcc",
+      "content_sha256": "88fde2962b6ae3a676c46bd903a06484a782cb980a54b98f74281336867fd793",
+      "sha256": "ed09eaa7dfcfa2d842d1ab7d863b35bb7d97bb1c47d8654bfb0b86a2131879de",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-review-conduct.md": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "245282cb2f8d92a2e325cae9d839cba73d8cda71cdcfccdb08ef5ad4fa11f0ea",
-      "sha256": "955c29411741e045276c8d33bd30f9211c3c62ec8ef54c307dd8a6ef6ba5e6a1",
+      "sha256": "bef27d74690f83d70622c39dcf13976cd4b91c5d0948c6b5463e2ff3ec79669e",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-usage-logging.md": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "2effee28b3c07c1b57bb4220fcb73e696885d1d4a2d1991881f6c03dd1c2d918",
-      "sha256": "70babf23b9f733eab01c6ad139dd337ad4949c12d507cf4f9a50bb9546e5ffe6",
+      "content_sha256": "e10b1ee272c05b8e636baac19c19d140267cdceebf99c32068126968dd34ae23",
+      "sha256": "b2af0c15d74397e667f22ab2c973d902a3750e43f9f1e902b13f2f177deb8a3a",
       "strategy": "copy"
     },
     ".claude/rules/aiscr-workspace-boundary-safety.md": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "b5b37b2d69100690f45e2c5f64d717d9e56764c7dd2e12105c833e4bb1f90841",
-      "sha256": "0020d70f758ab1299c416dce9fd64abd5749574707239d1d9e968b31a18f72ae",
+      "content_sha256": "58eef822e0c65de81b81b5eb395c1be8597eec1652f98d355379610eec11bfa1",
+      "sha256": "d44c92efe90fac365a655fef0b51955c25053ed9a2b26eaa20a06dfdeabe5f2f",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-plan-from-issue/SKILL.md": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "733379ca744ac131276dbd2966dc98820bbc3d6414b3a8e7541de2ded96c6146",
-      "sha256": "4e9ce432114f047b2eee3a59da37e540b510b7e69c9d727b563bb73ebbc0a563",
+      "sha256": "c109ffa5b5e9061ff0be19c2db81336cea4ef79d0212ba3e4d249e121ed98045",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-plan-issue/SKILL.md": {
       "asset": "aiscr-plan-issue",
       "content_sha256": "665ad5ee22884d19d1a2b53090c74179c1d3b7da987e09e25b6844fa2274f1c4",
-      "sha256": "dbe05114a44cd5133f290379409c678ea2c50344a24db441d4a8c3a902bf13c4",
+      "sha256": "df34349c5f55529ab48784e5e84527eae2e6af43032582109454bdbd1f54bec9",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-api-doc/SKILL.md": {
       "asset": "aiscr-review-api-doc",
       "content_sha256": "9f12610e188336e8a455bda9c3d48edf12289fd5510d02262cabf53a37bb875c",
-      "sha256": "4598e3aa64ad1721d714126e249085f6297b00ac8dbfc697a09a56a0945306b5",
+      "sha256": "fdfd39c3e1a6866b24fb7ed11f729986ee2ece93fc75e349c9ac6a282d51e114",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-codebase/SKILL.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "d81d11144d483e5d21591de7f48d1cdd84157b8c32564a2cf4f53ed0283cd824",
-      "sha256": "5bdd29f8e94a4269c27fde4948cdcfc8becb707ea9a8af8198131191641cb7d8",
+      "sha256": "631fb1de79943be231507dace6e8fb2ca4e3a3b66f3c7be438b753518b131cc9",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-codebase/review-schemas.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "d4105297d4c488db37c549cc5a5fc1aab1f7125472f63b0645b2c3c5d19f57f2",
-      "sha256": "6c81c59e3e75e59825f4fbd7bc6fb6d3268c1466d91ba3ff97646ee3ab113eb0",
+      "sha256": "6b0ab5701620b4c745acb6715306b923c89f9f13098eebb439d4a1188015fbf0",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-codebase/review-tracks.md": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "5f99a8dbb6ccea3d1c8fe1582eb8f1825a9db4db5422aafb715977573a5b5d08",
-      "sha256": "003bbd06e2d5c622847269da1510c6f0b0f0e3578416ab61ff5cac27d56bae8f",
+      "sha256": "4f476aebfdbabde05ee57c99f27e30f8fa75176c93e6b1ebd444e52191520320",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-live/SKILL.md": {
       "asset": "aiscr-review-live",
       "content_sha256": "36bd275f2ee1cdf23b7ef0cd894e8b2f229df30f2ed6c1ab20587625535a874a",
-      "sha256": "3fe2ec37acd57bb96d18fe2286ee9ce1f4cb0406f59fb7d3b7f028408ebca48b",
+      "sha256": "fbd1eadc25979cf3988124ba1480714b55cc4e1f54b294095d78589aa117705e",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-pr/SKILL.md": {
       "asset": "aiscr-review-pr",
-      "content_sha256": "019cf3116b455eb8640a38e6dd348b2b059ae47a6e3d12a34abbcdbbb5d19bb9",
-      "sha256": "d6f7d605cf890fdfdc4f66970465b81fcf47ead450017a0e294702909b7859e9",
+      "content_sha256": "580110cf9c177cd8fd66dd6e5b3cb31e3b715a7997598a2aa8662911b070d587",
+      "sha256": "81a9e45ad740a4222459cf25f2f03f59f4385e528e060ebcee97e766abaeffaf",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-pr/review-formats.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "16e671891a89da4550616301eeec1f18df4a47e084ad086998364670b8a57388",
-      "sha256": "fc5464b14195fb6d43e29ebdd6261f44d40853d3f13779f518c5a09af48134d0",
+      "sha256": "79530828dd11bfc233505c3145a6a2b4cde93dccb11c71dbd28f1f7a3276f77b",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-pr/review-tracks.md": {
       "asset": "aiscr-review-pr",
       "content_sha256": "70c67e2adcaddd614350be098bd5f776fdf12786d6138cb503084036c473f112",
-      "sha256": "622ff5c8f4ee99129718945f28ace656149e6d309c3f918822130c060817d2e9",
+      "sha256": "8920a0cf6441e549acdd0d730e110833957e06c4c49dca81984d1cc1edaa6ee2",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-prod-ui/SKILL.md": {
       "asset": "aiscr-review-prod-ui",
       "content_sha256": "18760149166a023eaec3d495f8c65f7bb10502098181f7cb07866da54cc3e22f",
-      "sha256": "7cf12218b62de2ffd4be0472a7fbbe838730ac4c4831003ecde744d6f5b62a25",
+      "sha256": "787f5a2b8b7e709af92b1fcfba137a63a01fbd3aa8e05d90051015b95d720034",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-review-translations/SKILL.md": {
       "asset": "aiscr-review-translations",
       "content_sha256": "5b45600c91c43c79c5570b0b1a1a3d3e66a571799c1d722461abfa23c1358009",
-      "sha256": "afb6e7a9a0bf2b1c2d667309a9ab450f87a888ae4dd7092f794a1edb98982048",
-      "strategy": "copy"
-    },
-    ".claude/skills/aiscr-setup-workstation-safety/SKILL.md": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "03e3f5c07e9e896bc2a14f95836a43afb58b398d5d9dc30a41c9d2e5e3827956",
-      "sha256": "209c63638262c0b78596b2aec1459141d6b8ccc5d6549ab5e81e9685c5473938",
+      "sha256": "30ac9083a4ede18df01faa2b3a3110d71ca614817cd5b9cdb841e45e43156897",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-write-incident-postmortem/SKILL.md": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "06d7391c1ea7f11b7bfc6cb61d668b570876aa090daf9af60a15b1be11ebe575",
-      "sha256": "335d9850a3ddac71b562d315bc237f4f29e0cd1861f1382ab54451a0ff663de8",
+      "content_sha256": "9e7355c673831441c55139c320b06973687ca06ed3d6933aa25dc50a49c6732f",
+      "sha256": "cedc1d6950ac011c00ca5b121de09ec1e36f57d0fdb45d8cbf91d987dbc4215b",
       "strategy": "copy"
     },
     ".claude/skills/aiscr-write-release-notes/SKILL.md": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "f3366153a74b06233bdc0c348f780ae87fe80beedfc9f953bc240e0df0fcc757",
-      "sha256": "ad7887118e7fb3732f37aa2dfb179cba8468b90f65f3c91278366770f79a3cdf",
+      "sha256": "0231371a3865fa5204029de8a087208584b04fe12dda93b39149166f4b68d602",
       "strategy": "copy"
     },
     ".claude/skills/openspec-apply-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "a8933b263ab01b4ce0a04ac805bd5321cadab78c84b6717b8617fea7eb2dc7dc",
-      "sha256": "846968936d33cdb3f285f2907e76eeea69422d36fd59ce82483d82de83d0ff63",
+      "sha256": "341717e9e0b34bb97c8ca06ddd381a329def9a3c9bc7deef8c2ab21b69f7ea05",
       "strategy": "copy"
     },
     ".claude/skills/openspec-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8ea5eb23ac050a781616c7b951228c9763f62fccb7e0a6537f286679f1c01a08",
-      "sha256": "eaeaaa052861a08344c1cf857e48537c0329101abb2017658fdc5ea642ecdf63",
+      "sha256": "c950c273ccba733374a34d7f231a394558a831f7cc6ab9c6597bde6cbfca6365",
       "strategy": "copy"
     },
     ".claude/skills/openspec-bulk-archive-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ecdd713771651c50970c4ccf8167d5ecb0e2dbdffecc3f471f18123db31ab35c",
-      "sha256": "cc72082458df62f1c959521e82f23d60692e6c7fa595c5a2c8eb5a6a92892d41",
+      "sha256": "be54bf877171528ff798ce151ba13fbaaa08816b83dd573b2fe06a8f0bde6eb7",
       "strategy": "copy"
     },
     ".claude/skills/openspec-continue-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "66c2eba5d06c3650719bc2813e0a54c85761a1a08aea358bd0dbe0052fe7d7a6",
-      "sha256": "d287547c28ccea4caa97b764d687421e5333c2104051b4023346711bffd4c4fc",
+      "sha256": "af072ce40db371f24899db614619868f7e265c7dfc647f6b7438483ff5d66b2f",
       "strategy": "copy"
     },
     ".claude/skills/openspec-explore/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "8eb7074d34277cf09e630ebd189a127154b8007d48445824b2c4c676806d501a",
-      "sha256": "7138e93f33f4b27bd89ae1f5dab8e637d3d1270ca3320e366a0d28e03b057939",
+      "sha256": "6a3b18acd93adb6f8fe1cc98110fd70c3784b4503d7bf38a13d8fb3e892046a7",
       "strategy": "copy"
     },
     ".claude/skills/openspec-ff-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "78a8fa3e1524cfe166ac67ec36954095d09fa2f6c0ee26400390d84c2656f022",
-      "sha256": "5f0c76435c0d11c77f6db016e667100020768f97fd1f2bf99c60b8acc2a6878e",
+      "sha256": "a682dc692afa0a0e058083db9b4dadd7daddaceaf937b6c078ecd8896672e1a9",
       "strategy": "copy"
     },
     ".claude/skills/openspec-new-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "fb538f6c146e3eb703c2418d0fa09b062afef61319f4230b79471f5b40f025de",
-      "sha256": "5cbe3207f3b0b8bea64ff376bd289346631c5454eee41daa26443e72fdd8ec16",
+      "sha256": "0d4e6134214c7c0e0435e97849a189e1c24b1465ffc9beb8b2f7bad17d40439b",
       "strategy": "copy"
     },
     ".claude/skills/openspec-onboard/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "cfca0c17fdcc439ef4c18c97916c8b6e4302affe02d5b6d1e212ace4dbea44aa",
-      "sha256": "3df37c2f70ffe3135b163e9249b0856617a258947be538c18cf964f9e398f27b",
+      "sha256": "16793d3a9059f50e120be32072b2f8e31d4647b42f0de8f403209c8bbd46f163",
       "strategy": "copy"
     },
     ".claude/skills/openspec-propose/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "e353e74472fdef44af4af2c646348085b5b87df60efe06949ca401ff00c972e6",
-      "sha256": "1f4c3ea99c7263d8592f973b9017c6bcdc0d2cb5783283fd055cb4d78af466ba",
+      "sha256": "7549d6924b055ad0e5ebb1ef75bff7d65957b28c7d72f3d9d6726a224da6d3bb",
       "strategy": "copy"
     },
     ".claude/skills/openspec-sync-specs/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "75556d2ca69892525698a0c681e0c3deead1e25f3b7b9be5449eaaf1621f026b",
-      "sha256": "89b8132ee2d3dba53db0cac06ca05943b11ea6aeb66a188f1212af4008f59dc0",
+      "sha256": "e0094ad43f04d3448bbf21a2fcb369ee0782baf0dff383779b1b4e5e6465317e",
       "strategy": "copy"
     },
     ".claude/skills/openspec-update-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "ca7ef061078b2260be47c2654e7df29b4c81ac1173dc73cbd565c3ea40879e87",
-      "sha256": "292561996103db6ab6545eb877dbc0f78399b9a6e6d059e7641a3ee00c726791",
+      "sha256": "67686b8acdfb60091ac69f3d9fcfe999cd96b7a2515648ea413e7e32deca676e",
       "strategy": "copy"
     },
     ".claude/skills/openspec-verify-change/SKILL.md": {
       "asset": "openspec-commands",
       "content_sha256": "3b86fbb9734fdb6b942dd12d0afa4247457aa7f212bb48832eae133f5e66880a",
-      "sha256": "c98e69e0f6b4375eeb7506c51b03066d1c99507651db531de075c93f50540c80",
+      "sha256": "63a5c07430f99bfc48fb020dbf9fa861032f42190be08e0c1c00d14274de3009",
       "strategy": "copy"
     },
     ".codex/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "9601df1d33e432993dcdbb4dce99270e9688d8c49700d300d7d31187f86e2624",
-      "sha256": "a70504da1409d641be72939c1b51a25499430bbb6697ffd075331a0425a7a109",
+      "sha256": "1ee712f4537bf482fe3a77adacfd43c1496487d967beb77f2fb918604e0e5bdb",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-correctness.toml": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "4a7bfff177ada1d4d32565c25922a6c5aaf016a366675aebb05ecbacf61b7498",
-      "sha256": "62726f24d8d79c117428e4db88352705d0cc9c0c4ef56c88283585ead43f113d",
+      "sha256": "4b88761d578143a1f5354a2b6e3a3719e093c25136faeb198c088ab2b4cf83ce",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-dead-code.toml": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "327828716d9637c4dddba1a35a8c529a1ebb9c0cba3b5f96c84fb23147490efa",
-      "sha256": "e521c0b767fbeca3e23c99beabe87360e99b2220f15fd3b797566b0903e40826",
+      "sha256": "8aacc0351e7eecedc4422c3365093fc4b93a83d2eb2c880a91ba32a92c61e97b",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-deploy-safety.toml": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "db82c379b51d11814807a92ea60457f66a426ebf3df422fd0f00df318a88a9f7",
-      "sha256": "32fc42377769d287d5a4d94272a93b14983e977d99422bb216f164f161670ef9",
+      "sha256": "f87fa680a0bd5189606e213e29d7cb008fcb423fe7ae82e91a7133a7dae87e21",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-duplication.toml": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "53812686d7e568037beffba54ea7fc0fb7fbc942d7281c8a3810424eaa8577b2",
-      "sha256": "27c96d307416d2eb4b9a6107e8379b4c83f22d879a803abdde9ab64d0b2ca042",
+      "sha256": "0945fe726ea2e9a7b3805f91961dce417b8f3b9d59d3b7509ae1d5c61c0bdd68",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-integration.toml": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "5d7685e164fb43f21d740d3027d95cc48d6cdb6460cba49d2595334e6f102300",
-      "sha256": "3b3efee35a8e1f556afd11d8356aa3bf8ea670d6b3e9d0229e8638942be6fac6",
+      "sha256": "237b817f838e95a988ddd5ede11d1f5026f83e7234a14c937fc3819b198c4b76",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-performance.toml": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "54bf28d7e16de2d73e845a7857eec677701f20cd355379a07dfd16e27203c82b",
-      "sha256": "f7babc85ad34dc96d69a0b885e7f03290aa211b8bba85b9b2e5ec1a00b299c31",
+      "sha256": "c448d22884809f8689abb8c1b82217f3a68c7d7c7b4296b2e002e8468a8b9e05",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-analyse-security.toml": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "8d25e04ced30fb72421115f0f7b6881cdd81a2600ef64faf979ee25e8591659f",
-      "sha256": "22695f16304a55d28dc03d9f98c58d6c2f60689638788f0d5e599e437c714a9d",
+      "sha256": "1a527d96789e25efa661d9665cc2142ff6f1645877ea87a9a4060cf5204f3b31",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-investigate.toml": {
       "asset": "aiscr-investigate",
       "content_sha256": "c1f961be2a56763df5510421a51f9b903e06373ac5e8e89a47b4896df75c05db",
-      "sha256": "31c1c281cc49b7f1f5046e69e7cdd791831d50f1bdc5ba588ba39117042268e1",
+      "sha256": "61cbb695bc423abb5ce82b2b288bf58b2c4743c0430e0bada29af6625200fab2",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-survey.toml": {
       "asset": "aiscr-survey",
       "content_sha256": "10e2e995476f7f2db43850ff2013cab72876fe02f1a5b956880a29ebdf35ea65",
-      "sha256": "64eaeaa02a333b3c2ddf613ab5d73c1cfbe80582fee385e345e20775595b7ad6",
+      "sha256": "0f98552a5ec5afa2ab14aa32861ec4056b3cf5c64208c3b56350185ecf2d73c3",
       "strategy": "copy"
     },
     ".codex/agents/aiscr-verify.toml": {
       "asset": "aiscr-verify",
       "content_sha256": "d59e24904eeb1ff7ecde9aede9de24c2757f743856e60cc521190c7f00c9853b",
-      "sha256": "c9c461c942c51224f090245f107023b1a526613aee1adfb4a9204e49ffb7f9d1",
+      "sha256": "3284a165acbad67a197919f6e1b5f6953b8f44ed8adf5ebe0c744e8962ee4706",
       "strategy": "copy"
     },
     ".codex/rules/safety-floor.rules": {
       "asset": "codex-safety-floor-execpolicy",
-      "content_sha256": "979e5447188a74cb6904ef0408cf6b4f09d5232ce86ed1ddeed8d6232aefe53e",
-      "sha256": "264a17d59f27d6b4ae5f51b746ada6d1681fa4ae9a24ebe82999be9aed728b43",
+      "content_sha256": "4a0dab02180befaa108d25c6c4ccc0d8ebe57c4062dbe316321b59cefc26308f",
+      "sha256": "edd40865220afb0a6e4145c55ebdaab7e2dd28f934a447ed1af997a04440a1b1",
       "strategy": "copy"
     },
     ".cursor/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "01a8fe63ecac75b1a435d87925b4257ff3015eac47284e4971120128991f50d6",
-      "sha256": "8744e89332e54cb7d3b6d04ab3bdad5e79baceb03f48014964f3606ecef2d850",
+      "sha256": "6022fb6871b1db2934f9f457b274099ac2bb61c7b25ca96cc757e762357e6b13",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "4bbd3c10a6cc9391794b87d48ddbba0184b9b0c98e554e110830169fdc3bfd13",
-      "sha256": "fe3b85b90b4f53bbe48a64a5842e9a3fb379c0f504958032b631ed87bd988715",
+      "sha256": "264ce2fb90782c87008c7948967c69ecd89d51f200702a8fd9bcf8c45d2e3e0e",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "68928c1595aa3577a48bbaeccde0bb9aa6f087b1573af9a88a1d6ab271697c25",
-      "sha256": "93f2086b5b41b06f91aa4840afc151e0a5b34d15af4ff10340245336d2a928f9",
+      "sha256": "40033075259745e7e1afbb0cbe0c3a9512132d7c9ffa1abf3a3020c0b6eef905",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "74b443f3ed3c0e5523ea502fc7674a7742d8f9c3f136a57bd1e3c73817923ddc",
-      "sha256": "ee56f20a1460e4adb9bb8e594b3d407fced88117ebf0bd07613dfeb3fd955d5e",
+      "sha256": "09dcb3d7e8f18a8551c304ce17d8b234e7f8e299ad5c213257b565a6134faa45",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "ba2d0bc94f86ac661f4735c545ee136648614a9e3b18def3f452c0b711a52b2d",
-      "sha256": "9e682a051dc1a98f8951c43e4ae13da9fd37131ecffc1ec1c35ebe1820ccf4d1",
+      "sha256": "b217dc6bee64ce50e88cd9c1163542e77bc33034ea1ca9ba913783f606885ae0",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "91fd2456822cce04e82bc8195c550104f0989d85bd19e7f8e6c75189155bee9b",
-      "sha256": "ac2f49d8a7b5540ba0c9931eb9fbf3e12b39560508d080d5bfa23f871603bddc",
+      "sha256": "62c0405ea189c2cbafc33b4b9509fdc5da3c4dd04b369a37ebfd72d4b261afc3",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "68d7f908827acb4aea2c23a6b809a11e31cbdb91404731b7eec7bf5cc8b284bf",
-      "sha256": "4b4536f0f224e86bf600894de40b81c5a8cb9d76862c6e0f42927807648162d3",
+      "sha256": "6709765ccd19fcb26c8ed0237c6fd32082db4f910ce35842f9b10a8e4fdf0e5d",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "bafebaba5982a4d4355f5060948c11e3c23758edd2376851d0558b2cb675bf80",
-      "sha256": "c08ae52a8f608abea04a8d8aea7a5bfa9727c1eabafb692b4dcec82823604ac3",
+      "sha256": "95c3e3f4db802306570e97dcec5bbd72b254dfadb597e7618525f8dac804f466",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "fb1f35b98b8c4a9f34f46e36aa6299ec22fb2ed4d0e3fdcba90f8ccfa1400e21",
-      "sha256": "b033951b37586f2aec8f67c55dd343beb3fde1ea3fdf48d51cf726d5b041ab29",
+      "sha256": "998c03102d253d29edc0050088c7c07a42a99a44d647224cbf9fda2c5c0bd925",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "b171ebd39a974678dfe92479ef2f2c35da39de1f29865f3e7772948ba6f45b76",
-      "sha256": "887706ad9380760d34a5099345b98669f48010a42f9523c619469487bc420bcf",
+      "sha256": "73252756fa35db054874f558278b6e87525ed0f52450992049ae9ce45f96bb9c",
       "strategy": "copy"
     },
     ".cursor/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "8de979bbb5a65003c78870d9b1ea9d3bf3a09f3cd5414db38dd8efece6b0ee6a",
-      "sha256": "e97abff69ca022263fa8eae2f60f181d82be07b444122e3366d6865876b832ab",
+      "sha256": "761089af5470e9fcdbe8b5ec80332882ee4cabdb8379e0ad8975a7708972e73c",
       "strategy": "copy"
     },
     ".cursor/cli.json": {
       "asset": "cursor-cli-permissions",
-      "content_sha256": "1cf851afbcaa8383cb8576f51c50900cd5dbb888e28be6b152dd30b0c2e3404d",
-      "sha256": "1cf851afbcaa8383cb8576f51c50900cd5dbb888e28be6b152dd30b0c2e3404d",
+      "content_sha256": "530c31e5af09fd5f72c5556c625835c73d32389e3c7e8759af9ac93c2e5c817d",
+      "sha256": "530c31e5af09fd5f72c5556c625835c73d32389e3c7e8759af9ac93c2e5c817d",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-ecosystem-governance.mdc": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "0e7da51f72ee3d032641267054314f9017ed6704a47aa9d6907a5d5074946329",
-      "sha256": "c36598f2a09d15602a968ef2c06a57a753b6e29abb0d3d22e19b898384ee75a1",
+      "content_sha256": "fc9cb815a5dcc8de65128f4930ca07950372115931164db2d57e6c9e64244cb8",
+      "sha256": "0a55d5b9ac0027d86112fcd33a4a3aa4fbc35eee4383046fd1d28cf7104b8630",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-model-logging.mdc": {
       "asset": "aiscr-model-logging",
       "content_sha256": "5773c2ddd265ff5b31bbff5e9746ec65a3c3f4253c930c782048c77ed64662ac",
-      "sha256": "58a5fcff7e2a9aad9740b6e0c94ec729344a802fe05bf2574e62e0d06e856edd",
+      "sha256": "511c03f02fcd13ed4991ba811a4fb058b3aeb3645892fcd1dff35d93c1dd6a1e",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-openspec-posture.mdc": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "c2946a055314e4ca8e2ab9746ff55485dc2508087814378867e380c41511307a",
-      "sha256": "5ad8b03565e8dd67dd7e5da38c303c68d4ccd718b314bc9388813da1f2f376c4",
+      "sha256": "047244d062c6f4964c7a860c643a9725404f5676ff531d6cdd3adc67fdd212be",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-planning-core.mdc": {
       "asset": "aiscr-planning-core",
       "content_sha256": "25b10c8a923c990fd71061dfb19bc6440dda8ac5642f684471c0a1e7feff9b31",
-      "sha256": "0ee70e6f2d353b7e49c826676cbc5ebeec02deacb44659217d50d71d261a90a1",
+      "sha256": "1db2bbc0dd8882be8522bf29cf472081754a94037b56448de314d235f650912f",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-quality-first-execution.mdc": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "3e41113b07accd84efde654884fb61339fbb8c4823de9ca6245303c8f61fb6e3",
-      "sha256": "fb6654296b8c74577f4d1e968aac059cc830cdd007d5c062700908bb4487ebc0",
+      "content_sha256": "e487c3f5561f260b851fcc1e56695cf085fe84f9beed62bee2d8fe100588196e",
+      "sha256": "eebfbaf83233f566d0c4b1d3ecc18c10701ba65e0871b152879778f220b21666",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-review-conduct.mdc": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "bf7f04736ee39b6c97697daba4095806566c8c735e1ada9375eff13fcc877667",
-      "sha256": "c46a3b738a4b69433d6c550514afceb2d8a302f3b35c45b50f94c483de5bd01b",
+      "sha256": "51e08ccef10c84ff87ba04b3f87696d0697bed61adae478deefd6c360a5828c8",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-usage-logging.mdc": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "b2b78a85d942179ddd3e1e6caf8c7f1c0434701e972b1ea02b2c61d637635415",
-      "sha256": "5aa994805992b4a753b535f53c5a9445c4643552d15b3090731bffb25019ad9b",
+      "content_sha256": "18fe099791bf8a49dd0d8d41feec1b1efce61a44fec59d3539b0a06bac134ac7",
+      "sha256": "bd9d3489ae5f89751eb36b430a4579cc7739269e83e3cd2535f65cb4dce2547f",
       "strategy": "copy"
     },
     ".cursor/rules/aiscr-workspace-boundary-safety.mdc": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "dd61f62725ca7be9bd541ed761973ab9e6702cf50c86bbe0c8b2ba0be5d4a30b",
-      "sha256": "c46c76bfd7ac511ffc7b72bca7508afdd11142053915157f872eb70252ca58b1",
+      "content_sha256": "c24a3649e3d68c7b4f0801b169433291c10abe5e9aa1f2054cbd767803f0fe60",
+      "sha256": "4183bb48c07230bad02f57116fd37d9ba5cd54405e94f0d0339e009c8316d44f",
       "strategy": "copy"
     },
     ".gemini/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "d86edb342c745b559a482ae2da31a803d2a734136ce20b8901d73ea7eedfbe67",
-      "sha256": "ea5e87245ef52125b2cae28c216aa253ccb10f7d99b73bf6447d62f03a215f24",
+      "sha256": "5c4018f992fefa1122f9dec42b81febe23c51d2219a8329337545ad68c8be8ab",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "be3a755a8daa42570204d63736a43b56e5edf6c132ef1bcd0defaffa4fde9de3",
-      "sha256": "43655df16b19464b952fda232d8eea646e17d134b93acd2df90c5b8c87120959",
+      "sha256": "aa37401d2fcf5f9dcaf8775363291204ee46de968e716cb962e2a86f5a16065f",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "646459837ce6ea4a80665fb6b928bbdb583cf60e363d7f7f3eecc0ee9b90c76b",
-      "sha256": "3ad65e36810b8a2c4c59e8b86fcfeefb3565dfceb5aa8e48d12c29cf1fc88a4b",
+      "sha256": "fc299bb6838dc2cb4f82aefb59cfe13a4913f109450a7e469637c3ed06d7d2ef",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "b078e7cee652bb20f26b49981cbd48c4b0011a910d7d86c390b01a83b9c052c1",
-      "sha256": "a8af8b629d1db94fdf45e58855f644b2d8b3dd363af6f3e1498f11f357167836",
+      "sha256": "3d150e6fc7d41f0c2f8dab5b4890d4ca5295f9ed4f49d498c6a4b1c407e0085a",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "79a1c52ec8ff9ebbf8410b4765cd05a2c0cabde6848fa86cab119f85cbe176eb",
-      "sha256": "f927ff69b578898beb565c4a05048afe5261d06d363408c1d4243558f1b1722a",
+      "sha256": "69f0239a4802c4c4e97ca695d8bfa441b0878d0fc8c72c9449a9cd96eaf66cf1",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "239eb7e9d3e98ca3847692a79b31dbc8ea8c09340088a016577c64f75671276e",
-      "sha256": "b3c2e3d1fc58c8d46df86073e4ac12084e6b8aef947d65a273dc4033b9d825be",
+      "sha256": "ff4faaa58b435ed34e0e0404039fbbb051c6a3773a8dbc9d662309ccadba0860",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "0a51dee13dc27bd0bd5a36254f33fe58e9a429f0448aaacaddf169bcc0d6c989",
-      "sha256": "f91afc2540cb57e7b24cea6a0046ddd4dd5c6f3e2b633abb0909879f793e8c5f",
+      "sha256": "ece29b2fff7b3883fcd1e36ddfabfcb59a01219eb5611645c3f963548c43788e",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "71fa991a8bf9ffddbdb2554f59b4de8a745afdffcdeeb78894bc1e8143d1ce8f",
-      "sha256": "34025a45064b80c148f104401e994147a9e92dea58cbc7998b5525f006444260",
+      "sha256": "562120f0958f51338976795341a4b0d91d8c14e84f841db13a6212b714b3660f",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "2bcd8ef4634b7f17d41d94bf00c121b2a889e6a396268668ead81ff5f7da9e2c",
-      "sha256": "a3ed92044efea5ab610ab22133950986d4d1381c8fd79059e1462916567f3952",
+      "sha256": "6cefb7821f5ca326aa96a4afdf3a42183baa02023524220da483a6ba97634efe",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "2f4210521fe66bccb583273a6d87d8198f339c0861df751dbfd5ad2a0b23acad",
-      "sha256": "6239662fcff25f1b5c41927d8f987f6909b3ad8738f6d3aa24c4e7e78fb313f3",
+      "sha256": "c0ea3d0276852c2be71e07b32dee74ff654cb4c627791872e24997a927fc3357",
       "strategy": "copy"
     },
     ".gemini/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "0e6e99d7d558b77a466e8c5cc7bef30b779251de8340c71756889f36ff152c00",
-      "sha256": "01fdc342c0b8b0d19b904afc8ee2cc45ad81db0614901d7c1ea0f8530ec4b0f8",
+      "sha256": "f66d9428df2a50ae50ca193afec3c0c72d416a6b8955cae5b136e8d7eee8fdde",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-plan-from-issue.toml": {
       "asset": "aiscr-plan-from-issue",
       "content_sha256": "520c24344832f822e16e17127b56a25fc38339b6f97da8fdfd13871f936bf908",
-      "sha256": "223b35f588f4ad25dc5492e1f22e80eefb04beb749d465f49fc9ac0a720b9fa7",
+      "sha256": "5dc246929417e6bc11f9d90f2438445f9bf201e24dfc1c84478485819d1af6a8",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-plan-issue.toml": {
       "asset": "aiscr-plan-issue",
       "content_sha256": "0ebdd0475a5028eea8daed1f4ed8186da8db5e201e357d5945a92b701ececa17",
-      "sha256": "496d4c0ff72b9b9e5dcc444f8ba9ffe9c358b379b5f1504fe581762d1f215d81",
+      "sha256": "7a368fab3c3403eb83e2d9b95f7331ffaabda5a3479fcc25488cb00f538960e5",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-api-doc.toml": {
       "asset": "aiscr-review-api-doc",
       "content_sha256": "d36be78d3d3b9d69c4b00c2b14c0436b0000e41382c9f6c4b7c47b35fdf1b9f3",
-      "sha256": "e1e71abd782bab55bf8669919189bf34d257d2063d57c90895718bbdb7fb238f",
+      "sha256": "c9f7c858e4461051d2e91a71b38b8850fea3eecc9af80f86ecdcf6f49cc23c96",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-codebase.toml": {
       "asset": "aiscr-review-codebase",
       "content_sha256": "88cda862457343a606abefb6a6a11c92091348f0983cb4a862bf397f208ee776",
-      "sha256": "e00f40397035d7a2399ea48146c179344830ce1787832cf2bd7619d39cb9c89f",
+      "sha256": "207b95e25a0ca83457b4aaf1396c838423dcc8838fabf801f256edccdaddba61",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-live.toml": {
       "asset": "aiscr-review-live",
       "content_sha256": "5aa707441b9f8f48563e6d1361adeaa1bfdca969a08288578f7d3d8f2a80b25c",
-      "sha256": "6890d6672fdde3d11aa1d1bfc7b99d6955958fa8ddde12808b20164e9ee27319",
+      "sha256": "48e921cc361bac2a1b10ee31afe36a185b3d56cc10490627963167d1ac6d1f74",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-pr.toml": {
       "asset": "aiscr-review-pr",
       "content_sha256": "e2414cf28f36a894d5c4097a66d18e2bf13583a10eaf081f87eb49f712dffbb5",
-      "sha256": "a29867ebbb4da80a67e69d166d4a0cf94a9e26599a44dd67734cea20b3bea0a4",
+      "sha256": "1424d6baad80563596ad62133644f0437f58b5b63eecacb6760da308f78a02e4",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-prod-ui.toml": {
       "asset": "aiscr-review-prod-ui",
       "content_sha256": "a0ebea1dba7b19aae2324bdee36cc4cddf76515abdeb46968617be304da2c2e1",
-      "sha256": "1bef4c36e3fd8d16ebc7727dc3c1cb208f078d7953e848ee2978ff75483b1a3b",
+      "sha256": "1f98f517a3e344359166daed737be7761f4bc49d51bd2883eeaa1b8340bee9c3",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-review-translations.toml": {
       "asset": "aiscr-review-translations",
       "content_sha256": "5a9730b6d9b98be9c3078d4f4bd5024aeb87bc13f307cbc9630505c13a9452b6",
-      "sha256": "af0112c1a43f0ca87b4c40428aa2493f33488651571605a130f39267816d4c1d",
-      "strategy": "copy"
-    },
-    ".gemini/commands/aiscr/aiscr-setup-workstation-safety.toml": {
-      "asset": "aiscr-setup-workstation-safety",
-      "content_sha256": "069201edcffe1bb65b629c11d425ce8c01bb21bcd7a7a753685aa69f219ae8b2",
-      "sha256": "e7b6c882704882ca37be7732a6066bf4e59f459328bbbd4d39247262c92cd0b9",
+      "sha256": "0f6a57c8d687114742dda3eb3621cfa8d4a4fd9d778ac7bb8e7b1742596d056b",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-write-incident-postmortem.toml": {
       "asset": "aiscr-write-incident-postmortem",
-      "content_sha256": "e4e950782876cbc6a379d7d8cef3b7d9954daf09d0153a6642fdb3e670e50763",
-      "sha256": "c8403658708108b874e404e8cc727296f47a740af552ccee479840aa8e7c2e10",
+      "content_sha256": "f9ed142e945f0e06936e1cd4625ae43f4ed47233e559e48a0251f0694ed8cb32",
+      "sha256": "c6a1d8ec9f0d2e8319e641e68be88621abdf456ec5961041f70f1dd3e92175db",
       "strategy": "copy"
     },
     ".gemini/commands/aiscr/aiscr-write-release-notes.toml": {
       "asset": "aiscr-write-release-notes",
       "content_sha256": "6a4f6989f577f5253b2390e39f1f1b0c0b9ce4c059c8e287f9163e8757544858",
-      "sha256": "d78edf43b9d05a7dbd5b53a003fb47613687c1279c998ac4155f332ced3fece4",
+      "sha256": "8c2ded93d3f21c4efa79b92e875a955a31fe95be9b1176912119cf99d92522e2",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-ecosystem-governance.md": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "867dfc3be9c5201da1d900dbecfb7a15b17d8d155fcaf46c72e700692bd269c2",
-      "sha256": "93c148352283688db33ab0a3424477e2ed837c612bf2b8a4fc7408ac49409c85",
+      "content_sha256": "f2d1cf6033180e889566c2f485aa4939fd1a504fe0aa2665f91a31b4c233f8ec",
+      "sha256": "aa14d3d5b46de754009756ee6bbf6b5649e5b5fe3754f4ce050db02dd52fa7c7",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-model-logging.md": {
       "asset": "aiscr-model-logging",
       "content_sha256": "446c4d6c64932fda2dcd8ba27e8180fc357169819540563cbe147210da82a6e8",
-      "sha256": "8939d6c6e0ddaa70e7fe0993238a49660e3dea81c73b20373591170a05fdbb81",
+      "sha256": "0fe12d8b9729813159746393526e3b80df2899e8e84eade394d8c670baa0cf24",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-openspec-posture.md": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "ace20c0d7304dc835b3db9bb5b60e2aa7ea862be36cf3d27ead04d37e22190ef",
-      "sha256": "f46fc242835f97e9d25836b61dd3c988e9eacdeec5c3b24a866d2c42df057413",
+      "sha256": "fdef46168af2b883320b8b03b3157464bd67575bd240bdb966e22a1b1c9c17f8",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-planning-core.md": {
       "asset": "aiscr-planning-core",
       "content_sha256": "7fba4a09ac062961ff584bf8604501f398233cf36dc6a4d6ef63c3c731f043e5",
-      "sha256": "b843e437889a4c225769754a9d495b0bbf21b676d33a8bc0cdcb8451118dcdd0",
+      "sha256": "fba973f62135ae66d88544260e46a8ecc7ab758953638661f082a77722aa2aca",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-quality-first-execution.md": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "8a14b1c09733a9b6b950c2bede50585024971937ff8a95ca6e56c656ad3f2630",
-      "sha256": "bae46556a22c12747b312652981417b9c88d259136cae4bfdd6ac35a536b2cf4",
+      "content_sha256": "125d015f0f178697a688937f123a0d2090453fd9e0cfcd35300e2a6b6783e48a",
+      "sha256": "1e5e76351ab0f405b37dc005c90a6a5d865f79130c7269986c0b8b1ecb205dee",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-review-conduct.md": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "b9e71c5090cd5ae40cb6b5b13f8b816d36d038b83785b19ef4da55cc6efd89eb",
-      "sha256": "9e3171708abf460fba4d822387cb08871f71fddcb5fa2d0e0d88c245a25c848c",
+      "sha256": "9e48d9b589ed1275d179c51fcd6e25a2bcd115cee70dedcd5b9ec5a976f677fc",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-usage-logging.md": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "436f4646167e645e4c254fd7fd369792d7678552a862c75ce599d6ebe2dfc806",
-      "sha256": "a1c0db256a7bea8996666026a22c1746f900f873dc8ec6852c1f61bb6a456675",
+      "content_sha256": "d1b07b6a297afc1c989bf71b9720f4b5f208d246cfed02edb21cc0ec3ee4ed25",
+      "sha256": "c188318444e7f7cfae213f01cf05083c39e5dfd0327b663469c0de19fbb9363a",
       "strategy": "copy"
     },
     ".gemini/context/aiscr-workspace-boundary-safety.md": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "469f646b1cbc6076358dccc022479c8f56b17d1c0905e9193d87574e8adb6546",
-      "sha256": "0901dffb183234746ba9319ca40314cbdf66a0bf8a782d997b1c318177168f8d",
+      "content_sha256": "6e4b67d3fba6476ae9982491985e45829735da16664f1acc0bd0b690c84ed52a",
+      "sha256": "45e952601644bac7367fde43272287737e0160c7fd64b8ee67458692a08912c7",
       "strategy": "copy"
     },
     ".github/copilot-floor.cmd": {
       "asset": "copilot-floor-wrapper",
-      "content_sha256": "f46c408e9395e396b12a67f796ec751a9feff6d3a6b5992b2de89c8e4d554b5d",
-      "sha256": "747e58256b28673419d376614d51dad7793a588022dd071fa9543a4beb2fc4ed",
+      "content_sha256": "6993dfcc083e7d07a77d43bfcdb7430e078ec9224ddac1ef10c0d55eee8bf83f",
+      "sha256": "2d85d681ea42be7543259df456e971c7a76afa31cfc0257ea044d413158b8815",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-ecosystem-governance.instructions.md": {
       "asset": "aiscr-ecosystem-governance",
-      "content_sha256": "d57e0a031845510c1766a43107ad02262dd7cfb21cca7ecbb5cc137e730bec86",
-      "sha256": "e9f973d10aaef8850e6f4b1465f3cb00499bb14bb3d8630fd097638cfb0378b0",
+      "content_sha256": "85a86536882feeccd3bb1d9f1bcafdb57b3803457597a7aec97f3c056685fe4e",
+      "sha256": "315f304a84dfffd0551c0f5d03d42f1cf0f26a6b203c0bb7f6faf086c59546bb",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-model-logging.instructions.md": {
       "asset": "aiscr-model-logging",
       "content_sha256": "3b96bf8491f9d087fb59b7afea8a9b7bd7da2c8eb5ea08b865f5c2efa0cf7116",
-      "sha256": "8e9a28afd5975a1b79225294ef961a96ab94675fdf937ff5f1ea21c101a8c2b8",
+      "sha256": "c4afd05116f648a2d830bfabad4bfb7f6b360c10b52351fc9ac98dc749d0338b",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-openspec-posture.instructions.md": {
       "asset": "aiscr-openspec-posture",
       "content_sha256": "d15403e80d021f164bdb2e1eb17d8ed680829a3cdf97e0641e878f300b9371af",
-      "sha256": "5915a1d772c5d8a4692efab9b9f2738d2e375e442df470f6924a189c4bcf1db2",
+      "sha256": "a769ec1f1c7c0063b17a111261cdb25cf7c98f7e7de3398bca23196a2222a457",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-planning-core.instructions.md": {
       "asset": "aiscr-planning-core",
       "content_sha256": "c880504a55463c6dd1d8df5e404e44e87eb133f9c0354d5b7f1bb960bec6733c",
-      "sha256": "61e325bd6b95bb2e538870086ad446cccc23162d4457f6f946f061ec8c19272b",
+      "sha256": "27a064ae15831e45ac8675f177718e5dc6b5a623e9f7e7cd99f327486ab03942",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-quality-first-execution.instructions.md": {
       "asset": "aiscr-quality-first-execution",
-      "content_sha256": "3d0320dd95f30293572216ffde9ee1015e86e1a83a39c9606371ec2542aca187",
-      "sha256": "404c64b185b86b3e144b639770122607311bb27b7b52b22e16b4736b862e727c",
+      "content_sha256": "7f92424224189f59ede125a557c90a56e3231c35225d519a60236f4504bdfae0",
+      "sha256": "df1adeee6c141a5439a0ab43cef373a96ee19540b34af2288151d3ba6be81819",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-review-conduct.instructions.md": {
       "asset": "aiscr-review-conduct",
       "content_sha256": "2a92af250883adfed0597ed2e338e94e3d7bdc0f5be3a1cabaf2d0ca25d2d039",
-      "sha256": "8541069b392b583e276740a219139166161bc43976c908cd5a2fbf415cf894bb",
+      "sha256": "55885a0f92ac94d5759d3427d649174f03e2e7a57a478f564af7fe60467143e4",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-usage-logging.instructions.md": {
       "asset": "aiscr-usage-logging",
-      "content_sha256": "b5f9e52a31a3180a5ed461cea00193f65fcf003e56a7752d8338df0f5a88ac54",
-      "sha256": "da161d4eb294211cd494bee63c92048b75450f4be1ebb11fcddefadc20cf47b6",
+      "content_sha256": "52e8a96d5fa1754e72c761a1199eee154f8538a73f9538fa7da7ff1aa760630a",
+      "sha256": "42727a320e6806d1329b5326489de0c2382591145061079733e31a310e6d3101",
       "strategy": "copy"
     },
     ".github/instructions/aiscr-workspace-boundary-safety.instructions.md": {
       "asset": "aiscr-workspace-boundary-safety",
-      "content_sha256": "3e988b303f9a1bb2e135fd4e3058eb1e6c676a75b44b62d8076ba6db393128d7",
-      "sha256": "6f5307fb2c1bdd621892b245aa83ac95b26f7c3a24fc12a85663c6f3ab8f3d88",
+      "content_sha256": "8a53afc13e1454b0c83c4f0591110d02e4c6aa96c989a5b51402f493fb6ac26c",
+      "sha256": "ec499c98bd1144354cd3b655472406cd44ba93ee4453e1c200b092acb6ca4d05",
       "strategy": "copy"
     },
     ".kilo/README.md": {
       "asset": "sibling-vendor-runtime-baseline",
       "content_sha256": "f4c839b10a7103021c4659ff0216ed0bd1d6e5dcdb77352943fd051fda9a10f0",
-      "sha256": "1bca06bddc9041ec7635c33774ccdb80f914b129ac0fb5038872d077878d283e",
+      "sha256": "c5749c67b142167bd331fd0d0fccaaf497c161b4037396bc36c0a021adf39ca7",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-correctness.md": {
       "asset": "aiscr-analyse-correctness",
       "content_sha256": "16185de1b86b4bba945918b2c16efd5e93f2ed680194c3e311e6d15f5283c368",
-      "sha256": "73510b56c3193a8c4d2bb9ef538016816440750b7c61236e2dd34f94ef22a2bd",
+      "sha256": "62de0a5cbbb23bc8e890e419ce00fa13232eedcd109724c1d22018aa886dfced",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-dead-code.md": {
       "asset": "aiscr-analyse-dead-code",
       "content_sha256": "feb333f896e4e436d9df7533b54ff6fb6e7e65e0dd02f514a744bb590853654b",
-      "sha256": "5cfe54c1f5f32a29877a38b9c551a4ea07e73c1ca277bf60071313585043b5ae",
+      "sha256": "8245ef5296ba456117a75a38f32616871a2d3717c40e979a604416a3c8ff665e",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-deploy-safety.md": {
       "asset": "aiscr-analyse-deploy-safety",
       "content_sha256": "b29b88b34e2b572e18e61878ed5092bf18ed7ceed10ba28c5039a4921bfca921",
-      "sha256": "11f8d738f2213069b644fee29d16c565d7f13731134a24856f5e221105c48edc",
+      "sha256": "11890a269e9c5cb95d6ab9eff5328973a24ba66dd04586b668cdebb2619ecf63",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-duplication.md": {
       "asset": "aiscr-analyse-duplication",
       "content_sha256": "a47ee9d43a58e0b87a7df26f8913899c924405705904ea0888c0fccbc6d90a39",
-      "sha256": "ed730e9162b8339d08654f9fa6b75a9ca094ef4aa39fce7f486dbe8e726c077b",
+      "sha256": "e81fa9fefc0b02f23bb2a337291b741a8f1521f9844b2e3f5d46137f390d64bc",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-integration.md": {
       "asset": "aiscr-analyse-integration",
       "content_sha256": "80ee03e8ed68a19fd96cd25532ffb2987b6323727cef40a0e38c4338504b051d",
-      "sha256": "998bf88bb59c47dedeb8f9473ee7417dc53e92c724e9649cc8c59fe6512b63df",
+      "sha256": "ebdcb446ec9588a9c4e2d5fb204f5ba5f125606a3d2c72b3605d69b3f488604b",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-performance.md": {
       "asset": "aiscr-analyse-performance",
       "content_sha256": "aa0574528495aa2ef418cd591f2d6aec3d4961ee18053a772e65c46bbaf189fb",
-      "sha256": "5cd0b386695ef7fe24f23d56d080a924cc13efa81719e236fda20774eb4047b3",
+      "sha256": "596249fba14471334743c304e2ae9f16a11bcd7add5c7991a1d322ccd29a9d9e",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-analyse-security.md": {
       "asset": "aiscr-analyse-security",
       "content_sha256": "7ab220bc113f0b700e8b4d82eb256749fb58e5f0fc2925e99d0a0f75db19d7bd",
-      "sha256": "d28f322084588f6d886bd8844c4a83f265f6d37f584e8b602ef69c6c5ff556f4",
+      "sha256": "ab2a253232465392df8e6f793cb31eceaf0965e3300f22e197e75bd960c0d4ac",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-investigate.md": {
       "asset": "aiscr-investigate",
       "content_sha256": "3583b44908c55392ce0e2a09f22237815d6760e8d7bbb8bfa6aab662c8e6a48c",
-      "sha256": "23b985a1596cdccfe95603e505f3337e2642dadd5dfc58d1a8268fa3f4e33ea4",
+      "sha256": "95899c6ff71dd890abdcc718439f14d3f627e4fb96bc4110116938a3321877b1",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-survey.md": {
       "asset": "aiscr-survey",
       "content_sha256": "bf11d47479cd47a1bd070b64b5d101b317bf7ff02ffeabc835eff6efcc2c2f85",
-      "sha256": "bfebe09ef956354452e10550dee94478ea5683844b3bc71e83f28beb76c554e0",
+      "sha256": "da51da4a3fa060200714be07725eb4d11af7a5c28f72cff97794b71e454c0dc0",
       "strategy": "copy"
     },
     ".kilo/agents/aiscr-verify.md": {
       "asset": "aiscr-verify",
       "content_sha256": "7a8fb47bf217a6410e9a2f8e3515999d2a7c0ca5f9b17f6116be26b9a80898d7",
-      "sha256": "866bdbb1e50b5106a061b411761b0d917f025a0af1c21ee5b2576eb57bbb9bd2",
+      "sha256": "89d67b7dac7839bd59b648fb5de59034eb894a19a7a2730d018e5c53a7ff348f",
+      "strategy": "copy"
+    },
+    "SECURITY.md": {
+      "asset": "security-reporting-policy",
+      "content_sha256": "31dda57e50bb0bb0d7dfdd70463c0ec9b8dd7aac18749d8fb574cad9ae80a742",
+      "sha256": "7a0cb275920efdf20d953592ba7859fb4874fbc37530d929685528166569df91",
       "strategy": "copy"
     }
   },
   "format": 2,
   "sections": {},
-  "source_commit": "4ce7896238fe9996ccf1b0740cf3d6440d8d4d3f"
+  "source_commit": "190c5bcb61054e19937fa5deec1ac26575756bd6"
 }
