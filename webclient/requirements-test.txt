@@ -37,7 +37,7 @@ celery==5.6.3
     #   -r requirements.txt
     #   django-celery-beat
     #   django-celery-results
-certifi==2026.10.23
+certifi==2026.11.20
     # via
     #   -r requirements.txt
     #   httpcore
@@ -46,7 +46,7 @@ certifi==2026.10.23
     #   selenium
 cffi==2.1.1
     # via cryptography
-charset-normalizer==3.5.2
+charset-normalizer==3.5.3
     # via
     #   -r requirements.txt
     #   reportlab
@@ -332,7 +332,7 @@ sniffio==1.3.1
     # via trio
 sortedcontainers==2.4.0
     # via trio
-soupsieve==4.1.2
+soupsieve==4.1.3
     # via
     #   -r requirements.txt
     #   beautifulsoup4
@@ -344,7 +344,7 @@ tablib==3.10.0
     # via -r requirements.txt
 tabulate==0.10.0
     # via -r requirements.txt
-texttable==1.7.3
+texttable==1.7.4
     # via
     #   -r requirements.txt
     #   py7zr
@@ -383,7 +383,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.9.4
+wcwidth==0.9.5
     # via
     #   -r requirements.txt
     #   prompt-toolkit
