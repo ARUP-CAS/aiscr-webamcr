@@ -353,15 +353,22 @@ _CONTENT_REQUEST_TYPES = frozenset(
 )
 
 
-def _get_fedora_timeout(content: bool = False) -> tuple[float, float]:
+def _get_fedora_timeout(content: bool = False, read_only: bool = False) -> tuple[float, float]:
     """
     Vrátí timeout ``(connect, read)`` pro požadavek do Fedory.
 
     :param content: ``True`` pro přenos obsahu binárního souboru nebo commit transakce,
-        kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``; jinak ``FEDORA_READ_TIMEOUT``.
+        kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``.
+    :param read_only: ``True`` pro GET mimo transakci (čtení pro zobrazení nebo stažení),
+        kde se použije kratší ``FEDORA_GET_READ_TIMEOUT``. Jinak platí ``FEDORA_READ_TIMEOUT``.
     :return: Dvojice ``(connect, read)`` v sekundách pro parametr ``timeout`` knihovny ``requests``.
     """
-    read_timeout = settings.FEDORA_CONTENT_READ_TIMEOUT if content else settings.FEDORA_READ_TIMEOUT
+    if content:
+        read_timeout = settings.FEDORA_CONTENT_READ_TIMEOUT
+    elif read_only:
+        read_timeout = settings.FEDORA_GET_READ_TIMEOUT
+    else:
+        read_timeout = settings.FEDORA_READ_TIMEOUT
     return settings.FEDORA_CONNECT_TIMEOUT, read_timeout
 
 
@@ -887,8 +894,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
             :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
             :raises FedoraNoResponseError: Vyvolá se, pokud se požadavek nepodaří odeslat
-                nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, u obsahu souborů
-                ``FEDORA_CONTENT_READ_TIMEOUT``).
+                nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, mimo transakci
+                u GET ``FEDORA_GET_READ_TIMEOUT``, u obsahu souborů ``FEDORA_CONTENT_READ_TIMEOUT``).
         """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
@@ -929,6 +936,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_DISTRIBUTION_METADATA,
             FedoraRequestType.GET_DISTRIBUTION_HISTORIE,
         ):
+            if not self.transaction_uid:
+                # Mimo transakci jde o čtení pro zobrazení nebo stažení. Kratší timeout brání tomu, aby
+                # zaseknutá Fedora držela workery po dobu FEDORA_READ_TIMEOUT za každý náhled na stránce
+                # (#4454). V transakci GET čeká na zámky stejně jako zápis, proto tam platí delší timeout.
+                timeout = _get_fedora_timeout(read_only=True)
             try:
                 response = session.get(url, headers=headers, auth=auth, verify=False, timeout=timeout)
             except requests.exceptions.RequestException as exc:
@@ -3013,10 +3025,25 @@ class FedoraTransactionNoIDError(Exception):
     pass
 
 
-class FedoraTransactionCommitFailedError(Exception):
-    """Implementuje komponentu ``FedoraTransactionCommitFailedError`` v rámci aplikace."""
+class FedoraTransactionCommitFailedError(FedoraError):
+    """
+    Selhání commitu (nebo rollbacku) Fedora transakce – chybová odpověď, výpadek spojení nebo vypršení timeoutu.
 
-    pass
+    Dědí z ``FedoraError``, aby ji zachytily ``handle_fedora_error``, ``ErrorMiddleware`` i obsluhy v API
+    a selhání prošlo společnou cestou s rollbackem transakce a uvolněním zámku záznamu (#4473).
+    """
+
+    def __init__(self, message, url=None, code=None, headers=None, fedora_transaction=None):
+        """
+        Inicializuje výjimku selhání commitu transakce.
+
+        :param message: Chybová zpráva (text odpovědi Fedory nebo popis výjimky spojení).
+        :param url: URL transakce ve Fedoře.
+        :param code: HTTP kód odpovědi, pokud Fedora odpověděla.
+        :param headers: HTTP hlavičky odpovědi.
+        :param fedora_transaction: Transakce, jejíž commit selhal; používá se pro záložní rollback.
+        """
+        super().__init__(url, message, code, headers=headers, fedora_transaction=fedora_transaction)
 
 
 class FedoraTransactionUnsupportedOperationError(Exception):
@@ -3249,7 +3276,9 @@ class FedoraTransaction(BaseFedoraTransaction):
                     "ident_cely": getattr(self.main_record, "ident_cely", None),
                 },
             )
-            raise FedoraTransactionCommitFailedError(f"{operation.name}: {exc}") from exc
+            raise FedoraTransactionCommitFailedError(
+                f"{operation.name}: {exc}", url=url, fedora_transaction=self
+            ) from exc
         succeeded = str(response.status_code).startswith("2")
         # COMMITED se zapíše jen po úspěšném commitu; odmítnutý commit se zapíše jako ABORTED,
         # jinak by middleware uživateli ohlásil uložení změn, které ve Fedoře nejsou (#4470).
@@ -3281,7 +3310,13 @@ class FedoraTransaction(BaseFedoraTransaction):
                     "ident_cely": getattr(self.main_record, "ident_cely", None),
                 },
             )
-            raise FedoraTransactionCommitFailedError(response.text)
+            raise FedoraTransactionCommitFailedError(
+                response.text,
+                url=url,
+                code=response.status_code,
+                headers=response.headers,
+                fedora_transaction=self,
+            )
         logger.debug(
             "core_repository_connector.FedoraTransaction.commit_transaction.end", extra={"transaction": self.uid}
         )

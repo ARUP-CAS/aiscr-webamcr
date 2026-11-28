@@ -56,56 +56,56 @@
   "issues": [
     {
       "id": "T10-SH-01",
-      "severity": "Střední",
-      "summary": "Deploy skripty nemají set -e; selhání příkazu mimo er() může být přehlédnuto",
+      "severity": "Medium",
+      "summary": "The deploy scripts have no set -e; a command failure outside er() may be overlooked",
       "scripts": ["scripts/prod_deploy.sh", "scripts/dev_deploy.sh", "scripts/test_deploy.sh", "scripts/git_prod_deploy.sh", "scripts/ci_deployment/deploy_server.sh", "scripts/ci_deployment/deploy_test_server.sh"],
-      "recommendation": "Přidat set -e na začátek (po shebangu) a případně set -o pipefail; u interaktivních bloků zvážit podmíněné vypnutí."
+      "recommendation": "Add set -e at the start (after the shebang) and possibly set -o pipefail; for interactive blocks consider conditionally disabling it."
     },
     {
       "id": "T10-SH-02",
-      "severity": "Nízká",
-      "summary": "Duplicitní logika: ask_continue, echo_dec, er(), check_create_network, check_stack_exists se opakují v prod_deploy, dev_deploy, test_deploy, git_prod_deploy",
+      "severity": "Low",
+      "summary": "Duplicated logic: ask_continue, echo_dec, er(), check_create_network, check_stack_exists are repeated in prod_deploy, dev_deploy, test_deploy, git_prod_deploy",
       "scripts": ["scripts/prod_deploy.sh", "scripts/dev_deploy.sh", "scripts/test_deploy.sh", "scripts/git_prod_deploy.sh"],
-      "recommendation": "Extrahovat společné funkce do souboru scripts/common.sh a v deploy skriptech ho načítat pomocí source."
+      "recommendation": "Extract the common functions into a scripts/common.sh file and load it in the deploy scripts via source."
     },
     {
       "id": "T10-SH-03",
-      "severity": "Střední",
-      "summary": "restore_database.sh nepoužívá set -e a neověřuje proměnné DBNAME, USED_DB_BACKUP, DB_FLAG_ROLE před destruktivními příkazy",
+      "severity": "Medium",
+      "summary": "restore_database.sh does not use set -e and does not validate the variables DBNAME, USED_DB_BACKUP, DB_FLAG_ROLE before destructive commands",
       "scripts": ["scripts/restore_database.sh"],
-      "recommendation": "Přidat set -e a na začátku kontrolu, že required env vars jsou nastaveny; při chybě skončit s jasnou hláškou."
+      "recommendation": "Add set -e and, at the start, a check that the required env vars are set; on error exit with a clear message."
     },
     {
       "id": "T10-SH-04",
-      "severity": "Nízká",
-      "summary": "build_prod_image.sh nemá žádný error handling ani dokumentaci",
+      "severity": "Low",
+      "summary": "build_prod_image.sh has no error handling or documentation",
       "scripts": ["scripts/build_prod_image.sh"],
-      "recommendation": "Přidat set -e; volitelně krátký komentář nebo -h s popisem."
+      "recommendation": "Add set -e; optionally a short comment or -h with a description."
     },
     {
       "id": "T10-PY-01",
-      "severity": "Střední",
-      "summary": "db_connection_from_docker-web.py nečte DB_PORT ze secretu; připojení používá výchozí port 5432",
+      "severity": "Medium",
+      "summary": "db_connection_from_docker-web.py does not read DB_PORT from the secret; the connection uses the default port 5432",
       "scripts": ["scripts/db/db_connection_from_docker-web.py"],
-      "recommendation": "Přidat db_port = data.get(\"DB_PORT\", 5432) a předat port do psycopg2.connect()."
+      "recommendation": "Add db_port = data.get(\"DB_PORT\", 5432) and pass port to psycopg2.connect()."
     },
     {
       "id": "T10-PY-02",
-      "severity": "Nízká",
-      "summary": "clone_test_db.py neověřuje existenci /run/secrets/db_conf ani povinné klíče v JSON před použitím",
+      "severity": "Low",
+      "summary": "clone_test_db.py does not verify the existence of /run/secrets/db_conf or the required keys in the JSON before use",
       "scripts": ["scripts/db/clone_test_db.py"],
-      "recommendation": "Na začátku zkontrolovat existenci souboru a přítomnost klíčů; při chybě sys.exit(1) s popisem."
+      "recommendation": "At the start, check the existence of the file and the presence of the keys; on error sys.exit(1) with a description."
     },
     {
       "id": "T10-PY-03",
-      "severity": "Nízká",
-      "summary": "clone_test_db.py používá f-stringy pro SQL; hodnoty pocházejí ze secretu, riziko injekce je nízké, ale konzistence s parametrizací by byla lepší",
+      "severity": "Low",
+      "summary": "clone_test_db.py uses f-strings for SQL; the values come from the secret, the injection risk is low, but consistency with parameterization would be better",
       "scripts": ["scripts/db/clone_test_db.py"],
-      "recommendation": "Použít parametrizované dotazy (cursor.execute s %s a tuple) tam, kde to psycopg2 umožňuje u DDL."
+      "recommendation": "Use parameterized queries (cursor.execute with %s and a tuple) where psycopg2 allows it for DDL."
     }
   ],
   "config_notes": {
-    "crontab.txt": "Spouští každou minutu: python3 manage.py runcrons \"cron.notifications.Notifications\" --settings=webclient.settings.production. Chyby z runcrons nejsou v crontabu ošetřeny; závisí na logování v aplikaci.",
-    "uwsgi_site.ini": "Konfigurace uWSGI pro produkci; nevolá přímo skripty z scripts/, pouze modul webclient.wsgi."
+    "crontab.txt": "Runs every minute: python3 manage.py runcrons \"cron.notifications.Notifications\" --settings=webclient.settings.production. Errors from runcrons are not handled in the crontab; it depends on logging in the application.",
+    "uwsgi_site.ini": "uWSGI configuration for production; it does not call the scripts from scripts/ directly, only the module webclient.wsgi."
   }
 }

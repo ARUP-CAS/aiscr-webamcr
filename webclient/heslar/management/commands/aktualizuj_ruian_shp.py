@@ -21,12 +21,13 @@ s VFR variantou ``ZKSH`` – beze změny, není dotčeno.
 
 Příklady použití::
 
+    # --valid-to se u 1.zip od ČÚZK odvodí z časů souborů v archivu
+    # (den před vygenerováním)
     python manage.py aktualizuj_ruian_shp \\
         --shp /vol/data-migrace/1.zip \\
-        --uzsz /vol/data-migrace/20260228_ST_UZSZ.xml.zip \\
-        --valid-to 2026-02-28
+        --uzsz /vol/data-migrace/20260228_ST_UZSZ.xml.zip
 
-    # Vstup může být i rozbalený adresář s SHP layery
+    # Vstup může být i rozbalený adresář s SHP layery; --valid-to je pak povinné
     python manage.py aktualizuj_ruian_shp \\
         --shp /home/admin/ARUP/Katastry/ \\
         --uzsz /vol/data-migrace/20260228_ST_UZSZ.xml.zip \\
@@ -35,8 +36,10 @@ Příklady použití::
 
 import logging
 import traceback
-from datetime import datetime
+import zipfile
+from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import Optional
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
@@ -45,9 +48,34 @@ from heslar.models import RuianSyncRun
 from heslar.ruian_sync import ShpUzszSource
 from heslar.ruian_sync import syncer as ruian_syncer
 from heslar.ruian_sync.souhrn_varovani import SberVarovani
+from heslar.ruian_sync.vfr_download import RUIAN_RETENCE_ZDROJE_DNU, kotva_mimo_retenci
 from heslar.ruian_sync.zamek import ruian_sync_lock
 
 logger = logging.getLogger(__name__)
+
+
+def _popis_mimo_retenci(valid_to: date) -> str:
+    """
+    Vysvětlí operátorovi, proč kotva mimo retenci změnových souborů nestačí.
+
+    :param valid_to: Odmítnutá kotva.
+    :return: Věta pro chybovou hlášku.
+    """
+    prvni_den = valid_to + timedelta(days=1)
+    return (
+        f"Denní sync by navázal změnovým souborem z {prvni_den.isoformat()}, který je starý "
+        f"{(_dnes() - prvni_den).days} dnů – mimo retenci ČÚZK ({RUIAN_RETENCE_ZDROJE_DNU} dnů). "
+        f"Soubor už na serveru není, kotva by se nikdy neposunula."
+    )
+
+
+def _dnes() -> date:
+    """
+    Vrátí dnešní datum; samostatně kvůli nahrazení v testech.
+
+    :return: Dnešní datum podle místního času serveru.
+    """
+    return datetime.now().date()
 
 
 #: Po kolika dnech odstupu ÚZSZ od ``--valid-to`` se upozorní. ÚZSZ vychází
@@ -95,7 +123,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--valid-to",
             type=str,
-            required=True,
+            required=False,
             help=_("heslar.management.commands.aktualizuj_ruian_shp.Command.add_arguments.valid_to_help"),
         )
 
@@ -106,8 +134,9 @@ class Command(BaseCommand):
         :param args: Standardní pozicovaný argument managementu.
         :param options: Slovník s argumenty (``shp``, ``uzsz``, ``valid_to``).
 
-        :raises CommandError: Pokud některá vstupní cesta neexistuje nebo
-            ``--valid-to`` má neplatný formát.
+        :raises CommandError: Pokud některá vstupní cesta neexistuje,
+            ``--valid-to`` má neplatný formát, nebo chybí u vstupu, ze kterého
+            ho nejde odvodit.
         """
         shp_path = Path(options["shp"])
         uzsz_path = Path(options["uzsz"])
@@ -116,10 +145,7 @@ class Command(BaseCommand):
         if not uzsz_path.exists():
             raise CommandError(f"UZSZ cesta neexistuje: {uzsz_path}")
 
-        try:
-            valid_to = datetime.strptime(options["valid_to"], "%Y-%m-%d").date()
-        except ValueError as exc:
-            raise CommandError(f"Neplatný formát --valid-to (očekáván YYYY-MM-DD): {exc}")
+        valid_to = self._urci_valid_to(shp_path, options.get("valid_to"))
 
         logger.debug(
             "heslar.management.commands.aktualizuj_ruian_shp.handle.start",
@@ -132,7 +158,7 @@ class Command(BaseCommand):
 
         source = ShpUzszSource(shp_path=shp_path, uzsz_path=uzsz_path)
 
-        self._zkontroluj_valid_to(uzsz_path, valid_to)
+        self._zkontroluj_valid_to(shp_path, uzsz_path, valid_to)
 
         # Tentýž advisory lock jako plánovaný denní sync, a bere se dřív, než
         # vznikne audit záznam – odmítnutý pokus nemá co zakládat běh. Bez
@@ -143,9 +169,9 @@ class Command(BaseCommand):
         with ruian_sync_lock() as ziskan_zamek:
             if not ziskan_zamek:
                 raise CommandError(
-                    "Synchronizace RÚIAN už běží (drží advisory lock). Počkejte na její "
-                    "dokončení, nebo zastavte běžící úlohu. Souběh plného synchu a denní "
-                    "delty by nenávratně zahodil změny zpracované mezitím."
+                    "Zámek synchronizace RÚIAN drží jiný proces (denní sync RÚIAN nebo "
+                    "anonymizace_dat). Počkejte na jeho dokončení, nebo zastavte běžící úlohu. "
+                    "Souběh plného synchu a denní delty by nenávratně zahodil změny zpracované mezitím."
                 )
             self._proved_sync(source, shp_path, uzsz_path, valid_to)
 
@@ -166,39 +192,183 @@ class Command(BaseCommand):
         except ValueError:
             return None
 
-    def _zkontroluj_valid_to(self, uzsz_path, valid_to):
+    @staticmethod
+    def _datum_vygenerovani_shp(shp_path) -> Optional[date]:
         """
-        Ověří, že ``--valid-to`` nepopisuje stav, který ještě neexistuje.
+        Zjistí den, kdy ČÚZK vygeneroval SHP archiv, z časů souborů v ZIP.
+
+        ``1.zip`` má stálou URL a nedatovaný název, ale soubory vrstev uvnitř
+        nesou čas vygenerování (např. ``1/OKRESY_P.shp`` 2026-11-10 20:27).
+        Bere se **nejstarší** čas souboru vrstvy ``.shp``, tedy začátek
+        generování – nejopatrnější odhad stavu dat.
+
+        U rozbaleného adresáře se datum nezjišťuje: časy souborů tam určuje
+        rozbalení, ne ČÚZK. Totéž platí pro archiv, který někdo přebalil –
+        nese časy přebalení a kontrola je pak volnější, než by měla být.
+        Časy v ZIP jsou místní bez časové zóny; ČÚZK generuje archiv večer
+        (kolem 20:30), takže posun o pár hodin den nezmění.
+
+        :param shp_path: Cesta k ``1.zip`` nebo k adresáři s vrstvami.
+        :return: Den vygenerování, nebo ``None``, když ho nejde zjistit
+            (adresář, poškozený archiv, archiv bez vrstev ``.shp``).
+        """
+        if not zipfile.is_zipfile(str(shp_path)):
+            return None
+        try:
+            with zipfile.ZipFile(str(shp_path)) as zf:
+                casy = [i.date_time for i in zf.infolist() if i.filename.lower().endswith(".shp")]
+        except (OSError, zipfile.BadZipFile):
+            return None
+        if not casy:
+            return None
+        rok, mesic, den = min(casy)[:3]
+        try:
+            return date(rok, mesic, den)
+        except ValueError:
+            return None
+
+    def _nejpozdejsi_kotva(self, shp_path) -> Optional[date]:
+        """
+        Vrátí nejpozdější přípustnou kotvu pro SHP archiv – den před jeho vygenerováním.
+
+        ČÚZK generuje archiv večer, ale změnový soubor téhož dne v něm ještě
+        není (ověřeno na archivu z 12. 10. 2026), takže archiv jistě obsahuje
+        jen změny do předchozího dne. Jediné místo s tímto pravidlem – používá
+        ho odvození kotvy i kontrola zadané hodnoty.
+
+        :param shp_path: Cesta k ``1.zip`` nebo k adresáři s vrstvami.
+        :return: Den před vygenerováním archivu, nebo ``None``, když datum
+            vygenerování nejde zjistit (viz :meth:`_datum_vygenerovani_shp`).
+        """
+        datum_shp = self._datum_vygenerovani_shp(shp_path)
+        return None if datum_shp is None else datum_shp - timedelta(days=1)
+
+    def _urci_valid_to(self, shp_path, zadane: Optional[str]) -> date:
+        """
+        Určí kotvu ``valid_to`` – ze zadané hodnoty, nebo z data vygenerování SHP.
+
+        Bez ``--valid-to`` se u ``1.zip`` od ČÚZK použije **den před
+        vygenerováním** archivu (viz :meth:`_datum_vygenerovani_shp`): archiv
+        obsahuje změny do předchozího dne, změnový soubor téhož dne ještě ne.
+        Ručně zadaná hodnota má přednost a dál ji ověří
+        :meth:`_zkontroluj_valid_to`.
+
+        :param shp_path: Cesta k ``1.zip`` nebo k adresáři s vrstvami.
+        :param zadane: Hodnota ``--valid-to`` (``YYYY-MM-DD``), nebo ``None``.
+        :return: Datum kotvy.
+        :raises CommandError: Když má zadaná hodnota neplatný formát, nebo
+            když chybí a datum vygenerování SHP nejde zjistit (adresář,
+            archiv bez vrstev ``.shp``), nebo když odvozená kotva leží mimo
+            retenci změnových souborů ČÚZK (viz
+            :func:`heslar.ruian_sync.vfr_download.kotva_mimo_retenci`).
+        """
+        if zadane is not None:
+            # Prázdný řetězec (např. nenastavená proměnná shellu) je chyba
+            # formátu, ne pokyn kotvu odvodit.
+            try:
+                return datetime.strptime(zadane, "%Y-%m-%d").date()
+            except ValueError as exc:
+                raise CommandError(f"Neplatný formát --valid-to (očekáván YYYY-MM-DD): {exc}")
+
+        valid_to = self._nejpozdejsi_kotva(shp_path)
+        if valid_to is None:
+            raise CommandError(
+                f"U {shp_path} nejde zjistit datum vygenerování SHP (není to ZIP od ČÚZK), "
+                f"zadejte proto --valid-to: poslední den, jehož změny SHP jistě obsahuje."
+            )
+        datum_shp = valid_to + timedelta(days=1)
+        if kotva_mimo_retenci(valid_to, _dnes()):
+            # Typicky přebalený archiv se starými časy souborů. Odmítne se už
+            # tady, aby chyba neradila zadat --valid-to ručně – i ruční kotvu
+            # mimo retenci odmítne _zkontroluj_valid_to.
+            raise CommandError(
+                f"Podle časů souborů v ZIP vznikl archiv {datum_shp.isoformat()}, kotva by byla "
+                f"{valid_to.isoformat()}. {_popis_mimo_retenci(valid_to)} Časy souborů v archivu nejspíš "
+                f"neodpovídají obsahu, nebo je archiv starý: stáhněte aktuální 1.zip přímo od ČÚZK."
+            )
+        self.stdout.write(
+            self.style.WARNING(
+                f"  --valid-to nezadáno: podle časů souborů v ZIP vznikl archiv {datum_shp.isoformat()}, "
+                f"kotva bude {valid_to.isoformat()}. Platí jen pro 1.zip stažený přímo od ČÚZK – u archivu "
+                f"přebaleného nebo odjinud zadejte --valid-to ručně, jinak denní sync přeskočí dny, které "
+                f"archiv neobsahuje."
+            )
+        )
+        return valid_to
+
+    def _zkontroluj_valid_to(self, shp_path, uzsz_path, valid_to):
+        """
+        Ověří, že ``--valid-to`` nepopisuje pozdější stav, než jaký vstupy obsahují.
+
+        Kotva odvozená v :meth:`_urci_valid_to` kontrolou proti datu SHP
+        projde vždy; ostatní kontroly (ÚZSZ) platí pro ni stejně.
 
         ``valid_to`` se ukládá jako kotva ``RuianSyncRun.data_valid_to`` a cron
         od ní pokračuje následujícím dnem. Když popisuje pozdější stav, než
         jaký se opravdu nahrál, dny mezi skutečnými daty a kotvou se nikdy
         nestáhnou – a protože kotva vypadá čerstvě, nespustí se ani hlídač
-        stáří dat. Taková ztráta je tichá.
+        stáří dat. Taková ztráta je tichá: na testu (plný sync se SHP
+        vygenerovaným 12. 10. 2026 a ``valid_to`` 12. 10.) vynechal denní sync
+        změnový soubor z 12. 10., který SHP ještě neobsahoval, a sousední
+        katastry se pak překrývaly.
 
-        Datum se **nedá** odvodit ze vstupních souborů: polygony nese ``1.zip``,
-        které je nedatované (stejná URL vždy vrací aktuální stav), a ÚZSZ
-        dodává jen definiční body a vydává se řidčeji. ÚZSZ starší než
-        ``valid_to`` je proto běžný a správný stav, ne chyba.
-
-        Kontroluje se tedy to, co ověřit jde:
+        Kontroluje se:
 
         * ``valid_to`` v budoucnosti je vždy špatně – takový stav nemohl být
           stažen a kotva by přeskočila všechny dny až k němu;
+        * ``valid_to`` **nejvýš den před vygenerováním SHP** (viz
+          :meth:`_datum_vygenerovani_shp`). ČÚZK generuje archiv večer,
+          ale změnový soubor téhož dne v něm ještě není; dřívější
+          kotva je přitom neškodná – denní sync jen znovu aplikuje den, který
+          už v datech je. U adresáře, kde datum nejde zjistit, jen upozorní;
+        * kotva, po které by denní sync navazoval změnovým souborem mimo
+          retenci ČÚZK (:func:`~heslar.ruian_sync.vfr_download.kotva_mimo_retenci`),
+          se odmítne vždy – zadaná, odvozená i u adresáře. Takový soubor už na
+          serveru není a kotva by se nikdy neposunula;
         * ÚZSZ **novější** než ``valid_to`` je podezřelé, protože definiční
           body by pocházely z pozdějšího stavu, než jaký se deklaruje;
         * velký odstup ÚZSZ od ``valid_to`` je jen upozornění, že definiční
-          body nově vzniklých katastrů mohou chybět.
+          body nově vzniklých katastrů mohou chybět. ÚZSZ vychází řidčeji než
+          SHP, starší ÚZSZ je proto běžný stav.
 
+        :param shp_path: Cesta k ``1.zip`` nebo k adresáři s vrstvami.
         :param uzsz_path: Cesta k souboru ÚZSZ.
         :param valid_to: Datum zadané přes ``--valid-to``.
-        :raises CommandError: Když ``--valid-to`` leží v budoucnosti.
+        :raises CommandError: Když ``--valid-to`` leží v budoucnosti, je
+            pozdější než den před vygenerováním SHP, nebo by po něm denní sync
+            navazoval souborem mimo retenci ČÚZK.
         """
-        dnes = datetime.now().date()
+        dnes = _dnes()
         if valid_to > dnes:
             raise CommandError(
                 f"--valid-to {valid_to.isoformat()} leží v budoucnosti (dnes je {dnes.isoformat()}). "
                 f"Kotva by přeskočila denní změny za {(valid_to - dnes).days} dnů a nikdo by se to nedozvěděl."
+            )
+        if kotva_mimo_retenci(valid_to, dnes):
+            # Platí pro každou kotvu – zadanou, odvozenou i u adresáře. Hlídač
+            # stáří dat v cronu by tu nepomohl: porovnává nejnovější kotvu
+            # s daty, takže starší kotva plného synchu po nedávné deltě projde tiše.
+            raise CommandError(
+                f"--valid-to {valid_to.isoformat()}: {_popis_mimo_retenci(valid_to)} Použijte čerstvý "
+                f"1.zip od ČÚZK a kotvu odpovídající jeho stavu."
+            )
+
+        nejpozdeji = self._nejpozdejsi_kotva(shp_path)
+        if nejpozdeji is None:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  U {shp_path} nejde zjistit datum vygenerování SHP (není to ZIP od ČÚZK). "
+                    f"Ověřte, že --valid-to není pozdější než den před vygenerováním dat."
+                )
+            )
+        elif valid_to > nejpozdeji:
+            raise CommandError(
+                f"--valid-to {valid_to.isoformat()} je pozdější než stav SHP: archiv vygeneroval ČÚZK "
+                f"{(nejpozdeji + timedelta(days=1)).isoformat()} (podle časů souborů v ZIP), --valid-to smí být nejvýš "
+                f"{nejpozdeji.isoformat()}. Pozdější kotva by denní sync přeskočil o změny "
+                f"{(nejpozdeji + timedelta(days=1)).isoformat()} až {valid_to.isoformat()}. Zadejte "
+                f"--valid-to {nejpozdeji.isoformat()} nebo dřívější; dřívější datum je bezpečné, denní sync "
+                f"dny navíc jen znovu aplikuje."
             )
 
         datum_uzsz = self._datum_snapshotu(uzsz_path)

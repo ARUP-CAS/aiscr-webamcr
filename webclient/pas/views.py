@@ -821,9 +821,8 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == p.ownershipChoices.our:
-            return Q(projekt__organizace=self.request.user.organizace) | Q(
-                predano_organizace=self.request.user.organizace
-            )
+            organization_ids = self.request.user.organizace_podstrom_ids
+            return Q(projekt__organizace__in=organization_ids) | Q(predano_organizace__in=organization_ids)
         else:
             return Q(**{"historie_zapsat__in": filtered_my})
 
@@ -893,6 +892,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        sort_params = self.filter_valid_sort_params(qs, sort_params)
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = (
@@ -1170,6 +1170,7 @@ class UzivatelSpolupraceListView(SearchListView):
                 "spolupracovnik__first_name",
                 "spolupracovnik__ident_cely",
             ]
+        sort_params = self.filter_valid_sort_params(qs, sort_params)
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
@@ -1192,7 +1193,7 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         filtered_my = Q(spolupracovnik=self.request.user)
         if ownership == p.ownershipChoices.our:
-            filtered_our = Q(vedouci__organizace=self.request.user.organizace)
+            filtered_our = Q(vedouci__organizace__in=self.request.user.organizace_podstrom_ids)
             return filtered_our | filtered_my
         else:
             return filtered_my

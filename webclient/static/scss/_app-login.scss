@@ -421,6 +421,11 @@
             .news-item-html {
                 // HTML obsah je ve výchozím stavu skrytý, dokud uživatel neklikne na tlačítko rozbalení
                 display: none;
+
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
             }
         }
 

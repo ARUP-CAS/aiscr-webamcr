@@ -85,7 +85,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import AsWKT, PointOnSurface
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import FieldError, PermissionDenied, ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
 from django.db import transaction
@@ -94,6 +94,7 @@ from django.http import (
     FileResponse,
     Http404,
     HttpResponse,
+    HttpResponseBadRequest,
     HttpResponseRedirect,
     JsonResponse,
     StreamingHttpResponse,
@@ -209,7 +210,6 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
     soubor.deleted_by_user = request.user
     soubor.active_transaction = fedora_transaction
     soubor_pk = soubor.pk
-    transaction_error = False
     # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint);
     # jinak by DB smazání zůstalo zapsané, zatímco Fedora transakce je už odvolaná.
     try:
@@ -218,7 +218,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
             logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
             return JsonResponse({"success": True})
     except FedoraUpdatedByAnotherTransactionError as err:
         logger.debug(
@@ -226,7 +226,6 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
         )
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-        transaction_error = True
     except FedoraBinaryFileAlreadyDeletedError as err:
         # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
         logger.info(
@@ -234,27 +233,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
         )
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-        transaction_error = True
-    if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
-        # Není jisté, zda je 404 jediná správná varianta.
-        logger.debug("core.views.delete_file_DZ.not_deleted", extra={"soubor": soubor})
-        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-        django_messages = []
-        for message in messages.get_messages(request):
-            django_messages.append(
-                {
-                    "level": message.level,
-                    "message": message.message,
-                    "extra_tags": message.tags,
-                }
-            )
-        fedora_transaction.rollback_transaction()
-        return JsonResponse({"success": False}, status=400)
-
-    if not transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-        fedora_transaction.mark_transaction_as_closed()
-    elif transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-        fedora_transaction.rollback_transaction()
+    # Úspěch vrací uvnitř ``atomic`` bloku; Fedora transakci při chybě odvolá už konektor před vyhozením výjimky.
     return JsonResponse({"success": False}, status=400)
 
 
@@ -302,8 +281,8 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         soubor.deleted_by_user = request.user
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
-        transaction_error = False
         # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint).
+        # Transakci Fedory před vyhozením obou zachycených výjimek odvolá už ``FedoraRepositoryConnector._send_request``.
         try:
             with transaction.atomic():
                 soubor.delete()
@@ -317,8 +296,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
             return JsonResponse({"success": False}, status=400)
         except FedoraBinaryFileAlreadyDeletedError as err:
             # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
@@ -327,24 +304,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
             return JsonResponse({"success": False}, status=400)
-        if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
-            # Není jisté, zda je 404 jediná správná varianta.
-            logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            django_messages = []
-            for message in messages.get_messages(request):
-                django_messages.append(
-                    {
-                        "level": message.level,
-                        "message": message.message,
-                        "extra_tags": message.tags,
-                    }
-                )
-            fedora_transaction.rollback_transaction()
-            return JsonResponse({"messages": django_messages}, status=400)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -354,10 +314,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
-        if not transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-            fedora_transaction.mark_transaction_as_closed()
-        elif transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-            fedora_transaction.rollback_transaction()
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         return JsonResponse({"redirect": response})
     else:
         context = {
@@ -1716,7 +1673,8 @@ class PermissionFilterMixin:
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == Permissions.ownershipChoices.our:
-            filter_historie = {"uzivatel__organizace": self.request.user.organizace}
+            organization_ids = self.request.user.organizace_podstrom_ids
+            filter_historie = {"uzivatel__organizace__in": organization_ids}
             filtered_our = Historie.objects.filter(**filter_historie)
             return Q(**{"historie_zapsat__in": filtered_our})
         else:
@@ -1827,8 +1785,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
+            export_suffix_string = self.request.GET.get("export_suffix_string")
+            if not export_suffix_string:
+                logger.warning("core.views.SearchListView.create_export.missing_export_suffix_string")
+                return HttpResponseBadRequest("Missing parameter export_suffix_string")
             r = RedisConnector.get_connection_decode()
-            export_suffix_string = self.request.GET["export_suffix_string"]
             redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}_{export_suffix_string}"
             update_progress_bar(r, redis_variable_name, 0, _("core.templates.core.export_modal.collecting_data"))
             dataset = self.get_table_data()
@@ -1951,10 +1912,44 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         """
         Vrací sort params.
 
-        :return: Načtená data odpovídající zadaným vstupům.
+        Hodnoty ``sort`` pochází z URL, proto se duplicity zahodí a počet termínů se omezí na
+        ``max_sort_params``; další hodnoty se ignorují. Tím je omezená i práce, kterou
+        ``filter_valid_sort_params`` vynaloží na ověření řazení.
+
+        :return: Seznam unikátních názvů polí pro řazení, nejvýše ``max_sort_params``.
         """
-        sort_params = self.request.GET.getlist("sort")
-        return sort_params
+        sort_params = list(dict.fromkeys(self.request.GET.getlist("sort")))
+        return sort_params[: self.max_sort_params]
+
+    #: Nejvyšší počet termínů ``sort`` z URL, které seznam zohlední (viz ``_get_sort_params``).
+    max_sort_params = 8
+
+    @staticmethod
+    def filter_valid_sort_params(qs, sort_params):
+        """
+        Odstraní z parametrů řazení pole, která querysetu nelze použít pro ``order_by()``.
+
+        Parametr ``sort`` pochází z URL a uživatel (nebo bot) ho může libovolně změnit. Každá hodnota se
+        ověří sestavením SQL dotazu s řazením (``as_sql()``, bez spuštění dotazu v databázi). Samotné
+        ``order_by()`` odmítne jen neexistující pole modelu, kdežto neplatné pole přes vazbu
+        (např. ``vazba__neexistuje``) selže až při kompilaci dotazu. Neplatná pole se zalogují jako
+        varování a vynechají, takže se seznam zobrazí s ostatním (nebo výchozím) řazením místo HTTP 500.
+
+        :param qs: Queryset, nad kterým se bude řadit.
+        :param sort_params: Seznam názvů polí pro řazení (po případném přejmenování na pole modelu).
+        :return: Seznam polí, která lze použít v ``order_by()``.
+        """
+        valid_params = []
+        for param in sort_params:
+            try:
+                qs.order_by(param).query.get_compiler(using=qs.db).as_sql()
+            except FieldError:
+                logger.warning(
+                    "core.views.SearchListView.filter_valid_sort_params.invalid_field", extra={"sort": param}
+                )
+                continue
+            valid_params.append(param)
+        return valid_params
 
     def get_context_data(self, **kwargs):
         """
@@ -2479,8 +2474,13 @@ class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
         return path
 
 
-class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
-    """Třída pohledu pro import překladových souborů."""
+class TranslationImportView(RosettaFileLevelMixinWithBackup, FormView):
+    """
+    Třída pohledu pro import překladových souborů.
+
+    Mixin Rosetty musí být první, aby se uplatnily jeho dekorátory na ``dispatch``
+    (``user_passes_test`` a ``never_cache``).
+    """
 
     template_name = "rosetta/import_form.html"
     form_class = TranslationImportForm
@@ -2493,6 +2493,8 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
 
             :return: Vrací výsledek volání ``redirect()``.
         """
+        # Vyhodnotí oprávnění k jazyku (404) dřív, než se nahraný soubor zkopíruje a naparsuje.
+        current_po_path = Path(self.po_file_path)
         new_pofile = form.cleaned_data["file"]
         tmp_path = None
         try:
@@ -2519,7 +2521,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             logger.error("core.views.TranslationImportView.form_valid", extra={"error": str(e)})
             messages.add_message(self.request, messages.ERROR, str(e))
             return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
-        p = Path(self.po_file_path)
+        p = current_po_path
         date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M%S")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
         self.handle_uploaded_file(new_pofile)

@@ -1,27 +1,26 @@
 # .agents/analysis
 
-Strojově čitelné výstupy jednotlivých analytických tasků (JSON souhrny).
+Machine-readable outputs of the individual analysis tasks (JSON summaries).
 
-Každý soubor `_analysis.json` odpovídá jednomu tasku z `review_config.yaml`
-(`T03`–`T10`) a slouží jako dlouhodobá paměť pro další agenty i pro lidské
-reviewery.
+Each `*_analysis.json` file corresponds to one task in `../config/review_config.toml`
+(`T03`–`T10`) and serves as long-term memory for later agent runs and for human
+reviewers.
 
-## Typické soubory
+## Typical files
 
-- `repository_map.json` — strukturální mapa repozitáře (T01).
-- `dependency_graph.json` — graf interních a externích závislostí (T02).
-- `orm_analysis.json` — shrnutí ORM vzorů, indexů a potenciálních N+1 (T03).
-- `docker_analysis.json` — analýza Dockerfile a docker-compose konfigurací (T04).
-- `security_analysis.json` — shrnutí bezpečnostních zjištění (T05).
-- `celery_analysis.json` — přehled Celery tasků, plánování a chybového zpracování (T06).
-- `frontend_analysis.json` — analýza vlastního JS/CSS a šablon (T07).
-- `documentation_analysis.json` — stav Sphinx dokumentace a generátorů (T08).
-- `cicd_analysis.json` — CI/CD pipeline, pre-commit, skenování (T09).
-- `scripts_analysis.json` — operační a pomocné skripty (T10).
+- `repository_map.json` — structural map of the repository (T01).
+- `dependency_graph.json` — graph of internal and external dependencies (T02).
+- `orm_analysis.json` — summary of ORM patterns, indexes, and potential N+1 queries (T03).
+- `docker_analysis.json` — analysis of the Dockerfile and docker-compose configurations (T04).
+- `security_analysis.json` — summary of security findings (T05).
+- `celery_analysis.json` — overview of Celery tasks, scheduling, and error handling (T06).
+- `frontend_analysis.json` — analysis of first-party JS/CSS and templates (T07).
+- `documentation_analysis.json` — state of the Sphinx documentation and its generators (T08).
+- `cicd_analysis.json` — CI/CD pipeline, pre-commit, and scanning (T09).
+- `scripts_analysis.json` — operational and helper scripts (T10).
 
-## Účel
+## Purpose
 
-- zachytit zjištění v kompaktní podobě (pro další běhy agentů),
-- umožnit porovnání stavů v čase (před/po refaktoringu),
-- sloužit jako vstup pro finální audit (T11) a pro tvorbu refactoring backlogu.
-
+- capture findings in a compact form for later agent runs,
+- allow comparing states over time (before and after refactoring),
+- serve as input for the final audit (T11) and for building the refactoring backlog.

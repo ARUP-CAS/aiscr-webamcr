@@ -41,16 +41,16 @@
 
 # Documents
 *.bibtex   text diff=bibtex
-*.doc      diff=astextplain
-*.DOC      diff=astextplain
-*.docx     diff=astextplain
-*.DOCX     diff=astextplain
-*.dot      diff=astextplain
-*.DOT      diff=astextplain
-*.pdf      diff=astextplain
-*.PDF      diff=astextplain
-*.rtf      diff=astextplain
-*.RTF      diff=astextplain
+*.doc      -text diff=astextplain
+*.DOC      -text diff=astextplain
+*.docx     -text diff=astextplain
+*.DOCX     -text diff=astextplain
+*.dot      -text diff=astextplain
+*.DOT      -text diff=astextplain
+*.pdf      -text diff=astextplain
+*.PDF      -text diff=astextplain
+*.rtf      -text diff=astextplain
+*.RTF      -text diff=astextplain
 *.md       text
 *.tex      text diff=tex
 *.adoc     text
@@ -92,6 +92,16 @@
 *.xml      text
 *.yaml     text
 *.yml      text
+
+# Fonts and other binary assets
+*.ttf      binary
+*.otf      binary
+*.woff     binary
+*.woff2    binary
+*.eot      binary
+*.dwg      binary
+*.xls      binary
+*.xlsx     binary
 
 # Archives
 *.7z       binary

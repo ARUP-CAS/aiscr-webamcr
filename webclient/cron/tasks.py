@@ -45,18 +45,21 @@ from core.import_data_mappers import (
     ImportDataError,
     ImportDataIntegrityError,
     ImportDataMissingFileError,
+    ImportDataOrganizationCycleError,
     ImportDataUnsupportedFileError,
     ImportDataUnsupportedFilesError,
     ImportDataValidationResult,
     ImportModelMapper,
     LookupImportField,
+    OrganizaceMapper,
     ParadataMapper,
     SouborMapper,
     UzivatelNotifikaceMapper,
     UzivatelOpravneniMapper,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
-from core.news_feed import _parse_feed, get_news_feed_cache_keys
+from core.news_feed import _parse_feed
+from core.news_feed_config import fetch_configuration_fingerprint, get_news_feed_cache_keys, get_news_feed_config
 from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
@@ -88,13 +91,14 @@ from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
+from heslar.ruian_sync.vfr_download import RUIAN_RETENCE_ZDROJE_DNU, kotva_mimo_retenci
 from heslar.ruian_sync.zamek import RUIAN_SYNC_LOCK_KEY, ruian_sync_lock  # noqa: F401 – reexport
 from historie.models import Historie
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import User, UserNotificationType
+from uzivatel.models import Organizace, User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
 
 import redis
@@ -151,6 +155,7 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_failure_reason",
     "import_data_count",
     "import_data_valid",
+    "import_data_organization_record_ids",
     "import_data_phase",
     "import_data_primary_keys",
     "import_data_files",
@@ -178,6 +183,17 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
 # Jak často validační task aktualizuje textový stav průběhu. Výsledky se přidávají po řádcích do
 # ``import_data_validation_details`` a report je rekonstruuje až při čtení.
 VALIDATION_REDIS_UPDATE_INTERVAL = 50
+IMPORT_DATA_RECORD_READ_BATCH_SIZE = 500
+
+
+def _decode_staged_import_record(serialized_record):
+    """Vrátí mapper a datovou část obálky importního záznamu uloženého v Redis."""
+    envelope = json.loads(serialized_record)
+    mapper_class = ImportModelMapper.get_import_data_mapper(envelope["__file_name"])
+    payload = dict(envelope)
+    payload.pop("__file_name")
+    return mapper_class, payload
+
 
 # Standardizační pravidlo: do Redis se ukládají pouze ID překladových řetězců (nikoli přeložené
 # texty); překlad se provádí až na straně čtenáře (``DataImportProgress`` /
@@ -1261,6 +1277,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
     chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
     chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
     records: list = []
+    organization_record_ids: list[int] = []
     invalid_records: list = []
     record_id = 0  # index platných záznamů — sufix Redis klíče a records_count
     row_order = 0  # index každého CSV řádku (platný i neplatný) — item_order ve validačních výsledcích
@@ -1403,8 +1420,15 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                     mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                     seen_in_batch = seen_in_batch_by_mapper.setdefault(file_name, set())
                     try:
-                        mapper_class.validate_batch_ordering(sheet.to_dict("records"))
-                    except (ImportDataBatchOrderingError, ImportDataDistributionPrefixCollisionError) as err:
+                        if mapper_class is OrganizaceMapper:
+                            mapper_class.validate_batch_ordering(sheet.to_dict("records"), performed_action)
+                        else:
+                            mapper_class.validate_batch_ordering(sheet.to_dict("records"))
+                    except (
+                        ImportDataBatchOrderingError,
+                        ImportDataDistributionPrefixCollisionError,
+                        ImportDataOrganizationCycleError,
+                    ) as err:
                         push_validation_result(
                             ImportDataValidationResult(
                                 item_order=row_order,
@@ -1491,6 +1515,8 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                                     json.dumps(record),
                                     ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                                 )
+                                if mapper_class is OrganizaceMapper:
+                                    organization_record_ids.append(record_id)
                                 record_id += 1
                             row_order += 1
                         else:
@@ -1524,6 +1550,11 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         # Success path: all files parsed. Finalize the per-job keys the import phase/report consume.
         record_count = record_id
         redis_connector.set(job_key("import_data_count"), record_count, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.set(
+            job_key("import_data_organization_record_ids"),
+            json.dumps(organization_record_ids),
+            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+        )
         redis_connector.set(
             job_key("import_data_valid"), "1" if not invalid_records else "0", ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
@@ -1709,6 +1740,13 @@ def run_data_import(job_id, user_id, lock_token):
         * - ``cron.tasks.run_data_import.finished``
           - Import doběhl úspěšně, nebyl zastaven a nebyla nastavena chyba.
 
+    Pokud import zpracovával organizační záznamy, závěrečný blok ``finally`` při úklidu po
+    importní fázi zkontroluje celou hierarchii organizací, i když importní transakce selhala
+    nebo byla vrácena zpět. Nalezené cykly pouze zaloguje spolu s ID úlohy; tato diagnostika
+    nemění výsledek importu ani jeho terminální fázi. Stejně se pouze zaznamená chyba samotné
+    kontroly a pokračuje úklid. Jde o kontrolu celé databáze, odlišnou od preimportní validace,
+    která kontroluje jen změněné vztahy a jejich dosažitelné předky.
+
     :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem
         "Missing required DIRECTORY_PATH setting".
     """
@@ -1716,6 +1754,8 @@ def run_data_import(job_id, user_id, lock_token):
 
     redis_connector = RedisConnector().get_connection()
     record_count = 0
+    organization_payloads = []
+    has_organization_records = False
     failed = True
     stopped = False  # initialized up front so the terminal finally can set the phase safely
     # None until the reports directory check below succeeds; guards the except/finally blocks,
@@ -2206,7 +2246,40 @@ def run_data_import(job_id, user_id, lock_token):
         # propagating exception). Drives the success -> rolled_back relabel.
         data_rolled_back = False
         try:
+            organization_record_ids_raw = redis_connector.get(job_key("import_data_organization_record_ids"))
+            # Existing approval jobs may predate this index; scan once to keep them importable.
+            organization_record_ids = (
+                json.loads(organization_record_ids_raw.decode("utf-8"))
+                if organization_record_ids_raw is not None
+                else range(record_count)
+            )
+            organization_payloads = []
+            for batch_start in range(0, len(organization_record_ids), IMPORT_DATA_RECORD_READ_BATCH_SIZE):
+                refresh_import_lock()
+                batch_ids = organization_record_ids[batch_start : batch_start + IMPORT_DATA_RECORD_READ_BATCH_SIZE]
+                pipeline = redis_connector.pipeline()
+                for staged_record_id in batch_ids:
+                    pipeline.get(record_key(staged_record_id))
+                serialized_records = pipeline.execute()
+                for serialized_record in serialized_records:
+                    mapper_class, payload = _decode_staged_import_record(serialized_record)
+                    if mapper_class is OrganizaceMapper:
+                        has_organization_records = True
+                        organization_payloads.append(
+                            {key: payload[key] for key in ("ident_cely", "soucast") if key in payload}
+                        )
+                serialized_records = None
+                serialized_record = mapper_class = payload = None
+                del batch_ids, pipeline
+
             with transaction.atomic():
+                try:
+                    if has_organization_records and performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                        OrganizaceMapper.validate_batch_ordering(organization_payloads, performed_action)
+                finally:
+                    organization_payloads.clear()
+                    organization_payloads = None
+
                 for record_id in range(record_count):
                     refresh_import_lock()
                     primary_key_record = None
@@ -2227,8 +2300,9 @@ def run_data_import(job_id, user_id, lock_token):
                         else:
                             fedora_transaction = FedoraDeletionOnlyTransaction()
                             fedora_transaction.override_tombstone = True
-                        serialized_record = json.loads(redis_connector.get(record_key(record_id)).decode("utf-8"))
-                        mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
+                        mapper_class, serialized_record = _decode_staged_import_record(
+                            redis_connector.get(record_key(record_id))
+                        )
                         mapper_classes[record_id] = mapper_class
                         records = mapper_class(serialized_record).create_records(performed_action)
                         if (
@@ -2347,7 +2421,15 @@ def run_data_import(job_id, user_id, lock_token):
                                         record_db_dict = model_to_dict(record_db) if record_db else None
                                         mapper_class.create_relations(record)
                                         mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
-                                        record.save()
+                                        if (
+                                            mapper_class is OrganizaceMapper
+                                            and performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+                                        ):
+                                            update_fields = set(serialized_record) - {"ident_cely"}
+                                            if update_fields:
+                                                record.save(update_fields=update_fields)
+                                        else:
+                                            record.save()
                                         record_saved = mapper_class.load_record_from_db(record)
                                         pending_fedora_update.append((mapper_class, record_saved or record))
                                         record_dict = (
@@ -3387,6 +3469,20 @@ def run_data_import(job_id, user_id, lock_token):
         if reports_directory_path:
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
     finally:
+        if organization_payloads is not None:
+            organization_payloads.clear()
+        if has_organization_records:
+            try:
+                cycles = Organizace.get_hierarchy_cycles()
+                if cycles:
+                    logger.error(
+                        "cron.tasks.run_data_import.organization_hierarchy_cycles",
+                        extra={"job_id": job_id, "cycles": cycles},
+                    )
+            except Exception:
+                logger.exception(
+                    "cron.tasks.run_data_import.organization_hierarchy_check_failed", extra={"job_id": job_id}
+                )
         LookupImportField.clear_cache()
         LookupImportField.clear_records()
         for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
@@ -3499,16 +3595,6 @@ ERROR_PRERUSENY_BEH = "Běh byl přerušen zvenčí (zabití procesu nebo restar
 #: 10 dnů je bezpečně nad běžným provozem včetně svátků.
 RUIAN_NO_DOWNLOAD_ERROR_DAYS = 10
 
-#: Jak dlouho ČÚZK drží denní změnové soubory ke stažení. Změřeno 8. 9. 2026
-#: proti ``https://vdp.cuzk.gov.cz/vymenny_format/soucasna/``: ``-92 dní``
-#: ještě vrací HTTP 200, ``-93 dní`` už 404 – tedy klouzavé okno 3 měsíců.
-#:
-#: Po překročení téhle hranice přestává platit záruka, na které stojí zotavení
-#: z výpadku (nepotvrzené dny se po opravě URL stáhnou znovu): zameškané dny
-#: na serveru prostě nejsou. Denní sync už mezeru nedožene a jediná cesta zpět
-#: je plný sync ze SHP.
-RUIAN_RETENCE_ZDROJE_DNU = 92
-
 
 def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
     """
@@ -3519,7 +3605,9 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
 
     * od :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS` dnů – ``dlouho_bez_dat``, tedy
       „něco je špatně, ověřte URL“; zameškané dny jsou pořád ke stažení,
-    * od :data:`RUIAN_RETENCE_ZDROJE_DNU` dnů – ``mimo_retenci_zdroje``:
+    * jakmile první zameškaný den vypadne z retence zdroje
+      (:func:`~heslar.ruian_sync.vfr_download.kotva_mimo_retenci`, stejné
+      pravidlo jako u ``--valid-to`` plného synchu) – ``mimo_retenci_zdroje``:
       soubory už ze serveru zmizely, denní sync mezeru nedožene a operátor
       musí spustit plný sync ``manage.py aktualizuj_ruian_shp``.
 
@@ -3548,7 +3636,7 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         return
 
     stari = (today - posledni_s_daty.data_valid_to).days
-    if stari >= RUIAN_RETENCE_ZDROJE_DNU:
+    if kotva_mimo_retenci(posledni_s_daty.data_valid_to, today):
         # Nejstarší zameškané dny už ČÚZK nenabízí – denní sync je nedožene
         # ani po opravě URL. Tady už nestačí hlásit „dlouho bez dat“, operátor
         # musí vědět, že se z toho dostane výhradně plným syncem.
@@ -3635,7 +3723,9 @@ def sync_ruian_changes(reassign_records: bool = True):
             # hustěji, než stíhá doběhnout – obojí je potřeba vidět.
             logger.error(
                 "cron.tasks.sync_ruian_changes.lock_not_acquired",
-                extra={"info": "Jiný běh sync_ruian_changes stále drží advisory lock, přeskakuji."},
+                extra={
+                    "info": "Zámek synchronizace RÚIAN drží jiný proces (sync RÚIAN nebo anonymizace_dat), přeskakuji."
+                },
             )
             return
         _sync_ruian_changes_locked(reassign_records)
@@ -3963,6 +4053,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
 
 NEWS_FEED_MAX_RETRIES = 3
 NEWS_FEED_RETRY_DELAY = 60
+NEWS_FEED_LAST_GOOD_TTL = 30 * 24 * 60 * 60
 
 
 @shared_task(bind=True, max_retries=NEWS_FEED_MAX_RETRIES, default_retry_delay=NEWS_FEED_RETRY_DELAY)
@@ -3970,33 +4061,56 @@ def load_news_feed(self, languages=None):
     """
     Načte a uloží novinkový kanál do cache.
 
-    Tato úloha je volána při startu aplikace a periodicky v intervalu
-    definovaném v settings (cache_ttl - 60 sekund).
+    Úloha se spouští při startu aplikace, po změně konfigurace a podle plánu
+    Celery Beat. Spravovaný interval vychází z cache_ttl - 60 sekund, vlastní
+    plán může mít přednost. Před načítáním se pokusí sladit plán; chyba sladění
+    nezabrání samotnému načítání.
 
+    HTTP přesměrování se nenásledují a odpovědi 3xx jsou považovány za chybu.
     Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
 
     :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
         použije se seznam z nastavení aplikace.
+    :return: ``True``, pokud zpracování skončilo bez vyžádání opakování úlohy;
+        výsledek nepotvrzuje zveřejnění dat vyřazených kvůli změně konfigurace.
     """
-    cache_ttl = settings.NEWS_FEED_CACHE_TTL
-    base_url = settings.NEWS_FEED_BASE_URL
-    languages = settings.NEWS_FEED_LANGUAGES if languages is None else languages
+    try:
+        from core.news_feed_scheduler import reconcile_news_feed_schedule
+
+        reconcile_news_feed_schedule()
+    except Exception:
+        logger.exception("Could not reconcile the news-feed schedule before refresh.")
+
+    config = get_news_feed_config(force_refresh=True)
+    cache_ttl = config.cache_ttl
+    base_url = config.base_url
+    languages = (
+        config.languages if languages is None else [language for language in languages if language in config.languages]
+    )
     failed_languages = []
 
     for language in languages:
         feed_url = f"{base_url}/{language}.json"
         try:
-            response = requests.get(feed_url, timeout=settings.NEWS_FEED_TIMEOUT)
+            response = requests.get(feed_url, timeout=config.timeout, allow_redirects=False)
+            if 300 <= response.status_code < 400:
+                raise requests.exceptions.HTTPError("News-feed redirects are not permitted.", response=response)
             response.raise_for_status()
             with override(language):
                 feed = _parse_feed(response.json())
-            cache_key, stale_key = get_news_feed_cache_keys(language)
+            current_config = get_news_feed_config(force_refresh=True)
+            if fetch_configuration_fingerprint(current_config) != fetch_configuration_fingerprint(config):
+                logger.info(
+                    "Discarding news feed result for %s because its configuration changed during fetch.", language
+                )
+                continue
+            cache_key, last_good_key = get_news_feed_cache_keys(language, config)
             cache.set(cache_key, feed, cache_ttl)
 
             if feed:
-                cache.set(stale_key, feed, None)
+                cache.set(last_good_key, feed, NEWS_FEED_LAST_GOOD_TTL)
             else:
-                logger.info("News feed for %s is valid but empty; preserving stale copy.", language)
+                logger.info("News feed for %s is valid but empty; preserving last-good copy.", language)
 
             logger.info("Successfully loaded news feed for %s", language)
         except Exception:
@@ -4027,7 +4141,15 @@ def run_news_feed_warmup():
     """
     logger.info("Starting background news feed warm-up")
 
-    # Spustit úlohu jako nezávislý Celery worker proces
+    # Repair a schedule left stale by a transient post-commit database failure.
+    try:
+        from core.news_feed_scheduler import reconcile_news_feed_schedule
+
+        reconcile_news_feed_schedule()
+    except Exception:
+        logger.exception("Could not reconcile the news-feed schedule during startup.")
+
+    # Spustit úlohu přímo v samostatném procesu.
     warmup_command = 'python manage.py shell -c "from cron.tasks import load_news_feed; load_news_feed()"'
     # nohup zajistí, že proces přežije i po ukončení entrypointu
     background_command = f"nohup {warmup_command} >/proc/1/fd/1 2>&1 </dev/null &"

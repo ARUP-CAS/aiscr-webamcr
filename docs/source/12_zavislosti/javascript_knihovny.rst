@@ -15,7 +15,7 @@ Knihovny instalované pomocí Node.js
      - Licence
      - Odkaz
    * - bootstrap
-     - 5.3.8
+     - 5.3.9
      - MIT
      - https://getbootstrap.com/
    * - bootstrap-datepicker
@@ -35,7 +35,7 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/Johann-S/bs-stepper
    * - daterangepicker
-     - 3.1.0
+     - 4.0.2
      - MIT
      - https://github.com/dangrossman/daterangepicker
    * - dropzone
@@ -87,7 +87,7 @@ Knihovny instalované pomocí Node.js
      - BSD-2-Clause
      - https://github.com/fgnass/spin.js
    * - vanilla-cookieconsent
-     - 3.1.0
+     - 3.3.0
      - MIT
      - https://cookieconsent.orestbida.com
 

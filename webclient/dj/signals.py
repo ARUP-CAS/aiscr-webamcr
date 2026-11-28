@@ -108,7 +108,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         """
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if inner_close_transaction:
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
 
     if created or instance.tracker.changed():
         if close_transaction:
