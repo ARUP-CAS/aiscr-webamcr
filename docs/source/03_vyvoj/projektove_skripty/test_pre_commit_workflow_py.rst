@@ -11,6 +11,17 @@ Ověří rozhodování workflow a publikační skripty s neaktivními testovací
 Třídy
 ------
 
+.. py:class:: BashDiscoveryTests
+
+   Nalezení interpretu funguje i mimo výchozí instalaci Gitu.
+
+   **Metody:**
+
+   .. py:method:: test_git_relative_fallback_unavailable_and_linux()
+
+      Ověří alternativní Git, PATH, odmítnutí WSL a běžný linuxový Bash.
+
+
 .. py:class:: WorkflowTests
 
    Ověří skutečný shell a JavaScript místo kopie jejich rozhodovacích pravidel.
@@ -85,16 +96,6 @@ Třídy
    .. py:method:: test_sticky_comment_updates_existing_bot_comment_or_creates_one()
 
       Spustí skutečný github-script se stránkováním komentářů a neaktivními zápisy.
-
-
-Funkce
-------
-
-.. py:function:: bash_executable()
-
-   Ve Windows upřednostní Git Bash před případným spouštěčem WSL v PATH.
-
-   :return: Cesta k Bash použitelnému pro testy nebo ``None``, pokud Bash není dostupný.
 
 Zdrojový kód
 ------------

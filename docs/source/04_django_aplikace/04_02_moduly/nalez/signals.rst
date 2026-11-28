@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: delete_nalez_objekt(sender, instance)
+.. py:function:: delete_nalez_objekt(sender, instance, **kwargs)
 
    Odstraní nalez objekt.
 
@@ -14,7 +14,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``hasattr()``, pracuje se s atributy ``pk``, ``active_transaction``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_nalez_objekt``.
 
-.. py:function:: delete_nalez_predmet(sender, instance)
+.. py:function:: delete_nalez_predmet(sender, instance, **kwargs)
 
    Odstraní nalez predmet.
 

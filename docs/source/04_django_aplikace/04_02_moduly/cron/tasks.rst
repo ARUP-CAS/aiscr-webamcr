@@ -91,7 +91,7 @@ Funkce
 
    Vrátí mapper a datovou část obálky importního záznamu uloženého v Redis.
 
-.. py:function:: translation_value(message_id, raw)
+.. py:function:: translation_value(message_id, raw, **params)
 
    Zabalí překladové ID (a případné parametry) pro uložení do Redis.
 
@@ -204,7 +204,7 @@ Funkce
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.
 
-.. py:function:: record_celery_worker_task_done(task)
+.. py:function:: record_celery_worker_task_done(task, **kwargs)
 
    Po každé dokončené úloze (úspěšné i neúspěšné) zapíše do Redisu aktuální unix čas
    pod klíč ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX:<hostname workeru>``.

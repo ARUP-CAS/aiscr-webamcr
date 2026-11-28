@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: save_dokumentacni_jednotka(sender, instance, created)
+.. py:function:: save_dokumentacni_jednotka(sender, instance, created, **kwargs)
 
    Metoda pro vytvoření pianu z katastru arch záznamu.
 
@@ -17,7 +17,7 @@ Funkce
    :param created: True pokud byl záznam právě vytvořen, False při aktualizaci.
    :param kwargs: Další parametry signálu.
 
-.. py:function:: pre_delete_dokumentacni_jednotka(sender, instance)
+.. py:function:: pre_delete_dokumentacni_jednotka(sender, instance, **kwargs)
 
    Zpracuje odpojení pianu a jeho případné smazání před smazáním dokumentační jednotky.
 
@@ -25,7 +25,7 @@ Funkce
    :param instance: Mazaná instance dokumentační jednotky.
    :param kwargs: Další parametry signálu.
 
-.. py:function:: delete_dokumentacni_jednotka(sender, instance)
+.. py:function:: delete_dokumentacni_jednotka(sender, instance, **kwargs)
 
    Odstraní dokumentacni jednotka.
 

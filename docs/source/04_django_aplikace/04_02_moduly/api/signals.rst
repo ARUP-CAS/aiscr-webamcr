@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: validate_pas_request_target_fields(sender, instance)
+.. py:function:: validate_pas_request_target_fields(sender, instance, **kwargs)
 
    Pro PAS-specifické cíle (XML import, evidenční číslo patch, fotografie upload)
    vyžaduje vyplněné ``ident_cely`` i ``samostatny_nalez`` v okamžiku, kdy je

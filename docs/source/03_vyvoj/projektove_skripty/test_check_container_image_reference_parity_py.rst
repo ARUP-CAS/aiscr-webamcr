@@ -6,7 +6,7 @@ Automaticky generovaná dokumentace skriptu ``scripts/test_check_container_image
 Funkce
 ------
 
-.. py:function:: _compose()
+.. py:function:: _compose(*services)
 
    Popis není k dispozici.
 

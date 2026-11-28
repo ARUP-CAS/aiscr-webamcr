@@ -387,8 +387,14 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
         pass
 
     def setUp(self):
-        """Provádí operaci setUp."""
+        """Připraví databáze, Fedoru a prohlížeč testu.
+
+        Před prvním krokem přípravy zaregistruje úklid, který při chybě setUp
+        zapíše do tabulky výsledků řádek ERROR, protože tearDown se pak nespustí.
+        """
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.start")
+        self._teardown_started = False
+        self.addCleanup(self._record_setup_error)
         # Pojistku voláme před paralelním blokem — clone_Fedora_database termuje fcrepo DB
         # connections, což může souběžné HEAD volání vrátit 500 místo očekávaného 404.
         self._assert_test_fedora()
@@ -423,6 +429,7 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
         else:
             # self.driver = webdriver.Firefox()
             self.driver = webdriver.Chrome(options=options)
+        self.addCleanup(self._quit_driver)
         self.implicit_wait = IMPLICIT_WAIT
         self.driver.implicitly_wait(self.implicit_wait)
         self.wait_interval = 2
@@ -947,7 +954,21 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
             self._js_errors = []
 
     def tearDown(self):
-        """Provádí operaci tearDown."""
+        """Zapíše výsledek a zachová základní úklid i původní chybu zápisu."""
+        self._teardown_started = True
+        try:
+            self._record_test_result()
+        except BaseException:
+            try:
+                super().tearDown()
+            except Exception:
+                logger.error("core.tests.test_selenium.BaseSeleniumTestClass.tearDown.base_cleanup_error")
+            raise
+        else:
+            super().tearDown()
+
+    def _record_test_result(self):
+        """Zaznamená výsledek aktuálního testu bez převzetí chyb předchozích testů."""
         self._collect_js_errors_at_end()
 
         result = self._outcome.result
@@ -973,7 +994,12 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
                 ),
             )
 
-        ok = not has_issue()
+        if not has_issue():
+            status = "OK"
+        elif any(test is self for test, _ in result.errors):
+            status = "ERROR"
+        else:
+            status = "FAIL"
 
         try:
             self.driver.save_screenshot(f"{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png")
@@ -982,6 +1008,37 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
                 "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.save_screenshot_error",
                 extra={"error": js_errors},
             )
+        self._write_result_row(status)
+
+        try:
+            WebDriverWait(self.driver, 5).until(
+                lambda d: d.execute_script("return typeof jQuery === 'undefined' || jQuery.active == 0")
+            )
+        except Exception as exc:
+            logger.debug(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.jquery_wait_ignored",
+                extra={"error": exc},
+            )
+
+    def _record_setup_error(self):
+        """Zapíše ERROR testu, jehož setUp selhal a jehož tearDown se proto nespustil.
+
+        Po spuštění tearDown, po přeskočení testu ani bez chyby tohoto testu nic
+        nezapisuje. Nepoužívá driver, který nemusí existovat nebo už je ukončený.
+        """
+        if self._teardown_started:
+            return
+        if any(test is self for test, _ in self._outcome.result.errors):
+            self._write_result_row("ERROR")
+
+    def _write_result_row(self, status):
+        """Zapíše výsledek aktuálního testu na řádek podle čísla v názvu testovací metody.
+
+        Chybějící řádky před tímto číslem doplní prázdné. Nepoužívá driver.
+
+        :param status: Výsledek ``OK``, ``FAIL`` nebo ``ERROR``.
+        :raises Exception: Chybu zápisu tabulky zaloguje a předá dál.
+        """
         path = f"{settings.TEST_SCREENSHOT_PATH}results.xlsx"
         if os.path.isfile(path):
             data = pandas.read_excel(path)
@@ -994,13 +1051,7 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
                 d.append([i, "", "", ""])
         d[index - 1][1] = datetime.now()
         d[index - 1][2] = self.id()
-        if ok:
-            d[index - 1][3] = "OK"
-        else:
-            if len(result.errors) > 0:
-                d[index - 1][3] = "ERROR"
-            elif len(result.failures) > 0:
-                d[index - 1][3] = "FAIL"
+        d[index - 1][3] = status
         data = pandas.DataFrame(d)
         data.columns = ["index", "date", "test name", "result"]
         try:
@@ -1010,18 +1061,7 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
                 "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.to_excel_error",
                 extra={"error": exc},
             )
-
-        try:
-            WebDriverWait(self.driver, 5).until(
-                lambda d: d.execute_script("return typeof jQuery === 'undefined' || jQuery.active == 0")
-            )
-        except Exception as exc:
-            logger.debug(
-                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.jquery_wait_ignored",
-                extra={"error": exc},
-            )
-        self._quit_driver()
-        super().tearDown()
+            raise
 
     def _quit_driver(self):
         """

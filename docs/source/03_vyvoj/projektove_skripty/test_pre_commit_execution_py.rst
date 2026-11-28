@@ -1,0 +1,180 @@
+Skript test_pre_commit_execution.py
+===================================
+
+Automaticky generovaná dokumentace skriptu ``scripts/test_pre_commit_execution.py``.
+
+Přehled modulu
+--------------
+
+Regrese skutečných výsledků runneru a protokolu jednotlivých pokusů.
+
+Třídy
+------
+
+.. py:class:: ExecutionTests
+
+   Ověří procesní stav, dokončený výstup a oddělené výsledky pokusů.
+
+   **Metody:**
+
+   .. py:method:: setUp()
+
+      Připraví pouze dočasné soubory bez Django či služeb.
+
+   .. py:method:: assert_sanitised_cause()
+
+      Ověří očištěnou příčinu bez kořene výsledků, tracebacku a příkazu workflow.
+
+      :param text: Vypsaná nebo zaznamenaná diagnostika.
+      :param stage: Očekávaná fáze selhání.
+      :param cause: Očekávaný typ a očištěná zpráva výjimky.
+
+   .. py:method:: attempt()
+
+      Připraví úplný výsledek přes produkční publikační funkci.
+
+      :param identity: Identita testovacího pokusu.
+      :param mode: Režim výběru.
+      :param number: Číslo testu.
+      :param state: Stav výsledku.
+      :param code: Výsledek procesu.
+      :param counts: Počty testů.
+      :return: Adresář pokusu a záznam výsledku.
+
+   .. py:method:: test_crash_zero_missing_and_inconsistent_results_fail()
+
+      Traceback ani chybějící či rozporný souhrn nezaloží úspěch.
+
+   .. py:method:: test_complete_success_failures_and_unexpected_success()
+
+      Úplné souhrny respektují nativní výsledek včetně unexpected successes.
+
+   .. py:method:: test_readers_finish_in_console_and_file_modes()
+
+      Dokončení procesu před koncem čtení nezkrátí zachycený výstup.
+
+   .. py:method:: test_migration_failure_stops_tests_and_publishes_error()
+
+      Chyba migrace nepustí testy a nevytvoří úspěšné nulové počty.
+
+   .. py:method:: test_capture_failure_reaps_child_and_unwritable_log_does_not_start_it()
+
+      Chyba čtení ukončí vlastní proces; neotevřitelný log jej vůbec nespustí.
+
+   .. py:method:: test_runner_crash_does_not_publish_passing_counts()
+
+      Chyba startu procesu dostane error místo completed s nulou.
+
+   .. py:method:: test_runner_diagnostics_hide_explicit_and_secret_backed_roots()
+
+      Pokus lze sledovat podle identity bez cesty z konfigurace, i když selže.
+
+   .. py:method:: test_failures_before_attempt_creation_report_sanitised_cause()
+
+      Chyba inicializace, konfigurace či adresáře uvede příčinu bez kořene výsledků.
+
+   .. py:method:: test_cause_replaces_configured_absolute_and_resolved_root()
+
+      Kořen zadaný jinou cestou se nahradí ve všech tvarech, v nichž se ve zprávě objeví.
+
+   .. py:method:: test_outcome_message_is_one_bounded_line()
+
+      Zpráva výsledku je jeden tisknutelný řádek v limitu, jinak výsledek neprojde.
+
+   .. py:method:: test_runner_error_stages_and_metadata_report_sanitised_cause()
+
+      Provozní chyby uvedou fázi, typ a očištěnou zprávu v konzoli i v JSON.
+
+   .. py:method:: test_failed_error_publication_reports_both_causes_without_traceback()
+
+      Druhá chyba publikace zachová neúspěch a uvede obě očištěné příčiny bez tracebacku.
+
+   .. py:method:: test_runner_publishes_completed_pass_and_failure()
+
+      Dokončené testy zachovají skutečný status a zveřejní aktuální počty.
+
+   .. py:method:: test_selective_workbook_keeps_unselected_tests()
+
+      Aktuální artefakt je nový, ale příští výběr nepřijde o dřívější testy.
+
+   .. py:method:: test_selection_preserves_previous_workbook_and_reports_noop()
+
+      No-op má novou identitu a stará tabulka zůstane vstupem výběru.
+
+   .. py:method:: test_missing_and_malformed_selection_fail()
+
+      Chybějící nebo neplatný vstup výběru není no-op.
+
+   .. py:method:: test_dev_defaults_record_a_workbook_row_for_every_test()
+
+      Výchozí DEV výběr obsahuje jen moduly, jejichž testy zapisují řádek tabulky výběru.
+
+   .. py:method:: test_selection_accepts_identifier_names_with_non_ascii_letters()
+
+      Název, jehož každá tečkovaná část je identifikátor, projde i s českými písmeny.
+
+   .. py:method:: link_directory()
+
+      Vytvoří symbolický odkaz, na Windows bez oprávnění junction.
+
+      :param link: Cesta vytvářeného odkazu.
+      :param target: Cílový adresář mimo kořen výsledků.
+
+   .. py:method:: test_runs_rotate_current_into_previous()
+
+      Nový běh začne prázdný, poslední zůstane v previous/ a starší zmizí.
+
+   .. py:method:: test_linked_result_directory_fails_without_touching_target()
+
+      Odkaz místo current/ či previous/ zastaví běh a cíl odkazu zůstane netknutý.
+
+   .. py:method:: test_stale_mixed_and_incomplete_results_are_rejected()
+
+      Platný starý souhrn, jiné identity i změněné soubory jsou odmítnuty.
+
+   .. py:method:: test_required_workbook_and_interrupted_publication_fail()
+
+      Chybějící tabulka ani přerušený zápis nevytvoří dokončený výsledek.
+
+   .. py:method:: test_manifest_schema_and_duplicate_keys_fail()
+
+      Názvy cest, duplicitní klíče a typy nelze podvrhnout jako metadata.
+
+   .. py:method:: test_runner_publishes_new_spreadsheet_and_rejects_failed_write()
+
+      Selenium běh vyžaduje tabulku tohoto pokusu, nikoli starou kopii.
+
+   .. py:method:: test_failures_without_workbook_rows_end_as_error()
+
+      Neúspěch bez řádku v tabulce ukončí každý režim chybou a kořenovou tabulku nenahradí.
+
+   .. py:method:: test_full_run_failure_rows_feed_failed_only_selection()
+
+      Úplný běh se shodnými řádky FAIL a ERROR se zveřejní a další běh neúspěšných je spustí.
+
+   .. py:method:: test_summary_validation_is_non_evaluating()
+
+      Celý souhrn má právě dva desetinné záznamy a nepřipouští příkazy.
+
+   .. py:method:: test_summary_read_is_bounded_before_allocation()
+
+      Odmítne velký proud po nejvýše 4097 bajtech a přijme přesnou hranici.
+
+   .. py:method:: test_explicit_categories_cross_runner_and_result_consumer()
+
+      Skips a očekávaná selhání nezvýší PASSED ani nezničí platný zero/zero běh.
+
+   .. py:method:: test_counter_consistency_and_unsupported_version_rejection()
+
+      Neplatné typy, kategorie či jiná verze formátu neprojdou do výsledku.
+
+   .. py:method:: test_all_mode_aliases_and_mutual_exclusion_remain_compatible()
+
+      Bez příznaku i s -a/--all se volí vsechny a konfliktní režimy se odmítnou.
+
+Zdrojový kód
+------------
+
+.. literalinclude:: ../../../../scripts/test_pre_commit_execution.py
+   :language: python
+   :linenos:

@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: komponenta_save(sender, instance)
+.. py:function:: komponenta_save(sender, instance, **kwargs)
 
    Aktualizuje metadata nadřazeného záznamu (dokumentu nebo arch. záznamu) po uložení komponenty.
 
@@ -14,7 +14,7 @@ Funkce
    :param instance: Ukládaná instance komponenty.
    :param kwargs: Další parametry signálu.
 
-.. py:function:: komponenta_delete(sender, instance)
+.. py:function:: komponenta_delete(sender, instance, **kwargs)
 
    Aktualizuje metadata nadřazeného záznamu (dokumentu nebo arch. záznamu) po smazání komponenty.
 

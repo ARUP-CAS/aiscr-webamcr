@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: create_dokument_vazby(sender, instance)
+.. py:function:: create_dokument_vazby(sender, instance, **kwargs)
 
    Před uložením dokumentu připraví vazby historie a souborů.
 
@@ -14,7 +14,7 @@ Funkce
    :param instance: Ukládaná instance dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: create_dokument_cast_vazby(sender, instance)
+.. py:function:: create_dokument_cast_vazby(sender, instance, **kwargs)
 
    Před uložením části dokumentu zajistí vytvoření komponentové vazby.
 
@@ -22,7 +22,7 @@ Funkce
    :param instance: Ukládaná instance části dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: dokument_save_metadata(sender, instance)
+.. py:function:: dokument_save_metadata(sender, instance, **kwargs)
 
    Po uložení dokumentu synchronizuje metadata navázaných objektů.
 
@@ -30,7 +30,7 @@ Funkce
    :param instance: Uložená instance dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: let_save_metadata(sender, instance)
+.. py:function:: let_save_metadata(sender, instance, **kwargs)
 
    Po uložení letu zapíše metadata do repozitáře.
 
@@ -38,7 +38,7 @@ Funkce
    :param instance: Uložená instance letu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: dokument_delete_repository_container(sender, instance)
+.. py:function:: dokument_delete_repository_container(sender, instance, **kwargs)
 
    Po smazání dokumentu odstraní repozitářové vazby a přegeneruje metadata.
 
@@ -46,7 +46,7 @@ Funkce
    :param instance: Smazaná instance dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: let_delete_repository_container(sender, instance)
+.. py:function:: let_delete_repository_container(sender, instance, **kwargs)
 
    Po smazání letu zapíše jeho odstranění do repozitáře.
 
@@ -54,7 +54,7 @@ Funkce
    :param instance: Smazaná instance letu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: dokument_cast_save_metadata_save(sender, instance, created)
+.. py:function:: dokument_cast_save_metadata_save(sender, instance, created, **kwargs)
 
    Po uložení části dokumentu synchronizuje metadata navázaných záznamů.
 
@@ -63,7 +63,7 @@ Funkce
    :param created: Parametr ``created`` ovlivňuje větvení podmínek.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: dokument_cast_save_metadata_delete(sender, instance)
+.. py:function:: dokument_cast_save_metadata_delete(sender, instance, **kwargs)
 
    Po smazání části dokumentu přepočítá metadata navázaných objektů.
 
@@ -71,7 +71,7 @@ Funkce
    :param instance: Smazaná instance části dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
-.. py:function:: tvar_save(sender, instance, created)
+.. py:function:: tvar_save(sender, instance, created, **kwargs)
 
    Uloží metadata dokumentu při uložení tvaru.
 
@@ -80,7 +80,7 @@ Funkce
    :param created: Zda je nová instance nebo aktualizace.
    :param kwargs: Dodatečné argumenty Djangoho signálu.
 
-.. py:function:: tvar_delete(sender, instance)
+.. py:function:: tvar_delete(sender, instance, **kwargs)
 
    Po smazání tvaru přepočítá metadata navázaného dokumentu.
 

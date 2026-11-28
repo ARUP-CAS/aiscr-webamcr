@@ -1,64 +1,11 @@
 #!/bin/bash
+set -eo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/deployment_helpers.sh"
 ###########
 #### SCRIPT: DEPLOYMENT from local repository into SWARM for testing
 #### PARAMS: see -h
 ###########
 #USAGE: deployment based on local repository
-
-ask_continue () {
-    while true; do
-        
-        read -p "$1 (y or n): " input        
-        case $input in
-            [yY]*)
-                echo '---Continuing!'
-                break
-                ;;
-            [nN]*)
-                echo '***So do THAT, exiting!'
-                exit 1
-                ;;
-             *)
-                echo '***Invalid input' >&2
-        esac
-    done
-}
-
-echo_dec ()
-{
-    echo "---------------------------------------"
-    echo "--> $1"
-    echo "---------------------------------------"
-}
-
-
-er () {
-    echo_dec "${1}"
-    eval "${1}"
-    ret_val=$?
-    echo "....................."
-    echo ">> DONE: ${1} with status: ${ret_val}"
-    return $ret_val
-}
-
-check_create_network () {
-    
-    docker network inspect ${network_name} > /dev/null 2>&1
-    network_status=$?
-    if [ ${network_status} -eq 1  ]; then
-      er "docker network create -d overlay --attachable ${network_name}"
-      echo_dec "Network ${network_name} created"
-    else
-       echo_dec "Network ${network_name} already exists"
-    fi
-}
-
-check_stack_exists ()
-{
-    docker stack ps ${stack_name} > /dev/null 2>&1
-    stack_status=$?
-    return ${stack_status}
-}
 
 actualize_repo ()
 {
@@ -107,8 +54,12 @@ run_default ()
    er "${cmd_create_images_redis}"
 
    
-    er "${cmd_deploy_base} ${compose_test} ${stack_name}" && \
-    echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+    if er "${cmd_deploy_base} ${compose_test} ${stack_name}"; then
+      echo_dec "$msg_success"
+    else
+      echo_dec "${msg_fail_build}"
+      return 1
+    fi
     
 
 }
@@ -117,7 +68,7 @@ Help ()
 {
     cat <<EOF
     !!!MUST BE RUN from REPOSIOTRY root like =>
-    usage: ./scrips/${script_name} [-x|b|h], 
+    usage: ./scripts/${script_name} [-x|-b|-q|-h]
     ---
        PURPOSE: manage deployment/run of production docker images build from GIT repository for AIS CR project in SWARM mode
     ----
@@ -149,6 +100,25 @@ EOF
 script_name=$(basename ${0})
 passed_args="$@"
 
+# Validate the entire request before any Swarm or image operations.
+options=()
+show_help=false
+OPTIND=1
+while getopts ":hxbq" option; do
+    case "$option" in
+        \?) printf 'Error: Invalid option -%s\n' "$OPTARG" >&2; exit 1 ;;
+        h) show_help=true ;;
+        *) options+=("$option");;
+    esac
+done
+if (( OPTIND <= $# )); then
+    echo "Error: Unexpected positional argument" >&2
+    exit 1
+fi
+if [[ "$show_help" == true ]]; then
+    Help
+    exit 0
+fi
 
 #INPUTS
 
@@ -173,8 +143,6 @@ start_time=$(date +%Y%m%dT%H%M%S)
 log_file="${start_time}_test-deployment_${passed_args}.log"
 mkdir -p ${log_dir}
 
-OPTIND=1
-
 #REDIRECT to log
 exec > >(tee "${log_dir}/${log_file}" )
 #exec 2>&1
@@ -182,16 +150,9 @@ exec > >(tee "${log_dir}/${log_file}" )
 echo_dec "# DEPLOYMENT in SWARM MODE (i.e. host has to be joined or initiated as SWARM NODE) @${start_time}"
 
 #CHECK SWARM ACTIVATED
-docker node ls
-status_swarm=$?
-
-if [ $status_swarm -ne 0 ]; then
-    echo_dec "SWARM not initiated or joined at this HOST. Exiting"
-    exit 1
-fi
+require_swarm || exit $?
 
 #Build commands
-cmd_stack_rm="docker stack rm ${stack_name}"
 # INSTALL_TEST_REQUIREMENTS=false postaví čistý produkční image (bez selenium aj.); testy v něm nepoběží.
 install_test_requirements="${INSTALL_TEST_REQUIREMENTS:-true}"
 cmd_create_images="docker build -t test_web -f Dockerfile --build-arg INSTALL_TEST_REQUIREMENTS=${install_test_requirements} --build-arg VERSION_APP=\"$(git rev-parse --short HEAD | head -c 8)\" --build-arg TAG_APP=local_build  ."
@@ -208,22 +169,11 @@ cmd_deploy_base="docker stack deploy --resolve-image never --compose-file"
 echo "Pruning unused Docker images..."
 docker image prune -f
 
-while getopts "hxqbut:d" option; do
-   option_passed="yes"
+for option in "${options[@]}"; do
    case ${option} in
-      h) # display Help
-         echo "OPTION: -h"
-         Help
-         exit;;
       x) echo "OPTION: -x" 
-         echo_dec "Remove docker stack: ${stack_name}"
-         if check_stack_exists; then
-            er "${cmd_stack_rm}" && \
-            echo_dec "Stack ${stack_name} removal successful" || echo_dec "Stack ${stack_name} removal FAILED"
-         else
-             echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"
-        fi
-        sleep 20 # Need to wait before network is really removed.
+         remove_old_stack || exit $?
+         sleep 20 # Need to wait before network is really removed.
          ;;
       b) #deploy stack 
         echo "OPTION: -b"
@@ -234,15 +184,11 @@ while getopts "hxqbut:d" option; do
          quiet_mode="yes"
          run_default
          ;;
-     \?) # Invalid option
-         echo_dec "OPTION: INVALID"
-         echo "Error: Invalid option ${option}"
-         exit;;
    esac
 done
 
 # RUN docker compose [default option]
-if [ -z ${option_passed+x} ]; then
+if (( ${#options[@]} == 0 )); then
    echo_dec "NO option passed as ARG so default case is called,"
    run_default
 fi

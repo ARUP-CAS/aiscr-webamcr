@@ -1178,7 +1178,7 @@ Funkce
 
    :return: ``True`` pokud je hodnota syntakticky validní.
 
-.. py:function:: _invalidate_api_cache(sender, instance)
+.. py:function:: _invalidate_api_cache(sender, instance, **kwargs)
 
    Vymaže cache pravidel API po změně záznamu ``CustomAdminSettings`` skupiny ``pas_api``.
 

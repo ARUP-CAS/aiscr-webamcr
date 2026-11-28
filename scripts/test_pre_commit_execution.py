@@ -1,0 +1,884 @@
+"""Regrese skutečných výsledků runneru a protokolu jednotlivých pokusů."""
+
+import ast
+import io
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import time
+import unittest
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "webclient"))
+import run_tests as runner  # noqa: E402
+import test_run_results as protocol  # noqa: E402
+
+# Skutečné názvy Selenium testů s českými písmeny; výběr i zveřejnění je musí přijmout.
+NON_ASCII_TESTS = (
+    "ez.tests.test_selenium.AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001",
+    "dokument.tests.test_selenium.AkceDokumenty.test_162_smazání_dokumentu_p_001",
+)
+
+
+class ExecutionTests(unittest.TestCase):
+    """Ověří procesní stav, dokončený výstup a oddělené výsledky pokusů."""
+
+    def setUp(self):
+        """Připraví pouze dočasné soubory bez Django či služeb."""
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory(dir=os.environ.get("TEST_TEMP_ROOT")))).resolve()
+        self.enterContext(patch.object(runner, "configure_logging"))
+        # Zpráva s kořenem výsledků a příkazem workflow za zalomením řádku.
+        self.sensitive = f"{self.root}{os.sep}private\n::warning::canary"
+        self.cause = f"OSError: <results-root>{os.sep}private ::warning::canary"
+
+    def assert_sanitised_cause(self, text, stage, cause):
+        """Ověří očištěnou příčinu bez kořene výsledků, tracebacku a příkazu workflow.
+
+        :param text: Vypsaná nebo zaznamenaná diagnostika.
+        :param stage: Očekávaná fáze selhání.
+        :param cause: Očekávaný typ a očištěná zpráva výjimky.
+        """
+        self.assertIn(f"Chyba testovacího běhu ({stage}): {cause}", text)
+        self.assertNotIn(str(self.root), text)
+        self.assertNotIn(self.root.as_posix(), text)
+        self.assertNotIn("Traceback", text)
+        self.assertFalse([line for line in text.splitlines() if line.startswith("::")], text)
+
+    def attempt(self, identity="123-1", mode="vsechny", number="", state="completed", code=0, counts=(1, 0)):
+        """Připraví úplný výsledek přes produkční publikační funkci.
+
+        :param identity: Identita testovacího pokusu.
+        :param mode: Režim výběru.
+        :param number: Číslo testu.
+        :param state: Stav výsledku.
+        :param code: Výsledek procesu.
+        :param counts: Počty testů.
+        :return: Adresář pokusu a záznam výsledku.
+        """
+        identity = protocol.attempt_identity(identity)
+        directory = protocol.prepare_current(self.root)
+        if state != "error":
+            protocol.write_summary(directory, *counts)
+        metadata = dict(total=sum(counts), passed=counts[0], failed=counts[1], skipped=0, expected_failures=0)
+        protocol.publish_outcome(
+            directory, identity, mode, number, state, code, counts=metadata if state == "completed" else None
+        )
+        return directory, protocol.load_record(directory, identity, mode, number)
+
+    def test_crash_zero_missing_and_inconsistent_results_fail(self):
+        """Traceback ani chybějící či rozporný souhrn nezaloží úspěch."""
+        for output, code in (
+            ("Traceback: startup failed\n", 1),
+            ("Ran 0 tests in 0s\n\nOK\n", 0),
+            ("Ran 1 test in 0s\n", 0),
+            ("Ran 1 test in 0s\n\nOK\n", 1),
+            ("Ran 1 test in 0s\n\nFAILED (errors=1)\n", 0),
+            ("Ran 1 test in 0s\n\nFAILED (errors=2)\n", 1),
+            ("Ran 1 test in 0s\n\nOK\n", -9),
+        ):
+            with self.subTest(output=output, code=code), self.assertRaises(ValueError):
+                runner.parse_result(output, code)
+
+    def test_complete_success_failures_and_unexpected_success(self):
+        """Úplné souhrny respektují nativní výsledek včetně unexpected successes."""
+        self.assertEqual(
+            runner.parse_result("Ran 3 tests in 1s\n\nOK (skipped=1)\n", 0),
+            dict(total=3, passed=2, failed=0, skipped=1, expected_failures=0),
+        )
+        self.assertEqual(
+            runner.parse_result("Ran 3 tests in 1s\n\nFAILED (failures=1, errors=1)\n", 1),
+            dict(total=3, passed=1, failed=2, skipped=0, expected_failures=0),
+        )
+        self.assertEqual(
+            runner.parse_result("Ran 1 test in 1s\n\nFAILED (unexpected successes=1)\n", 1),
+            dict(total=1, passed=0, failed=1, skipped=0, expected_failures=0),
+        )
+
+    def test_readers_finish_in_console_and_file_modes(self):
+        """Dokončení procesu před koncem čtení nezkrátí zachycený výstup."""
+
+        class Delayed(io.StringIO):
+            """Odloží čtení simulovaného posledního výstupu."""
+
+            def __next__(self):
+                """Vrátí řádek až po malém zpoždění.
+
+                :return: Řádek simulovaného proudu.
+                """
+                time.sleep(0.005)
+                return super().__next__()
+
+        for file_mode in (False, True):
+            process = SimpleNamespace(
+                stdout=Delayed("body\n"), stderr=Delayed("Ran 1 test in 1s\n\nOK\n"), wait=lambda: 0
+            )
+            with patch.object(runner.subprocess, "Popen", return_value=process), redirect_stdout(io.StringIO()):
+                code, text = runner.execute_tests(["sample.tests.test_one"], self.root, file_mode)
+            self.assertEqual(
+                runner.parse_result(text, code), dict(total=1, passed=1, failed=0, skipped=0, expected_failures=0)
+            )
+            self.assertEqual((self.root / "test_output.log").read_text(encoding="utf-8"), text)
+
+    def test_migration_failure_stops_tests_and_publishes_error(self):
+        """Chyba migrace nepustí testy a nevytvoří úspěšné nulové počty."""
+        with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=7)), patch.object(
+            runner, "execute_tests"
+        ) as execute, redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            code = runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"])
+        self.assertEqual(code, 1)
+        execute.assert_not_called()
+        record = protocol.load_record(self.root / "current", "123-1", "vsechny", "")
+        self.assertEqual(record["state"], "error")
+        self.assertNotIn("test_summary.env", record["files"])
+
+    def test_capture_failure_reaps_child_and_unwritable_log_does_not_start_it(self):
+        """Chyba čtení ukončí vlastní proces; neotevřitelný log jej vůbec nespustí."""
+        from unittest.mock import Mock
+
+        class Broken(io.StringIO):
+            """Proud, který při čtení selže."""
+
+            def __next__(self):
+                """Simuluje chybu proudového vstupu.
+
+                :raises OSError: Při pokusu přečíst další řádek.
+                """
+                raise OSError("capture failed")
+
+        process = SimpleNamespace(
+            stdout=Broken(""), stderr=io.StringIO(""), wait=Mock(return_value=1), terminate=Mock()
+        )
+        with patch.object(runner.subprocess, "Popen", return_value=process), self.assertRaises(RuntimeError):
+            runner.execute_tests(["sample.tests.one"], self.root)
+        process.terminate.assert_called_once()
+        process.wait.assert_called_once()
+        with patch.object(Path, "open", side_effect=PermissionError("log failed")), patch.object(
+            runner.subprocess, "Popen"
+        ) as start, self.assertRaises(PermissionError):
+            runner.execute_tests(["sample.tests.one"], self.root)
+        start.assert_not_called()
+
+    def test_runner_crash_does_not_publish_passing_counts(self):
+        """Chyba startu procesu dostane error místo completed s nulou."""
+        with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+            runner, "execute_tests", return_value=(1, "Traceback: startup failed\n")
+        ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"]), 1)
+        record = protocol.load_record(self.root / "current", "123-1", "vsechny", "")
+        self.assertEqual(record["state"], "error")
+
+    def test_runner_diagnostics_hide_explicit_and_secret_backed_roots(self):
+        """Pokus lze sledovat podle identity bez cesty z konfigurace, i když selže."""
+        for configured in (False, True):
+            for fails in (False, True):
+                with self.subTest(secret_backed=configured, fails=fails), ExitStack() as stack:
+                    root = self.root / f"sensitive-output-root-{configured}-{fails}"
+                    identity = f"safe-{configured}-{fails}"
+                    stdout, stderr = io.StringIO(), io.StringIO()
+                    stack.enter_context(patch.dict(os.environ))
+                    os.environ.pop("AMCR_TEST_RESULTS_ROOT", None)
+                    stack.enter_context(
+                        patch.dict(
+                            sys.modules,
+                            {"webclient.settings.dev_test": SimpleNamespace(TEST_SCREENSHOT_PATH=str(root))},
+                        )
+                    )
+                    stack.enter_context(patch.object(runner, "select_tests", return_value=["sample.tests.one"]))
+                    stack.enter_context(
+                        patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0))
+                    )
+                    failure = OSError(f"{root}{os.sep}current{os.sep}test_output.log: disk full")
+                    stack.enter_context(
+                        patch.object(
+                            runner,
+                            "execute_tests",
+                            side_effect=failure if fails else None,
+                            return_value=(0, "Ran 1 test in 0s\n\nOK\n"),
+                        )
+                    )
+                    stack.enter_context(redirect_stdout(stdout))
+                    stack.enter_context(redirect_stderr(stderr))
+                    args = ["--attempt-id", identity]
+                    if not configured:
+                        args += ["--results-root", str(root)]
+                    self.assertEqual(runner.main(args), int(fails))
+                    record = protocol.load_record(root / "current", identity, "vsechny", "")
+                    self.assertEqual(protocol.validate_bundle(root / "current", record), None if fails else (1, 0))
+                    self.assertIn(identity, stdout.getvalue())
+                    diagnostics = stdout.getvalue() + stderr.getvalue() + json.dumps(record)
+                    self.assertNotIn(str(root), diagnostics)
+                    self.assertNotIn("sensitive-output-root", diagnostics)
+                    if fails:
+                        cause = f"OSError: <results-root>{os.sep}current{os.sep}test_output.log: disk full"
+                        self.assertEqual(record["message"], f"Chyba testovacího běhu (execution): {cause}")
+                        self.assert_sanitised_cause(stderr.getvalue(), "execution", cause)
+
+    def test_failures_before_attempt_creation_report_sanitised_cause(self):
+        """Chyba inicializace, konfigurace či adresáře uvede příčinu bez kořene výsledků."""
+        for stage, target, attribute in (
+            ("initialization", runner, "configure_logging"),
+            ("configuration", runner, "Path"),
+            ("attempt", protocol, "prepare_current"),
+        ):
+            with self.subTest(stage=stage), patch.object(target, attribute, side_effect=OSError(self.sensitive)):
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    code = runner.main(["--results-root", str(self.root), "--attempt-id", "private-attempt"])
+                self.assertEqual(code, 1)
+                self.assert_sanitised_cause(stdout.getvalue() + stderr.getvalue(), stage, self.cause)
+                self.assertFalse((self.root / "current").exists())
+
+    def test_cause_replaces_configured_absolute_and_resolved_root(self):
+        """Kořen zadaný jinou cestou se nahradí ve všech tvarech, v nichž se ve zprávě objeví."""
+        (self.root / "alias").mkdir()
+        configured = (self.root / "alias" / "..").as_posix()
+        failure = OSError(f"{configured}/current | {self.root}{os.sep}current | {self.root.as_posix()}/current")
+        stderr = io.StringIO()
+        with patch.object(runner, "select_tests", side_effect=failure), redirect_stdout(io.StringIO()), redirect_stderr(
+            stderr
+        ):
+            self.assertEqual(runner.main(["--results-root", configured, "--attempt-id", "safe-forms"]), 1)
+        cause = f"OSError: <results-root>/current | <results-root>{os.sep}current | <results-root>/current"
+        record = protocol.load_record(self.root / "current", "safe-forms", "vsechny", "")
+        self.assertEqual(record["message"], f"Chyba testovacího běhu (selection): {cause}")
+        self.assert_sanitised_cause(stderr.getvalue() + record["message"], "selection", cause)
+        self.assertNotIn("alias", stderr.getvalue() + record["message"])
+
+    def test_outcome_message_is_one_bounded_line(self):
+        """Zpráva výsledku je jeden tisknutelný řádek v limitu, jinak výsledek neprojde."""
+        line = protocol.bounded_message("a\nb\r\x1bc d" + "x" * protocol.MESSAGE_LIMIT)
+        self.assertTrue(line.startswith("a b c dxx"), line)
+        self.assertEqual(len(line), protocol.MESSAGE_LIMIT)
+        self.assertTrue(line.endswith("…") and line.isprintable())
+        _, record = self.attempt(state="error", code=1)
+        self.assertEqual(protocol.validate_record(dict(record, message=line), "123-1", "vsechny", "")["message"], line)
+        for message in ("first\nsecond", "tab\tseparated", "x" * (protocol.MESSAGE_LIMIT + 1)):
+            with self.subTest(message=message[:16]), self.assertRaises(ValueError):
+                protocol.validate_record(dict(record, message=message), "123-1", "vsechny", "")
+
+    def test_runner_error_stages_and_metadata_report_sanitised_cause(self):
+        """Provozní chyby uvedou fázi, typ a očištěnou zprávu v konzoli i v JSON."""
+        sensitive = self.sensitive
+        publish = protocol.publish_outcome
+
+        def fail_completed_publication(*args, **kwargs):
+            """První publikaci odmítne, chybový výsledek zapíše skutečnou funkcí.
+
+            :param args: Argumenty publikovaného pokusu.
+            :param kwargs: Volitelná metadata výsledku.
+            :return: Výsledek skutečné publikace chyby.
+            :raises OSError: Při pokusu zveřejnit dokončený běh.
+            """
+            if args[4] != "error":
+                raise OSError(sensitive)
+            return publish(*args, **kwargs)
+
+        for case, stage, target, attribute in (
+            ("selection", "selection", runner, "select_tests"),
+            ("migration", "migration", runner.subprocess, "run"),
+            ("execution", "execution", runner, "execute_tests"),
+            ("summary", "summary", runner, "parse_result"),
+            ("summary-write", "summary", protocol, "write_summary"),
+            ("publication", "publication", protocol, "publish_outcome"),
+            ("noop-publication", "publication", protocol, "write_summary"),
+        ):
+            with self.subTest(case=case), ExitStack() as stack:
+                identity = f"safe-{case}"
+                stdout, stderr = io.StringIO(), io.StringIO()
+                stack.enter_context(
+                    patch.object(
+                        runner, "select_tests", return_value=[] if case == "noop-publication" else ["sample.tests.one"]
+                    )
+                )
+                stack.enter_context(patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)))
+                stack.enter_context(patch.object(runner, "execute_tests", return_value=(0, "Ran 1 test in 0s\n\nOK\n")))
+                stack.enter_context(
+                    patch.object(
+                        target,
+                        attribute,
+                        side_effect=fail_completed_publication if case == "publication" else OSError(sensitive),
+                    )
+                )
+                stack.enter_context(redirect_stdout(stdout))
+                stack.enter_context(redirect_stderr(stderr))
+                args = ["--results-root", str(self.root), "--attempt-id", identity]
+                mode = "neuspesne" if case == "noop-publication" else "vsechny"
+                if mode == "neuspesne":
+                    args.append("-f")
+                self.assertEqual(runner.main(args), 1)
+                directory = self.root / "current"
+                record = protocol.load_record(directory, identity, mode, "")
+                self.assertEqual(record["state"], "error")
+                self.assertEqual(record["message"], f"Chyba testovacího běhu ({stage}): {self.cause}")
+                diagnostics = stdout.getvalue() + stderr.getvalue() + (directory / "outcome.json").read_text()
+                self.assert_sanitised_cause(stderr.getvalue(), stage, self.cause)
+                self.assertNotIn(str(self.root), diagnostics)
+                self.assertNotIn("Traceback", diagnostics)
+                self.assertIsNone(protocol.validate_bundle(directory, record))
+
+    def test_failed_error_publication_reports_both_causes_without_traceback(self):
+        """Druhá chyba publikace zachová neúspěch a uvede obě očištěné příčiny bez tracebacku."""
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with patch.object(runner, "select_tests", side_effect=OSError(self.sensitive)), patch.object(
+            protocol, "publish_outcome", side_effect=OSError(self.sensitive)
+        ), redirect_stdout(stdout), redirect_stderr(stderr):
+            code = runner.main(["--results-root", str(self.root), "--attempt-id", "safe-error"])
+        self.assertEqual(code, 1)
+        diagnostics = stdout.getvalue() + stderr.getvalue()
+        self.assert_sanitised_cause(diagnostics, "selection", self.cause)
+        self.assertIn(f"Zveřejnění chybového výsledku selhalo (publication): {self.cause}", diagnostics)
+        self.assertFalse((self.root / "current/outcome.json").exists())
+
+    def test_runner_publishes_completed_pass_and_failure(self):
+        """Dokončené testy zachovají skutečný status a zveřejní aktuální počty."""
+        for code, status, counts in ((0, "OK", (2, 0)), (1, "FAILED (errors=1)", (1, 1))):
+            identity = f"123-{code + 1}"
+            with patch.object(runner, "select_tests", return_value=["sample.tests.test_one"]), patch.object(
+                runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)
+            ), patch.object(
+                runner, "execute_tests", return_value=(code, f"Ran 2 tests in 1s\n\n{status}\n")
+            ), redirect_stdout(
+                io.StringIO()
+            ):
+                self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", identity]), code)
+            directory = self.root / "current"
+            record = protocol.load_record(directory, identity, "vsechny", "")
+            self.assertEqual(protocol.validate_bundle(directory, record), counts)
+
+    def test_selective_workbook_keeps_unselected_tests(self):
+        """Aktuální artefakt je nový, ale příští výběr nepřijde o dřívější testy."""
+        import pandas
+
+        columns = ["index", "date", "test name", "result"]
+        previous = pandas.DataFrame(
+            [[1, "old", "sample.tests.one", "OK"], [2, "old", NON_ASCII_TESTS[0], "FAIL"]], columns=columns
+        )
+        current = pandas.DataFrame([[1, None, None, None], [2, "now", NON_ASCII_TESTS[0], "OK"]], columns=columns)
+        directory = protocol.prepare_current(self.root)
+        previous.to_excel(self.root / "results.xlsx", index=False)
+        current.to_excel(directory / "results.xlsx", index=False)
+        merged = runner.selection_content(self.root, directory, "neuspesne", 0)
+        table = pandas.read_excel(io.BytesIO(merged))
+        self.assertEqual(list(table["test name"]), ["sample.tests.one", NON_ASCII_TESTS[0]])
+        self.assertEqual(list(table["result"]), ["OK", "OK"])
+
+    def test_selection_preserves_previous_workbook_and_reports_noop(self):
+        """No-op má novou identitu a stará tabulka zůstane vstupem výběru."""
+        import pandas
+
+        table = pandas.DataFrame(
+            [[42, "date", "sample.tests.test_one", "OK"]], columns=["index", "date", "test name", "result"]
+        )
+        previous = self.root / "results.xlsx"
+        previous.write_bytes(b"previous-input")
+        with patch.object(pandas, "read_excel", return_value=table), patch.object(runner.subprocess, "run") as migrate:
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(runner.main(["-f", "--results-root", str(self.root), "--attempt-id", "123-1"]), 0)
+            migrate.assert_not_called()
+            self.assertEqual(runner.select_tests("konkretni", "42", previous), ["sample.tests.test_one"])
+            with self.assertRaises(ValueError):
+                runner.select_tests("konkretni", "43", previous)
+        record = protocol.load_record(self.root / "current", "123-1", "neuspesne", "")
+        self.assertEqual(record["state"], "no-tests")
+        self.assertEqual(protocol.validate_bundle(self.root / "current", record), (0, 0))
+        self.assertEqual(previous.read_bytes(), b"previous-input")
+
+    def test_missing_and_malformed_selection_fail(self):
+        """Chybějící nebo neplatný vstup výběru není no-op."""
+        import pandas
+
+        with self.assertRaises(ValueError):
+            runner.select_tests("neuspesne", "", self.root / "absent.xlsx")
+        for table in (
+            pandas.DataFrame([[1]]),
+            pandas.DataFrame([[1, "", "$(bad)", "FAIL"]], columns=["index", "date", "test name", "result"]),
+        ):
+            with patch.object(pandas, "read_excel", return_value=table), self.assertRaises(ValueError):
+                runner.select_tests("neuspesne", "", self.root / "results.xlsx")
+        columns = ["index", "date", "test name", "result"]
+        for rows in (
+            [[1, "", "sample.tests.one", None]],
+            [[1, "", "$(bad)", "OK"]],
+            [[1.5, "", "sample.tests.one", "FAIL"]],
+            [[1, "", "sample.tests.one", "OK"], [1, "", "sample.tests.two", "FAIL"]],
+            [[1, "", "sample.tests.one", "OK"], [2, "", "sample.tests.one", "FAIL"]],
+            [[1, "", "single", "OK"]],
+            [[1, "", "sample..one", "OK"]],
+            [[1, "", "sample.tests.1one", "OK"]],
+            [[1, "", "sample.tests.test-one", "OK"]],
+            [[1, "", "sample.tests.test one", "OK"]],
+        ):
+            table = pandas.DataFrame(rows, columns=columns)
+            with patch.object(pandas, "read_excel", return_value=table), self.assertRaises(ValueError):
+                runner.select_tests("neuspesne", "", self.root / "results.xlsx")
+
+    def test_dev_defaults_record_a_workbook_row_for_every_test(self):
+        """Výchozí DEV výběr obsahuje jen moduly, jejichž testy zapisují řádek tabulky výběru."""
+        untracked = []
+        for label in runner.DEFAULT_TESTS:
+            path = (ROOT / "webclient" / Path(*label.split("."))).with_suffix(".py")
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            classes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
+
+            def writes_rows(node, seen=()):
+                """Zjistí, zda třída dědí od BaseSeleniumTestClass přímo nebo přes třídu modulu.
+
+                :param node: Ověřovaná třída.
+                :param seen: Již procházené třídy modulu, které brání zacyklení.
+                :return: True, pokud test zapisuje řádek tabulky výsledků.
+                """
+                for base in node.bases:
+                    name = getattr(base, "id", getattr(base, "attr", None))
+                    if name == "BaseSeleniumTestClass":
+                        return True
+                    if name in classes and name not in seen and writes_rows(classes[name], (*seen, name)):
+                        return True
+                return False
+
+            for node in classes.values():
+                tests = [
+                    item for item in node.body if isinstance(item, ast.FunctionDef) and item.name.startswith("test")
+                ]
+                if tests and not writes_rows(node):
+                    untracked.append(f"{label}.{node.name}")
+        self.assertTrue(runner.DEFAULT_TESTS)
+        self.assertEqual(untracked, [], "Výchozí DEV moduly s testy, které nezapisují tabulku výběru")
+
+    def test_selection_accepts_identifier_names_with_non_ascii_letters(self):
+        """Název, jehož každá tečkovaná část je identifikátor, projde i s českými písmeny."""
+        import pandas
+
+        path = self.root / "results.xlsx"
+        pandas.DataFrame(
+            [[117, "", NON_ASCII_TESTS[0], "FAIL"], [162, "", NON_ASCII_TESTS[1], "OK"]],
+            columns=["index", "date", "test name", "result"],
+        ).to_excel(path, index=False)
+        self.assertEqual(runner.select_tests("neuspesne", "", path), [NON_ASCII_TESTS[0]])
+        self.assertEqual(runner.select_tests("konkretni", "162", path), [NON_ASCII_TESTS[1]])
+
+    def link_directory(self, link, target):
+        """Vytvoří symbolický odkaz, na Windows bez oprávnění junction.
+
+        :param link: Cesta vytvářeného odkazu.
+        :param target: Cílový adresář mimo kořen výsledků.
+        """
+        try:
+            link.symlink_to(target, target_is_directory=True)
+        except OSError:
+            if os.name != "nt":
+                raise
+            subprocess.run(
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    "New-Item -ItemType Junction -Path $env:FIXTURE_LINK -Target $env:FIXTURE_TARGET | Out-Null",
+                ],
+                env=dict(os.environ, FIXTURE_LINK=str(link), FIXTURE_TARGET=str(target)),
+                check=True,
+                capture_output=True,
+            )
+
+    def test_runs_rotate_current_into_previous(self):
+        """Nový běh začne prázdný, poslední zůstane v previous/ a starší zmizí."""
+        self.assertFalse((self.root / "current").exists())
+        (self.root / "results.xlsx").write_bytes(b"selection-input")
+        (self.root / "unrelated.txt").write_bytes(b"keep")
+        for identity in ("123-1", "123-2", "123-3"):
+            self.attempt(identity)
+        current = protocol.load_record(self.root / "current", "123-3", "vsechny", "")
+        previous = protocol.load_record(self.root / "previous", "123-2", "vsechny", "")
+        self.assertEqual((current["attempt_id"], previous["attempt_id"]), ("123-3", "123-2"))
+        self.assertEqual(
+            sorted(path.name for path in self.root.iterdir()),
+            ["current", "previous", "results.xlsx", "unrelated.txt"],
+        )
+        self.assertEqual((self.root / "results.xlsx").read_bytes(), b"selection-input")
+        self.assertEqual((self.root / "unrelated.txt").read_bytes(), b"keep")
+        self.assertEqual(list(protocol.prepare_current(self.root).iterdir()), [])
+        for identity in ("../outside", "a/b", "$(bad)", "a\nb", ""):
+            with self.subTest(identity=identity), self.assertRaises(ValueError):
+                protocol.validate_identity(identity)
+
+    def test_linked_result_directory_fails_without_touching_target(self):
+        """Odkaz místo current/ či previous/ zastaví běh a cíl odkazu zůstane netknutý."""
+        outside = self.root / "outside"
+        outside.mkdir()
+        (outside / "keep").write_bytes(b"external canary")
+        results = self.root / "results"
+        results.mkdir()
+        for name in ("current", "previous"):
+            with self.subTest(name=name):
+                link = results / name
+                self.link_directory(link, outside)
+                try:
+                    with self.assertRaises(ValueError):
+                        protocol.prepare_current(results)
+                    stdout, stderr = io.StringIO(), io.StringIO()
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
+                        code = runner.main(["--results-root", str(results), "--attempt-id", "123-1"])
+                    self.assertEqual(code, 1)
+                    self.assertIn("(attempt)", stderr.getvalue())
+                finally:
+                    # Windows removes directory symlinks and junctions as directories.
+                    if os.name == "nt":
+                        os.rmdir(link)
+                    else:
+                        link.unlink()
+                self.assertEqual(sorted(path.name for path in outside.iterdir()), ["keep"])
+                self.assertEqual((outside / "keep").read_bytes(), b"external canary")
+
+    def test_stale_mixed_and_incomplete_results_are_rejected(self):
+        """Platný starý souhrn, jiné identity i změněné soubory jsou odmítnuty."""
+        directory, record = self.attempt()
+        with self.assertRaises(ValueError):
+            protocol.load_record(directory, "123-2", "vsechny", "")
+        with self.assertRaises(ValueError):
+            protocol.load_record(directory, "123-1", "konkretni", "42")
+        (directory / "test_summary.env").write_text("PASSED=99\nFAILED=0\n", encoding="ascii")
+        with self.assertRaises(ValueError):
+            protocol.validate_bundle(directory, record)
+        (directory / "test_summary.env").unlink()
+        with self.assertRaises(ValueError):
+            protocol.validate_bundle(directory, record)
+
+    def test_required_workbook_and_interrupted_publication_fail(self):
+        """Chybějící tabulka ani přerušený zápis nevytvoří dokončený výsledek."""
+        identity = "123-1"
+        directory = protocol.prepare_current(self.root)
+        protocol.write_summary(directory, 1, 0)
+        with self.assertRaises(ValueError):
+            protocol.publish_outcome(
+                directory,
+                identity,
+                "vsechny",
+                "",
+                "completed",
+                0,
+                True,
+                counts=dict(total=1, passed=1, failed=0, skipped=0, expected_failures=0),
+            )
+        self.assertFalse((directory / "outcome.json").exists())
+        with patch.object(protocol.os, "replace", side_effect=OSError("interrupted")), self.assertRaises(OSError):
+            protocol.publish_outcome(
+                directory,
+                identity,
+                "vsechny",
+                "",
+                "completed",
+                0,
+                counts=dict(total=1, passed=1, failed=0, skipped=0, expected_failures=0),
+            )
+        self.assertFalse((directory / "outcome.json").exists())
+        self.assertEqual(list(directory.glob("*.tmp")), [])
+
+    def test_manifest_schema_and_duplicate_keys_fail(self):
+        """Názvy cest, duplicitní klíče a typy nelze podvrhnout jako metadata."""
+        directory, record = self.attempt()
+        for key, value in (
+            ("files", {"../outside": "a" * 64}),
+            ("version", True),
+            ("exit_code", False),
+            ("state", "$(bad)"),
+        ):
+            candidate = dict(record)
+            candidate[key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                protocol.validate_record(candidate, "123-1", "vsechny", "")
+        (directory / "outcome.json").write_text(
+            json.dumps(record).replace('"version": 2', '"version": 2, "version": 2'), encoding="utf-8"
+        )
+        with self.assertRaises(ValueError):
+            protocol.load_record(directory, "123-1", "vsechny", "")
+
+    def test_runner_publishes_new_spreadsheet_and_rejects_failed_write(self):
+        """Selenium běh vyžaduje tabulku tohoto pokusu, nikoli starou kopii."""
+        import pandas
+
+        columns = ["index", "date", "test name", "result"]
+        previous = self.root / "results.xlsx"
+        previous.write_bytes(b"previous-selection")
+
+        def execute(labels, directory, file_logging):
+            """Zapíše testovací tabulku do přesměrovaného adresáře.
+
+            :param labels: Testovací výběr.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim výstupu.
+            :return: Dokončený souhrn.
+            """
+            self.assertEqual(Path(os.environ["AMCR_TEST_OUTPUT_DIR"]), directory)
+            pandas.DataFrame([[117, "now", NON_ASCII_TESTS[0], "OK"]], columns=columns).to_excel(
+                directory / "results.xlsx", index=False
+            )
+            return 0, "Ran 1 test in 1s\n\nOK\n"
+
+        with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+            runner, "execute_tests", side_effect=execute
+        ), redirect_stdout(io.StringIO()):
+            self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-1"]), 0)
+        directory = self.root / "current"
+        record = protocol.load_record(directory, "123-1", "vsechny", "")
+        self.assertTrue(record["spreadsheet_required"])
+        self.assertEqual(protocol.digest(previous), record["files"]["results.xlsx"])
+        with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+            runner, "execute_tests", return_value=(0, "Ran 1 test in 1s\n\nOK\n")
+        ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-2"]), 1)
+        failed = protocol.load_record(self.root / "current", "123-2", "vsechny", "")
+        self.assertEqual(failed["state"], "error")
+        self.assertEqual(protocol.digest(previous), record["files"]["results.xlsx"])
+
+        def partial_write(labels, directory, file_logging):
+            """Napodobí poškozenou tabulku po chybě zápisu.
+
+            :param labels: Výběr testů.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim logování.
+            :return: Neúspěšný úplný souhrn testů.
+            """
+            (directory / "results.xlsx").write_bytes(b"partial workbook")
+            return 1, "Ran 1 test in 1s\n\nFAILED (errors=1)\n"
+
+        with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+            runner, "execute_tests", side_effect=partial_write
+        ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            self.assertEqual(runner.main(["--results-root", str(self.root), "--attempt-id", "123-3"]), 1)
+        failed = protocol.load_record(self.root / "current", "123-3", "vsechny", "")
+        self.assertEqual(failed["state"], "error")
+        self.assertEqual(protocol.digest(previous), record["files"]["results.xlsx"])
+
+    def test_failures_without_workbook_rows_end_as_error(self):
+        """Neúspěch bez řádku v tabulce ukončí každý režim chybou a kořenovou tabulku nenahradí."""
+        import pandas
+
+        columns = ["index", "date", "test name", "result"]
+        names = ("core.tests.test_selenium.CoreSeleniumTest.test_001_prihlaseni", NON_ASCII_TESTS[0])
+        previous = self.root / "results.xlsx"
+        output = io.BytesIO()
+        pandas.DataFrame([[1, "old", names[0], "FAIL"], [2, "old", names[1], "OK"]], columns=columns).to_excel(
+            output, index=False
+        )
+        before = output.getvalue()
+
+        def execute(labels, directory, file_logging):
+            """Zapíše jen úspěšný řádek, ačkoli unittest hlásí chybu bez řádku.
+
+            :param labels: Výběr testů.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim logování.
+            :return: Neúspěšný úplný souhrn testů.
+            """
+            pandas.DataFrame([[2, "now", names[1], "OK"]], columns=columns).to_excel(
+                directory / "results.xlsx", index=False
+            )
+            return 1, "Ran 2 tests in 1s\n\nFAILED (errors=1)\n"
+
+        for attempt, (arguments, mode, number) in enumerate(
+            (([], "vsechny", ""), (["-f"], "neuspesne", ""), (["-t", "1"], "konkretni", "1")), start=1
+        ):
+            with self.subTest(mode=mode):
+                identity = f"123-{attempt}"
+                previous.write_bytes(before)
+                with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+                    runner, "execute_tests", side_effect=execute
+                ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                    self.assertEqual(
+                        runner.main([*arguments, "--results-root", str(self.root), "--attempt-id", identity]), 1
+                    )
+                record = protocol.load_record(self.root / "current", identity, mode, number)
+                self.assertEqual(record["state"], "error")
+                self.assertIn(
+                    "(publication): ValueError: Neúspěšné testy v tabulce výsledků (0) neodpovídají souhrnu testů (1)",
+                    record["message"],
+                )
+                self.assertEqual(previous.read_bytes(), before)
+
+    def test_full_run_failure_rows_feed_failed_only_selection(self):
+        """Úplný běh se shodnými řádky FAIL a ERROR se zveřejní a další běh neúspěšných je spustí."""
+        import pandas
+
+        columns = ["index", "date", "test name", "result"]
+        names = (
+            "core.tests.test_selenium.CoreSeleniumTest.test_001_prihlaseni",
+            NON_ASCII_TESTS[0],
+            NON_ASCII_TESTS[1],
+        )
+        selected = []
+
+        def execute_full(labels, directory, file_logging):
+            """Zapíše jeden FAIL, jeden ERROR a jeden OK v souladu se souhrnem.
+
+            :param labels: Výběr testů.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim logování.
+            :return: Neúspěšný úplný souhrn testů.
+            """
+            rows = [[1, "now", names[0], "FAIL"], [2, "now", names[1], "ERROR"], [3, "now", names[2], "OK"]]
+            pandas.DataFrame(rows, columns=columns).to_excel(directory / "results.xlsx", index=False)
+            return 1, "Ran 3 tests in 1s\n\nFAILED (failures=1, errors=1)\n"
+
+        def execute_failed(labels, directory, file_logging):
+            """Zaznamená výběr a oba vybrané testy nyní projdou.
+
+            :param labels: Výběr testů.
+            :param directory: Adresář pokusu.
+            :param file_logging: Režim logování.
+            :return: Úspěšný úplný souhrn testů.
+            """
+            selected.extend(labels)
+            rows = [[1, "now", names[0], "OK"], [2, "now", names[1], "OK"]]
+            pandas.DataFrame(rows, columns=columns).to_excel(directory / "results.xlsx", index=False)
+            return 0, "Ran 2 tests in 1s\n\nOK\n"
+
+        for arguments, identity, execute, code in (
+            ([], "123-1", execute_full, 1),
+            (["-f"], "123-2", execute_failed, 0),
+        ):
+            with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)), patch.object(
+                runner, "execute_tests", side_effect=execute
+            ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                self.assertEqual(
+                    runner.main([*arguments, "--results-root", str(self.root), "--attempt-id", identity]), code
+                )
+            mode = "neuspesne" if arguments else "vsechny"
+            self.assertEqual(protocol.load_record(self.root / "current", identity, mode, "")["state"], "completed")
+        self.assertEqual(selected, list(names[:2]))
+        table = pandas.read_excel(self.root / "results.xlsx")
+        self.assertEqual(list(table["result"]), ["OK", "OK", "OK"])
+
+    def test_summary_validation_is_non_evaluating(self):
+        """Celý souhrn má právě dva desetinné záznamy a nepřipouští příkazy."""
+        path = self.root / "summary"
+        for raw in (b"FAILED=0002\r\nPASSED=0001", b"PASSED=1\nFAILED=2\n"):
+            path.write_bytes(raw)
+            self.assertEqual(protocol.read_summary(path), (1, 2))
+        for raw in (
+            b"",
+            b"PASSED=1\n",
+            b"PASSED=1\x00\nFAILED=0",
+            b"PASSED=1\nFAILED=0\n\n",
+            b"PASSED=1\nFAILED=0\nOTHER=2",
+            b"PASSED=$(bad)\nFAILED=0",
+            b"PASSED=1\nPASSED=2\nFAILED=0",
+        ):
+            path.write_bytes(raw)
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                protocol.read_summary(path)
+
+    def test_summary_read_is_bounded_before_allocation(self):
+        """Odmítne velký proud po nejvýše 4097 bajtech a přijme přesnou hranici."""
+        stream = io.BytesIO(b"x" * 100000)
+        from unittest.mock import Mock
+
+        stream.read = Mock(wraps=stream.read)
+        path = SimpleNamespace(open=Mock(return_value=stream))
+        with self.assertRaises(ValueError):
+            protocol.read_summary(path)
+        stream.read.assert_called_once_with(4097)
+        path = self.root / "bounded-summary"
+        suffix = b"\nFAILED=0\n"
+        valid = b"PASSED=" + b"0" * (4096 - len(b"PASSED=") - len(suffix)) + suffix
+        path.write_bytes(valid)
+        self.assertEqual(protocol.read_summary(path), (0, 0))
+        path.write_bytes(valid + b"\n")
+        with self.assertRaises(ValueError):
+            protocol.read_summary(path)
+
+    def test_explicit_categories_cross_runner_and_result_consumer(self):
+        """Skips a očekávaná selhání nezvýší PASSED ani nezničí platný zero/zero běh."""
+        from scripts.collect_test_results import report
+
+        for index, (total, details, native, expected) in enumerate(
+            (
+                (5, "OK (skipped=2, expected failures=1)", 0, (2, 0, 2, 1)),
+                (2, "OK (expected failures=2)", 0, (0, 0, 0, 2)),
+                (2, "OK (skipped=2)", 0, None),
+                (1, "FAILED (unexpected successes=1)", 1, (0, 1, 0, 0)),
+            )
+        ):
+            identity = f"categories-{index}"
+            with patch.object(runner, "select_tests", return_value=["sample.tests.one"]), patch.object(
+                runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)
+            ), patch.object(
+                runner, "execute_tests", return_value=(native, f"Ran {total} tests in 0s\n\n{details}\n")
+            ), redirect_stdout(
+                io.StringIO()
+            ), redirect_stderr(
+                io.StringIO()
+            ):
+                code = runner.main(["--results-root", str(self.root), "--attempt-id", identity])
+            directory = self.root / "current"
+            record = protocol.load_record(directory, identity, "vsechny", "")
+            self.assertEqual(record["version"], 2)
+            outputs, summary = self.root / f"outputs-{index}", self.root / f"summary-{index}"
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                status = report(directory, identity, "vsechny", "", outputs, summary)
+            annotations = [line for line in stdout.getvalue().splitlines() if line.startswith("::error::")]
+            self.assertEqual(outputs.read_text(encoding="utf-8"), "ARTIFACTS=true\n")
+            report_text = summary.read_text(encoding="utf-8")
+            if expected is None:
+                self.assertEqual((code, status, record["state"]), (1, 1, "error"))
+                self.assertIsNone(record["counts"])
+                self.assertIn("stav: `error`", report_text)
+                self.assertNotIn("| Stav | Počet |", report_text)
+                self.assertEqual(annotations, ["::error::" + record["message"]])
+                self.assertIn("(summary): ValueError: ", record["message"])
+            else:
+                passed, failed, skipped, xfail = expected
+                self.assertEqual((code, status), (native, native))
+                self.assertEqual(annotations, [f"::error::Selhalo {failed} testů"] if failed else [])
+                self.assertEqual(
+                    record["counts"],
+                    dict(total=total, passed=passed, failed=failed, skipped=skipped, expected_failures=xfail),
+                )
+                self.assertIn(f"| ✅ Prošlo | {passed} |", report_text)
+                self.assertIn(f"| ❌ Selhalo | {failed} |", report_text)
+                self.assertIn(f"| Přeskočeno | {skipped} |", report_text)
+                self.assertIn(f"| Očekávaná selhání | {xfail} |", report_text)
+
+    def test_counter_consistency_and_unsupported_version_rejection(self):
+        """Neplatné typy, kategorie či jiná verze formátu neprojdou do výsledku."""
+        directory, record = self.attempt()
+        for key, value in (("total", True), ("passed", -1), ("skipped", False), ("total", 2)):
+            candidate = dict(record, counts=dict(record["counts"], **{key: value}))
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                protocol.validate_record(candidate, "123-1", "vsechny", "")
+        candidate = dict(record, counts=dict(total=2, passed=2, failed=0, skipped=0, expected_failures=0))
+        with self.assertRaises(ValueError):
+            protocol.validate_bundle(directory, candidate)
+        legacy = dict(record, version=1)
+        legacy.pop("counts")
+        path = directory / "outcome.json"
+        path.write_text(json.dumps(legacy), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            protocol.load_record(directory, "123-1", "vsechny", "")
+
+    def test_all_mode_aliases_and_mutual_exclusion_remain_compatible(self):
+        """Bez příznaku i s -a/--all se volí vsechny a konfliktní režimy se odmítnou."""
+        for index, flags in enumerate(([], ["-a"], ["--all"])):
+            with patch.object(runner, "select_tests", return_value=["sample.tests.one"]) as select, patch.object(
+                runner.subprocess, "run", return_value=SimpleNamespace(returncode=0)
+            ), patch.object(runner, "execute_tests", return_value=(0, "Ran 1 test in 0s\n\nOK\n")), redirect_stdout(
+                io.StringIO()
+            ):
+                self.assertEqual(
+                    runner.main(["--results-root", str(self.root), "--attempt-id", f"aliases-{index}", *flags]), 0
+                )
+            self.assertEqual(select.call_args.args[:2], ("vsechny", ""))
+        for flags in (["-a", "-f"], ["--all", "-t", "42"]):
+            with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as error:
+                runner.main(flags)
+            self.assertEqual(error.exception.code, 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

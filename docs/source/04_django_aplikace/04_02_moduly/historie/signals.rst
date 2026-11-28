@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: soubor_update_metadata(sender, instance)
+.. py:function:: soubor_update_metadata(sender, instance, **kwargs)
 
    Před uložením záznamu Historie nastaví snímek organizace podle přiřazeného uživatele.
 

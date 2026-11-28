@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: news_feed_settings_capture_previous_identity(sender, instance, raw)
+.. py:function:: news_feed_settings_capture_previous_identity(sender, instance, raw, **kwargs)
 
    Zachová původní identitu nastavení před jeho uložením.
 
@@ -22,7 +22,7 @@ Funkce
    :param previous: Původní skupina, identifikátor a hodnota nastavení; při vytvoření chybí.
    :param current: Uložená skupina, identifikátor a hodnota nastavení; při smazání chybí.
 
-.. py:function:: news_feed_settings_saved(sender, instance, raw)
+.. py:function:: news_feed_settings_saved(sender, instance, raw, **kwargs)
 
    Naplánuje reakci na uložené nastavení zpráv po potvrzení transakce.
 
@@ -31,7 +31,7 @@ Funkce
    :param raw: Příznak načítání surových dat, při kterém se změna ignoruje.
    :param kwargs: Další argumenty signálu.
 
-.. py:function:: news_feed_settings_deleted(sender, instance)
+.. py:function:: news_feed_settings_deleted(sender, instance, **kwargs)
 
    Naplánuje reakci na smazání nastavení zpráv po potvrzení transakce.
 
@@ -39,7 +39,7 @@ Funkce
    :param instance: Smazaná instance nastavení.
    :param kwargs: Další argumenty signálu.
 
-.. py:function:: soubor_get_rozsah(sender, instance)
+.. py:function:: soubor_get_rozsah(sender, instance, **kwargs)
 
    Určí počet stran/snímků souboru (PDF, TIF) a uloží jej do ``rozsah``.
 
@@ -47,7 +47,7 @@ Funkce
    :param instance: Instancia ``Soubor`` předaná k uložení.
    :param kwargs: Dodatečné argumenty signálu.
 
-.. py:function:: soubor_save_update_record_metadata(sender, instance)
+.. py:function:: soubor_save_update_record_metadata(sender, instance, **kwargs)
 
    Aktualizuje metadata nadřazeného archeologického záznamu po uložení souboru.
 
@@ -55,7 +55,7 @@ Funkce
    :param instance: Instancia ``Soubor`` která byla uložena.
    :param kwargs: Dodatečné argumenty signálu.
 
-.. py:function:: soubor_delete_connections(sender, instance)
+.. py:function:: soubor_delete_connections(sender, instance, **kwargs)
 
    Odstraní historii záznamu spojené se souborem před jeho fyzickým smazáním.
 
@@ -63,7 +63,7 @@ Funkce
    :param instance: Instancia ``Soubor`` určená ke smazání.
    :param kwargs: Dodatečné argumenty signálu.
 
-.. py:function:: soubor_delete_update_metadata(sender, instance)
+.. py:function:: soubor_delete_update_metadata(sender, instance, **kwargs)
 
    Aktualizuje metadata nadřazeného archeologického záznamu po smazání souboru.
 

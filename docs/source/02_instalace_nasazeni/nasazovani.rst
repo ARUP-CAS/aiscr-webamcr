@@ -1,21 +1,24 @@
 Nasazování aplikace
 ================================
 Tato sekce popisuje možné způsoby nasazení aplikace WebAMČR, včetně předpokladů a specifik takových nasazení. Všechny následující postupy jsou založeny na použití docker kontejnerů, které jsou vytvářeny pomocí docker-compose souborů a to automaticky nebo manuálně.
-Primárně jsou docker obrazy vytvářeny v rámci běhu Gihub CI, tj. definované ve workflow `./.github/workflows/publish_aiscr_hub.yml` spouštěné v rámci Github Actions. Uvedná worfklow se spouští jedině a tehdy pokud se vytvoří tag na větvi "dev" a tento tag je ve formátu "v*."
+Workflow pro vydání nové verze ``.github/workflows/new-version.yml`` volá
+``.github/workflows/publish_images.yml``, které sestaví a zveřejní Docker obrazy.
+Nasazení na server se spouští samostatně volbou cílového prostředí a verze.
 Další možnosti vytvoření docker obrazů jsou pomocí níže uvedených automatizačních skriptů, které dokáží tyto obrazy vytvořit lokálně na cílové stanici.
 
 =========================
 Vytváření docker obrazů
 =========================
-Jak bylo zmíněno výše, primární metodou vytváření docker obrazů je workflow `./.github/workflows/publish_aiscr_hub.yml`, po jejím spuštění dojde k vytvoření těchto docker obrazů:
+Workflow publikuje obrazy aplikace WebAMČR, proxy NGINX a serveru Redis
+do GitHub Container Registry i Docker Hubu. V GitHub Container Registry
+jsou pod názvy ``ghcr.io/arup-cas/aiscr-webamcr``,
+``ghcr.io/arup-cas/aiscr-webamcr-proxy`` a
+``ghcr.io/arup-cas/aiscr-webamcr-redis``. Na Docker Hubu jsou pod názvy
+``aiscr/webamcr``, ``aiscr/webamcr-proxy`` a ``aiscr/webamcr-redis``.
+Tag obrazu v obou registrech odpovídá tagu vydání bez úvodního ``v``,
+například ``1.2.3`` pro vydání s Git tagem ``v1.2.3``.
 
-* **aiscr/webamcr** (obraz s aplikací WebAMČR)
-* **aiscr/webacmr-proxy** (obraz s proxy serverem NGINX)
-* **aiscr/webamcr-redis** (chachovací server Redis s upravenou konfigurací)
-  
-Všechny tři vytvořené obrazy jsou poté nahrány do veřejně přístupného docker-hub repozitáře umístěného na adrese `https://hub.docker.com/u/aiscr`. Tento repozitář je spravovaný Archeologickým instituem Praha.
 Každý vytvořený obraz obsahuje soubour **/version.txt**, který zachycuje datum vytvoření a verzi daného obrazu (verze je odvozena od názvu tagu vytvořeného v rámci git repozitáře). Jméno verze je také zapsáno do proměnných prostředí (VERSION, TAG) každého docker obrazu, takže tyto systémové proměnné lze použít pro účely aplikace.
-Docker-hub repozitář pak slouží jako místo, kde se uchovávají všechny vytvořené verze aplikace WebAMČR a lze jej tak snadno použít pro nasazení aplikace v různých verzích, definovaných tagy.
 
 Alternativně lze docker obrazy vytvořit manuálně, s pomocí předpřipravených Dockerfile souborů:
 
@@ -34,8 +37,9 @@ Varianty nasazení aplikace WebAMČR
 ===================================
 *Existuje pět různých módů nasazení aplikace WebAMČR*:
 
-#. Automatické nasazení v rámci Github Actions (použito pro nasazení do vývojového prostředí)
-#. Skriptované nasazení z docker-hubu (ostatní případě, včetně produkčního nasazení), `./scripts/prod_deploy.sh`
+#. Nasazení na DEV nebo TEST ručně spuštěným workflow v GitHub Actions.
+#. Skriptované nasazení verzovaných obrazů příkazem ``./scripts/prod_deploy.sh -t <tag>``
+   nebo ``./scripts/prod_deploy.sh dockerhub -t <tag>``.
 #. Skriptované nasazení z lokálního repozitáře (použito pro specifické účely, např. hotfix ve zdrojovém kódu, nezávisle na prostředí), `./scripts/git_prod_deploy.sh`
 #. Skriptované nasazení pro vývojové účely (specifický deployment pro vývojové účely na lokálním vývojovém prostředí)
 #. Manuální nasazení pomocí docker-compose souborů (specifické případy), ovládání přes docker-compose není v tomto manuálu vysvětleno a lze využít oficiální dokumentaci `Docker compose <https://docs.docker.com/compose/>`
@@ -52,15 +56,15 @@ V takových případech může docházet k neočekávaným chybám a konfliktům
       - Port
       - Secrets
       - Použití
-    * - Automatické Github Actions
-      - worfklow `.github\workflows\deployment.yml`
-      - Docker-hub
+    * - Nasazení přes GitHub Actions
+      - Ruční spuštění ``.github/workflows/deployment.yml``
+      - GitHub Container Registry (výchozí) nebo Docker Hub
       - 8080
       - docker secrets
-      - Vývojová stanice ARUP
-    * - Skriptované z Docker-hub
-      - ``./scripts/prod_deploy.sh``
-      - Docker-hub
+      - DEV nebo TEST
+    * - Skriptované nasazení verzovaných obrazů
+      - ``./scripts/prod_deploy.sh -t <tag>`` nebo ``./scripts/prod_deploy.sh dockerhub -t <tag>``
+      - GitHub Container Registry (výchozí) nebo Docker Hub
       - 8080
       - docker secrets
       - Testovací stanice ARUP
@@ -84,55 +88,57 @@ V takových případech může docházet k neočekávaným chybám a konfliktům
       - Speciální případy
 
 
-===============================
-Automatické nasazení
 ================================
-Automatické nasazení probíhá při vytvoření tagu pojmenovaného dle formátu "v*" v repozitáři Github. Po vytvoření takového tagu nejprve proběhne proces vytvoření docker obrazů (popsaný výše) a poté dojde ke spuštění
-další Github workflow s názvem `.github\workflows\deployment.yml` v rámci které dojde ke provedení následujících kroků:
+Nasazení přes GitHub Actions
+================================
+Po zveřejnění obrazů spusťte workflow **Deployment to selected environment**
+(``.github/workflows/deployment.yml``). Zadejte tag vydání
+(``v1.2.3`` nebo ``1.2.3``), vyberte prostředí DEV nebo TEST a zvolte
+zdroj obrazů. Výchozí volby jsou TEST a GitHub Container Registry. Pro
+Docker Hub vyberte zdroj ``DockerHub``.
 
-* inicializace VPN spojení na DEPLOYMENT_SERVER_DEV
-* ověření stability spojení pomocí dotazů na lokalní DNS server
-* přihlášení přes ssh na cílovou stanici
-* v místě nasazení dojde k otevření adresáře obsahujícího deployment skripty a následnému stashování git repozitáře a jeho aktualizaci (tzv. pull).
-* spuštění deployment skriptu (`scripts/ci_deployment/deploy_server_dev.sh`), který poté vyvolá:
+Workflow naváže VPN spojení, ověří dostupnost cílové stanice a připojí
+se přes SSH. Na stanici načte Git tagy, přepne pracovní kopii na
+vybraný tag vydání a z něj spustí ``scripts/ci_deployment/deploy_server.sh``.
+Aktuální verze tohoto skriptu předá zvolený zdroj a tag obrazu skriptu
+``scripts/prod_deploy.sh``, který nasadí danou verzi do Docker Swarm.
+Poté wrapper ověří připravenost nasazeného stacku.
 
- * spuštění vlastního nasazení WebAMČR přes skript `scripts/prod_deploy.sh`, tj. nasazení nejnovějších docker obrazů z docker-hubu pomocí swarm módu.
- * ověření správného spuštění docker kontejnerů ve swarm-mode.
-
-Github Action worfklow `.github\workflows\deployment.yml` potřebuje ke správnému spuštění následující definice tzv. secrets v repozitáři Github, tyto je nutné definovat manuálně a jsou v gesci správce repozitáře:
+Správce repozitáře nastavuje pro workflow tyto GitHub secrets.
 
 * VPN_CA_CRT - certifikát CA pro VPN
 * VPN_USER_CRT - certifikát uživatele pro VPN
 * VPN_USER_KEY - privátní klíč uživatele pro VPN
 * VPN_SECRET_USERNAME_PASSWORD - uživatelské heslo pro VPN
-* DEPLOYMENT_SERVER_DEV - IP adresa cílové stanice pro nasazení
-* DNS_RESOLVER - IP adresa DNS serveru pro ověření stability spojení
-* SSH_KNOWN_HOST_DEV - fingerprint cílové stanice SSH připojení
-* SSH_PRIVATE_KEY_SERVER_DEV - privátní klíč pro SSH připojení na cílovou stanici
+* ``DEPLOYMENT_SERVER_DEV`` a ``DEPLOYMENT_SERVER_TEST`` – adresy cílových stanic
+* ``SSH_KNOWN_HOST_DEV`` a ``SSH_KNOWN_HOST_TEST`` – ověřené záznamy hostitelů pro SSH
+* ``SSH_PRIVATE_KEY_SERVER_DEV`` a ``SSH_PRIVATE_KEY_SERVER_TEST`` – privátní klíče pro SSH připojení na cílové stanice
 
-===================================
-Skriptované nasazení z docker-hubu
-===================================
+=========================================
+Skriptované nasazení verzovaných obrazů
+=========================================
 Pro nasazování na testovací prostředí byl vytvořen automatizační skript `scripts/prod_deploy.sh`, který zjednodušuje nasazení, provádí logování celého průběhu do adresáře `logs/prod_deploy/`, aktualizaci docker obrazů, ověřování prostředí, a nasazení aplikace WebAMČR.
-Tento skript má několik možných parametrů, nápověda přístupná spuštěním příkazu ``./scripts/prod_deploy.sh -h.``. V základním módu se tento skript spouští
-bez jakéhokoliv volitelného parametru, tzn. ``./scripts/prod_deploy.sh``. Po úspěšném vykonání je aplikace WebAMČR dostupná na ip adrese dané stanice a portu **8080**.
+Skript ověří všechny argumenty před zahájením operací. Příkaz
+``./scripts/prod_deploy.sh -h`` zobrazí nápovědu i bez spuštěného Dockeru.
+Bez volby skript vypíše pokyny k použití. Pro nasazení zadejte tag
+obrazu bez úvodního ``v``. Příkaz ``./scripts/prod_deploy.sh -t 1.2.3``
+použije výchozí GitHub Container Registry a příkaz
+``./scripts/prod_deploy.sh dockerhub -t 1.2.3`` použije Docker Hub.
+Po úspěšném nasazení je WebAMČR dostupná na IP adrese stanice a portu **8080**.
 
-Skript pro nasazení z Docker Hubu do Docker Swarm podporuje několik parametrů, každý s určitým účelem a příkladem použití. Zde je seznam možných parametrů s popisem a příklady v češtině:
-
-Niže je přehled dostupných parametrů.
+Skript podporuje tyto volby.
 
 * `-h`: Zobrazení nápovědy.
    - **Použití**: `scripts/prod_deploy.sh -h`
 * `-x`: Odstranění celého Docker stacku, tedy všech službeb.
    - **Použití**: `scripts/prod_deploy.sh -x`
    - **Popis**: Použití tohoto parametru způsobí odstranění celého Docker stacku, což zahrnuje všechny běžící služby definované v Docker Compose souboru.
-* `-u <tag_name>`: Aktualizuje všechny služby novými verzeme images.
-   - **Příklad**: `scripts/prod_deploy.sh -u`
-   - **Popis**: Použitím tohoto parametru dojde k aktualizaci všech služeb.
+* `-u <tag_name>`: Aktualizuje webovou službu a proxy na zadanou verzi.
+   - **Příklad**: `scripts/prod_deploy.sh -u my-custom-tag`
 * `-t <tag_name>`: Umožňuje specifikovat konkrétní tag image pro nasazení.
    - **Příklad**: `scripts/prod_deploy.sh -t my-custom-tag`
    - **Popis**: Tento parametr se používa pro nasazení specifické verze nebo konfigurace obrazu.
-* `-i`: Zobrazí aktuální dostupné verze k nasazení.
+* `-i`: Zobrazí až deset tagů aplikace z Docker Hubu.
 
 .. important::
 
@@ -150,14 +156,17 @@ Niže je přehled dostupných parametrů.
 * postgresql_exporter - heslo k PostgreSQL databázi, která má být monitorována
 * postgresql_exporter_uri - adresa rozhraní databáze PostgreSQL, která má být monitorována
 
-**Souhrn:** ``./scripts/prod_deploy.sh``, docker swarm-mode, <ip_adresa_stanice:8080>, existující definice docker secrets.
+**Souhrn.** Pro Docker Swarm se zadanými secrets použijte
+``./scripts/prod_deploy.sh -t <tag>`` s výchozím zdrojem GitHub Container
+Registry nebo ``./scripts/prod_deploy.sh dockerhub -t <tag>`` pro Docker Hub.
+Aplikace poběží na portu **8080**.
 
 =============================================
 Skriptované nasazení z lokálního repozitáře
 =============================================
-V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat zdrojový kód přímo v lokální repozitáři a následně spustit automatizační skript `./logs/git_prod_deploy`, který se postará o vytvoření docker obrazů lokálně na základě zdrojových souborů lokálního repozitáře.
+V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat zdrojový kód přímo v lokální repozitáři a následně spustit automatizační skript `./scripts/git_prod_deploy.sh`, který se postará o vytvoření docker obrazů lokálně na základě zdrojových souborů lokálního repozitáře.
 Tento skript loguje průběh do souboru `logs/git_prod_deploy`, vytváří lokálně docker obrazy, jež jsou následně nasazeny pomocí docker-compose, tj. **NEPOUŽÍVÁ SE swarm-mode**. Aplikace WebAMČR je v tomto případě přístupná na portu **8081**.
-Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``logs/git_prod_deploy.sh -h``.
+Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``./scripts/git_prod_deploy.sh -h``.
 
 **Předpoklady**: existující a aktualizované soubory s tzv. secrets, které obsahují nezbytné autentizační a konfigurační údaje viz `git_docker-compose.yml`, kde se předpokládá existence těch souborů:
 
@@ -199,7 +208,7 @@ Manuální nasazení pomocí docker-compose souborů
 ================================================
 Při specifických způsobech nasazení, kdy výše uvedené automatizační skripty neodpovídají požadovanému scénáři, je možné využít existujících docker-compose souborů a celou akci provést manuálně.
 
-* `./docker-compose.yml` - obsahuje služby potřebné pro běh aplikace WebAMČR, (**nutnost existence systémové proměnné IMAGE_TAG, která definuje požadovanou verzi aplikace WebAMČR, která má být stažena z docker-hub repozitáře, tj. latest, nebo v0.3.0 apod.**)
+* `./docker-compose.yml` - obsahuje služby potřebné pro běh aplikace WebAMČR. **Obrazy vybírají proměnné prostředí** ``amcr_image`` pro služby web, celery_worker a celery_beat a ``redis_image`` pro službu redis, vždy s úplným názvem obrazu včetně registru a tagu, např. ``ghcr.io/arup-cas/aiscr-webamcr:<tag>``. Proměnná ``IMAGE_TAG`` obraz nevybírá, pouze předává verzi aplikace do kontejnerů web, celery_worker a celery_beat. Hodnoty pro GitHub Container Registry i Docker Hub nastavuje podporovaný skript ``scripts/prod_deploy.sh``.
  
  * web - aplikace WebAMČR
  * sidecar - pomocná služba pro zálohování locale na lokální úložiště
@@ -213,7 +222,7 @@ Při specifických způsobech nasazení, kdy výše uvedené automatizační skr
  * kibana - grafické prostředí pro logovací službu
  * selenium - testovací služba
  
-* `./docker-compose-proxy.yml` - obsahuje služby potřebné pro běh proxy serveru NGINX, port je nastaven na 8080, služby:
+* `./docker-compose-proxy.yml` - obsahuje služby potřebné pro běh proxy serveru NGINX, port je nastaven na 8080, obraz vybírá proměnná prostředí ``proxy_image`` s úplným názvem obrazu včetně registru a tagu, služby:
  
  * proxy - proxy server NGINX
 

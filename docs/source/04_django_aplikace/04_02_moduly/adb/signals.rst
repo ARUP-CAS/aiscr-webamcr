@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: adb_save_metadata(sender, instance, created)
+.. py:function:: adb_save_metadata(sender, instance, created, **kwargs)
 
    Uloží metadata záznamu ADB do Fedory po jeho uložení.
 
@@ -15,7 +15,7 @@ Funkce
    :param created: True pokud byl záznam právě vytvořen, False při aktualizaci.
    :param kwargs: Další parametry signálu.
 
-.. py:function:: vyskovy_bod_save_metadata(sender, instance)
+.. py:function:: vyskovy_bod_save_metadata(sender, instance, **kwargs)
 
    Uloží metadata nadřazeného záznamu ADB po uložení výškového bodu.
 
@@ -23,7 +23,7 @@ Funkce
    :param instance: Ukládaná instance výškového bodu.
    :param kwargs: Další parametry signálu.
 
-.. py:function:: adb_delete_repository_container(sender, instance)
+.. py:function:: adb_delete_repository_container(sender, instance, **kwargs)
 
    Odstraní kontejner záznamu ADB z Fedory a aktualizuje metadata nadřazeného záznamu.
 
@@ -31,7 +31,7 @@ Funkce
    :param instance: Smazaná instance záznamu ADB.
    :param kwargs: Další parametry signálu.
 
-.. py:function:: vyskovy_bod_delete_repository_container(sender, instance)
+.. py:function:: vyskovy_bod_delete_repository_container(sender, instance, **kwargs)
 
    Aktualizuje metadata nadřazeného záznamu ADB po smazání výškového bodu.
 

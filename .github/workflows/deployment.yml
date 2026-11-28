@@ -41,16 +41,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DEPLOYMENT_SERVER: ${{ inputs.environment == 'DEV' && secrets.DEPLOYMENT_SERVER_DEV || inputs.environment == 'TEST' && secrets.DEPLOYMENT_SERVER_TEST }}
-      SSH_PRIVATE_KEY: ${{ inputs.environment == 'DEV' && secrets.SSH_PRIVATE_KEY_SERVER_DEV || inputs.environment == 'TEST' && secrets.SSH_PRIVATE_KEY_SERVER_TEST }}
       SSH_KNOWN_HOST: ${{ inputs.environment == 'DEV' && secrets.SSH_KNOWN_HOST_DEV || inputs.environment == 'TEST' && secrets.SSH_KNOWN_HOST_TEST }}
     
     steps:
       - name: Normalize deployment tag
         id: normalize-tag
         shell: bash
+        env:
+          RAW_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          raw_tag="${{ inputs.tag }}"
+          raw_tag="$RAW_TAG"
           if [[ ! "$raw_tag" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::Invalid deployment tag '$raw_tag'. Expected 1.2.3 or v1.2.3."
             exit 1
@@ -62,11 +63,21 @@ jobs:
           echo "git_tag=${git_tag}" >> "$GITHUB_OUTPUT"
           echo "image_tag=${image_tag}" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ steps.normalize-tag.outputs.git_tag }}
           fetch-depth: 0
-    
+
+      - name: Checkout SSH helper at workflow revision
+        id: checkout-ssh-helper
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .workflow-source
+          sparse-checkout: scripts/ssh_arguments.sh
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - name: Install OpenVPN
         run: |
           sudo apt-get update
@@ -99,31 +110,49 @@ jobs:
 
       - name: SSH connection
         shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ inputs.environment == 'DEV' && secrets.SSH_PRIVATE_KEY_SERVER_DEV || inputs.environment == 'TEST' && secrets.SSH_PRIVATE_KEY_SERVER_TEST }}
+          GIT_TAG: ${{ steps.normalize-tag.outputs.git_tag }}
+          IMAGE_TAG: ${{ steps.normalize-tag.outputs.image_tag }}
+          SERVER_ROOT: ${{ env.server_deploy_root }}
+          DEP_SCRIPT: ${{ env.dep_script }}
+          DEPLOYMENT_SOURCE: ${{ inputs.source }}
         run: |
           set -euo pipefail
-          eval $(ssh-agent -s)
-          echo "${{ env.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+          agent_environment="$(ssh-agent -s)"
+          eval "$agent_environment" > /dev/null
+          trap 'ssh-agent -k > /dev/null 2>&1 || true' EXIT
+          if ! printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null 2>&1; then
+            echo "::error::Unable to load the deployment SSH key"
+            exit 1
+          fi
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ env.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KNOWN_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           for i in {1..10}; do
-            if ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then break; fi
+            if ping -c 1 "$DEPLOYMENT_SERVER"; then break; fi
             sleep 3
           done
-          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
-          ssh amcr@${{ env.DEPLOYMENT_SERVER }} "sudo bash -s" << EOF
+          source "$GITHUB_WORKSPACE/.workflow-source/scripts/ssh_arguments.sh"
+          remote_command="$(ssh_command "$GIT_TAG" "$IMAGE_TAG" "$SERVER_ROOT" "$DEP_SCRIPT" "$DEPLOYMENT_SOURCE")"
+          ssh "amcr@$DEPLOYMENT_SERVER" "$remote_command" <<'EOF'
           set -euo pipefail
-          cd ${{ env.server_deploy_root }}          
+          GIT_TAG="$1"
+          IMAGE_TAG="$2"
+          SERVER_ROOT="$3"
+          DEP_SCRIPT="$4"
+          DEPLOYMENT_SOURCE="$5"
+          cd "$SERVER_ROOT"
           git fetch --all --tags --force          
-          if ! git rev-parse "refs/tags/${{ steps.normalize-tag.outputs.git_tag }}" >/dev/null 2>&1; then
-            echo "ERROR: Tag ${{ steps.normalize-tag.outputs.git_tag }} does not exist"
+          if ! git rev-parse "refs/tags/$GIT_TAG" >/dev/null 2>&1; then
+            echo "ERROR: Tag $GIT_TAG does not exist"
             git tag -l
             exit 1
           fi          
-          git checkout -f "refs/tags/${{ steps.normalize-tag.outputs.git_tag }}"          
-          chmod +x ${{ env.dep_script }}
-          ./${{ env.dep_script }} ${{ steps.normalize-tag.outputs.image_tag }} ${{ env.server_deploy_root }} ${{ inputs.source }}
+          git checkout -f "refs/tags/$GIT_TAG"
+          chmod +x "$DEP_SCRIPT"
+          "./$DEP_SCRIPT" "$IMAGE_TAG" "$SERVER_ROOT" "$DEPLOYMENT_SOURCE"
           EOF
 
       - name: Disconnect VPN

@@ -14,7 +14,7 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, výsledek volání ``FedoraTransaction()``.
 
-.. py:function:: save_ident_cely(sender, instance)
+.. py:function:: save_ident_cely(sender, instance, **kwargs)
 
    Aktualizuje identifikátor hesla po uložení.
 
@@ -24,7 +24,7 @@ Funkce
 
    :raises Exception: Vyvolá se při splnění podmínky ``not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, 'heslar')``.
 
-.. py:function:: save_metadata_heslar(sender, instance)
+.. py:function:: save_metadata_heslar(sender, instance, **kwargs)
 
    Vytváří metadata pro heslo po uložení.
 
@@ -32,7 +32,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_katastr(sender, instance)
+.. py:function:: save_metadata_katastr(sender, instance, **kwargs)
 
    Funkce pro uložení metadat katastru.
 
@@ -40,7 +40,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_kraj(sender, instance)
+.. py:function:: save_metadata_kraj(sender, instance, **kwargs)
 
    Funkce pro uložení metadat kraje.
 
@@ -48,7 +48,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_okres(sender, instance)
+.. py:function:: save_metadata_okres(sender, instance, **kwargs)
 
    Uloží metadata okres.
 
@@ -56,7 +56,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_heslar_hierarchie(sender, instance, created)
+.. py:function:: save_metadata_heslar_hierarchie(sender, instance, created, **kwargs)
 
    Funkce pro uložení metadat heslář - hierarchie.
 
@@ -65,7 +65,7 @@ Funkce
    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_hierarchie``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_heslar_datace(sender, instance, created)
+.. py:function:: save_metadata_heslar_datace(sender, instance, created, **kwargs)
 
    Funkce pro uložení metadat heslář - hierarchie.
 
@@ -74,7 +74,7 @@ Funkce
    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_datace``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_heslar_odkaz(sender, instance, created)
+.. py:function:: save_metadata_heslar_odkaz(sender, instance, created, **kwargs)
 
    Funkce pro uložení metadat heslář - odkaz.
 
@@ -83,7 +83,7 @@ Funkce
    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_odkaz``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: heslar_delete_repository_container(sender, instance)
+.. py:function:: heslar_delete_repository_container(sender, instance, **kwargs)
 
    Provádí operaci heslar delete repository container.
 
@@ -91,7 +91,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: ruian_katastr_delete_repository_container(sender, instance)
+.. py:function:: ruian_katastr_delete_repository_container(sender, instance, **kwargs)
 
    Provádí operaci ruian katastr delete repository container.
 
@@ -104,7 +104,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: ruian_kraj_delete_repository_container(sender, instance)
+.. py:function:: ruian_kraj_delete_repository_container(sender, instance, **kwargs)
 
    Provádí operaci ruian kraj delete repository container.
 
@@ -115,7 +115,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: ruian_okres_delete_repository_container(sender, instance)
+.. py:function:: ruian_okres_delete_repository_container(sender, instance, **kwargs)
 
    Provádí operaci ruian okres delete repository container.
 
@@ -126,7 +126,7 @@ Funkce
    :param instance: Instance modelu, která byla uložena.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: delete_uppdate_related_heslar_hierarchie(sender, instance)
+.. py:function:: delete_uppdate_related_heslar_hierarchie(sender, instance, **kwargs)
 
    Funkce pro uložení metadat navázaného hesláře při smazání heslář - hierarchie.
 
@@ -134,7 +134,7 @@ Funkce
    :param instance: Instance modelu, která byla uložena.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: delete_uppdate_related_heslar_odkaz(sender, instance)
+.. py:function:: delete_uppdate_related_heslar_odkaz(sender, instance, **kwargs)
 
    Funkce pro uložení metadat navázaného hesláře při smazání heslář - odkaz.
 
@@ -142,7 +142,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: delete_uppdate_related_heslar_datace(sender, instance)
+.. py:function:: delete_uppdate_related_heslar_datace(sender, instance, **kwargs)
 
    Funkce pro uložení metadat navázaného hesláře při smazání heslář - datace.
 

@@ -6,7 +6,7 @@ Definice signálů.
 Funkce
 ------
 
-.. py:function:: save_lokalita_snapshot(sender, instance)
+.. py:function:: save_lokalita_snapshot(sender, instance, **kwargs)
 
    Uloží lokalita snapshot.
 
@@ -14,7 +14,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``archeologicky_zaznam``, ``set_snapshots``.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_lokalita_snapshot``.
 
-.. py:function:: save_lokalita_redis_snapshot(sender, instance)
+.. py:function:: save_lokalita_redis_snapshot(sender, instance, **kwargs)
 
    Uloží lokalita redis snapshot.
 
@@ -22,7 +22,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``check_if_task_queued()``, pracuje se s atributy ``archeologicky_zaznam``, ``pk``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_lokalita_redis_snapshot``.
 
-.. py:function:: delete_lokalita(sender, instance)
+.. py:function:: delete_lokalita(sender, instance, **kwargs)
 
    Odstraní lokalita. v aplikaci.
 

@@ -64,7 +64,7 @@ FEDORA_DB_PASS = get_test_secret("TEST_FEDORA_DB_PASS")
 FEDORA_DB_NAME = get_test_secret("TEST_FEDORA_DB_NAME")
 FEDORA_DB_TEMPLATE_NAME = get_test_secret("TEST_FEDORA_DB_TEMPLATE_NAME")
 
-TEST_SCREENSHOT_PATH = get_test_secret("TEST_SCREENSHOT_PATH")
+TEST_SCREENSHOT_PATH = os.environ.get("AMCR_TEST_OUTPUT_DIR") or get_test_secret("TEST_SCREENSHOT_PATH")
 # heslar/hesla_dynamicka.py načítá pk konstant (hesla, ADMIN_USER...) při importu, ještě před přepnutím
 # na testovací DB. Proto se při startu čte ze vzorové DB (stejná pk jako klon), ne z klonu z minulého běhu,
 # který po obnově vzorové DB může mít jiná pk nebo nemusí vůbec existovat.

@@ -10,6 +10,7 @@ Tato sekce popisuje závislosti a knihovny používané v aplikaci WebAMČR.
    python_knihovny
    javascript_knihovny
    docker_images
+   github_actions
    licence
    aktualizace
 

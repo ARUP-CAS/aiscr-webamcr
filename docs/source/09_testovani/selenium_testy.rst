@@ -3,31 +3,43 @@
 Automatické testy
 =================
 
-Ke spuštění testů slouží vývojový server (.24). Před spuštěním testů je nutné nasadit aktuální nebo požadovanou verzi aplikace WebAMČR.
-To se provede pomocí skriptu ``./scripts/test_deploy.sh``. Skript se při spuštění také zeptá, zda má stáhnout aktuální verzi WebAMČR origin/dev.
-Po nasazení verze je potřeba cca 5 minut počkat než se WebAMČR rozběhne
-Testy je možné spustit následujícím příkazem 
+Ke spuštění testů slouží vývojový server (.24). Před spuštěním testů
+nasaďte požadovanou verzi WebAMČR pomocí ``./scripts/test_deploy.sh``.
+Při interaktivním nasazení se skript zeptá, zda má pracovní kopii
+aktualizovat podle ``origin/main``. Příkaz ``./scripts/test_deploy.sh -h``
+zobrazí nápovědu bez přístupu k Dockeru a bez vytváření logů.
+Po nasazení vyčkejte přibližně pět minut, než se WebAMČR rozběhne.
 
-::
+.. code-block:: bash
 
-./scripts/start_selenium_tests.sh
+   ./scripts/start_selenium_tests.sh
 
-skript má následující parametry:
- * `-f`          Provede neúspěšné testy v tabulce 
- * `-a`          Provede všechny testy (výchozí)
- * `-t cislo`    Provede test zadaneho čísla
- * `-b`          Spustí všechny testy na pozadí, výstup se uloží do /opt/selenium_test/test.log a run.log
- * `-h`          Zobrazí nápovědu
-  
-Výsledky testů se uloží do /opt/selenium_test/results.xlsx. 
+Skript podporuje tyto volby.
 
-V tabulce se ukládá:
- * `index` Pořadové číslo testu
- * `date` Datum a čas provedení testu
- * `test name` Jméno testu
- * `result` Výsledek testu (OK, Fail nebo Error)
+* ``-a`` spustí všechny testy (výchozí volba).
+* ``-f`` spustí neúspěšné testy podle výběrové tabulky.
+* ``-t <číslo>`` spustí test se zadaným číslem.
+* ``-b`` spustí všechny testy na pozadí. Spouštěcí skript přidává výstup
+  do ``/opt/selenium_test/run.log`` a nečeká na dokončení běhu.
+* ``-h`` zobrazí nápovědu.
 
-V  adresáři ``/opt/selenium_test/`` se ukládají také screenshoty každého testu.
+Výsledky posledního běhu jsou na serveru v ``/opt/selenium_test/current/``.
+Na začátku každého běhu se tento adresář přesune do
+``/opt/selenium_test/previous/`` a starší výsledky se smažou. Výstup běžících
+testů se zapisuje do ``test_output.log``. Tabulka výsledků ``results.xlsx``
+a snímky obrazovky se ukládají do stejného adresáře, pokud je testy vytvoří.
+Kořenová tabulka ``/opt/selenium_test/results.xlsx`` průběžně uchovává
+výsledky pro výběr testů v dalších bězích.
+
+Nespouštějte testy na serveru ručně, zatímco běží testy z Github Actions.
+Oba běhy by zapisovaly do stejného adresáře ``current/``.
+
+Tabulka výsledků obsahuje tyto sloupce.
+
+* ``index`` označuje pořadové číslo testu.
+* ``date`` uvádí datum a čas provedení.
+* ``test name`` obsahuje název testu.
+* ``result`` uvádí stav ``OK``, ``FAIL`` nebo ``ERROR``.
 
 **Pozn.** Pokud uživatel přeruší probíhající test, je potřeba před spuštěním nového testu počkat několik minut, než se ukonči Selenium.
 

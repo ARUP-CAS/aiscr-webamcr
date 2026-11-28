@@ -108,10 +108,15 @@ Třídy
    :type homepage: str
 
 
+.. py:class:: WorkflowAction
+
+   Ověřený tvar externího odkazu a jeho umístění ve zdroji workflow.
+
+
 Funkce
 ------
 
-.. py:function:: vprint()
+.. py:function:: vprint(*args, **kwargs)
 
    Vypíše zprávu pouze ve verbose režimu.
 
@@ -297,6 +302,17 @@ Funkce
 
    :param source_file: Cesta ke zdrojovému souboru.
    :return: tuple: (docstring modulu nebo None, třídy, funkce); třídy a funkce jsou seznamy slovníků.
+
+.. py:function:: _signature_parameters(arguments)
+
+   Vrátí parametry funkce v pořadí signatury bez výchozích hodnot.
+
+   Zachová pouze poziční parametry s oddělovačem ``/``, ``*args``, holou
+   ``*`` před pouze pojmenovanými parametry bez ``*args`` a ``**kwargs``,
+   aby direktiva ``py:function`` odpovídala skutečné signatuře.
+
+   :param arguments: Uzel ``ast.arguments`` dokumentované funkce.
+   :return: Položky signatury v pořadí zdrojového kódu.
 
 .. py:function:: _looks_like_sphinx_fieldlist(docstring)
 
@@ -771,6 +787,45 @@ Funkce
    :param begin_marker: Značka začátku bloku (výchozí blok Node.js knihoven).
    :param end_marker: Značka konce bloku.
    :return: Obsah po vložení bloku, jinak ``block`` předřazený před ``content``.
+
+.. py:function:: mapping_value(node, key)
+
+   Vrátí položku YAML mapy bez převodu klíče ``on`` na boolean.
+
+   :param node: Uzel mapy nebo jiný YAML uzel.
+   :param key: Hledaný název položky.
+   :return: Uzel hodnoty, nebo ``None`` při chybějící položce.
+
+.. py:function:: action_nodes(document)
+
+   Vybere volání akcí a reusable workflows, nikoli text shellu.
+
+   :param document: Kořen parsovaného workflow.
+   :return: Iterátor uzlů ``uses`` na úrovni jobů a jejich kroků.
+
+.. py:function:: parse_workflow_actions(text, filename)
+
+   Načte externí akce s úplným SHA a skutečným komentářem vydání.
+
+   :param text: Úplný zdroj workflow v YAML.
+   :param filename: Název zdroje uváděný v záznamech a diagnostice.
+   :return: Odkazy v pořadí zdroje; lokální volání jsou vynechána.
+   :raises ValueError: Při neplatném YAML, mutabilním odkazu či chybějící verzi.
+
+.. py:function:: action_reference_errors(text, filename)
+
+   Vrátí diagnostiku stejného parseru, který používá inventář.
+
+   :param text: Úplný zdroj workflow v YAML.
+   :param filename: Název uváděný v diagnostice spolu s číslem řádku.
+   :return: Seznam chyb; existenci SHA v upstream repozitáři neověřuje.
+
+.. py:function:: generate_github_actions_rst()
+
+   Obnoví inventář GitHub Actions ze skutečných YAML odkazů bez síťových volání.
+
+   :return: True po úspěšném zpracování včetně prázdného inventáře.
+   :raises ValueError: Při neplatném workflow nebo odkazu; dokumentaci nepřepíše.
 
 .. py:function:: generate_js_libraries_rst()
 

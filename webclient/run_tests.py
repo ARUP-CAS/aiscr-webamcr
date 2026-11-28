@@ -1,161 +1,333 @@
+"""Spustí zvolené testy a ověří jejich skutečný výsledek před zveřejněním."""
+
 import argparse
 import logging
 import os
 import re
 import subprocess
-from io import StringIO
-from threading import Thread
-
-import logstash
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--fail", help="provede neúspěšné testy", action="store_true")
-parser.add_argument("-a", "--all", help="provede všechny testy", action="store_true")
-parser.add_argument("-t", "--test", type=int, help="provede test daného čísla")
-parser.add_argument("-s", "--soubor", help="uloží výstup do souboru", action="store_true")
-args = parser.parse_args()
+import sys
+from io import BytesIO
+from pathlib import Path
+from threading import Lock, Thread
 
 SETTINGS = "webclient.settings.dev_test"
-
 logger = logging.getLogger("webamcr.test_runner")
-# logger.setLevel(logging.INFO)
-logger.addHandler(logstash.TCPLogstashHandler(host="logstash", version=1, tags="dev_test"))
-logger.info("amcr_test_runner.start")
+# DEV spouští jen Selenium testy: každý zapíše řádek tabulky, ze které vybírají běhy
+# neúspěšných a číslovaných testů. Ostatní testy patří do samostatného Django CI.
+DEFAULT_TESTS = [
+    "core.tests.test_selenium",
+    "core.tests.test_selenium_distribuce",
+    "projekt.tests.test_selenium",
+    "dokument.tests.test_selenium",
+    "lokalita.tests.test_selenium",
+    "arch_z.tests.test_selenium",
+    "pas.tests.test_selenium",
+    "oznameni.tests.test_selenium",
+    "ez.tests.test_selenium",
+    "uzivatel.tests.test_selenium",
+    "heslar.tests.test_selenium",
+]
 
-if args.fail is True:
+
+def configure_logging():
+    """Zachová provozní značky běhu odesílané do Logstash."""
+    import logstash
+
+    if not logger.handlers:
+        logger.addHandler(logstash.TCPLogstashHandler(host="logstash", version=1, tags="dev_test"))
+
+
+def select_tests(mode, number, spreadsheet):
+    """Vybere testy z předchozí tabulky; prázdný výběr připouští jen režim neúspěšných.
+
+    :param mode: Režim vsechny, neuspesne nebo konkretni.
+    :param number: Požadované číslo testu nebo prázdný řetězec.
+    :param spreadsheet: Předchozí výsledky používané pouze jako vstup výběru.
+    :return: Seznam úplných názvů vybraných testů.
+    :raises ValueError: Při chybějící, neplatné nebo nevyhovující tabulce.
+    """
+    if mode == "vsechny":
+        return list(DEFAULT_TESTS)
     import pandas
 
-    from webclient.settings.dev_test import TEST_SCREENSHOT_PATH
+    try:
+        data = pandas.read_excel(spreadsheet)
+        if list(data.columns) != ["index", "date", "test name", "result"]:
+            raise ValueError("Neplatné sloupce výsledků")
+        selected = []
+        indexes, names = set(), set()
+        for index, _, name, result in data.itertuples(index=False, name=None):
+            index_value = int(index)
+            if isinstance(index, bool) or index_value <= 0 or index_value != index or index_value in indexes:
+                raise ValueError("Neplatné nebo duplicitní číslo testu")
+            indexes.add(index_value)
+            empty_name = pandas.isna(name) or name == ""
+            empty_result = pandas.isna(result) or result == ""
+            if empty_name and empty_result:
+                continue
+            if result not in ("OK", "FAIL", "ERROR") or not isinstance(name, str):
+                raise ValueError("Neplatný řádek výsledků")
+            # Názvy Selenium testů obsahují i česká písmena; stačí platný identifikátor v každé části.
+            parts = name.split(".")
+            if len(parts) < 2 or not all(part.isidentifier() for part in parts):
+                raise ValueError("Neplatný název testu")
+            if name in names:
+                raise ValueError("Duplicitní název testu")
+            names.add(name)
+            if mode == "konkretni" and index != int(number):
+                continue
+            if mode == "neuspesne" and result == "OK":
+                continue
+            selected.append(name)
+        if mode == "konkretni" and len(selected) != 1:
+            raise ValueError(f"Test {number} nebyl jednoznačně nalezen")
+        return selected
+    except (OSError, ValueError, TypeError, ImportError, OverflowError) as exc:
+        raise ValueError(f"Nelze vybrat testy z předchozích výsledků: {exc}") from exc
 
-    if os.path.isfile(f"{TEST_SCREENSHOT_PATH}results.xlsx"):
-        data = pandas.read_excel(f"{TEST_SCREENSHOT_PATH}results.xlsx")
-        d = data.values.tolist()
-        test_list = []
-        for line in d:
-            if line[3] != "OK" and isinstance(line[3], float) is not True:
-                test_list.append(line[2])
-        if len(test_list) == 0:
-            print("Všechny testy OK")
-            exit()
 
-    else:
-        print("Nenalezn soubor s výsledky")
-        exit()
-elif args.test is not None:
+def parse_result(output, returncode):
+    """Ověří úplný souhrn unittest proti skutečnému návratovému kódu.
+
+    :param output: Úplný zachycený výstup obou proudů.
+    :param returncode: Návratový kód testovacího procesu.
+    :return: Úplné počty skutečně úspěšných, neúspěšných, přeskočených a očekávaně selhaných testů.
+    :raises ValueError: Při neúplném, nulovém nebo rozporném výsledku.
+    """
+    ran = re.findall(r"^Ran ([0-9]+) tests? in [^\r\n]+\r?$", output, re.MULTILINE)
+    statuses = re.findall(r"^(OK|FAILED)(?: \(([^\r\n]*)\))?\r?$", output, re.MULTILINE)
+    if len(ran) != 1 or len(statuses) != 1 or int(ran[0]) <= 0:
+        raise ValueError("Chybí jednoznačný úplný výsledek provedených testů")
+    status, details = statuses[0]
+    counters = {}
+    for entry in details.split(", ") if details else []:
+        match = re.fullmatch(r"(failures|errors|skipped|expected failures|unexpected successes)=([0-9]+)", entry)
+        if not match or match[1] in counters:
+            raise ValueError("Neplatný souhrn testů")
+        counters[match[1]] = int(match[2])
+    failed = sum(counters.get(key, 0) for key in ("failures", "errors", "unexpected successes"))
+    total = int(ran[0])
+    if sum(counters.values()) > total or (status == "OK") != (failed == 0):
+        raise ValueError("Rozporné počty testů")
+    if (returncode == 0) != (status == "OK") or returncode not in (0, 1):
+        raise ValueError("Návratový kód neodpovídá úplnému výsledku testů")
+    skipped, expected = counters.get("skipped", 0), counters.get("expected failures", 0)
+    if total - skipped <= 0:
+        raise ValueError("Nebylo provedeno žádné tělo testu")
+    return dict(
+        total=total,
+        passed=total - failed - skipped - expected,
+        failed=failed,
+        skipped=skipped,
+        expected_failures=expected,
+    )
+
+
+def execute_tests(labels, directory, file_logging=False):
+    """Zachytí oba proudy až do konce a teprve potom vyhodnotí proces.
+
+    :param labels: Úplné názvy spouštěných testů.
+    :param directory: Adresář aktuálního pokusu pro diagnostiku.
+    :param file_logging: Zapisovat průběh jen do souboru místo konzole.
+    :return: Návratový kód a úplný výstup.
+    :raises RuntimeError: Pokud některý čtecí proud selže.
+    """
+    command = [sys.executable, "manage.py", "test", *labels, f"--settings={SETTINGS}", "--noinput", "--verbosity=2"]
+    parts, errors = [], []
+    lock = Lock()
+    with (directory / "test_output.log").open("w", encoding="utf-8") as log:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        def read_stream(stream):
+            """Dočte proud a předá chybu hlavnímu vláknu.
+
+            :param stream: Výstupní proud testovacího procesu.
+            """
+            try:
+                with stream:
+                    for line in stream:
+                        with lock:
+                            parts.append(line)
+                            log.write(line)
+                            log.flush()
+                            if not file_logging:
+                                print(line, end="", flush=True)
+            except Exception as exc:
+                errors.append(exc)
+                try:
+                    process.terminate()
+                except OSError:
+                    pass
+
+        readers = [Thread(target=read_stream, args=(stream,)) for stream in (process.stdout, process.stderr)]
+        for reader in readers:
+            reader.start()
+        try:
+            returncode = process.wait()
+        except BaseException:
+            process.terminate()
+            process.wait()
+            raise
+        finally:
+            for reader in readers:
+                reader.join()
+    if errors:
+        raise RuntimeError("Zachycení výstupu testů selhalo") from errors[0]
+    return returncode, "".join(parts)
+
+
+def selection_content(root, directory, mode, failed):
+    """Připraví kompatibilní tabulku bez ztráty dříve známých testů.
+
+    Tabulka pokusu musí mít tolik řádků FAIL a ERROR, kolik neúspěšných testů
+    hlásí unittest. Jinak by neúspěšný test bez řádku příští běh neúspěšných
+    testů nevybral.
+
+    :param root: Kořen předchozího vstupu výběru.
+    :param directory: Výstup aktuálního pokusu.
+    :param mode: Režim právě dokončeného výběru.
+    :param failed: Počet neúspěšných testů ze souhrnu unittest.
+    :return: Bajty tabulky nebo None, pokud testy tabulku nevytvářejí.
+    :raises ValueError: Při neplatné tabulce nebo počtu jejích neúspěšných řádků jiném než ``failed``.
+    """
+    current = directory / "results.xlsx"
+    if not current.exists():
+        return None
+    unsuccessful = len(select_tests("neuspesne", "", current))
+    if unsuccessful != failed:
+        raise ValueError(f"Neúspěšné testy v tabulce výsledků ({unsuccessful}) neodpovídají souhrnu testů ({failed})")
+    if mode == "vsechny":
+        return current.read_bytes()
     import pandas
 
-    from webclient.settings.dev_test import TEST_SCREENSHOT_PATH
-
-    if os.path.isfile(f"{TEST_SCREENSHOT_PATH}results.xlsx"):
-        data = pandas.read_excel(f"{TEST_SCREENSHOT_PATH}results.xlsx")
-        d = data.values.tolist()
-        test_list = []
-        for line in d:
-            if line[0] == args.test:
-                test_list.append(line[2])
-                break
-        if len(test_list) == 0:
-            print(f"Test {args.test} nenalezen.")
-            exit()
-else:
-    test_list = [
-        "core.tests.test_selenium",
-        "core.tests.test_selenium_distribuce",
-        "projekt.tests.test_selenium",
-        "dokument.tests.test_selenium",
-        "lokalita.tests.test_selenium",
-        "arch_z.tests.test_selenium",
-        "pas.tests.test_selenium",
-        "oznameni.tests.test_selenium",
-        "ez.tests.test_selenium",
-        "uzivatel.tests.test_selenium",
-        "heslar.tests.test_selenium",
-        "core.tests.test_fedora_integration_child_walk",
-        "core.tests.test_fedora_integration_paradata",
-        "core.tests.test_organization_ownership",
-        "core.tests.test_mappers.test_organizace_mapper",
-        "cron.tests.test_run_data_import_organizace",
-        "heslar.tests.test_organization_import_guard",
-    ]
+    previous = pandas.read_excel(root / "results.xlsx")
+    updated = pandas.read_excel(current)
+    rows = {}
+    for table in (previous, updated):
+        for row in table.itertuples(index=False, name=None):
+            if isinstance(row[2], str) and row[2]:
+                rows[int(row[0])] = row
+    output = BytesIO()
+    pandas.DataFrame([rows[key] for key in sorted(rows)], columns=previous.columns).to_excel(output, index=False)
+    return output.getvalue()
 
 
-output_buffer = StringIO()
+def describe_failure(exc, results_root):
+    """Popíše výjimku typem a zprávou bez nakonfigurovaného kořene výsledků.
 
+    Kořen se ve zprávě nahradí značkou ``<results-root>`` v zadaném,
+    absolutním i vyřešeném tvaru, každý s oběma oddělovači cest. Delší tvary
+    se nahrazují dříve, aby z nich nezůstala část kratšího tvaru.
 
-def reader_and_capture(pipe):
+    :param exc: Zachycená výjimka.
+    :param results_root: Nakonfigurovaný kořen výsledků, nebo None, pokud ještě není znám.
+    :return: Typ a očištěná zpráva výjimky, ještě nesjednocená na jeden řádek.
     """
-    Provádí operaci reader and capture.
+    text = str(exc)
+    if results_root is not None:
+        forms = {str(results_root), os.path.abspath(results_root)}
+        try:
+            forms.add(str(Path(results_root).resolve()))
+        except (OSError, RuntimeError):
+            pass
+        forms |= {form.replace("\\", "/") for form in forms}
+        for form in sorted({form.rstrip("/\\") or form for form in forms if form}, key=len, reverse=True):
+            text = text.replace(form, "<results-root>")
+    return f"{type(exc).__name__}: {text}" if text else type(exc).__name__
 
-    :param pipe: Stream (pipe), ze kterého se průběžně čte výstup podprocesu.
+
+def main(argv=None):
+    """Vybere testy a zveřejní výsledek pouze po ověření dokončeného pokusu.
+
+    Při chybě vypíše a zaznamená fázi, typ výjimky a její zprávu bez
+    nakonfigurovaného kořene výsledků, sjednocené na jeden omezený řádek.
+
+    :param argv: Volitelné argumenty příkazové řádky.
+    :return: Nula při úspěchu či výslovném no-op, jinak jedna.
     """
-    while True:
-        line = pipe.readline()
-        if not line:
-            break
-        print(line, end="")
-        output_buffer.write(line)
+    from test_run_results import attempt_identity, bounded_message, prepare_current, publish_outcome, write_summary
+
+    parser = argparse.ArgumentParser()
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("-f", "--fail", action="store_true", help="provede neúspěšné testy")
+    modes.add_argument("-a", "--all", action="store_true", help="provede všechny testy")
+    modes.add_argument("-t", "--test", type=int, help="provede test daného čísla")
+    parser.add_argument("-s", "--soubor", action="store_true", help="uloží výstup do souboru")
+    parser.add_argument("--results-root", default=os.environ.get("AMCR_TEST_RESULTS_ROOT"))
+    parser.add_argument("--attempt-id", default=os.environ.get("AMCR_TEST_ATTEMPT_ID"))
+    args = parser.parse_args(argv)
+    mode = "neuspesne" if args.fail else "konkretni" if args.test is not None else "vsechny"
+    number = str(args.test) if args.test is not None else ""
+    directory = None
+    status = 1
+    previous_output = os.environ.get("AMCR_TEST_OUTPUT_DIR")
+    stage = "initialization"
+    try:
+        configure_logging()
+        logger.info("amcr_test_runner.start")
+        stage = "configuration"
+        if args.results_root is None:
+            from webclient.settings.dev_test import TEST_SCREENSHOT_PATH
+
+            args.results_root = TEST_SCREENSHOT_PATH
+        root = Path(args.results_root)
+        stage = "attempt"
+        identity = attempt_identity(args.attempt_id)
+        directory = prepare_current(root)
+        print(f"Pokus testů: {identity}")
+        stage = "selection"
+        labels = select_tests(mode, number, root / "results.xlsx")
+        if not labels:
+            stage = "publication"
+            write_summary(directory, 0, 0)
+            publish_outcome(directory, identity, mode, number, "no-tests", 0)
+            print("Žádné neúspěšné testy k opakování")
+            status = 0
+        else:
+            os.environ["AMCR_TEST_OUTPUT_DIR"] = str(directory) + os.sep
+            logger.info("amcr_test_runner.start_test")
+            stage = "migration"
+            migration = subprocess.run([sys.executable, "manage.py", "migrate", f"--settings={SETTINGS}"], check=False)
+            if migration.returncode:
+                raise RuntimeError("Migrace testovací databáze selhala")
+            stage = "execution"
+            returncode, output = execute_tests(labels, directory, args.soubor)
+            stage = "summary"
+            counts = parse_result(output, returncode)
+            passed, failed = counts["passed"], counts["failed"]
+            write_summary(directory, passed, failed)
+            spreadsheet_required = any("test_selenium" in label for label in labels)
+            stage = "publication"
+            publish_outcome(
+                directory,
+                identity,
+                mode,
+                number,
+                "completed",
+                returncode,
+                spreadsheet_required,
+                selection_data=selection_content(root, directory, mode, failed),
+                counts=counts,
+            )
+            status = returncode
+    except Exception as exc:
+        message = bounded_message(f"Chyba testovacího běhu ({stage}): {describe_failure(exc, args.results_root)}")
+        print(message, file=sys.stderr)
+        if directory is not None:
+            try:
+                publish_outcome(directory, identity, mode, number, "error", 1, message=message)
+            except Exception as publication_exc:
+                cause = describe_failure(publication_exc, args.results_root)
+                print(bounded_message(f"Zveřejnění chybového výsledku selhalo (publication): {cause}"), file=sys.stderr)
+        status = 1
+    finally:
+        logger.info("amcr_test_runner.end")
+        if previous_output is None:
+            os.environ.pop("AMCR_TEST_OUTPUT_DIR", None)
+        else:
+            os.environ["AMCR_TEST_OUTPUT_DIR"] = previous_output
+    return status
 
 
-def filelog(pipe):
-    """
-    Provádí operaci filelog.
-
-    :param pipe: Stream (pipe), ze kterého se průběžně čte výstup podprocesu.
-    """
-    with open("/vol/web/selenium_test/test.log", "a") as file:
-        while True:
-            line = pipe.read(1)
-            file.write(line)
-            if not line:
-                break
-
-
-logger.info("amcr_test_runner.start_test")
-# Migruje se vzorová DB přes alias default (v dev_test ukazuje na TEST_DATABASE_NAME stejně jako test_db).
-# Datové migrace (RunPython) se bez .using() dotazují přes default; při migraci přes test_db by šly druhým
-# spojením do téže DB a čekaly by na zámek ALTER TABLE z vlastní migrace až do statement_timeout.
-subprocess.run(f"python3 manage.py migrate --settings={SETTINGS}", text=True, shell=True)
-
-process = subprocess.Popen(
-    f"python3 manage.py test {' '.join(test_list)} --settings={SETTINGS} --noinput --verbosity=2",
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True,
-    shell=True,
-)
-if args.soubor is True:
-    t1 = Thread(target=filelog, args=[process.stdout]).start()
-    t2 = Thread(target=filelog, args=[process.stderr]).start()
-else:
-    t1 = Thread(target=reader_and_capture, args=[process.stdout]).start()
-    t2 = Thread(target=reader_and_capture, args=[process.stderr]).start()
-process.wait()
-
-logger.info("amcr_test_runner.end")
-
-stdout_text = output_buffer.getvalue()
-
-# Zápis do logu
-with open("/vol/web/selenium_test/test_output.log", "w") as f:
-    f.write(stdout_text)
-# Parsování z výstupu
-ran_match = re.search(r"Ran (\d+) tests?", stdout_text)
-failures_match = re.search(r"failures=(\d+)", stdout_text)
-errors_match = re.search(r"errors=(\d+)", stdout_text)
-ok_match = re.search(r"\nOK\n", stdout_text)
-
-ran = int(ran_match.group(1)) if ran_match else 0
-failures = int(failures_match.group(1)) if failures_match else 0
-errors = int(errors_match.group(1)) if errors_match else 0
-passed = ran - failures - errors if ran > 0 else 0
-
-# Výstup do souboru pro GitHub Actions
-with open("/vol/web/selenium_test/test_summary.env", "w") as f:
-    f.write(f"PASSED={passed}\n")
-    f.write(f"FAILED={failures + errors}\n")
-
-# Výsledek
-if failures + errors > 0:
-    exit(1)
-else:
-    exit(0)
+if __name__ == "__main__":
+    sys.exit(main())

@@ -10,7 +10,7 @@ Funkce
 
    Zneplatní cache pro modely Akce a Projekt po změně archeologického záznamu.
 
-.. py:function:: create_arch_z_vazby(sender, instance)
+.. py:function:: create_arch_z_vazby(sender, instance, **kwargs)
 
    Metoda pro vytvoření historických vazeb arch záznamu.
 
@@ -20,7 +20,7 @@ Funkce
    :param instance: Instance archeologického záznamu; pokud nemá primární klíč, vytváří se nová vazba na historii.
    :param kwargs: Dodatečné argumenty předané signálem.
 
-.. py:function:: create_arch_z_metadata(sender, instance)
+.. py:function:: create_arch_z_metadata(sender, instance, **kwargs)
 
    Funkce pro aktualizaci metadat archeologického záznamu.
 
@@ -28,7 +28,7 @@ Funkce
    :param instance: Instance archeologického záznamu; při změně přístupnosti nebo stavu se aktualizují metadata navázaných PIAN a ADB záznamů.
    :param kwargs: Dodatečné argumenty předané signálem.
 
-.. py:function:: update_akce_snapshot(sender, instance)
+.. py:function:: update_akce_snapshot(sender, instance, **kwargs)
 
    Aktualizuje akce snapshot.
 
@@ -36,7 +36,7 @@ Funkce
    :param instance: Instance akce; spouští aktualizaci Redis snapshotu a při změně projektu aktualizuje metadata projektu.
    :param kwargs: Dodatečné argumenty předané signálem.
 
-.. py:function:: create_externi_odkaz_metadata(sender, instance)
+.. py:function:: create_externi_odkaz_metadata(sender, instance, **kwargs)
 
    Funkce pro aktualizaci metadat externího odkazu.
 
@@ -44,7 +44,7 @@ Funkce
    :param instance: Instance externího odkazu; aktualizuje metadata navázaného archeologického záznamu a externího zdroje.
    :param kwargs: Dodatečné argumenty předané signálem.
 
-.. py:function:: delete_arch_z_repository_container_and_connections(sender, instance)
+.. py:function:: delete_arch_z_repository_container_and_connections(sender, instance, **kwargs)
 
    Funkce pro aktualizaci metadat archeologického záznamu.
 
@@ -52,7 +52,7 @@ Funkce
    :param instance: Instance archeologického záznamu; před smazáním odstraňuje komponenty a jejich vazby dokumentačních jednotek.
    :param kwargs: Dodatečné argumenty předané signálem.
 
-.. py:function:: delete_arch_z_repository_update_connected_records(sender, instance)
+.. py:function:: delete_arch_z_repository_update_connected_records(sender, instance, **kwargs)
 
    Po smazání archeologického záznamu aktualizuje metadata projektu a zaznamená smazání v repozitáři.
 
@@ -64,7 +64,7 @@ Funkce
    :param instance: Instance smazaného archeologického záznamu; aktualizuje metadata navázaného projektu a zaznamenává smazání v repozitáři.
    :param kwargs: Dodatečné argumenty předané signálem.
 
-.. py:function:: delete_externi_odkaz_repository_container(sender, instance)
+.. py:function:: delete_externi_odkaz_repository_container(sender, instance, **kwargs)
 
    Funkce pro aktualizaci metadat archeologického záznamu.
 
