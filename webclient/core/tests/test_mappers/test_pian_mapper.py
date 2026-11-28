@@ -91,6 +91,24 @@ class PianMapperCheckRequiredFieldsTest(TestCase):
         with self.assertRaises(ImportDataError):
             mapper.check_required_fields(INSERT)
 
+    def test_geometry_derived_from_geom_system_is_not_required(self):
+        """Geometrii v druhém systému dopočte transformace, proto chybějící hodnota nevadí."""
+        for geom_system, source_column, derived_column in (
+            ("4326", "geom", "geom_sjtsk"),
+            ("5514", "geom_sjtsk", "geom"),
+        ):
+            with self.subTest(geom_system=geom_system):
+                row = VALID_ROW.copy()
+                row.update({"geom_system": geom_system, source_column: "POINT (1 1)", derived_column: None})
+                PianMapper(row).check_required_fields(INSERT)
+
+    def test_source_geometry_is_required(self):
+        """Geometrie v systému daném ``geom_system`` je povinná."""
+        row = VALID_ROW.copy()
+        row.update({"geom_system": "4326", "geom": None, "geom_sjtsk": "POINT (1 1)"})
+        with self.assertRaises(ImportDataError):
+            PianMapper(row).check_required_fields(INSERT)
+
 
 class PianMapperMapValidTest(TestCase):
     """Testy pro PianMapper — platný dataset pro map()."""

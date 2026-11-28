@@ -1064,13 +1064,20 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``_check_column_structure()``, ``get_mapping()``.
       :return: Vrací výsledek operace.
 
+   .. py:method:: is_empty_value()
+
+      Určí, zda hodnota buňky importovaného souboru znamená prázdnou hodnotu.
+
+      :param value: Hodnota buňky.
+      :return: ``True`` pro ``None``, ``NaN``, prázdný řetězec a text ``nan`` (bez ohledu na velikost písmen a mezery).
+
    .. py:method:: check_required_fields()
 
       Ověří required fields.
 
       :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``check_required_fields``.
 
-      :raises ImportDataError: Vyvolá se při splnění podmínky ``required and (value is None or str(value).lower().strip() in ('nan', '') or pd.isna(value))``.
+      :raises ImportDataError: Vyvolá se, pokud je povinné pole prázdné (``is_empty_value``).
 
    .. py:method:: map_column_name_to_field_name()
 
@@ -1730,6 +1737,14 @@ Třídy
       :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
+
+   .. py:method:: check_required_fields()
+
+      Ověří povinná pole řádku. Geometrii v druhém systému, než určuje ``geom_system``, nevyžaduje,
+      protože ji dopočte ``transform_geometries``.
+
+      :param performed_action: Prováděná akce importu.
+      :raises ImportDataError: Vyvolá se, pokud povinné pole (kromě odvozené geometrie) chybí.
 
    .. py:method:: get_record_history()
 

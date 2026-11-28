@@ -2027,17 +2027,26 @@ class ImportModelMapper(ABC):
                     )
         return mapping_dict
 
+    @staticmethod
+    def is_empty_value(value) -> bool:
+        """
+        Určí, zda hodnota buňky importovaného souboru znamená prázdnou hodnotu.
+
+        :param value: Hodnota buňky.
+        :return: ``True`` pro ``None``, ``NaN``, prázdný řetězec a text ``nan`` (bez ohledu na velikost písmen a mezery).
+        """
+        return value is None or str(value).lower().strip() in ("nan", "") or pd.isna(value)
+
     def check_required_fields(self, performed_action):
         """
         Ověří required fields.
 
         :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``check_required_fields``.
 
-            :raises ImportDataError: Vyvolá se při splnění podmínky ``required and (value is None or str(value).lower().strip() in ('nan', '') or pd.isna(value))``.
+            :raises ImportDataError: Vyvolá se, pokud je povinné pole prázdné (``is_empty_value``).
         """
         for key, value in self.value_dict.items():
-            required = self.is_field_required(key)
-            if required and (value is None or str(value).lower().strip() in ("nan", "") or pd.isna(value)):
+            if self.is_field_required(key) and self.is_empty_value(value):
                 raise ImportDataError(_("core_admin.ImportDataError.message.missing_required_field") + ": " + str(key))
 
     def map_column_name_to_field_name(self, column_name):
@@ -3630,6 +3639,20 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
+
+    def check_required_fields(self, performed_action):
+        """
+        Ověří povinná pole řádku. Geometrii v druhém systému, než určuje ``geom_system``, nevyžaduje,
+        protože ji dopočte ``transform_geometries``.
+
+        :param performed_action: Prováděná akce importu.
+        :raises ImportDataError: Vyvolá se, pokud povinné pole (kromě odvozené geometrie) chybí.
+        """
+        geom_system = str(self.value_dict.get("geom_system") or "").strip()
+        derived_geometry_column = {"4326": "geom_sjtsk", "5514": "geom"}.get(geom_system)
+        for key, value in self.value_dict.items():
+            if key != derived_geometry_column and self.is_field_required(key) and self.is_empty_value(value):
+                raise ImportDataError(_("core_admin.ImportDataError.message.missing_required_field") + ": " + str(key))
 
     @staticmethod
     def get_record_history(record: Pian):
