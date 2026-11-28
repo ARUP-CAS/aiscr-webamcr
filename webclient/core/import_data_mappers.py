@@ -2284,6 +2284,8 @@ class MultipleClassImportModelMapper(ImportModelMapper):
     foreign_key_fields = tuple()
     classes = tuple()
     lookup_fields_mapping: dict = {}
+    # Zda při UPDATE a DELETE musí existovat i záznam druhé třídy (``classes[1]``).
+    class_1_required = True
 
     @classmethod
     def _field_to_model(cls):
@@ -2352,13 +2354,14 @@ class MultipleClassImportModelMapper(ImportModelMapper):
             # does too (e.g. an ArcheologickyZaznam whose typ_zaznamu does not match this mapper's
             # specialization) — without this check, create_records()'s classes[1][1].objects.get()
             # would raise an unguarded DoesNotExist instead of a per-row ImportDataIntegrityError.
-            class_1_alias, class_1_model, class_1_fk_field = self.classes[1]
-            if not class_1_model.objects.filter(
-                **{"{}__ident_cely".format(class_1_fk_field): self.value_dict["ident_cely"]}
-            ).exists():
-                raise ImportDataIntegrityError(
-                    self._get_filter_kwargs_primary_key(), class_1_model.__name__, performed_action
-                )
+            if self.class_1_required:
+                class_1_alias, class_1_model, class_1_fk_field = self.classes[1]
+                if not class_1_model.objects.filter(
+                    **{"{}__ident_cely".format(class_1_fk_field): self.value_dict["ident_cely"]}
+                ).exists():
+                    raise ImportDataIntegrityError(
+                        self._get_filter_kwargs_primary_key(), class_1_model.__name__, performed_action
+                    )
         return self._get_filter_kwargs_primary_key()
 
     def _get_filter_kwargs_primary_key(self):
@@ -3805,6 +3808,9 @@ class DokumentLetMapper(ImportModelMapper):
 @ImportModelMapper.register("dokumenty")
 class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
     """Mapovač pro modely Dokument a DokumentExtraData."""
+
+    # DokumentExtraData je volitelná; create_records ji při UPDATE podle potřeby založí a DELETE se bez ní obejde.
+    class_1_required = False
 
     fields = (
         ("dokument", "ident_cely"),

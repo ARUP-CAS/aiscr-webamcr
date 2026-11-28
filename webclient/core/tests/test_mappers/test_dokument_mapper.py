@@ -12,6 +12,7 @@ from dokument.models import Dokument, DokumentExtraData
 
 INSERT = ImportDataAdminForm.PERFORMED_ACTION_INSERT
 UPDATE = ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+DELETE = ImportDataAdminForm.PERFORMED_ACTION_DELETE
 
 WKT_WGS84 = "POINT (14.5 50.1)"
 WKT_SJTSK = "POINT (-598288 -1160780)"
@@ -263,3 +264,15 @@ class DokumentMapperUpdateGeometryWithoutExtraDataTest(RunDataImportMapperTestBa
         self.assertEqual(extra_data.geom_system, "4326")
         self.assertEqual(extra_data.geom.wkt, WKT_WGS84)
         self.assertEqual(extra_data.geom_sjtsk.wkt, WKT_SJTSK)
+
+
+class DokumentMapperValidationWithoutExtraDataTest(RunDataImportMapperTestBase):
+    """Validace UPDATE a DELETE dokumentu, který nemá DokumentExtraData."""
+
+    def test_update_and_delete_pass_validation(self):
+        """Chybějící rozšiřující data dokumentu nesmí vést k odmítnutí řádku při UPDATE ani DELETE."""
+        self.assertFalse(DokumentExtraData.objects.filter(dokument=self.dokument).exists())
+        for performed_action in (UPDATE, DELETE):
+            with self.subTest(performed_action=performed_action):
+                mapper = DokumentMapper({"ident_cely": self.dokument.ident_cely})
+                self.assertEqual(mapper.import_validation(performed_action), {"ident_cely": self.dokument.ident_cely})
