@@ -621,6 +621,9 @@ Třídy
 
    Třída pohledu pro import překladových souborů.
 
+   Mixin Rosetty musí být první, aby se uplatnily jeho dekorátory na ``dispatch``
+   (``user_passes_test`` a ``never_cache``).
+
    **Metody:**
 
    .. py:method:: form_valid()
