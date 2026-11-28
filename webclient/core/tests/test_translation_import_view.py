@@ -69,11 +69,15 @@ class TranslationImportViewAccessTest(SimpleTestCase):
         :param pofile_mock: Mock funkce ``pofile`` v ``core.views``.
         """
         user = mock.Mock(is_authenticated=True)
-        with mock.patch(ACCESS, return_value=lambda u: True), mock.patch.object(
-            TranslationImportView, "po_file_path", new_callable=mock.PropertyMock, side_effect=Http404
+        with (
+            mock.patch(ACCESS, return_value=lambda u: True),
+            mock.patch("rosetta.views.can_translate_language", return_value=False) as can_translate_language_mock,
+            mock.patch("core.views.find_pos_with_backup", return_value=[]) as find_pos_mock,
         ):
             with self.assertRaises(Http404):
                 TranslationImportView.as_view()(self._request("post", user), **KWARGS)
+        can_translate_language_mock.assert_called_once_with(user, KWARGS["lang_id"])
+        find_pos_mock.assert_not_called()
         pofile_mock.assert_not_called()
 
     def test_prekladatel_projde_a_odpoved_ma_no_cache_hlavicky(self):
@@ -84,8 +88,9 @@ class TranslationImportViewAccessTest(SimpleTestCase):
             po_path = Path(tmpdir, "locale", "cs", "LC_MESSAGES", "django.po")
             po_path.parent.mkdir(parents=True)
             po_path.write_text('msgid ""\nmsgstr ""\n', encoding="utf-8")
-            with mock.patch(ACCESS, return_value=lambda u: True), mock.patch(
-                "core.views.find_pos_with_backup", return_value=[str(po_path)]
+            with (
+                mock.patch(ACCESS, return_value=lambda u: True),
+                mock.patch("core.views.find_pos_with_backup", return_value=[str(po_path)]),
             ):
                 response = TranslationImportView.as_view()(self._request("get", user), **KWARGS)
         self.assertEqual(response.status_code, 200)
