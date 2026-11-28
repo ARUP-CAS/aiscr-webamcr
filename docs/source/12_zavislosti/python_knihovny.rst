@@ -72,7 +72,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD
      - https://github.com/Anorov/PySocks
    * - PyYAML
-     - 6.0.3
+     - 6.0.4
      - MIT License
      - https://pyyaml.org/
    * - Pygments
@@ -108,11 +108,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
-     - 2.18.0
-     - BSD License
+     - 2.19.0
+     - BSD-3-Clause
      - https://babel.pocoo.org/
    * - backports.zstd
-     - 1.8.0
+     - 1.8.1
      - PSF-2.0
      - https://github.com/rogdham/backports.zstd
    * - beautifulsoup4
@@ -140,7 +140,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.10.23
+     - 2026.11.20
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -152,7 +152,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.5.2
+     - 3.5.3
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
@@ -304,7 +304,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 4.2.12
+     - 4.3.2
      - MIT
      - https://github.com/tox-dev/filelock
    * - freezegun
@@ -380,7 +380,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 26.3
+     - 26.4
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.43
+     - 9.0.44
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/jazzband/pip-tools/
    * - platformdirs
-     - 4.14.7
+     - 4.14.9
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -472,7 +472,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.21.4
+     - 7.1.1
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.9.6
+     - 1.9.8
      - MIT
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -568,7 +568,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 4.1.2
+     - 4.1.3
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -624,7 +624,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/astanin/python-tabulate
    * - texttable
-     - 1.7.3
+     - 1.7.4
      - MIT
      - https://github.com/foutaise/texttable/
    * - tornado
@@ -664,11 +664,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.15.9
+     - 21.15.14
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.9.4
+     - 0.9.5
      - MIT License
      - https://github.com/jquast/wcwidth
    * - webencodings
