@@ -3118,6 +3118,15 @@ msgstr "Samostatná akce (typ N) nesmí mít vyplněný projekt."
 msgid "core_admin.ImportDataError.message.adb.target_dokumentacni_jednotka_has_adb"
 msgstr "Cílová dokumentační jednotka už má ADB"
 
+msgid "core_admin.ImportDataError.message.invalid_model_values"
+msgstr "Hodnoty porušují pravidla záznamu"
+
+msgid "core_admin.ImportDataError.message.duplicate_in_batch"
+msgstr "Unikátní hodnota se v importu opakuje"
+
+msgid "core_admin.ImportDataError.message.delete_restricted"
+msgstr "Záznam nelze smazat, odkazují na něj jiné záznamy"
+
 #: core/import_data_mappers.py:3045
 msgid ""
 "core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"

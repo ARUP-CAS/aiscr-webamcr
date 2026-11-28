@@ -502,6 +502,9 @@ class RunDataImportValidationTest(TestCase):
             def create_records(self, performed_action):
                 return []
 
+            def validate_model_records(self, records, performed_action, batch_state):
+                return None
+
         archive = io.BytesIO()
         with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
             zf.writestr("a/soubory.csv", "logical_key\nduplicate.txt\n")

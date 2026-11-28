@@ -30,9 +30,10 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.gdal import GDALException
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.postgres.fields import DateRangeField
-from django.core.exceptions import FieldDoesNotExist
-from django.db import models
+from django.core.exceptions import FieldDoesNotExist, ValidationError
+from django.db import models, router
 from django.db.backends.postgresql.psycopg_any import DateRange
+from django.db.models.deletion import Collector, ProtectedError, RestrictedError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext_noop
@@ -2146,6 +2147,144 @@ class ImportModelMapper(ABC):
         :param fedora_transaction: Transakce Fedory pro mazání, kterou datová fáze nastaví i mazanému záznamu.
         """
         pass
+
+    def validate_model_records(self, records, performed_action, batch_state: dict) -> None:
+        """
+        Ověří záznamy řádku sestavené ``create_records`` proti pravidlům modelu a databáze.
+
+        U INSERT a UPDATE kontroluje jen pole, která řádek nastavuje: ``null`` u povinných polí a validátory pole
+        včetně délky (bez ``blank`` a ``choices``), check a unique constrainty proti DB (``validate_constraints``, ``validate_unique``)
+        a unikátnost v rámci dávky. U DELETE odmítne záznam, na který odkazuje ``RESTRICT``/``PROTECT`` vazba,
+        pokud odkazující záznam nesmaže dřívější řádek dávky. Metoda jen čte, databázi nemění.
+
+        :param records: Instance modelů vrácené ``create_records`` pro tento řádek.
+        :param performed_action: Typ prováděné operace importu.
+        :param batch_state: Stav sdílený řádky dávky: ``unique_keys`` (klíče unikátních hodnot s primárním klíčem
+            záznamu, který je nastavil) a ``deleted`` (množina dvojic ``(model, pk)`` mazaných dřívějšími řádky).
+        :raises ImportDataError: Vyvolá se, pokud záznam porušuje pravidlo modelu, opakuje unikátní hodnotu
+            v dávce nebo ho nelze smazat kvůli odkazujícím záznamům.
+        """
+        model_records = [record for record in records if isinstance(record, models.Model)]
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            for record in model_records:
+                if record.pk is not None:
+                    self._validate_record_deletion(record, batch_state["deleted"])
+            return
+        row_fields = {self.map_column_name_to_field_name(column) for column in self.value_dict}
+        for record in model_records:
+            self._validate_record_fields(record, row_fields, batch_state["unique_keys"])
+
+    @staticmethod
+    def _validate_record_fields(record, row_fields: set, batch_unique_keys: dict) -> None:
+        """
+        Spustí validaci modelu na polích, která nastavuje importovaný řádek.
+
+        Vazební pole se kontrolují jen na povinnost (existenci odkazovaného záznamu ověřují importní pole
+        a záznam vytvářený v téže dávce ještě nemá primární klíč). Primární klíč ověřuje ``import_validation``.
+
+        :param record: Instance modelu sestavená z řádku.
+        :param row_fields: Názvy polí modelu, které řádek nastavuje.
+        :param batch_unique_keys: Klíče unikátních hodnot z dřívějších řádků dávky s primárním klíčem záznamu, který
+            je nastavil; doplní se o klíče záznamu. Tentýž existující záznam může hodnotu v dávce zopakovat.
+        :raises ImportDataError: Vyvolá se, pokud záznam porušuje pravidlo modelu nebo opakuje unikátní hodnotu.
+        """
+        concrete_fields = [field for field in record._meta.concrete_fields if not field.primary_key]
+        checked_fields = [field for field in concrete_fields if field.name in row_fields]
+        if not checked_fields:
+            return
+        errors = {}
+        for field in checked_fields:
+            if field.is_relation and not field.null:
+                try:
+                    related = getattr(record, field.name)
+                except field.related_model.DoesNotExist:
+                    related = None
+                if related is None:
+                    errors.setdefault(field.name, []).append(str(field.error_messages["null"]))
+        # Bez kontroly ``choices``: uložená data obsahují kódy, které v choices modelu chybí (např. typ_zmeny
+        # ``DEL`` a ``IMP`` zapisuje sama aplikace), takže by se odmítaly platné řádky.
+        # Bez kontroly ``blank``: jde o omezení formulářů aplikace, DB prázdný řetězec přijme; hlídá se jen ``null``.
+        for field in checked_fields:
+            if field.is_relation:
+                continue
+            value = getattr(record, field.attname)
+            if value is None and not field.null:
+                errors.setdefault(field.name, []).append(str(field.error_messages["null"]))
+            else:
+                try:
+                    field.run_validators(value)
+                except ValidationError as err:
+                    errors.setdefault(field.name, []).extend(err.messages)
+        constraint_exclude = {field.name for field in record._meta.concrete_fields} - {
+            field.name for field in checked_fields
+        }
+        for check in (record.validate_constraints, record.validate_unique):
+            try:
+                check(exclude=constraint_exclude | {record._meta.pk.name})
+            except ValidationError as err:
+                for field_name, messages in err.message_dict.items():
+                    errors.setdefault(field_name, []).extend(messages)
+        if errors:
+            details = "; ".join(f"{field_name}: {' '.join(messages)}" for field_name, messages in errors.items())
+            raise ImportDataError(
+                _("core_admin.ImportDataError.message.invalid_model_values")
+                + f" ({record._meta.model_name}): {details}"
+            )
+        unique_checks, _date_checks = record._get_unique_checks(
+            exclude=constraint_exclude | {record._meta.pk.name}, include_meta_constraints=True
+        )
+        record_keys = []
+        for model_class, field_names in unique_checks:
+            values = tuple(getattr(record, record._meta.get_field(name).attname) for name in field_names)
+            if any(value is None for value in values):
+                continue
+            key = (model_class._meta.label, field_names, values)
+            if key in batch_unique_keys and (record.pk is None or batch_unique_keys[key] != record.pk):
+                raise ImportDataError(
+                    _("core_admin.ImportDataError.message.duplicate_in_batch")
+                    + f" ({model_class._meta.model_name}): "
+                    + ", ".join(f"{name}={value}" for name, value in zip(field_names, values))
+                )
+            record_keys.append(key)
+        batch_unique_keys.update(dict.fromkeys(record_keys, record.pk))
+
+    @staticmethod
+    def _validate_record_deletion(record, batch_deleted: set) -> None:
+        """
+        Simuluje smazání záznamu (Django ``Collector``) a odmítne ho, pokud mu brání odkazující záznamy.
+
+        Odkazující záznam nevadí, pokud ho smaže dřívější řádek dávky (přímo nebo kaskádou); datová fáze
+        zpracovává řádky ve stejném pořadí jako validace.
+
+        :param record: Instance modelu, která se má smazat.
+        :param batch_deleted: Dvojice ``(model, pk)`` mazané dřívějšími řádky; doplní se o záznamy tohoto řádku.
+        :raises ImportDataError: Vyvolá se, pokud na záznam odkazuje ``RESTRICT``/``PROTECT`` vazba
+            ze záznamu, který dávka dříve nesmaže.
+        """
+        collector = Collector(using=router.db_for_write(record.__class__), origin=record)
+        blocking = ()
+        try:
+            collector.collect([record])
+        except ProtectedError as err:
+            blocking = err.protected_objects
+        except RestrictedError as err:
+            blocking = err.restricted_objects
+        remaining = [obj for obj in blocking if (obj.__class__, obj.pk) not in batch_deleted]
+        if remaining:
+            referencing = ", ".join(
+                f"{obj._meta.model_name} {getattr(obj, 'ident_cely', None) or obj.pk}" for obj in remaining[:10]
+            )
+            raise ImportDataError(
+                _("core_admin.ImportDataError.message.delete_restricted")
+                + f": {referencing}"
+                + (f" (+{len(remaining) - 10})" if len(remaining) > 10 else "")
+            )
+        batch_deleted.add((record.__class__, record.pk))
+        for model_class, instances in collector.data.items():
+            batch_deleted.update((model_class, instance.pk) for instance in instances)
+        # Záznamy mazané hromadně (fast delete) nejsou v ``collector.data``, jen jako querysety.
+        for queryset in collector.fast_deletes:
+            batch_deleted.update((queryset.model, pk) for pk in queryset.values_list("pk", flat=True))
 
 
 class GeometryTransformMixin:

@@ -1138,6 +1138,47 @@ Třídy
       :param record: Záznam, který se bude mazat.
       :param fedora_transaction: Transakce Fedory pro mazání, kterou datová fáze nastaví i mazanému záznamu.
 
+   .. py:method:: validate_model_records()
+
+      Ověří záznamy řádku sestavené ``create_records`` proti pravidlům modelu a databáze.
+
+      U INSERT a UPDATE kontroluje jen pole, která řádek nastavuje: ``null`` u povinných polí a validátory pole
+      včetně délky (bez ``blank`` a ``choices``), check a unique constrainty proti DB (``validate_constraints``, ``validate_unique``)
+      a unikátnost v rámci dávky. U DELETE odmítne záznam, na který odkazuje ``RESTRICT``/``PROTECT`` vazba,
+      pokud odkazující záznam nesmaže dřívější řádek dávky. Metoda jen čte, databázi nemění.
+
+      :param records: Instance modelů vrácené ``create_records`` pro tento řádek.
+      :param performed_action: Typ prováděné operace importu.
+      :param batch_state: Stav sdílený řádky dávky: ``unique_keys`` (klíče unikátních hodnot s primárním klíčem
+          záznamu, který je nastavil) a ``deleted`` (množina dvojic ``(model, pk)`` mazaných dřívějšími řádky).
+      :raises ImportDataError: Vyvolá se, pokud záznam porušuje pravidlo modelu, opakuje unikátní hodnotu
+          v dávce nebo ho nelze smazat kvůli odkazujícím záznamům.
+
+   .. py:method:: _validate_record_fields()
+
+      Spustí validaci modelu na polích, která nastavuje importovaný řádek.
+
+      Vazební pole se kontrolují jen na povinnost (existenci odkazovaného záznamu ověřují importní pole
+      a záznam vytvářený v téže dávce ještě nemá primární klíč). Primární klíč ověřuje ``import_validation``.
+
+      :param record: Instance modelu sestavená z řádku.
+      :param row_fields: Názvy polí modelu, které řádek nastavuje.
+      :param batch_unique_keys: Klíče unikátních hodnot z dřívějších řádků dávky s primárním klíčem záznamu, který
+          je nastavil; doplní se o klíče záznamu. Tentýž existující záznam může hodnotu v dávce zopakovat.
+      :raises ImportDataError: Vyvolá se, pokud záznam porušuje pravidlo modelu nebo opakuje unikátní hodnotu.
+
+   .. py:method:: _validate_record_deletion()
+
+      Simuluje smazání záznamu (Django ``Collector``) a odmítne ho, pokud mu brání odkazující záznamy.
+
+      Odkazující záznam nevadí, pokud ho smaže dřívější řádek dávky (přímo nebo kaskádou); datová fáze
+      zpracovává řádky ve stejném pořadí jako validace.
+
+      :param record: Instance modelu, která se má smazat.
+      :param batch_deleted: Dvojice ``(model, pk)`` mazané dřívějšími řádky; doplní se o záznamy tohoto řádku.
+      :raises ImportDataError: Vyvolá se, pokud na záznam odkazuje ``RESTRICT``/``PROTECT`` vazba
+          ze záznamu, který dávka dříve nesmaže.
+
 
 .. py:class:: GeometryTransformMixin
 

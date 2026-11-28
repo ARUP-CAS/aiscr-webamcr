@@ -1401,6 +1401,9 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                 # any real parse error surfaces there, not here.
                 total_rows = 0
                 seen_in_batch_by_mapper: dict[str, set] = {}
+                # Shared across all files of the batch: unique values already used by earlier rows and
+                # records the earlier DELETE rows remove (see ImportModelMapper.validate_model_records).
+                model_validation_state = {"unique_keys": {}, "deleted": set()}
                 for file_name in file_names:
                     try:
                         with zf.open(file_name) as file:
@@ -1477,7 +1480,9 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                                 # create_records is called for serialization only and must remain
                                 # read-only — it must not call save()/delete() or otherwise mutate
                                 # the DB during validation (read-only contract).
-                                records += mapper.create_records(performed_action)
+                                row_records = mapper.create_records(performed_action)
+                                mapper.validate_model_records(row_records, performed_action, model_validation_state)
+                                records += row_records
                                 record["__file_name"] = file_name
                             except ImportDataIntegrityError as err:
                                 push_validation_result(

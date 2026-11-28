@@ -3115,6 +3115,15 @@ msgstr "Individual fieldwork event (type N) must not have a project."
 msgid "core_admin.ImportDataError.message.adb.target_dokumentacni_jednotka_has_adb"
 msgstr "The target documentation unit already has an ADB"
 
+msgid "core_admin.ImportDataError.message.invalid_model_values"
+msgstr "The values violate the record's rules"
+
+msgid "core_admin.ImportDataError.message.duplicate_in_batch"
+msgstr "A unique value is repeated in the import"
+
+msgid "core_admin.ImportDataError.message.delete_restricted"
+msgstr "The record can't be deleted because other records reference it"
+
 #: core/import_data_mappers.py:3045
 msgid ""
 "core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"
