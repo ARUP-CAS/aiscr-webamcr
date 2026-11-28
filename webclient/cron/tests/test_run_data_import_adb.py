@@ -3,9 +3,10 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from adb.models import Adb, Kladysm5
+from adb.models import Adb, Kladysm5, VyskovyBod
 from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
+from core.import_data_mappers import AdbMapper, ImportDataError
 from core.tests.fake_redis import FakeRedis
 from cron import tasks as cron_tasks
 from cron.tests._import_test_fixtures import (
@@ -17,8 +18,9 @@ from cron.tests._import_test_fixtures import (
 )
 from django.contrib.auth.models import Group
 from django.test import TestCase
-from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP
+from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar, HeslarNazev
+from historie.models import Historie
 from uzivatel.models import Osoba, User
 
 FILE_KEY = "az_adb"
@@ -47,6 +49,7 @@ class RunDataImportAdbTest(TestCase):
         ), patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
             heslars = create_heslar_fixtures("adb")
             katastr, pian = create_ruian_with_pian("adb", "P-0001-200001", heslars)
+            cls.heslars, cls.katastr, cls.pian = heslars, katastr, pian
             organizace = create_organizace("adb", heslars)
             cls.user = User.objects.create_user(  # type: ignore[attr-defined]
                 email="import-runner-adb@example.cz",
@@ -346,3 +349,96 @@ class RunDataImportAdbTest(TestCase):
         details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)
+
+    def _create_second_dj(self, az_ident: str = "C-202300003A", dj_ident: str = "C-202300003A-D01"):
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ), patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            az = create_archeologicky_zaznam(az_ident, self.katastr, self.heslars["pristupnost"])
+            dj = create_dokumentacni_jednotka(dj_ident, az, self.pian, self.heslars["dj_typ"])
+        return az, dj
+
+    def _validate_update(self, dj_ident: str, seen_in_batch: set):
+        payload = self._build_insert_payload()
+        del payload["__file_name"]
+        payload["dokumentacni_jednotka"] = dj_ident
+        return AdbMapper(payload).import_validation(
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE, self.user.id, seen_in_batch=seen_in_batch
+        )
+
+    def test_update_moves_adb_and_height_points_to_another_dj(self):
+        """Ověřuje, že UPDATE se změnou DJ přesune ADB i výškové body a zapíše oba AZ do historie a Fedory (F32)."""
+        adb = self._create_existing_adb()
+        vb_typ_nazev, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_VYSKOVY_BOD_TYP, defaults={"nazev": "vyskovy_bod_typ"}
+        )
+        vb_typ = Heslar.objects.create(
+            ident_cely="HES-VBTYP-ADB-001", nazev_heslare=vb_typ_nazev, heslo="Bod", heslo_en="Point", zkratka="VB"
+        )
+        vb = VyskovyBod(
+            ident_cely=f"{ADB_IDENT}-V01", adb=adb, typ=vb_typ, geom="SRID=5514;POINT Z(-700000 -1050000 100.0)"
+        )
+        vb.suppress_signal = True
+        vb.save()
+        new_az, new_dj = self._create_second_dj()
+        payload = self._build_insert_payload()
+        payload["dokumentacni_jednotka"] = new_dj.ident_cely
+        fake_redis = FakeRedis(
+            {
+                f"import_data_count_{JOB_ID}": "1",
+                f"import_performed_action_{JOB_ID}": ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                f"import_data_{JOB_ID}_record_0": json.dumps(payload),
+            }
+        )
+
+        save_metadata_calls = self._run_import(fake_redis)
+
+        progress_raw = fake_redis.get(f"import_data_progress_{JOB_ID}")
+        self.assertEqual(int(progress_raw.decode("utf-8")), cron_tasks.IMPORT_PROGRESS_PHASE_FINISHED)
+        moved = Adb.objects.get(ident_cely=ADB_IDENT)
+        self.assertEqual(moved.dokumentacni_jednotka, new_dj)
+        self.assertEqual(moved.uzivatelske_oznaceni_sondy, "S-01")
+        self.assertEqual(Adb.objects.count(), 1)
+        self.assertEqual(VyskovyBod.objects.get(pk=vb.pk).adb_id, new_dj.pk)
+        updated_idents = {getattr(record, "ident_cely", None) for record in save_metadata_calls}
+        self.assertTrue({ADB_IDENT, AZ_IDENT, new_az.ident_cely} <= updated_idents, updated_idents)
+        for az in (self.az, new_az):
+            az.refresh_from_db()
+            self.assertTrue(Historie.objects.filter(vazba=az.historie).exists(), az.ident_cely)
+
+    def test_validation_rejects_move_to_dj_that_has_adb(self):
+        """Ověřuje, že validace odmítne přesun ADB na DJ, která už ADB má (F32)."""
+        self._create_existing_adb()
+        _, new_dj = self._create_second_dj()
+        existing_target_adb = Adb(
+            ident_cely="ADB-ABCD12-000002",
+            dokumentacni_jednotka=new_dj,
+            rok_popisu=2020,
+            autor_popisu=self.autor,
+            sm5=self.sm5,
+        )
+        existing_target_adb.suppress_signal = True
+        existing_target_adb.save()
+
+        with self.assertRaises(ImportDataError):
+            self._validate_update(new_dj.ident_cely, set())
+
+    def test_validation_allows_one_move_per_target_dj_in_batch(self):
+        """Ověřuje, že validace povolí přesun na DJ bez ADB, ale jen jednou v rámci dávky (F32)."""
+        self._create_existing_adb()
+        _, new_dj = self._create_second_dj()
+        seen_in_batch: set = set()
+
+        self.assertEqual(self._validate_update(new_dj.ident_cely, seen_in_batch), {"ident_cely": ADB_IDENT})
+        with self.assertRaises(ImportDataError):
+            self._validate_update(new_dj.ident_cely, seen_in_batch)
+
+    def test_validation_allows_update_without_dj_change(self):
+        """Ověřuje, že UPDATE se stejnou DJ validace propustí i opakovaně v jedné dávce."""
+        self._create_existing_adb()
+        seen_in_batch: set = set()
+
+        self._validate_update(DJ_IDENT, seen_in_batch)
+        self._validate_update(DJ_IDENT, seen_in_batch)
+        self.assertEqual(seen_in_batch, set())

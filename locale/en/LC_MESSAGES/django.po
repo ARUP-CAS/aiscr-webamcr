@@ -3106,6 +3106,9 @@ msgid ""
 "core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt"
 msgstr "Individual fieldwork event (type N) must not have a project."
 
+msgid "core_admin.ImportDataError.message.adb.target_dokumentacni_jednotka_has_adb"
+msgstr "The target documentation unit already has an ADB"
+
 #: core/import_data_mappers.py:3045
 msgid ""
 "core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"

@@ -1116,6 +1116,16 @@ Třídy
       :param record: Záznam, pro který se má najít objekt určený pro historii.
       :return: ``None``, pokud mapper nemá definovaný konkrétní cílový objekt historie.
 
+   .. py:method:: get_related_update_targets()
+
+      Vrátí další záznamy, kterých se import záznamu dotkl mimo ``get_record_history``.
+
+      Datová fáze je zařadí mezi cíle historie i Fedory, např. původní archeologický záznam
+      při přesunu ADB na dokumentační jednotku jiného záznamu.
+
+      :param record: Záznam zpracovaný importem (instance po ``record_postprocessing``).
+      :return: Seznam dotčených záznamů, výchozí implementace vrací prázdný seznam.
+
 
 .. py:class:: GeometryTransformMixin
 
@@ -1726,6 +1736,40 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: import_validation()
+
+      Ověří existenci záznamu a při UPDATE přesun ADB na jinou dokumentační jednotku.
+
+      Cílová dokumentační jednotka nesmí mít ADB v databázi ani být cílem přesunu jiného řádku dávky.
+
+      :param performed_action: Požadovaná importní akce.
+      :param seen_in_batch: Množina klíčů již zpracovaných řádků dávky; ukládají se do ní cílové
+          dokumentační jednotky přesunů ve tvaru ``("dokumentacni_jednotka", ident_cely)``.
+      :param args: Další poziční argumenty předané bázové validaci.
+      :param kwargs: Další pojmenované argumenty předané bázové validaci.
+      :return: Slovník s podmínkou pro dohledání záznamu z bázové validace.
+      :raises ImportDataError: Vyvolá se, pokud cílová dokumentační jednotka přesunu už ADB má.
+
+   .. py:method:: record_postprocessing()
+
+      Při UPDATE se změnou dokumentační jednotky přesune ADB i jeho výškové body na novou jednotku.
+
+      Dokumentační jednotka je primární klíč ADB, takže ``save()`` by místo přesunu vložil nový řádek.
+      Klíč se proto změní hromadnou aktualizací (ADB i ``VyskovyBod.adb``) a ``save()`` pak aktualizuje
+      přesunutý řádek. Původní archeologický záznam se uloží do ``previous_archeologicky_zaznam``.
+
+      :param record: Importovaný záznam ``Adb`` načtený z databáze a doplněný hodnotami z importu.
+      :param performed_action: Typ prováděné operace importu.
+      :param fedora_transaction: Transakce Fedory datové fáze (nepoužívá se).
+      :return: Záznam ``record``.
+
+   .. py:method:: get_related_update_targets()
+
+      Vrátí původní archeologický záznam přesunutého ADB, jinak prázdný seznam.
+
+      :param record: Záznam ``Adb`` po ``record_postprocessing``.
+      :return: Seznam s původním archeologickým záznamem, pokud se ADB přesunul na jiný záznam.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 

@@ -2447,6 +2447,11 @@ def run_data_import(job_id, user_id, lock_token):
                                             record.save()
                                         record_saved = mapper_class.load_record_from_db(record)
                                         pending_fedora_update.append((mapper_class, record_saved or record))
+                                        for related_target in mapper_class.get_related_update_targets(record):
+                                            add_updated_history(mapper_class, related_target, record_id)
+                                            add_item_fedora_update_target(
+                                                {(related_target.__class__, related_target.pk)}, record_id
+                                            )
                                         record_dict = (
                                             model_to_dict(record_saved) if record_saved else model_to_dict(record)
                                         )
