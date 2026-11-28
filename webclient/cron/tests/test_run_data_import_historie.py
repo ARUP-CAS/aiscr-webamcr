@@ -1,10 +1,12 @@
 """Jednotkové testy pro ``cron.tasks.run_data_import`` — mapper ``HistorieMapper``."""
 
+import datetime
 from unittest.mock import patch
 
 from core.constants import IMPORT
 from core.forms import ImportDataAdminForm
 from cron.tests._run_data_import_mapper_base import JOB_ID, RunDataImportMapperTestBase
+from django.utils import timezone
 from historie.models import Historie
 
 HISTORIE_FILE_KEY = "historie"
@@ -36,6 +38,16 @@ class RunDataImportHistorieTest(RunDataImportMapperTestBase):
 
         self.assert_import_success(fake_redis)
         self.assertTrue(Historie.objects.filter(poznamka="Import historie").exists())
+
+    def test_insert_keeps_datum_zmeny_from_file(self):
+        """INSERT uloží datum změny ze souboru, ne čas importu."""
+        fake_redis, _ = self.run_import(HISTORIE_FILE_KEY, self._base_payload())
+
+        self.assert_import_success(fake_redis)
+        historie = Historie.objects.get(poznamka="Import historie")
+        self.assertEqual(
+            timezone.localtime(historie.datum_zmeny).replace(tzinfo=None), datetime.datetime(2024, 1, 2, 10, 0, 0)
+        )
 
     def test_update_modifies_existing_historie(self):
         """Ověřuje, že UPDATE import upraví existující záznam historie."""

@@ -63,6 +63,7 @@ from core.constants import (
     ZMENA_UDAJU_UZIVATEL,
 )
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar import hesla_dynamicka
@@ -139,8 +140,12 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (SMAZANI_DISTRIBUCE, _("historie.models.historieStav.distribuce.DIST10")),
     )
 
+    # Výchozí hodnota místo auto_now_add, aby import historie mohl uložit původní datum změny.
     datum_zmeny = models.DateTimeField(
-        auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"), db_index=True
+        default=timezone.now,
+        editable=False,
+        verbose_name=_("historie.models.historie.datumZmeny.label"),
+        db_index=True,
     )
     typ_zmeny = models.TextField(
         choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"), db_index=True
