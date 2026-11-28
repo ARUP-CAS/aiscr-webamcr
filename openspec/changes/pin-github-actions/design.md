@@ -286,7 +286,12 @@ Two layers close this:
 
 Layer 1 handles the likely case, an infrastructure error during setup, as an
 ordinary ERROR row that the next failed-only run selects. Layer 2 turns the
-rare remaining cases into a visible error instead of a false pass.
+rare remaining cases into a visible error instead of a false pass. A
+class-level `setUpClass` error reaches the result as unittest's
+`_ErrorHolder`, which has no test number; `_exc_info_to_string` therefore
+reads `progress_index` defensively and prints the error without a number,
+so the run reaches the summary and the row check instead of aborting with
+`AttributeError`.
 
 Alternatives considered:
 
@@ -488,9 +493,9 @@ safe; an older runner ignores `current/` and `previous/`.
 ## Review history
 
 Per-item evidence and dispositions are in the linked reviews and in the git
-history of this file. Every round from 5 to 11 confirmed all repairs from the
+history of this file. Every round from 5 to 13 confirmed all repairs from the
 round before. Pre-commit and CodeQL passed on each delivered head from
-`d90182be3` to `e0831d563`.
+`d90182be3` to `f09a38ccb`, and the round-thirteen head's hooks passed locally.
 
 | Round | Reviewed head | Source | Introduced | Pre-existing fixed | Main outcome |
 | --- | --- | --- | --- | --- | --- |
@@ -512,6 +517,8 @@ round before. Pre-commit and CodeQL passed on each delivered head from
 | 10 | `bca3b69d6` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6085012707) | 2 (Low) | 2 (O17, O18; O15 in #4570) | ssh-agent block to #4570; usage sentence; guide paths; generator signatures |
 | DEV run | `64cdbd48b` | [run 45999248513](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45999248513), test 1 only | 0 | 0 | Attempt 1 stopped at readiness (DEV environment); [attempt 2](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45999248513/job/140546677814) passed |
 | 11 | `64cdbd48b` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6089472584) | 1 (Medium) | 0 (F1 and O15 in #4570) | Setup errors record a row; failures without a row end as an error |
+| 12 | `f09a38ccb` | [review](https://github.com/ARUP-CAS/aiscr-webamcr/pull/4544#pullrequestreview-6094573096) | 0 | 0 (round-eleven Medium fixed; O19 recorded) | Setup errors record a row; failures without a row end as an error |
+| 13 | `d9a696354` | Review round thirteen | 2 (Low, record/spec) | 1 (O19) | `_ErrorHolder` guard; spec single-class case and change record aligned |
 | Simplification | `f11aa5629` | Exploration on 2026-11-26 | - | - | Retention replaced, v1 code and `set -e` removed, specs split |
 
 ## Sources

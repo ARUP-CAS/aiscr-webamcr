@@ -198,9 +198,15 @@ states the mismatch and SHALL leave the root selection workbook unchanged.
 
 #### Scenario: A failure has no workbook row
 
-- **GIVEN** a run in which unittest counts a failure or error that has no FAIL or ERROR row, such as a failed class setup or a failed workbook write
+- **GIVEN** a run that executed test bodies and in which unittest counts a failure or error that has no FAIL or ERROR row, such as a failed class setup in a multi-class run or a failed workbook write
 - **WHEN** the runner publishes its outcome
 - **THEN** it publishes an error outcome stating the mismatch and the root selection workbook is unchanged
+
+#### Scenario: A class setup fails with no executed test
+
+- **GIVEN** a run in which the only class fails `setUpClass` and unittest reports `Ran 0 tests`
+- **WHEN** the runner publishes its outcome
+- **THEN** it publishes an error outcome stating that the complete test summary is missing, and the root selection workbook is unchanged
 
 ### Requirement: Test runner outcomes reflect actual execution
 

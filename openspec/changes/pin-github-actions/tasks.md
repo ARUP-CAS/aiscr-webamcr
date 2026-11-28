@@ -9,7 +9,7 @@ Approach: [design.md](design.md).
 Groups 1-4 summarize the work delivered in `0735cb560`..`f11aa5629`. The
 round-by-round history is in [design.md](design.md#review-history). Groups 5
 and 6 are the simplification revision. Group 7 covers the live DEV runs,
-review rounds nine to eleven and a leaked test annotation in hosted
+review rounds nine to thirteen and a leaked test annotation in hosted
 pre-commit.
 
 ## 1. Action pins and inventory
@@ -63,7 +63,7 @@ pre-commit.
   Inspect the diff to confirm only the planned files changed.
 - [x] 6.2 Update the single rolling usage entry for this change with runtime and model metadata, results and limits. No hub asset change or sync is planned; any future sync needs a reviewed dry run before a separately approved apply.
 
-## 7. Live DEV runs and review rounds nine to eleven
+## 7. Live DEV runs and review rounds nine to thirteen
 
 - [x] 7.1 Make `scripts/check_stack_ready.py` run on the deployment host's Python 3.6, as found by the [DEV run](https://github.com/ARUP-CAS/aiscr-webamcr/actions/runs/45771045340/job/139747914273): pass the inspection deadline explicitly instead of through `contextvars`, and call `subprocess.run` with `stdout` and `stderr` pipes and `universal_newlines` instead of `capture_output` and `text`. Record the 3.6 floor in the module docstring. Adapt `scripts/test_pre_commit_stack_ready.py` and add a guard that parses the script with the Python 3.6 grammar and rejects later standard-library modules and `subprocess.run` arguments. Verify with the stack-ready and deployment fixtures on Windows and isolated Linux. Optionally, with separate approval, run the script in a `python:3.6-slim` container without Docker and confirm that it reports the inspection failure instead of an import error or `TypeError`. The DEV rerun in the workflow follow-up is the live confirmation.
 - [x] 7.2 Correct the manual Compose section of `docs/source/02_instalace_nasazeni/nasazovani.rst` (round-nine observation O16, a deliberate exception to the scope freeze): `amcr_image`, `redis_image` and `proxy_image` select the images with registry and tag, and `IMAGE_TAG` only passes the version to the application containers. Verify with a strict Sphinx build of the page.
@@ -91,6 +91,8 @@ pre-commit.
   Verify that the new cases fail against the current class and pass after the change, on Windows and isolated Linux.
 - [x] 7.13 In `webclient/run_tests.py`, before a completed outcome is published, compare the FAIL and ERROR rows of `current/results.xlsx` with `counts["failed"]`. When they differ, raise an error that states both counts, so the run publishes an error outcome and the root workbook is not replaced (round-eleven Medium finding, a deliberate exception to the scope freeze). `selection_content` already validates the current workbook with `select_tests("neuspesne", "", current)`; reuse that result instead of reading the workbook again. In `scripts/test_pre_commit_execution.py`, cover a full, a failed-only and a numbered run whose workbook lacks a failed test's row, each ending as an error with the root workbook unchanged, and a full run whose failed rows match, followed by a failed-only run that selects them. Verify that the new cases fail against the current runner and pass after the change, on Windows and isolated Linux.
 - [x] 7.14 Repeat the 6.1 checks, regenerate the script documentation with the existing generators, and update the rolling usage entry with round eleven, DEV run 45999248513, tasks 7.12 and 7.13 and F1's tracking in #4570.
+- [x] 7.15 In `CustomTextTestResult._exc_info_to_string` of `webclient/core/tests/runner.py`, read `progress_index` with a default and skip the test-number prefix when it is absent, so a class-level `setUpClass` error reported by unittest as an `_ErrorHolder` is recorded instead of aborting the run with `AttributeError` (round-thirteen finding, a deliberate exception to the scope freeze). Add `CustomResultTests` to `scripts/test_pre_commit_selenium_lifecycle.py`: a class-setup failure keeps the result usable, and a normal numbered failure keeps its prefix. Verify both cases fail against the pre-fix method and pass after it, run the `scripts` suites, and regenerate the script page.
+- [x] 7.16 Narrow the "A failure has no workbook row" scenario in [specs/ci-test-results/spec.md](specs/ci-test-results/spec.md#requirement-every-failed-test-of-a-completed-run-has-a-workbook-row) to runs that execute test bodies, add a single-class setup scenario that ends with the missing-summary error, and update the rolling usage entry and this task list with the round-thirteen guard and the two record findings.
 
 ## Workflow follow-up
 
