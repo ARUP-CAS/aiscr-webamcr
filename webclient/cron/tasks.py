@@ -76,6 +76,7 @@ from core.utils import (
 )
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import F, Min, Model, Q
@@ -927,6 +928,21 @@ def _format_import_primary_key(pk):
     if isinstance(pk, dict):
         return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
     return str(pk)
+
+
+def _model_to_comparable_dict(record) -> dict:
+    """
+    Vrátí hodnoty polí záznamu pro zjištění změny importem.
+
+    Geometrie se převádí na EWKB, protože porovnání ``GEOSGeometry`` ignoruje souřadnici Z.
+
+    :param record: Instance modelu.
+    :return: Slovník ``model_to_dict`` s geometriemi jako EWKB.
+    """
+    return {
+        name: bytes(value.ewkb) if isinstance(value, GEOSGeometry) else value
+        for name, value in model_to_dict(record).items()
+    }
 
 
 def reset_import_job(redis_connector, job_id):
@@ -2438,7 +2454,7 @@ def run_data_import(job_id, user_id, lock_token):
                                 ):
                                     if isinstance(record, Model):
                                         record_db = mapper_class.load_record_from_db(record)
-                                        record_db_dict = model_to_dict(record_db) if record_db else None
+                                        record_db_dict = _model_to_comparable_dict(record_db) if record_db else None
                                         mapper_class.create_relations(record)
                                         mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
                                         if (
@@ -2457,9 +2473,7 @@ def run_data_import(job_id, user_id, lock_token):
                                             add_item_fedora_update_target(
                                                 {(related_target.__class__, related_target.pk)}, record_id
                                             )
-                                        record_dict = (
-                                            model_to_dict(record_saved) if record_saved else model_to_dict(record)
-                                        )
+                                        record_dict = _model_to_comparable_dict(record_saved or record)
                                         if (
                                             performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
                                             or record_dict != record_db_dict

@@ -1709,12 +1709,15 @@ class ImportModelMapper(ABC):
         """
         Načte aktuální podobu záznamu z databáze podle jeho primárního klíče.
 
+        Načítá model záznamu, ne ``model_class`` mapperu: doplňkový záznam (např. ``Akce``) sdílí primární
+        klíč s hlavním záznamem a podle ``model_class`` by se načetl hlavní záznam.
+
         :param record: Instance modelu, jejíž aktuální stav má být z databáze znovu načten.
         :return: Nalezený záznam z databáze, jinak ``None`` při chybě nebo nepodporovaném primárním klíči.
         """
         if isinstance(cls.primary_key, str):
             try:
-                return cls.model_class.objects.get(pk=record.pk)
+                return type(record).objects.get(pk=record.pk)
             except Exception:
                 return None
 

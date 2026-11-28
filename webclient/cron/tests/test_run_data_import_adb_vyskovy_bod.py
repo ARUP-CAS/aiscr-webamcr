@@ -19,6 +19,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar, HeslarNazev
+from historie.models import Historie
 from uzivatel.models import Osoba, User
 
 FILE_KEY = "az_adb_vyskove_body"
@@ -238,6 +239,17 @@ class RunDataImportVyskovyBodTest(TestCase):
 
         updated = VyskovyBod.objects.get(ident_cely=VB_IDENT)
         self.assertAlmostEqual(updated.geom.z, 250.5, places=2)
+
+    def test_update_of_z_only_writes_history(self):
+        """UPDATE měnící jen souřadnici Z výškového bodu zapíše historii archeologického záznamu."""
+        self._create_existing_vb()
+        az = self.adb.dokumentacni_jednotka.archeologicky_zaznam
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+
+        self._run_import(fake_redis)
+
+        az.refresh_from_db()
+        self.assertTrue(Historie.objects.filter(vazba=az.historie).exists())
 
     def test_delete_removes_vb_from_database(self):
         """Ověřuje, že DELETE import smaže záznam vyskovy bod z databáze."""

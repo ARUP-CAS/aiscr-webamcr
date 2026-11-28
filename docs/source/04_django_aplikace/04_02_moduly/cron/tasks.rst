@@ -243,6 +243,15 @@ Funkce
    :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
    :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
 
+.. py:function:: _model_to_comparable_dict(record)
+
+   Vrátí hodnoty polí záznamu pro zjištění změny importem.
+
+   Geometrie se převádí na EWKB, protože porovnání ``GEOSGeometry`` ignoruje souřadnici Z.
+
+   :param record: Instance modelu.
+   :return: Slovník ``model_to_dict`` s geometriemi jako EWKB.
+
 .. py:function:: reset_import_job(redis_connector, job_id)
 
    Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.

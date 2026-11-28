@@ -23,6 +23,7 @@ from cron.tests._import_test_fixtures import (
 )
 from django.contrib.auth.models import Group
 from django.test import TestCase
+from historie.models import Historie
 from uzivatel.models import Osoba, User
 
 FILE_KEY = "az_akce"
@@ -211,8 +212,6 @@ class RunDataImportArcheologickyZaznamAkceTest(TestCase):
 
     def test_history_save_failure_marks_import_as_failed(self):
         """Ověřuje, že selhání uložení historie záznamu archeologicky zaznam akce označí import jako selhaný."""
-        from historie.models import Historie
-
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
 
         def failing_save(self, *args, **kwargs):
@@ -334,6 +333,18 @@ class RunDataImportArcheologickyZaznamAkceTest(TestCase):
         self.assertEqual(updated.stav, 2, "Stav musí být aktualizován na 2.")
         self.assertEqual(updated.pristupnost_id, original_pristupnost_id, "Pristupnost nesmí být přepsána na None.")
         self.assertEqual(updated.hlavni_katastr_id, original_katastr_id, "Hlavní katastr nesmí být přepsán na None.")
+
+    def test_update_of_akce_only_writes_history(self):
+        """UPDATE měnící jen pole akce (doplňkového záznamu) zapíše historii archeologického záznamu."""
+        az, _ = self._create_existing_az_with_akce()
+        payload = {"__file_name": FILE_KEY, "ident_cely": AZ_IDENT, "ulozeni_dokumentace": "Nové uložení"}
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_UPDATE, payload)
+
+        self._run_import(fake_redis)
+
+        self.assertEqual(Akce.objects.get(archeologicky_zaznam=az).ulozeni_dokumentace, "Nové uložení")
+        az.refresh_from_db()
+        self.assertTrue(Historie.objects.filter(vazba=az.historie).exists())
 
     def test_delete_removes_az_and_akce_from_database(self):
         """DELETE pro ``ArcheologickyZaznamAkceMapper`` smaže Akci i ArcheologickyZaznam.
