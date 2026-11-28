@@ -1,0 +1,1449 @@
+{
+  "messages": {
+    "api.model.apiRequestLog.clientIp": {
+      "cs": "IP",
+      "en": "IP"
+    },
+    "api.model.apiRequestLog.errors": {
+      "cs": "Chyby",
+      "en": "Errors"
+    },
+    "api.model.apiRequestLog.fileSize": {
+      "cs": "Velikost (B)",
+      "en": "Size (B)"
+    },
+    "api.model.apiRequestLog.filename": {
+      "cs": "Soubor",
+      "en": "Filename"
+    },
+    "api.model.apiRequestLog.finishedAt": {
+      "cs": "Dokončeno",
+      "en": "Finished at"
+    },
+    "api.model.apiRequestLog.identCely": {
+      "cs": "ID",
+      "en": "ID"
+    },
+    "api.model.apiRequestLog.receivedAt": {
+      "cs": "Přijato",
+      "en": "Received at"
+    },
+    "api.model.apiRequestLog.requestTarget": {
+      "cs": "Cíl",
+      "en": "Target"
+    },
+    "api.model.apiRequestLog.samostatnyNalez": {
+      "cs": "Nález",
+      "en": "Find"
+    },
+    "api.model.apiRequestLog.status": {
+      "cs": "Stav",
+      "en": "Status"
+    },
+    "api.model.apiRequestLog.user": {
+      "cs": "Uživatel",
+      "en": "User"
+    },
+    "core.admin.import_data.error.bad_zip_file": {
+      "cs": "ZIP soubor se nepodařilo přečíst.",
+      "en": "ZIP file could not be read."
+    },
+    "core.admin.import_data.error.empty_import": {
+      "cs": "Importní soubor je prázdný.",
+      "en": "The import file is empty."
+    },
+    "core.admin.import_data.error.import_error": {
+      "cs": "Chyba importu",
+      "en": "Import error"
+    },
+    "core.admin.import_data.error.missing_file": {
+      "cs": "Chybí importovaný soubor.",
+      "en": "Imported file is missing."
+    },
+    "core.admin.import_data.error.unexpected_error": {
+      "cs": "Neočekávaná výjimka.",
+      "en": "An unexpected exception."
+    },
+    "core.admin.import_data.error.virus_found": {
+      "cs": "V souboru byl nalezen škodlivý kód.",
+      "en": "Malicious code was found in the file."
+    },
+    "core.admin.import_data.error.zip_too_large": {
+      "cs": "ZIP soubor je příliš velký.",
+      "en": "ZIP file is too large."
+    },
+    "core.admin.import_data.record_valid": {
+      "cs": "záznam ověřen",
+      "en": "record validated"
+    },
+    "core.forms.OdstavkaSystemuForm.textCs.label": {
+      "cs": "Předběžná informace o blížící se odstávce (CS)",
+      "en": "Preliminary information about an upcoming downtime (CS)"
+    },
+    "core.forms.OdstavkaSystemuForm.textEn.label": {
+      "cs": "Předběžná informace o blížící se odstávce (EN)",
+      "en": "Preliminary information about an upcoming downtime (EN)"
+    },
+    "core.import_data_mappers.AdbMapper.podnet.limit_choices": {
+      "cs": "adb_podnet",
+      "en": "adb_podnet"
+    },
+    "core.import_data_mappers.AdbMapper.typ_sondy.limit_choices": {
+      "cs": "adb_typ",
+      "en": "adb_typ"
+    },
+    "core.import_data_mappers.AdbVyskovyBod.typ.limit_choices": {
+      "cs": "vyskovy_bod_typ",
+      "en": "vyskovy_bod_typ"
+    },
+    "core.import_data_mappers.ArcheologickyZaznamAkceMapper.hlavni_typ.limit_choices": {
+      "cs": "akce_typ",
+      "en": "akce_typ"
+    },
+    "core.import_data_mappers.ArcheologickyZaznamAkceMapper.pristupnost.limit_choices": {
+      "cs": "pristupnost",
+      "en": "pristupnost"
+    },
+    "core.import_data_mappers.ArcheologickyZaznamAkceMapper.specifikace_data.limit_choices": {
+      "cs": "datum_specifikace",
+      "en": "datum_specifikace"
+    },
+    "core.import_data_mappers.ArcheologickyZaznamAkceMapper.vedlejsi_typ.limit_choices": {
+      "cs": "akce_typ",
+      "en": "akce_typ"
+    },
+    "core.import_data_mappers.DokumentJazykMapper.jazyk.limit_choices": {
+      "cs": "jazyk",
+      "en": "jazyk"
+    },
+    "core.import_data_mappers.DokumentLetMapper.dohlednost.limit_choices": {
+      "cs": "dohlednost",
+      "en": "dohlednost"
+    },
+    "core.import_data_mappers.DokumentLetMapper.letiste_cil.limit_choices": {
+      "cs": "letiste",
+      "en": "letiste"
+    },
+    "core.import_data_mappers.DokumentLetMapper.letiste_start.limit_choices": {
+      "cs": "letiste",
+      "en": "letiste"
+    },
+    "core.import_data_mappers.DokumentLetMapper.pocasi.limit_choices": {
+      "cs": "pocasi",
+      "en": "pocasi"
+    },
+    "core.import_data_mappers.DokumentMapper.format.limit_choices": {
+      "cs": "dokument_format",
+      "en": "dokument_format"
+    },
+    "core.import_data_mappers.DokumentMapper.licence.limit_choices": {
+      "cs": "dokument_licence",
+      "en": "dokument_licence"
+    },
+    "core.import_data_mappers.DokumentMapper.material_originalu.limit_choices": {
+      "cs": "dokument_material",
+      "en": "dokument_material"
+    },
+    "core.import_data_mappers.DokumentMapper.nahrada.limit_choices": {
+      "cs": "dokument_nahrada",
+      "en": "dokument_nahrada"
+    },
+    "core.import_data_mappers.DokumentMapper.pristupnost.limit_choices": {
+      "cs": "pristupnost",
+      "en": "pristupnost"
+    },
+    "core.import_data_mappers.DokumentMapper.rada.limit_choices": {
+      "cs": "dokument_rada",
+      "en": "dokument_rada"
+    },
+    "core.import_data_mappers.DokumentMapper.typ_dokumentu.limit_choices": {
+      "cs": "dokument_typ",
+      "en": "dokument_typ"
+    },
+    "core.import_data_mappers.DokumentMapper.udalost_typ.limit_choices": {
+      "cs": "udalost_typ",
+      "en": "udalost_typ"
+    },
+    "core.import_data_mappers.DokumentMapper.ulozeni_originalu.limit_choices": {
+      "cs": "dokument_ulozeni",
+      "en": "dokument_ulozeni"
+    },
+    "core.import_data_mappers.DokumentMapper.zachovalost.limit_choices": {
+      "cs": "dokument_zachovalost",
+      "en": "dokument_zachovalost"
+    },
+    "core.import_data_mappers.DokumentMapper.zeme.limit_choices": {
+      "cs": "zeme",
+      "en": "zeme"
+    },
+    "core.import_data_mappers.DokumentPosudekMapper.posudek.limit_choices": {
+      "cs": "posudek_typ",
+      "en": "posudek_typ"
+    },
+    "core.import_data_mappers.DokumentacniJednotkaMapper.typ.limit_choices": {
+      "cs": "dok_jednotka_typ",
+      "en": "dok_jednotka_typ"
+    },
+    "core.import_data_mappers.ExterniZdrojMapper.typ.limit_choices": {
+      "cs": "ext_zdroj_typ",
+      "en": "ext_zdroj_typ"
+    },
+    "core.import_data_mappers.ExterniZdrojMapper.typ_dokumentu.limit_choices": {
+      "cs": "dokument_typ",
+      "en": "dokument_typ"
+    },
+    "core.import_data_mappers.HeslarDataceMapper.obdobi.limit_choices": {
+      "cs": "obdobi",
+      "en": "obdobi"
+    },
+    "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_material.limit_choices": {
+      "cs": "dokument_material",
+      "en": "dokument_material"
+    },
+    "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_typ.limit_choices": {
+      "cs": "dokument_typ",
+      "en": "dokument_typ"
+    },
+    "core.import_data_mappers.KomponentaAktivitaMapper.aktivita.limit_choices": {
+      "cs": "aktivita",
+      "en": "aktivita"
+    },
+    "core.import_data_mappers.KomponentaMapper.areal.limit_choices": {
+      "cs": "areal",
+      "en": "areal"
+    },
+    "core.import_data_mappers.KomponentaMapper.obdobi.limit_choices": {
+      "cs": "obdobi",
+      "en": "obdobi"
+    },
+    "core.import_data_mappers.LokalitaMapper.druh.limit_choices": {
+      "cs": "lokalita_druh",
+      "en": "lokalita_druh"
+    },
+    "core.import_data_mappers.LokalitaMapper.jistota.limit_choices": {
+      "cs": "jistota_urceni",
+      "en": "jistota_urceni"
+    },
+    "core.import_data_mappers.LokalitaMapper.pristupnost.limit_choices": {
+      "cs": "pristupnost",
+      "en": "pristupnost"
+    },
+    "core.import_data_mappers.LokalitaMapper.typ_lokality.limit_choices": {
+      "cs": "lokalita_typ",
+      "en": "lokalita_typ"
+    },
+    "core.import_data_mappers.LokalitaMapper.zachovalost.limit_choices": {
+      "cs": "stav_dochovani",
+      "en": "stav_dochovani"
+    },
+    "core.import_data_mappers.NalezObjektMapper.druh.limit_choices": {
+      "cs": "objekt_druh",
+      "en": "objekt_druh"
+    },
+    "core.import_data_mappers.NalezObjektMapper.specifikace.limit_choices": {
+      "cs": "objekt_specifikace",
+      "en": "objekt_specifikace"
+    },
+    "core.import_data_mappers.NalezPredmetMapper.druh.limit_choices": {
+      "cs": "predmet_druh",
+      "en": "predmet_druh"
+    },
+    "core.import_data_mappers.NalezPredmetMapper.specifikace.limit_choices": {
+      "cs": "predmet_specifikace",
+      "en": "predmet_specifikace"
+    },
+    "core.import_data_mappers.OrganizaceMapper.licence.limit_choices": {
+      "cs": "dokument_licence",
+      "en": "dokument_licence"
+    },
+    "core.import_data_mappers.OrganizaceMapper.typ_organizace.limit_choices": {
+      "cs": "organizace_typ",
+      "en": "organizace_typ"
+    },
+    "core.import_data_mappers.OrganizaceMapper.zverejneni_pristupnost.limit_choices": {
+      "cs": "pristupnost",
+      "en": "pristupnost"
+    },
+    "core.import_data_mappers.PianMapper.presnost.limit_choices": {
+      "cs": "pian_presnost",
+      "en": "pian_presnost"
+    },
+    "core.import_data_mappers.PianMapper.typ.limit_choices": {
+      "cs": "pian_typ",
+      "en": "pian_typ"
+    },
+    "core.import_data_mappers.ProjektMapper.kulturni_pamatka.limit_choices": {
+      "cs": "pamatkova_ochrana",
+      "en": "pamatkova_ochrana"
+    },
+    "core.import_data_mappers.ProjektMapper.typ_projektu.limit_choices": {
+      "cs": "projekt_typ",
+      "en": "projekt_typ"
+    },
+    "core.import_data_mappers.SamostatnyNalezMapper.druh_nalezu.limit_choices": {
+      "cs": "predmet_druh",
+      "en": "predmet_druh"
+    },
+    "core.import_data_mappers.SamostatnyNalezMapper.obdobi.limit_choices": {
+      "cs": "obdobi",
+      "en": "obdobi"
+    },
+    "core.import_data_mappers.SamostatnyNalezMapper.okolnosti.limit_choices": {
+      "cs": "nalezove_okolnosti",
+      "en": "nalezove_okolnosti"
+    },
+    "core.import_data_mappers.SamostatnyNalezMapper.pristupnost.limit_choices": {
+      "cs": "pristupnost",
+      "en": "pristupnost"
+    },
+    "core.import_data_mappers.SamostatnyNalezMapper.specifikace.limit_choices": {
+      "cs": "predmet_specifikace",
+      "en": "predmet_specifikace"
+    },
+    "core.import_data_mappers.TvarMapper.tvar.limit_choices": {
+      "cs": "letfoto_tvar",
+      "en": "letfoto_tvar"
+    },
+    "core.model.OdstavkaSystemu.casOdstavky.label": {
+      "cs": "Čas odstávky",
+      "en": "Downtime time"
+    },
+    "core.model.OdstavkaSystemu.datumOdstavky.label": {
+      "cs": "Datum odstávky",
+      "en": "Downtime date"
+    },
+    "core.model.OdstavkaSystemu.infoOd.label": {
+      "cs": "Datum oznámení",
+      "en": "Date of announcement"
+    },
+    "core.model.OdstavkaSystemu.status.label": {
+      "cs": "Aktivní",
+      "en": "Active"
+    },
+    "core.models.permissions.accessibility": {
+      "cs": "Přístupnost",
+      "en": "Accessibility"
+    },
+    "core.models.permissions.action": {
+      "cs": "Akce",
+      "en": "Action"
+    },
+    "core.models.permissions.addressInApp": {
+      "cs": "URL",
+      "en": "URL"
+    },
+    "core.models.permissions.base": {
+      "cs": "základní přístup",
+      "en": "basic access"
+    },
+    "core.models.permissions.mainRole": {
+      "cs": "Role",
+      "en": "Role"
+    },
+    "core.models.permissions.ownership": {
+      "cs": "Vlastnictví",
+      "en": "Ownership"
+    },
+    "core.models.permissions.status": {
+      "cs": "Stav",
+      "en": "Status"
+    },
+    "core.templates.admin.import_data.cancel_confirm": {
+      "cs": "Opravdu chcete zrušit import a uvolnit zámek?",
+      "en": "Are you sure you want to cancel the import and release the lock?"
+    },
+    "core.templates.admin.import_data.cancel_not_allowed": {
+      "cs": "Import v této fázi nelze zrušit.",
+      "en": "Import cannot be cancelled in this phase."
+    },
+    "core.templates.admin.import_data.cancel_release_lock": {
+      "cs": "Zrušit import",
+      "en": "Cancel import"
+    },
+    "core.templates.admin.import_data.download_report": {
+      "cs": "Stáhnout log importu",
+      "en": "Download import log"
+    },
+    "core.templates.admin.import_data.fedora_target.affected_records": {
+      "cs": "Dotčené záznamy",
+      "en": "Affected records"
+    },
+    "core.templates.admin.import_data.fedora_target.ident_cely": {
+      "cs": "ID",
+      "en": "ID"
+    },
+    "core.templates.admin.import_data.fedora_target.result": {
+      "cs": "Výsledek",
+      "en": "Result"
+    },
+    "core.templates.admin.import_data.fedora_target.transaction_uid": {
+      "cs": "Transakce",
+      "en": "Transaction"
+    },
+    "core.templates.admin.import_data.fedora_update_result": {
+      "cs": "Záznam ve Fedoře",
+      "en": "Fedora record"
+    },
+    "core.templates.admin.import_data.fila_name": {
+      "cs": "CSV",
+      "en": "CSV"
+    },
+    "core.templates.admin.import_data.files.additional_info": {
+      "cs": "Další informace",
+      "en": "Additional information"
+    },
+    "core.templates.admin.import_data.files.file_name": {
+      "cs": "Soubor",
+      "en": "File"
+    },
+    "core.templates.admin.import_data.files.ident_cely": {
+      "cs": "ID",
+      "en": "ID"
+    },
+    "core.templates.admin.import_data.files.size_mb": {
+      "cs": "Velikost (MB)",
+      "en": "Size (MB)"
+    },
+    "core.templates.admin.import_data.heading": {
+      "cs": "Hromadný import",
+      "en": "Bulk import"
+    },
+    "core.templates.admin.import_data.history_record_result": {
+      "cs": "Záznam v historii",
+      "en": "History record"
+    },
+    "core.templates.admin.import_data.home_link": {
+      "cs": "Domů",
+      "en": "Home"
+    },
+    "core.templates.admin.import_data.import_directory_not_configured": {
+      "cs": "Chybí nastavení adresáře s datovými soubory.",
+      "en": "Data file directory is not configured."
+    },
+    "core.templates.admin.import_data.import_is_running": {
+      "cs": "Import aktuálně probíhá v jiné instanci.",
+      "en": "The import is currently in progress in another instance."
+    },
+    "core.templates.admin.import_data.import_order": {
+      "cs": "Operace",
+      "en": "Operation"
+    },
+    "core.templates.admin.import_data.invalid_records": {
+      "cs": "Import obsahuje chyby v těchto záznamech.",
+      "en": "The import contains errors in these records."
+    },
+    "core.templates.admin.import_data.no_active_job_notice": {
+      "cs": "Žádný import neprobíhá. Výsledky předchozích importů najdete v sekci",
+      "en": "No import is running. Results of previous imports are available in"
+    },
+    "core.templates.admin.import_data.not_maintenance": {
+      "cs": "Pro použití hromadného importu musí být systém uveden do stavu odstávky.",
+      "en": "The system must be in maintenance mode to use bulk import."
+    },
+    "core.templates.admin.import_data.not_owner": {
+      "cs": "Tuto akci může provést pouze uživatel, který import spustil.",
+      "en": "Only the user who started the import can perform this action."
+    },
+    "core.templates.admin.import_data.nothing_to_reset": {
+      "cs": "Import v této fázi nelze resetovat.",
+      "en": "Import cannot be reset in this phase."
+    },
+    "core.templates.admin.import_data.partial_report_banner": {
+      "cs": "Report je neúplný, import stále probíhá.",
+      "en": "Report is incomplete; import is still running."
+    },
+    "core.templates.admin.import_data.primary_key_database": {
+      "cs": "ID v DB",
+      "en": "ID in DB"
+    },
+    "core.templates.admin.import_data.primary_key_import": {
+      "cs": "ID v CSV",
+      "en": "ID in CSV"
+    },
+    "core.templates.admin.import_data.report_saved_label": {
+      "cs": "Report uložen",
+      "en": "Report saved"
+    },
+    "core.templates.admin.import_data.reset_confirm": {
+      "cs": "Opravdu chcete resetovat import? Uvolní se zámek a úloha bude ukončena.",
+      "en": "Are you sure you want to reset the import? The lock will be released and the task terminated."
+    },
+    "core.templates.admin.import_data.reset_import": {
+      "cs": "Resetovat import",
+      "en": "Reset import"
+    },
+    "core.templates.admin.import_data.reset_recent_progress": {
+      "cs": "Import nelze resetovat, úloha v posledních pěti minutách pokročila.",
+      "en": "Import cannot be reset because task made progress in the last five minutes."
+    },
+    "core.templates.admin.import_data.reupload": {
+      "cs": "Nahrát soubor znovu",
+      "en": "Upload file again"
+    },
+    "core.templates.admin.import_data.reupload_notice": {
+      "cs": "Import byl přerušen. Nahrajte soubor znovu.",
+      "en": "Import was interrupted. Upload the file again."
+    },
+    "core.templates.admin.import_data.start_import": {
+      "cs": "Zahájit import",
+      "en": "Start importing"
+    },
+    "core.templates.admin.import_data.starting": {
+      "cs": "zahajuji import záznamů",
+      "en": "starting records import"
+    },
+    "core.templates.admin.import_data.status": {
+      "cs": "Výsledek importu",
+      "en": "Import result"
+    },
+    "core.templates.admin.import_data.stop_confirm": {
+      "cs": "Opravdu chcete zastavit import?",
+      "en": "Are you sure you want to stop the import?"
+    },
+    "core.templates.admin.import_data.stop_request": {
+      "cs": "Zastavit úlohu",
+      "en": "Stop task"
+    },
+    "core.templates.admin.import_data.timeout_error": {
+      "cs": "Uplynul maximální čas pro import.",
+      "en": "The maximum time for importing has elapsed."
+    },
+    "core.templates.admin.import_reports.directory_not_configured": {
+      "cs": "Adresář pro reporty importu není nastaven.",
+      "en": "Import report directory is not configured."
+    },
+    "core.templates.admin.import_reports.download": {
+      "cs": "Stáhnout",
+      "en": "Download"
+    },
+    "core.templates.admin.import_reports.empty": {
+      "cs": "Zatím nebyly uloženy žádné reporty importu.",
+      "en": "No import reports have been saved yet."
+    },
+    "core.templates.admin.import_reports.file_missing": {
+      "cs": "Soubor chybí",
+      "en": "File missing"
+    },
+    "core.templates.admin.import_reports.file_name": {
+      "cs": "Název souboru",
+      "en": "File name"
+    },
+    "core.templates.admin.import_reports.heading": {
+      "cs": "Reporty hromadného importu",
+      "en": "Bulk import reports"
+    },
+    "core.templates.admin.import_reports.job_id": {
+      "cs": "ID úlohy",
+      "en": "Task ID"
+    },
+    "core.templates.admin.import_reports.missing_files_error": {
+      "cs": "Některé soubory reportů v adresáři chybí. Dotčené položky jsou v seznamu označeny.",
+      "en": "Some report files are missing from the directory. Affected entries are marked in the list."
+    },
+    "core.templates.admin.import_reports.stage": {
+      "cs": "Fáze",
+      "en": "Phase"
+    },
+    "core.templates.admin.import_reports.stage_awaiting_approval": {
+      "cs": "Čeká na schválení",
+      "en": "Awaiting approval"
+    },
+    "core.templates.admin.import_reports.stage_canceled": {
+      "cs": "Zrušeno",
+      "en": "Cancelled"
+    },
+    "core.templates.admin.import_reports.stage_failed": {
+      "cs": "Selhalo",
+      "en": "Failed"
+    },
+    "core.templates.admin.import_reports.stage_finished": {
+      "cs": "Dokončeno",
+      "en": "Completed"
+    },
+    "core.templates.admin.import_reports.stage_importing": {
+      "cs": "Probíhá import",
+      "en": "Importing"
+    },
+    "core.templates.admin.import_reports.stage_stopped": {
+      "cs": "Zastaveno",
+      "en": "Stopped"
+    },
+    "core.templates.admin.import_reports.stage_validating": {
+      "cs": "Validace",
+      "en": "Validation"
+    },
+    "core.templates.admin.import_reports.updated_at": {
+      "cs": "Poslední změna",
+      "en": "Last updated"
+    },
+    "core_admin.BooleanImportField.message.invalid_boolean_value": {
+      "cs": "Chyba zpracování hodnoty typu Boolean.",
+      "en": "Error in processing of a Boolean value."
+    },
+    "core_admin.DateRangeImportField.message.invalid_date_range_value": {
+      "cs": "Chyba zpracování hodnoty typu daterange.",
+      "en": "Error in processing of a daterange value."
+    },
+    "core_admin.DecimalImportField.message.invalid_decimal_value": {
+      "cs": "Chyba zpracování hodnoty typu desetinné číslo.",
+      "en": "Error in processing of a decimal number."
+    },
+    "core_admin.DistribuceImportIntegrityError.message": {
+      "cs": "Distribuce {distribution} u souboru {soubor_id} neodpovídá očekávanému stavu při akci {performed_action}.",
+      "en": "Distribution {distribution} of file {soubor_id} does not match the expected state for action {performed_action}."
+    },
+    "core_admin.DistribuceMissingRepositoryUuidError.message": {
+      "cs": "Soubor {soubor_id} nemá v cestě uložené UUID kontejneru ve Fedoře.",
+      "en": "File {soubor_id} has no Fedora container UUID stored in its path."
+    },
+    "core_admin.DistribuceMissingVazbaError.message": {
+      "cs": "Soubor {soubor_id} nemá vazbu na nadřazený záznam.",
+      "en": "File {soubor_id} has no link to a parent record."
+    },
+    "core_admin.DistribuceUnsafeFilenameError.message": {
+      "cs": "Název souboru {nazev} není bezpečný.",
+      "en": "The file name {nazev} is not safe."
+    },
+    "core_admin.GeomImportField.message.invalid_date_value": {
+      "cs": "Chyba při zpracování hodnoty typu datum.",
+      "en": "Error in processing of a date value."
+    },
+    "core_admin.GeomImportField.message.srid_mismatch": {
+      "cs": "Chyba při stanovení souřadnicového systému.",
+      "en": "Error in determining the coordinate system."
+    },
+    "core_admin.ImportDataActiveUserCannotBeDeleted.message": {
+      "cs": "Aktivní uživatel provádějící import nemůže být smazán",
+      "en": "An active user performing an import cannot be deleted"
+    },
+    "core_admin.ImportDataBatchOrderingError.message": {
+      "cs": "Záznam {child} odkazuje v poli {field} na nadřazený záznam {parent}, který v databázi neexistuje a v importním souboru je uveden až později. Uveďte záznam {parent} v souboru před záznamem {child}.",
+      "en": "Record {child} refers in field {field} to parent record {parent}, which does not exist in the database and appears later in the import file. Place record {parent} before record {child} in the file."
+    },
+    "core_admin.ImportDataDistributionPathConflictError.message": {
+      "cs": "Konflikt cesty distribuce",
+      "en": "Distribution path conflict"
+    },
+    "core_admin.ImportDataDistributionPrefixCollisionError.message": {
+      "cs": "Kolize předpony distribuce",
+      "en": "Distribution prefix collision"
+    },
+    "core_admin.ImportDataError.message.akce_typ_check.invalid_typ": {
+      "cs": "Neplatný typ akce {typ}. Povolené hodnoty jsou N a R.",
+      "en": "Invalid fieldwork event type {typ}. Allowed values are N and R."
+    },
+    "core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt": {
+      "cs": "Samostatná akce (typ N) nesmí mít vyplněný projekt.",
+      "en": "Individual fieldwork event (type N) must not have a project."
+    },
+    "core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt": {
+      "cs": "Projektová akce (typ R) musí mít vyplněný projekt.",
+      "en": "Project fieldwork event (type R) must have a project."
+    },
+    "core_admin.ImportDataError.message.invalid_date_time_value": {
+      "cs": "Neplatná hodnota data a času",
+      "en": "Invalid date and time value"
+    },
+    "core_admin.ImportDataError.message.invalid_date_value": {
+      "cs": "Neplatná hodnota data",
+      "en": "Invalid date value"
+    },
+    "core_admin.ImportDataError.message.invalid_integer_value": {
+      "cs": "Neplatná celočíselná hodnota",
+      "en": "Invalid integer value"
+    },
+    "core_admin.ImportDataError.message.invalid_performed_action": {
+      "cs": "Neplatná operace importu",
+      "en": "Invalid import operation"
+    },
+    "core_admin.ImportDataError.message.invalid_positive_integer_value": {
+      "cs": "Neplatná kladná celočíselná hodnota",
+      "en": "Invalid positive integer value"
+    },
+    "core_admin.ImportDataError.message.missing_required_field": {
+      "cs": "Chybí povinné pole",
+      "en": "Missing required field"
+    },
+    "core_admin.ImportDataFileExtensionNotAllowedError.message": {
+      "cs": "Přípona souboru {nazev} není u záznamu {vazba} povolena.",
+      "en": "File extension of {nazev} is not allowed for record {vazba}."
+    },
+    "core_admin.ImportDataIncorrectPrimaryKeyFormatError.message": {
+      "cs": "Chybný formát primárního klíče.",
+      "en": "Invalid primary key format."
+    },
+    "core_admin.ImportDataIncorrectStructureContentObjectError.message": {
+      "cs": "Neplatná struktura obsahu importovaných dat. Sloupce: {columns}. Očekávané možnosti sloupců: {options}.",
+      "en": "Invalid structure of imported data content. Columns: {columns}. Expected column options: {options}."
+    },
+    "core_admin.ImportDataIncorrectStructureError.message": {
+      "cs": "Chybný formát CSV souboru s daty.",
+      "en": "Incorrect CSV data file format."
+    },
+    "core_admin.ImportDataIncorrectStructureError.message.excess_columns": {
+      "cs": "Přebývající sloupce: {columns}.",
+      "en": "Excess columns: {columns}."
+    },
+    "core_admin.ImportDataIncorrectStructureError.message.missing_columns": {
+      "cs": "Chybějící sloupce: {columns}.",
+      "en": "Missing columns: {columns}."
+    },
+    "core_admin.ImportDataIntegrityError.message": {
+      "cs": "Chyba integrity databáze při zpracování záznamu {record} v modelu {model} (operace: {action}).",
+      "en": "Database integrity error while processing record {record} in model {model} (operation: {action})."
+    },
+    "core_admin.ImportDataInvalidDistributionError.message": {
+      "cs": "Název distribuce {distribution} není platný.",
+      "en": "The distribution name {distribution} is not valid."
+    },
+    "core_admin.ImportDataLimitChoicesError.message": {
+      "cs": "Hodnotu v poli {import_field} záznamu {record} nelze použít. Přípustné jsou pouze hodnoty z hesláře {heslar}.",
+      "en": "Value in field {import_field} of record {record} cannot be used. Only values from vocabulary {heslar} are allowed."
+    },
+    "core_admin.ImportDataMissingHeslarValueError.message": {
+      "cs": "Hodnota {value} v poli {import_field} nebyla nalezena v hesláři {heslar} (vyhledáno podle {field_name}).",
+      "en": "Value {value} in field {import_field} was not found in vocabulary {heslar} (looked up by {field_name})."
+    },
+    "core_admin.ImportDataMissingReferencedValueError.message": {
+      "cs": "Referencovaná hodnota {value} nebyla nalezena.",
+      "en": "Referenced value {value} was not found."
+    },
+    "core_admin.ImportDataMissingReferencedValueError.message.field": {
+      "cs": "Referencovaná hodnota {value} v poli {field} nebyla nalezena.",
+      "en": "Referenced value {value} in field {field} was not found."
+    },
+    "core_admin.ImportDataMissingReferencedValueError.message.model": {
+      "cs": "Referencovaná hodnota {value} nebyla v modelu {model} nalezena.",
+      "en": "Referenced value {value} was not found in model {model}."
+    },
+    "core_admin.ImportDataMissingReferencedValueError.message.model_field": {
+      "cs": "Referencovaná hodnota {value} v poli {field} nebyla v modelu {model} nalezena.",
+      "en": "Referenced value {value} in field {field} was not found in model {model}."
+    },
+    "core_admin.ImportDataReservedDistributionError.message": {
+      "cs": "Název distribuce {distribution} je vyhrazený a nelze jej použít.",
+      "en": "The distribution name {distribution} is reserved and cannot be used."
+    },
+    "core_admin.ImportDataUnsupportedFileError.message": {
+      "cs": "Soubor {file} neodpovídá žádnému modelu.",
+      "en": "File {file} does not correspond to any model."
+    },
+    "core_admin.ImportDataUnsupportedFilesError.message": {
+      "cs": "Soubory {files} se nepodařilo zpracovat.",
+      "en": "Files {files} could not be processed."
+    },
+    "core_admin.LookupImportField.message.limit_choices_to_unsupported_model": {
+      "cs": "Omezení limit_choices_to je podporováno pouze pro model Heslar.",
+      "en": "Restriction limit_choices_to is supported only for model Heslar."
+    },
+    "core_admin.SouborImportIntegrityError.message": {
+      "cs": "Soubor {nazev} u záznamu {vazba} již existuje v databázi nebo v importním souboru.",
+      "en": "File {nazev} already exists for record {vazba} in the database or in the import file."
+    },
+    "cron.tasks.run_data_import.already_exists": {
+      "cs": "Soubor již existuje.",
+      "en": "File already exists."
+    },
+    "cron.tasks.run_data_import.cancelled": {
+      "cs": "Import byl zrušen.",
+      "en": "Import was cancelled."
+    },
+    "cron.tasks.run_data_import.cannot_read_from_directory": {
+      "cs": "Chyba čtení adresáře s datovými soubory.",
+      "en": "Error reading directory with data files."
+    },
+    "cron.tasks.run_data_import.creating_history_records": {
+      "cs": "Vytváření záznamů historie",
+      "en": "Creating history records"
+    },
+    "cron.tasks.run_data_import.creating_history_records_progress": {
+      "cs": "Vytváření záznamů historie {n}/{total}",
+      "en": "Creating history records {n}/{total}"
+    },
+    "cron.tasks.run_data_import.error.database_error": {
+      "cs": "Při ukládání importovaných dat došlo k databázové chybě.",
+      "en": "A database error occurred while saving the imported data."
+    },
+    "cron.tasks.run_data_import.error.message": {
+      "cs": "Došlo k chybě importu: {error}, u záznamu {record} při operaci {action}.",
+      "en": "An import error occurred: {error}, for record {record} during operation {action}."
+    },
+    "cron.tasks.run_data_import.error.not_model": {
+      "cs": "Importovaný záznam není instancí modelu.",
+      "en": "The imported record is not a model instance."
+    },
+    "cron.tasks.run_data_import.failed_during_data_import": {
+      "cs": "Import selhal při ukládání dat záznamů.",
+      "en": "Import failed while saving record data."
+    },
+    "cron.tasks.run_data_import.failed_during_fedora": {
+      "cs": "Import selhal při ukládání metadat do Fedory.",
+      "en": "Import failed while saving metadata to Fedora."
+    },
+    "cron.tasks.run_data_import.failed_during_history": {
+      "cs": "Import selhal při vytváření záznamů historie.",
+      "en": "Import failed while creating history records."
+    },
+    "cron.tasks.run_data_import.failed_lock_acquisition": {
+      "cs": "Import nelze spustit, nepodařilo se získat zámek importu. Zkuste to znovu později.",
+      "en": "Import could not start because import lock could not be acquired. Try again later."
+    },
+    "cron.tasks.run_data_import.failed_lock_lost": {
+      "cs": "Import byl přerušen, úloha ztratila zámek importu. Nahrajte soubor znovu.",
+      "en": "Import was interrupted because task lost import lock. Upload the file again."
+    },
+    "cron.tasks.run_data_import.failed_mime_extension_mismatch": {
+      "cs": "Import souboru selhal: přípona neodpovídá typu souboru.",
+      "en": "File import failed: file extension does not match file type."
+    },
+    "cron.tasks.run_data_import.failed_mime_not_allowed": {
+      "cs": "Import souboru selhal: typ souboru není u navázaného záznamu povolen.",
+      "en": "File import failed: file type is not allowed for linked record."
+    },
+    "cron.tasks.run_data_import.failed_mime_unsupported": {
+      "cs": "Import souboru selhal: typ souboru není podporován.",
+      "en": "File import failed: file type is not supported."
+    },
+    "cron.tasks.run_data_import.failed_missing_repository_uuid": {
+      "cs": "Import souboru selhal: navázaný záznam nemá identifikátor v repozitáři.",
+      "en": "File import failed: linked record has no repository identifier."
+    },
+    "cron.tasks.run_data_import.fedora_delete_commit_failed": {
+      "cs": "Smazání ve Fedoře se nepodařilo potvrdit u záznamu {identity}: {error}",
+      "en": "Deletion in Fedora could not be committed for record {identity}: {error}"
+    },
+    "cron.tasks.run_data_import.fedora_error": {
+      "cs": "Chyba zápisu do Fedory",
+      "en": "Error while recording to Fedora"
+    },
+    "cron.tasks.run_data_import.fedora_record": {
+      "cs": "Záznam ve Fedoře",
+      "en": "Fedora record"
+    },
+    "cron.tasks.run_data_import.fedora_skipped": {
+      "cs": "Přeskočeno",
+      "en": "Skipped"
+    },
+    "cron.tasks.run_data_import.fedora_target_error": {
+      "cs": "Chyba",
+      "en": "Error"
+    },
+    "cron.tasks.run_data_import.fedora_target_skipped": {
+      "cs": "Přeskočeno",
+      "en": "Skipped"
+    },
+    "cron.tasks.run_data_import.fedora_target_success": {
+      "cs": "Aktualizováno",
+      "en": "Updated"
+    },
+    "cron.tasks.run_data_import.fedora_target_unattempted": {
+      "cs": "Nezpracováno",
+      "en": "Not processed"
+    },
+    "cron.tasks.run_data_import.fedora_waiting_data_import": {
+      "cs": "Čeká na import dat",
+      "en": "Waiting for data import"
+    },
+    "cron.tasks.run_data_import.file": {
+      "cs": "Soubor importován",
+      "en": "File imported"
+    },
+    "cron.tasks.run_data_import.file_import.connected": {
+      "cs": "Připojení navázáno",
+      "en": "Connection established"
+    },
+    "cron.tasks.run_data_import.file_import.validating_directory_settings": {
+      "cs": "Kontrola nastavení adresáře s datovými soubory",
+      "en": "Checking data file directory settings"
+    },
+    "cron.tasks.run_data_import.file_mime_type": {
+      "cs": "Typ souboru (MIME): {message}",
+      "en": "File type (MIME): {message}"
+    },
+    "cron.tasks.run_data_import.file_not_found_in_directory": {
+      "cs": "Zdrojový soubor se nepodařilo nalézt.",
+      "en": "The source file could not be found."
+    },
+    "cron.tasks.run_data_import.finalizing": {
+      "cs": "Dokončování importu",
+      "en": "Finalising import"
+    },
+    "cron.tasks.run_data_import.finished": {
+      "cs": "Import byl dokončen.",
+      "en": "Import completed."
+    },
+    "cron.tasks.run_data_import.finished_with_skipped_files": {
+      "cs": "Import byl dokončen. Počet přeskočených souborů: {skipped}.",
+      "en": "Import completed. Skipped files: {skipped}."
+    },
+    "cron.tasks.run_data_import.history_record_created": {
+      "cs": "Vytvořen záznam v historii",
+      "en": "History record created"
+    },
+    "cron.tasks.run_data_import.history_record_error": {
+      "cs": "Chyba při vytváření záznamu historie: {message}",
+      "en": "Error creating history record: {message}"
+    },
+    "cron.tasks.run_data_import.history_record_skipped": {
+      "cs": "Přeskočeno",
+      "en": "Skipped"
+    },
+    "cron.tasks.run_data_import.import_directory_not_configured": {
+      "cs": "Chybí nastavení adresáře s datovými soubory.",
+      "en": "Data file directory is not configured."
+    },
+    "cron.tasks.run_data_import.imported_file": {
+      "cs": "Importovaný soubor",
+      "en": "Imported file"
+    },
+    "cron.tasks.run_data_import.importing_distribution": {
+      "cs": "Import distribuce {n}/{total}: {filename} ({ident_cely})",
+      "en": "Importing distribution {n}/{total}: {filename} ({ident_cely})"
+    },
+    "cron.tasks.run_data_import.importing_file": {
+      "cs": "Import souboru {n}/{total}: {filename} ({ident_cely})",
+      "en": "Importing file {n}/{total}: {filename} ({ident_cely})"
+    },
+    "cron.tasks.run_data_import.importing_record_data": {
+      "cs": "Import záznamů {n}/{total}",
+      "en": "Importing records {n}/{total}"
+    },
+    "cron.tasks.run_data_import.reset_by_admin": {
+      "cs": "Import byl resetován administrátorem.",
+      "en": "Import was reset by an administrator."
+    },
+    "cron.tasks.run_data_import.rolled_back": {
+      "cs": "Import revokován",
+      "en": "Import revoked"
+    },
+    "cron.tasks.run_data_import.stopped_by_user": {
+      "cs": "Import byl zastaven uživatelem.",
+      "en": "Import was stopped by the user."
+    },
+    "cron.tasks.run_data_import.success": {
+      "cs": "Úspěšně importován",
+      "en": "Successfully imported"
+    },
+    "cron.tasks.run_data_import.update_now_allowed": {
+      "cs": "Aktualizace tohoto typu záznamu není povolena.",
+      "en": "Updates to this type of record are not allowed."
+    },
+    "cron.tasks.run_data_import.updating_fedora_records": {
+      "cs": "Aktualizace záznamů ve Fedoře",
+      "en": "Updating records in Fedora"
+    },
+    "cron.tasks.run_data_import.updating_fedora_records_progress": {
+      "cs": "Aktualizace záznamů ve Fedoře {n}/{total}",
+      "en": "Updating records in Fedora {n}/{total}"
+    },
+    "cron.tasks.run_data_import.validating": {
+      "cs": "Validace záznamů",
+      "en": "Validating records"
+    },
+    "cron.tasks.run_data_import.validating_progress": {
+      "cs": "Validace záznamů {n}/{total}",
+      "en": "Validating records {n}/{total}"
+    },
+    "cron.tasks.run_data_import.validation_done": {
+      "cs": "Validace proběhla úspěšně, import lze zahájit.",
+      "en": "Validation succeeded. Import can be started."
+    },
+    "cron.tasks.run_data_import.validation_rejected": {
+      "cs": "Počet záznamů s chybou: {count}. Opravte je a soubor nahrajte znovu.",
+      "en": "Records with errors: {count}. Correct them and upload the file again."
+    },
+    "heslar.models.Heslar.heslo": {
+      "cs": "Heslo (CS)",
+      "en": "Term (CS)"
+    },
+    "heslar.models.Heslar.heslo_en": {
+      "cs": "Heslo (EN)",
+      "en": "Term (EN)"
+    },
+    "heslar.models.Heslar.ident_cely": {
+      "cs": "ID",
+      "en": "ID"
+    },
+    "heslar.models.Heslar.nazev_heslare": {
+      "cs": "Název hesláře",
+      "en": "Vocabulary title"
+    },
+    "heslar.models.Heslar.popis": {
+      "cs": "Popis (CS)",
+      "en": "Description (CS)"
+    },
+    "heslar.models.Heslar.popis_en": {
+      "cs": "Popis (EN)",
+      "en": "Description (EN)"
+    },
+    "heslar.models.Heslar.razeni": {
+      "cs": "Řazení",
+      "en": "Ordering"
+    },
+    "heslar.models.Heslar.zkratka": {
+      "cs": "Zkratka",
+      "en": "Abbreviation"
+    },
+    "heslar.models.HeslarDatace.obdobi": {
+      "cs": "Období",
+      "en": "Period"
+    },
+    "heslar.models.HeslarDatace.poznamka": {
+      "cs": "Poznámka",
+      "en": "Note"
+    },
+    "heslar.models.HeslarDatace.rok_do_max": {
+      "cs": "Rok do (max)",
+      "en": "Year to (max)"
+    },
+    "heslar.models.HeslarDatace.rok_do_min": {
+      "cs": "Rok do (min)",
+      "en": "Year to (min)"
+    },
+    "heslar.models.HeslarDatace.rok_od_max": {
+      "cs": "Rok od (max)",
+      "en": "Year from (max)"
+    },
+    "heslar.models.HeslarDatace.rok_od_min": {
+      "cs": "Rok od (min)",
+      "en": "Year from (min)"
+    },
+    "heslar.models.HeslarDokumentTypMaterial.dokument_material": {
+      "cs": "Materiál dokumentu",
+      "en": "Document material"
+    },
+    "heslar.models.HeslarDokumentTypMaterial.dokument_typ": {
+      "cs": "Typ dokumentu",
+      "en": "Document type"
+    },
+    "heslar.models.HeslarHierarchie.heslo_nadrazene": {
+      "cs": "Nadřazené heslo",
+      "en": "Parent term"
+    },
+    "heslar.models.HeslarHierarchie.heslo_podrazene": {
+      "cs": "Heslo",
+      "en": "Term"
+    },
+    "heslar.models.HeslarHierarchie.typ": {
+      "cs": "Typ vztahu",
+      "en": "Relation type"
+    },
+    "heslar.models.HeslarNazev.nazev": {
+      "cs": "Název hesláře",
+      "en": "Vocabulary title"
+    },
+    "heslar.models.HeslarNazev.povolit_zmeny": {
+      "cs": "Povolit změny hesláře",
+      "en": "Allow changes to the vocabulary"
+    },
+    "heslar.models.HeslarOdkaz.heslo": {
+      "cs": "Heslo",
+      "en": "Term"
+    },
+    "heslar.models.HeslarOdkaz.kod": {
+      "cs": "Kód (ID)",
+      "en": "Code (ID)"
+    },
+    "heslar.models.HeslarOdkaz.nazev_kodu": {
+      "cs": "Název kódu/ID",
+      "en": "Code name/ID"
+    },
+    "heslar.models.HeslarOdkaz.skos_mapping_relation": {
+      "cs": "Typ vazby (SKOS)",
+      "en": "Relation type (SKOS)"
+    },
+    "heslar.models.HeslarOdkaz.uri": {
+      "cs": "URL",
+      "en": "URL"
+    },
+    "heslar.models.HeslarOdkaz.zdroj": {
+      "cs": "Zdroj",
+      "en": "Source"
+    },
+    "heslar.models.RuianKatastr.definicni_bod": {
+      "cs": "Definiční bod",
+      "en": "Definition point"
+    },
+    "heslar.models.RuianKatastr.hranice": {
+      "cs": "Hranice",
+      "en": "Boundary"
+    },
+    "heslar.models.RuianKatastr.kod": {
+      "cs": "Kód RÚIAN",
+      "en": "RÚIAN code"
+    },
+    "heslar.models.RuianKatastr.nazev": {
+      "cs": "Název",
+      "en": "Name"
+    },
+    "heslar.models.RuianKatastr.okres": {
+      "cs": "Okres",
+      "en": "District"
+    },
+    "heslar.models.RuianKatastr.pian": {
+      "cs": "PIAN",
+      "en": "Spatial unit"
+    },
+    "heslar.models.RuianKraj.email": {
+      "cs": "Email pro oznámení",
+      "en": "Email for notifications"
+    },
+    "heslar.models.RuianKraj.kod": {
+      "cs": "Kód RÚIAN",
+      "en": "RÚIAN code"
+    },
+    "heslar.models.RuianKraj.nazev": {
+      "cs": "Název",
+      "en": "Name"
+    },
+    "heslar.models.RuianKraj.rada_id": {
+      "cs": "Region",
+      "en": "Region"
+    },
+    "heslar.models.RuianOkres.kod": {
+      "cs": "Kód RÚIAN",
+      "en": "RÚIAN code"
+    },
+    "heslar.models.RuianOkres.kraj": {
+      "cs": "Kraj",
+      "en": "Region"
+    },
+    "heslar.models.RuianOkres.nazev": {
+      "cs": "Název",
+      "en": "Name"
+    },
+    "heslar.models.RuianOkres.nazev_en": {
+      "cs": "Název (EN)",
+      "en": "Name (EN)"
+    },
+    "heslar.models.RuianOkres.spz": {
+      "cs": "Zkratka",
+      "en": "Abbreviation"
+    },
+    "heslar.models.RuianSyncRun.affected_az": {
+      "cs": "Dotčené archeologické záznamy",
+      "en": "Affected archaeological records"
+    },
+    "heslar.models.RuianSyncRun.affected_neident_akce": {
+      "cs": "Dotčené neidentifikované akce",
+      "en": "Affected unidentified fieldwork"
+    },
+    "heslar.models.RuianSyncRun.affected_projekt": {
+      "cs": "Dotčené projekty",
+      "en": "Affected projects"
+    },
+    "heslar.models.RuianSyncRun.affected_sn": {
+      "cs": "Dotčené samostatné nálezy",
+      "en": "Affected individual finds"
+    },
+    "heslar.models.RuianSyncRun.data_valid_to": {
+      "cs": "Platnost dat do",
+      "en": "Data valid to"
+    },
+    "heslar.models.RuianSyncRun.error": {
+      "cs": "Chyba",
+      "en": "Error"
+    },
+    "heslar.models.RuianSyncRun.finished_at": {
+      "cs": "Čas dokončení",
+      "en": "End time"
+    },
+    "heslar.models.RuianSyncRun.katastr_deletes": {
+      "cs": "Smazaná katastrální území",
+      "en": "Cadastral areas deleted"
+    },
+    "heslar.models.RuianSyncRun.katastr_upserts": {
+      "cs": "Změněná katastrální území",
+      "en": "Cadastral areas changed"
+    },
+    "heslar.models.RuianSyncRun.kraj_deletes": {
+      "cs": "Smazané kraje",
+      "en": "Regions deleted"
+    },
+    "heslar.models.RuianSyncRun.kraj_upserts": {
+      "cs": "Změněné kraje",
+      "en": "Regions changed"
+    },
+    "heslar.models.RuianSyncRun.mode": {
+      "cs": "Režim",
+      "en": "Mode"
+    },
+    "heslar.models.RuianSyncRun.note": {
+      "cs": "Poznámka",
+      "en": "Note"
+    },
+    "heslar.models.RuianSyncRun.okres_deletes": {
+      "cs": "Smazané okresy",
+      "en": "Districts deleted"
+    },
+    "heslar.models.RuianSyncRun.okres_upserts": {
+      "cs": "Změněné okresy",
+      "en": "Districts changed"
+    },
+    "heslar.models.RuianSyncRun.since": {
+      "cs": "Změny od",
+      "en": "Changes since"
+    },
+    "heslar.models.RuianSyncRun.source": {
+      "cs": "Zdroj",
+      "en": "Source"
+    },
+    "heslar.models.RuianSyncRun.source_path": {
+      "cs": "Cesta ke zdroji",
+      "en": "Source path"
+    },
+    "heslar.models.RuianSyncRun.started_at": {
+      "cs": "Čas zahájení",
+      "en": "Start time"
+    },
+    "heslar.models.RuianSyncRun.status": {
+      "cs": "Stav",
+      "en": "Status"
+    },
+    "heslar.models.RuianSyncRun.triggered_by": {
+      "cs": "Spuštěno",
+      "en": "Triggered by"
+    },
+    "heslar.models.RuianSyncRun.variant": {
+      "cs": "Varianta",
+      "en": "Variant"
+    },
+    "heslar.models.RuianSyncRun.warnings": {
+      "cs": "Varování",
+      "en": "Warnings"
+    },
+    "historie.models.historie.datumZmeny.label": {
+      "cs": "Datum změny",
+      "en": "Date of change"
+    },
+    "historie.models.historie.poznamka.label": {
+      "cs": "Poznámka",
+      "en": "Note"
+    },
+    "historie.models.historie.typZmeny.label": {
+      "cs": "Typ změny",
+      "en": "Type of change"
+    },
+    "historie.models.historie.uzivatel.label": {
+      "cs": "Uživatel",
+      "en": "User"
+    },
+    "nalez.models.nalezObjekt.druh.label": {
+      "cs": "Druh",
+      "en": "Type"
+    },
+    "nalez.models.nalezObjekt.specifikace.label": {
+      "cs": "Specifikace",
+      "en": "Specification"
+    },
+    "nalez.models.nalezPredmet.druh.label": {
+      "cs": "Druh",
+      "en": "Type"
+    },
+    "nalez.models.nalezPredmet.specifikace.label": {
+      "cs": "Specifikace",
+      "en": "Specification"
+    },
+    "pas.models.uzivatelSpoluprace.projekty.label": {
+      "cs": "Projekty",
+      "en": "Projects"
+    },
+    "projekt.models.projekt.datumPrihlaseni.label": {
+      "cs": "Datum přihlášení",
+      "en": "Date of registration"
+    },
+    "projekt.models.projekt.datumUkonceni.label": {
+      "cs": "Datum ukončení",
+      "en": "End date"
+    },
+    "projekt.models.projekt.datumUzavreni.label": {
+      "cs": "Datum uzavření",
+      "en": "Date of closure"
+    },
+    "projekt.models.projekt.datumZahajeni.label": {
+      "cs": "Datum zahájení",
+      "en": "Start date"
+    },
+    "projekt.models.projekt.hlavniKatastr.label": {
+      "cs": "Hlavní katastr",
+      "en": "Main cadastral area"
+    },
+    "projekt.models.projekt.ident.label": {
+      "cs": "ID",
+      "en": "ID"
+    },
+    "projekt.models.projekt.kulturniPamatka.label": {
+      "cs": "Památková ochrana",
+      "en": "Monument protection"
+    },
+    "projekt.models.projekt.oznaceniStavby.label": {
+      "cs": "Označení stavby",
+      "en": "Construction designation"
+    },
+    "projekt.models.projekt.planovaneZahajeni.label": {
+      "cs": "Plánované zahájení",
+      "en": "Planned start"
+    },
+    "projekt.models.projekt.podnet.label": {
+      "cs": "Podnět",
+      "en": "Intervention motivation"
+    },
+    "projekt.models.projekt.stav.label": {
+      "cs": "Stav",
+      "en": "Status"
+    },
+    "projekt.models.projekt.typProjektu.label": {
+      "cs": "Typ",
+      "en": "Type"
+    },
+    "projekt.models.projekt.uyivatelskeOznaceni.label": {
+      "cs": "Uživatelské označení",
+      "en": "User label"
+    },
+    "projekt.models.projekt.vedouciProjektu.label": {
+      "cs": "Vedoucí",
+      "en": "Project manager"
+    },
+    "uzivatel.models.Organizace.adresa": {
+      "cs": "Adresa",
+      "en": "Address"
+    },
+    "uzivatel.models.Organizace.cteni_dokumentu": {
+      "cs": "Povolit čtení archivovaných dokumentů",
+      "en": "Allow reading archived documents"
+    },
+    "uzivatel.models.Organizace.email": {
+      "cs": "Email",
+      "en": "Email"
+    },
+    "uzivatel.models.Organizace.ico": {
+      "cs": "IČO",
+      "en": "Company ID"
+    },
+    "uzivatel.models.Organizace.mesicu_do_zverejneni": {
+      "cs": "Měsíců do zveřejnění",
+      "en": "Months until publication"
+    },
+    "uzivatel.models.Organizace.nazev": {
+      "cs": "Název",
+      "en": "Name"
+    },
+    "uzivatel.models.Organizace.nazev_en": {
+      "cs": "Název (EN)",
+      "en": "Name (EN)"
+    },
+    "uzivatel.models.Organizace.nazev_zkraceny": {
+      "cs": "Název - zkrácený",
+      "en": "Name - shortened"
+    },
+    "uzivatel.models.Organizace.nazev_zkraceny_en": {
+      "cs": "Název - zkrácený (EN)",
+      "en": "Name - shortened (EN)"
+    },
+    "uzivatel.models.Organizace.oao": {
+      "cs": "OAO",
+      "en": "Authorised"
+    },
+    "uzivatel.models.Organizace.telefon": {
+      "cs": "Telefon",
+      "en": "Telephone"
+    },
+    "uzivatel.models.Organizace.typ_organizace": {
+      "cs": "Typ",
+      "en": "Type"
+    },
+    "uzivatel.models.Organizace.web": {
+      "cs": "Web",
+      "en": "Web"
+    },
+    "uzivatel.models.Organizace.zanikla": {
+      "cs": "Zaniklá",
+      "en": "Defunct"
+    },
+    "uzivatel.models.Organizace.zverejneni_pristupnost": {
+      "cs": "Přístupnost",
+      "en": "Accessibility"
+    },
+    "uzivatel.models.Osoba.jmeno": {
+      "cs": "Jméno",
+      "en": "Given name"
+    },
+    "uzivatel.models.Osoba.prijmeni": {
+      "cs": "Příjmení",
+      "en": "Family name"
+    },
+    "uzivatel.models.Osoba.rodne_prijmeni": {
+      "cs": "Rodné příjmení",
+      "en": "Surname at birth"
+    },
+    "uzivatel.models.Osoba.rok_narozeni": {
+      "cs": "Rok narození",
+      "en": "Year of birth"
+    },
+    "uzivatel.models.Osoba.rok_umrti": {
+      "cs": "Rok úmrtí",
+      "en": "Year of death"
+    },
+    "uzivatel.models.Osoba.vypis": {
+      "cs": "Výpis - zkrácený",
+      "en": "Label - short"
+    },
+    "uzivatel.models.Osoba.vypis_cely": {
+      "cs": "Výpis",
+      "en": "Label"
+    },
+    "uzivatel.models.User.aktivni": {
+      "cs": "Aktivní účet",
+      "en": "Active account"
+    },
+    "uzivatel.models.User.datumPotvrzeniEmailu": {
+      "cs": "Datum potvrzení emailu",
+      "en": "Email confirmation date"
+    },
+    "uzivatel.models.User.email": {
+      "cs": "Email",
+      "en": "Email"
+    },
+    "uzivatel.models.User.globalnyAdministrator": {
+      "cs": "Superadmin",
+      "en": "Superadmin"
+    },
+    "uzivatel.models.User.heslo": {
+      "cs": "Heslo",
+      "en": "Password"
+    },
+    "uzivatel.models.User.jazyk": {
+      "cs": "Jazyk",
+      "en": "Language"
+    },
+    "uzivatel.models.User.jmeno": {
+      "cs": "Jméno",
+      "en": "Given name"
+    },
+    "uzivatel.models.User.organizace": {
+      "cs": "Organizace",
+      "en": "Organisation"
+    },
+    "uzivatel.models.User.osoba": {
+      "cs": "Osoba",
+      "en": "Person"
+    },
+    "uzivatel.models.User.prijmeni": {
+      "cs": "Příjmení",
+      "en": "Family name"
+    },
+    "uzivatel.models.User.pristupDoAdminRozhrani": {
+      "cs": "Přístup do administrace",
+      "en": "Access to administration"
+    },
+    "uzivatel.models.User.telefon": {
+      "cs": "Telefon",
+      "en": "Telephone"
+    }
+  },
+  "note": "Empty translations remain visible; do not invent labels or accept a different field's diagnostic.",
+  "source_hashes": {
+    "cs": "6f417460531fec566a9a3fdb367cd372fc7e20b1e868113fe5d9c8471f8f7b45",
+    "en": "716734191ba4ae49b54db4d056932b241dde4d06abd19a2a2e38ecd74ece6b98"
+  }
+}

@@ -1,0 +1,1588 @@
+[
+  {
+    "coverage_ids": [
+      "heslar.insert",
+      "organizace.insert",
+      "osoby.insert"
+    ],
+    "expected": "apply",
+    "id": "B01-foundations",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "heslar_datace.insert",
+      "heslar_dokument_typ_material.insert",
+      "heslar_hierarchie.insert",
+      "heslar_odkazy.insert",
+      "projekty.insert",
+      "projekty_katastry.insert",
+      "projekty_oznamovatele.insert",
+      "samostatne_nalezy.insert",
+      "az_akce.insert",
+      "az_lokality.insert",
+      "az_akce_vedouci.insert",
+      "az_katastry.insert",
+      "az_pian.insert",
+      "az_dokumentacni_jednotky.insert",
+      "az_adb.insert",
+      "az_adb_vyskove_body.insert",
+      "dokumenty_lety.insert",
+      "dokumenty.insert",
+      "dokumenty_autori.insert",
+      "dokumenty_jazyky.insert",
+      "dokumenty_osoby.insert",
+      "dokumenty_posudky.insert",
+      "dokumenty_tvary.insert",
+      "dokumenty_casti.insert",
+      "dokumenty_neident_akce.insert",
+      "dokumenty_neident_akce_vedouci.insert",
+      "externi_zdroje.insert",
+      "externi_zdroje_autori.insert",
+      "externi_zdroje_editori.insert",
+      "externi_odkazy.insert",
+      "uzivatele.insert",
+      "uzivatele_notifikace_projekty.insert",
+      "uzivatele_spoluprace.insert"
+    ],
+    "expected": "apply",
+    "id": "B02-domain-graph",
+    "operation": "insert",
+    "prerequisites": [
+      "B01-foundations"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "komponenty.insert",
+      "komponenty_aktivity.insert",
+      "komponenty_nalezy_objekty.insert",
+      "komponenty_nalezy_predmety.insert"
+    ],
+    "expected": "apply",
+    "id": "B02b-components",
+    "operation": "insert",
+    "prerequisites": [
+      "B02-domain-graph"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele_opravneni.insert",
+      "uzivatele_notifikace.insert"
+    ],
+    "expected": "apply",
+    "id": "B02c-user-relations",
+    "operation": "insert",
+    "prerequisites": [
+      "B02b-components"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "soubory.insert"
+    ],
+    "expected": "apply",
+    "id": "B03-files",
+    "operation": "insert",
+    "prerequisites": [
+      "B02c-user-relations"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.insert",
+      "paradata.insert"
+    ],
+    "expected": "apply",
+    "id": "B04-distributions-paradata",
+    "operation": "insert",
+    "prerequisites": [
+      "B03-files"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "historie.insert"
+    ],
+    "expected": "apply",
+    "id": "B05-explicit-history",
+    "operation": "insert",
+    "prerequisites": [
+      "B04-distributions-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar.update",
+      "heslar_datace.update",
+      "heslar_dokument_typ_material.update",
+      "heslar_hierarchie.update",
+      "heslar_odkazy.update",
+      "organizace.update",
+      "osoby.update",
+      "projekty.update",
+      "projekty_oznamovatele.update",
+      "samostatne_nalezy.update",
+      "az_akce.update",
+      "az_lokality.update",
+      "az_akce_vedouci.update",
+      "az_pian.update",
+      "az_dokumentacni_jednotky.update",
+      "az_adb.update",
+      "az_adb_vyskove_body.update",
+      "dokumenty_lety.update",
+      "dokumenty.update",
+      "dokumenty_tvary.update",
+      "dokumenty_casti.update",
+      "dokumenty_neident_akce.update",
+      "komponenty.update",
+      "komponenty_nalezy_objekty.update",
+      "komponenty_nalezy_predmety.update",
+      "externi_zdroje.update",
+      "externi_odkazy.update",
+      "uzivatele.update",
+      "uzivatele_spoluprace.update",
+      "soubory.update",
+      "distribution.update",
+      "paradata.update",
+      "historie.update"
+    ],
+    "expected": "apply",
+    "id": "B06-full-update",
+    "operation": "update",
+    "prerequisites": [
+      "B05-explicit-history"
+    ]
+  },
+  {
+    "coverage_ids": [],
+    "expected": "apply",
+    "id": "B07-partial-update",
+    "operation": "update",
+    "prerequisites": [
+      "B06-full-update"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "projekty_katastry.update",
+      "az_katastry.update",
+      "dokumenty_autori.update",
+      "dokumenty_jazyky.update",
+      "dokumenty_osoby.update",
+      "dokumenty_posudky.update",
+      "dokumenty_neident_akce_vedouci.update",
+      "komponenty_aktivity.update",
+      "externi_zdroje_autori.update",
+      "externi_zdroje_editori.update",
+      "uzivatele_notifikace_projekty.update",
+      "uzivatele_opravneni.update",
+      "uzivatele_notifikace.update"
+    ],
+    "expected": "reject unsupported CSV list",
+    "id": "N01-prohibited-updates",
+    "operation": "update",
+    "prerequisites": [
+      "B02-domain-graph"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "archive.N02-unknown-file"
+    ],
+    "expected": "unsupported file",
+    "id": "N02-unknown-file",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N03-malformed-csv"
+    ],
+    "expected": "CSV parser error",
+    "id": "N03-malformed-csv",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N04-empty-zip"
+    ],
+    "expected": "empty import",
+    "id": "N04-empty-zip",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N05-wrong-headers"
+    ],
+    "expected": "incorrect column structure",
+    "id": "N05-wrong-headers",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N08-wrong-encoding"
+    ],
+    "expected": "encoding error",
+    "id": "N08-wrong-encoding",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N09-duplicate-headers"
+    ],
+    "expected": "incorrect column structure",
+    "id": "N09-duplicate-headers",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N10-semicolon"
+    ],
+    "expected": "incorrect column structure",
+    "id": "N10-semicolon",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N06-not-a-zip"
+    ],
+    "expected": "invalid ZIP",
+    "id": "N06-not-a-zip",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.N11-expansion-limit"
+    ],
+    "expected": "zip_too_large",
+    "id": "N11-expansion-limit",
+    "operation": "insert",
+    "prerequisites": []
+  },
+  {
+    "coverage_ids": [
+      "archive.P01-utf8-bom"
+    ],
+    "expected": "apply",
+    "id": "P01-utf8-bom",
+    "operation": "insert",
+    "prerequisites": [
+      "B01-foundations"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar.field.heslo.missing-required",
+      "heslar.field.heslo.overflow",
+      "heslar.field.heslo_en.missing-required",
+      "heslar.field.heslo_en.overflow",
+      "heslar.field.ident_cely.missing-required",
+      "heslar.field.nazev_heslare.missing-required",
+      "heslar.field.nazev_heslare.missing-lookup",
+      "heslar.field.razeni.invalid-type",
+      "heslar.field.zkratka.overflow",
+      "heslar_datace.field.obdobi.missing-required",
+      "heslar_datace.field.obdobi.missing-lookup",
+      "heslar_datace.field.rok_do_max.missing-required",
+      "heslar_datace.field.rok_do_max.invalid-type",
+      "heslar_datace.field.rok_do_min.missing-required",
+      "heslar_datace.field.rok_do_min.invalid-type",
+      "heslar_datace.field.rok_od_max.missing-required",
+      "heslar_datace.field.rok_od_max.invalid-type",
+      "heslar_datace.field.rok_od_min.missing-required",
+      "heslar_datace.field.rok_od_min.invalid-type",
+      "heslar_dokument_typ_material.field.dokument_material.missing-required",
+      "heslar_dokument_typ_material.field.dokument_material.missing-lookup",
+      "heslar_dokument_typ_material.field.dokument_typ.missing-required",
+      "heslar_dokument_typ_material.field.dokument_typ.missing-lookup",
+      "heslar_hierarchie.field.heslo_nadrazene.missing-required",
+      "heslar_hierarchie.field.heslo_podrazene.missing-required",
+      "heslar_hierarchie.field.typ.missing-required",
+      "heslar_odkazy.field.heslo.missing-required",
+      "heslar_odkazy.field.heslo.missing-lookup",
+      "heslar_odkazy.field.kod.missing-required",
+      "heslar_odkazy.field.kod.overflow",
+      "heslar_odkazy.field.nazev_kodu.missing-required",
+      "heslar_odkazy.field.nazev_kodu.overflow",
+      "heslar_odkazy.field.scheme_uri.overflow",
+      "heslar_odkazy.field.skos_mapping_relation.missing-required",
+      "heslar_odkazy.field.skos_mapping_relation.overflow",
+      "heslar_odkazy.field.zdroj.missing-required",
+      "heslar_odkazy.field.zdroj.overflow",
+      "organizace.field.adresa.overflow",
+      "organizace.field.cteni_dokumentu.invalid-type",
+      "organizace.field.email.overflow",
+      "organizace.field.ico.overflow",
+      "organizace.field.ident_cely.missing-required",
+      "organizace.field.ident_cely.overflow",
+      "organizace.field.licence.missing-lookup",
+      "organizace.field.nazev.missing-required",
+      "organizace.field.nazev.overflow",
+      "organizace.field.nazev_en.overflow",
+      "organizace.field.nazev_zkraceny.missing-required",
+      "organizace.field.nazev_zkraceny.overflow",
+      "organizace.field.nazev_zkraceny_en.missing-required",
+      "organizace.field.nazev_zkraceny_en.overflow",
+      "organizace.field.oao.invalid-type",
+      "organizace.field.ror.overflow",
+      "organizace.field.telefon.overflow",
+      "organizace.field.typ_organizace.missing-required",
+      "organizace.field.typ_organizace.missing-lookup",
+      "organizace.field.web.overflow",
+      "organizace.field.zanikla.invalid-type",
+      "organizace.field.zverejneni_pristupnost.missing-required",
+      "organizace.field.zverejneni_pristupnost.missing-lookup",
+      "osoby.field.ident_cely.missing-required",
+      "osoby.field.ident_cely.overflow",
+      "osoby.field.jmeno.missing-required",
+      "osoby.field.jmeno.overflow",
+      "osoby.field.orcid.overflow",
+      "osoby.field.prijmeni.missing-required",
+      "osoby.field.prijmeni.overflow",
+      "osoby.field.rodne_prijmeni.overflow",
+      "osoby.field.rok_narozeni.invalid-type",
+      "osoby.field.rok_umrti.invalid-type",
+      "osoby.field.vypis.missing-required",
+      "osoby.field.vypis.overflow",
+      "osoby.field.vypis_cely.missing-required",
+      "osoby.field.vypis_cely.overflow",
+      "osoby.field.wikidata.overflow",
+      "projekty.field.datum_ukonceni.invalid-type",
+      "projekty.field.datum_zahajeni.invalid-type",
+      "projekty.field.geom_system.overflow",
+      "projekty.field.hlavni_katastr.missing-required",
+      "projekty.field.hlavni_katastr.missing-lookup",
+      "projekty.field.ident_cely.missing-required",
+      "projekty.field.kulturni_pamatka.missing-lookup",
+      "projekty.field.organizace.missing-lookup",
+      "projekty.field.stav.invalid-type",
+      "projekty.field.termin_odevzdani_nz.invalid-type",
+      "projekty.field.typ_projektu.missing-required",
+      "projekty.field.typ_projektu.missing-lookup",
+      "projekty.field.vedouci_projektu.missing-lookup",
+      "projekty_katastry.field.katastr.missing-required",
+      "projekty_katastry.field.katastr.missing-lookup",
+      "projekty_katastry.field.projekt.missing-required",
+      "projekty_katastry.field.projekt.missing-lookup",
+      "projekty_oznamovatele.field.adresa.missing-required",
+      "projekty_oznamovatele.field.email.missing-required",
+      "projekty_oznamovatele.field.odpovedna_osoba.missing-required",
+      "projekty_oznamovatele.field.oznamovatel.missing-required",
+      "projekty_oznamovatele.field.poznamka.overflow",
+      "projekty_oznamovatele.field.projekt.missing-required",
+      "projekty_oznamovatele.field.projekt.missing-lookup",
+      "samostatne_nalezy.field.datum_nalezu.invalid-type",
+      "samostatne_nalezy.field.druh_nalezu.missing-lookup",
+      "samostatne_nalezy.field.ident_cely.missing-required",
+      "samostatne_nalezy.field.igsn.overflow",
+      "samostatne_nalezy.field.katastr.missing-lookup",
+      "samostatne_nalezy.field.nalezce.missing-lookup",
+      "samostatne_nalezy.field.obdobi.missing-lookup",
+      "samostatne_nalezy.field.okolnosti.missing-lookup",
+      "samostatne_nalezy.field.predano.invalid-type",
+      "samostatne_nalezy.field.predano_organizace.missing-lookup",
+      "samostatne_nalezy.field.pristupnost.missing-required",
+      "samostatne_nalezy.field.pristupnost.missing-lookup",
+      "samostatne_nalezy.field.projekt.missing-required",
+      "samostatne_nalezy.field.projekt.missing-lookup",
+      "samostatne_nalezy.field.specifikace.missing-lookup",
+      "samostatne_nalezy.field.stav.missing-required",
+      "samostatne_nalezy.field.stav.invalid-type",
+      "az_akce.field.datum_ukonceni.invalid-type",
+      "az_akce.field.datum_zahajeni.invalid-type",
+      "az_akce.field.hlavni_katastr.missing-required",
+      "az_akce.field.hlavni_katastr.missing-lookup",
+      "az_akce.field.hlavni_typ.missing-lookup",
+      "az_akce.field.hlavni_vedouci.missing-lookup",
+      "az_akce.field.ident_cely.missing-required",
+      "az_akce.field.je_nz.invalid-type",
+      "az_akce.field.odlozena_nz.invalid-type",
+      "az_akce.field.organizace.missing-lookup",
+      "az_akce.field.pristupnost.missing-required",
+      "az_akce.field.pristupnost.missing-lookup",
+      "az_akce.field.projekt.missing-lookup",
+      "az_akce.field.specifikace_data.missing-required",
+      "az_akce.field.specifikace_data.missing-lookup",
+      "az_akce.field.stav.missing-required",
+      "az_akce.field.stav.invalid-type",
+      "az_akce.field.typ.missing-required",
+      "az_akce.field.typ.overflow",
+      "az_akce.field.vedlejsi_typ.missing-lookup",
+      "az_lokality.field.druh.missing-required",
+      "az_lokality.field.druh.missing-lookup",
+      "az_lokality.field.hlavni_katastr.missing-required",
+      "az_lokality.field.hlavni_katastr.missing-lookup",
+      "az_lokality.field.ident_cely.missing-required",
+      "az_lokality.field.igsn.overflow",
+      "az_lokality.field.jistota.missing-lookup",
+      "az_lokality.field.nazev.missing-required",
+      "az_lokality.field.nazev.overflow",
+      "az_lokality.field.pristupnost.missing-required",
+      "az_lokality.field.pristupnost.missing-lookup",
+      "az_lokality.field.stav.missing-required",
+      "az_lokality.field.stav.invalid-type",
+      "az_lokality.field.typ_lokality.missing-required",
+      "az_lokality.field.typ_lokality.missing-lookup",
+      "az_lokality.field.zachovalost.missing-lookup",
+      "az_akce_vedouci.field.akce.missing-required",
+      "az_akce_vedouci.field.akce.missing-lookup",
+      "az_akce_vedouci.field.organizace.missing-required",
+      "az_akce_vedouci.field.organizace.missing-lookup",
+      "az_akce_vedouci.field.vedouci.missing-required",
+      "az_akce_vedouci.field.vedouci.missing-lookup",
+      "az_katastry.field.archeologicky_zaznam.missing-required",
+      "az_katastry.field.archeologicky_zaznam.missing-lookup",
+      "az_katastry.field.katastr.missing-required",
+      "az_katastry.field.katastr.missing-lookup",
+      "az_pian.field.geom.missing-required",
+      "az_pian.field.geom_system.overflow",
+      "az_pian.field.ident_cely.missing-required",
+      "az_pian.field.ident_cely.overflow",
+      "az_pian.field.presnost.missing-required",
+      "az_pian.field.presnost.missing-lookup",
+      "az_pian.field.stav.invalid-type",
+      "az_pian.field.typ.missing-required",
+      "az_pian.field.typ.missing-lookup",
+      "az_pian.field.zm10.missing-required",
+      "az_pian.field.zm10.missing-lookup",
+      "az_pian.field.zm50.missing-required",
+      "az_pian.field.zm50.missing-lookup",
+      "az_dokumentacni_jednotky.field.archeologicky_zaznam.missing-required",
+      "az_dokumentacni_jednotky.field.archeologicky_zaznam.missing-lookup",
+      "az_dokumentacni_jednotky.field.ident_cely.missing-required",
+      "az_dokumentacni_jednotky.field.negativni_jednotka.invalid-type",
+      "az_dokumentacni_jednotky.field.pian.missing-lookup",
+      "az_dokumentacni_jednotky.field.typ.missing-required",
+      "az_dokumentacni_jednotky.field.typ.missing-lookup",
+      "az_adb.field.autor_popisu.missing-required",
+      "az_adb.field.autor_popisu.missing-lookup",
+      "az_adb.field.autor_revize.missing-lookup",
+      "az_adb.field.dokumentacni_jednotka.missing-required",
+      "az_adb.field.dokumentacni_jednotka.missing-lookup",
+      "az_adb.field.ident_cely.missing-required",
+      "az_adb.field.podnet.missing-lookup",
+      "az_adb.field.rok_popisu.missing-required",
+      "az_adb.field.rok_popisu.invalid-type",
+      "az_adb.field.rok_revize.invalid-type",
+      "az_adb.field.sm5.missing-required",
+      "az_adb.field.sm5.missing-lookup",
+      "az_adb.field.typ_sondy.missing-lookup",
+      "az_adb_vyskove_body.field.adb.missing-required",
+      "az_adb_vyskove_body.field.adb.missing-lookup",
+      "az_adb_vyskove_body.field.geom.missing-required",
+      "az_adb_vyskove_body.field.ident_cely.missing-required",
+      "az_adb_vyskove_body.field.typ.missing-required",
+      "az_adb_vyskove_body.field.typ.missing-lookup",
+      "dokumenty_lety.field.datum.invalid-type",
+      "dokumenty_lety.field.dohlednost.missing-lookup",
+      "dokumenty_lety.field.ident_cely.missing-required",
+      "dokumenty_lety.field.letiste_cil.missing-lookup",
+      "dokumenty_lety.field.letiste_start.missing-lookup",
+      "dokumenty_lety.field.organizace.missing-lookup",
+      "dokumenty_lety.field.pocasi.missing-lookup",
+      "dokumenty_lety.field.pozorovatel.missing-lookup",
+      "dokumenty.field.datum_vzniku.invalid-type",
+      "dokumenty.field.datum_zverejneni.invalid-type",
+      "dokumenty.field.doi.overflow",
+      "dokumenty.field.format.missing-lookup",
+      "dokumenty.field.geom_system.overflow",
+      "dokumenty.field.ident_cely.missing-required",
+      "dokumenty.field.let.missing-lookup",
+      "dokumenty.field.licence.missing-lookup",
+      "dokumenty.field.material_originalu.missing-required",
+      "dokumenty.field.material_originalu.missing-lookup",
+      "dokumenty.field.nahrada.missing-lookup",
+      "dokumenty.field.organizace.missing-required",
+      "dokumenty.field.organizace.missing-lookup",
+      "dokumenty.field.pocet_variant_originalu.invalid-type",
+      "dokumenty.field.pristupnost.missing-required",
+      "dokumenty.field.pristupnost.missing-lookup",
+      "dokumenty.field.rada.missing-required",
+      "dokumenty.field.rada.missing-lookup",
+      "dokumenty.field.sirka.invalid-type",
+      "dokumenty.field.stav.missing-required",
+      "dokumenty.field.stav.invalid-type",
+      "dokumenty.field.typ_dokumentu.missing-required",
+      "dokumenty.field.typ_dokumentu.missing-lookup",
+      "dokumenty.field.udalost_typ.missing-lookup",
+      "dokumenty.field.ulozeni_originalu.missing-lookup",
+      "dokumenty.field.vyska.invalid-type",
+      "dokumenty.field.zachovalost.missing-lookup",
+      "dokumenty.field.zeme.missing-lookup",
+      "dokumenty_autori.field.autor.missing-required",
+      "dokumenty_autori.field.autor.missing-lookup",
+      "dokumenty_autori.field.dokument.missing-required",
+      "dokumenty_autori.field.dokument.missing-lookup",
+      "dokumenty_autori.field.poradi.missing-required",
+      "dokumenty_autori.field.poradi.invalid-type",
+      "dokumenty_jazyky.field.dokument.missing-required",
+      "dokumenty_jazyky.field.dokument.missing-lookup",
+      "dokumenty_jazyky.field.jazyk.missing-required",
+      "dokumenty_jazyky.field.jazyk.missing-lookup",
+      "dokumenty_osoby.field.dokument.missing-required",
+      "dokumenty_osoby.field.dokument.missing-lookup",
+      "dokumenty_osoby.field.osoba.missing-required",
+      "dokumenty_osoby.field.osoba.missing-lookup",
+      "dokumenty_posudky.field.dokument.missing-required",
+      "dokumenty_posudky.field.dokument.missing-lookup",
+      "dokumenty_posudky.field.posudek.missing-required",
+      "dokumenty_posudky.field.posudek.missing-lookup",
+      "dokumenty_tvary.field.dokument.missing-required",
+      "dokumenty_tvary.field.dokument.missing-lookup",
+      "dokumenty_tvary.field.tvar.missing-required",
+      "dokumenty_tvary.field.tvar.missing-lookup",
+      "dokumenty_casti.field.archeologicky_zaznam.missing-lookup",
+      "dokumenty_casti.field.dokument.missing-required",
+      "dokumenty_casti.field.dokument.missing-lookup",
+      "dokumenty_casti.field.ident_cely.missing-required",
+      "dokumenty_casti.field.projekt.missing-lookup",
+      "dokumenty_neident_akce.field.dokument_cast.missing-required",
+      "dokumenty_neident_akce.field.dokument_cast.missing-lookup",
+      "dokumenty_neident_akce.field.katastr.missing-lookup",
+      "dokumenty_neident_akce.field.rok_ukonceni.invalid-type",
+      "dokumenty_neident_akce.field.rok_zahajeni.invalid-type",
+      "dokumenty_neident_akce_vedouci.field.neident_akce.missing-required",
+      "dokumenty_neident_akce_vedouci.field.neident_akce.missing-lookup",
+      "dokumenty_neident_akce_vedouci.field.vedouci.missing-required",
+      "dokumenty_neident_akce_vedouci.field.vedouci.missing-lookup",
+      "komponenty.field.areal.missing-lookup",
+      "komponenty.field.ident_cely.missing-required",
+      "komponenty.field.jistota.invalid-type",
+      "komponenty.field.obdobi.missing-lookup",
+      "komponenty.field.vazba.missing-required",
+      "komponenty_aktivity.field.aktivita.missing-required",
+      "komponenty_aktivity.field.aktivita.missing-lookup",
+      "komponenty_aktivity.field.komponenta.missing-required",
+      "komponenty_aktivity.field.komponenta.missing-lookup",
+      "komponenty_nalezy_objekty.field.druh.missing-required",
+      "komponenty_nalezy_objekty.field.druh.missing-lookup",
+      "komponenty_nalezy_objekty.field.komponenta.missing-required",
+      "komponenty_nalezy_objekty.field.komponenta.missing-lookup",
+      "komponenty_nalezy_objekty.field.specifikace.missing-lookup",
+      "komponenty_nalezy_predmety.field.druh.missing-required",
+      "komponenty_nalezy_predmety.field.druh.missing-lookup",
+      "komponenty_nalezy_predmety.field.komponenta.missing-required",
+      "komponenty_nalezy_predmety.field.komponenta.missing-lookup",
+      "komponenty_nalezy_predmety.field.specifikace.missing-lookup",
+      "externi_zdroje.field.datum_rd.invalid-type",
+      "externi_zdroje.field.doi.overflow",
+      "externi_zdroje.field.ident_cely.missing-required",
+      "externi_zdroje.field.organizace.overflow",
+      "externi_zdroje.field.stav.missing-required",
+      "externi_zdroje.field.stav.invalid-type",
+      "externi_zdroje.field.typ.missing-required",
+      "externi_zdroje.field.typ.missing-lookup",
+      "externi_zdroje.field.typ_dokumentu.missing-lookup",
+      "externi_zdroje_autori.field.autor.missing-required",
+      "externi_zdroje_autori.field.autor.missing-lookup",
+      "externi_zdroje_autori.field.externi_zdroj.missing-required",
+      "externi_zdroje_autori.field.externi_zdroj.missing-lookup",
+      "externi_zdroje_autori.field.poradi.missing-required",
+      "externi_zdroje_autori.field.poradi.invalid-type",
+      "externi_zdroje_editori.field.editor.missing-required",
+      "externi_zdroje_editori.field.editor.missing-lookup",
+      "externi_zdroje_editori.field.externi_zdroj.missing-required",
+      "externi_zdroje_editori.field.externi_zdroj.missing-lookup",
+      "externi_zdroje_editori.field.poradi.missing-required",
+      "externi_zdroje_editori.field.poradi.invalid-type",
+      "externi_odkazy.field.archeologicky_zaznam.missing-required",
+      "externi_odkazy.field.archeologicky_zaznam.missing-lookup",
+      "externi_odkazy.field.externi_zdroj.missing-required",
+      "externi_odkazy.field.externi_zdroj.missing-lookup",
+      "uzivatele.field.date_joined.invalid-type",
+      "uzivatele.field.email.missing-required",
+      "uzivatele.field.email.overflow",
+      "uzivatele.field.first_name.missing-required",
+      "uzivatele.field.first_name.overflow",
+      "uzivatele.field.ident_cely.missing-required",
+      "uzivatele.field.ident_cely.overflow",
+      "uzivatele.field.is_active.invalid-type",
+      "uzivatele.field.is_staff.invalid-type",
+      "uzivatele.field.is_superuser.invalid-type",
+      "uzivatele.field.jazyk.overflow",
+      "uzivatele.field.last_login.invalid-type",
+      "uzivatele.field.last_name.missing-required",
+      "uzivatele.field.last_name.overflow",
+      "uzivatele.field.orcid.overflow",
+      "uzivatele.field.organizace.missing-required",
+      "uzivatele.field.organizace.missing-lookup",
+      "uzivatele.field.osoba.missing-lookup",
+      "uzivatele.field.telefon.overflow",
+      "uzivatele_notifikace_projekty.field.ruian.missing-lookup",
+      "uzivatele_notifikace_projekty.field.uzivatel.missing-required",
+      "uzivatele_notifikace_projekty.field.uzivatel.missing-lookup",
+      "uzivatele_spoluprace.field.spolupracovnik.missing-required",
+      "uzivatele_spoluprace.field.spolupracovnik.missing-lookup",
+      "uzivatele_spoluprace.field.stav.missing-required",
+      "uzivatele_spoluprace.field.stav.invalid-type",
+      "uzivatele_spoluprace.field.vedouci.missing-required",
+      "uzivatele_spoluprace.field.vedouci.missing-lookup",
+      "uzivatele_opravneni.field.skupina.missing-lookup",
+      "uzivatele_opravneni.field.uzivatel.missing-required",
+      "uzivatele_opravneni.field.uzivatel.missing-lookup",
+      "uzivatele_opravneni.field.uzivatel.overflow",
+      "soubory.field.nazev.missing-required",
+      "soubory.field.nazev.missing-lookup",
+      "soubory.field.vazba.missing-required",
+      "uzivatele_notifikace.field.notifikace.missing-lookup",
+      "uzivatele_notifikace.field.uzivatel.missing-required",
+      "uzivatele_notifikace.field.uzivatel.missing-lookup",
+      "uzivatele_notifikace.field.uzivatel.overflow",
+      "historie.field.datum_zmeny.missing-required",
+      "historie.field.datum_zmeny.invalid-type",
+      "historie.field.typ_zmeny.missing-required",
+      "historie.field.uzivatel.missing-required",
+      "historie.field.uzivatel.missing-lookup",
+      "historie.field.vazba.missing-required"
+    ],
+    "expected": "reject intended row diagnostics",
+    "id": "N07-field-boundaries",
+    "operation": "insert",
+    "prerequisites": [
+      "B05-explicit-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "komponenty.field.vazba.missing-lookup",
+      "soubory.field.vazba.missing-lookup",
+      "historie.field.vazba.missing-lookup"
+    ],
+    "deferred": [
+      "vazba-lookup-fallback"
+    ],
+    "expected": "reject intended row diagnostics",
+    "id": "N07x-deferred-known-defects",
+    "operation": "insert",
+    "prerequisites": [
+      "B05-explicit-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar_hierarchie.field.heslo_nadrazene.missing-lookup"
+    ],
+    "expected": "reject intended ordering lookup",
+    "id": "N07-1-ordering-boundary",
+    "operation": "insert",
+    "prerequisites": [
+      "B05-explicit-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar_hierarchie.field.heslo_podrazene.missing-lookup"
+    ],
+    "expected": "reject intended ordering lookup",
+    "id": "N07-2-ordering-boundary",
+    "operation": "insert",
+    "prerequisites": [
+      "B05-explicit-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "organizace.field.soucast.missing-lookup"
+    ],
+    "expected": "reject intended ordering lookup",
+    "id": "N07-3-ordering-boundary",
+    "operation": "insert",
+    "prerequisites": [
+      "B05-explicit-history"
+    ]
+  },
+  {
+    "coverage_ids": [],
+    "expected": "apply",
+    "id": "V00-isolated-contexts",
+    "operation": "insert",
+    "prerequisites": [
+      "B05-explicit-history"
+    ]
+  },
+  {
+    "coverage_ids": [],
+    "expected": "apply",
+    "id": "V00b-isolated-components",
+    "operation": "insert",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [],
+    "expected": "apply",
+    "id": "V00c-isolated-user-relations",
+    "operation": "insert",
+    "prerequisites": [
+      "V00b-isolated-components"
+    ]
+  },
+  {
+    "coverage_ids": [],
+    "expected": "apply",
+    "id": "V00d-isolated-history",
+    "operation": "insert",
+    "prerequisites": [
+      "V00c-isolated-user-relations"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "soubory.branch.document-owner",
+      "soubory.branch.project-owner",
+      "soubory.branch.individual-find-owner"
+    ],
+    "expected": "apply",
+    "id": "V01-isolated-files",
+    "operation": "insert",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "V02-existing-distributions",
+    "operation": "insert",
+    "prerequisites": [
+      "V01-isolated-files"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "paradata.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "V03-existing-paradata",
+    "operation": "insert",
+    "prerequisites": [
+      "V02-existing-distributions"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar.branch.unique-term",
+      "heslar.branch.unique-abbreviation",
+      "heslar_datace.branch.wrong-vocabulary",
+      "heslar_dokument_typ_material.branch.wrong-vocabulary",
+      "heslar_odkazy.branch.mapping-relation-choice",
+      "organizace.branch.month-limit",
+      "osoby.branch.duplicate-name",
+      "samostatne_nalezy.branch.constraints",
+      "az_akce.branch.type-project-constraint",
+      "az_akce.branch.wrong-subtype",
+      "az_lokality.branch.wrong-subtype",
+      "az_pian.branch.invalid-geometry",
+      "az_pian.branch.omitted-versus-clear",
+      "az_adb.branch.required-map-sheet",
+      "az_adb_vyskove_body.branch.invalid-geometry",
+      "dokumenty_lety.branch.date-trailing-junk",
+      "dokumenty.branch.confidence-bounds",
+      "dokumenty_tvary.branch.wrong-vocabulary",
+      "dokumenty_casti.branch.mutual-exclusion",
+      "komponenty_nalezy_objekty.branch.wrong-vocabulary",
+      "komponenty_nalezy_predmety.branch.wrong-vocabulary",
+      "uzivatele.branch.unique-email",
+      "uzivatele.branch.datetime-trailing-junk",
+      "distribution.branch.reserved-orig",
+      "distribution.branch.reserved-paradata",
+      "distribution.branch.reserved-page-thumb",
+      "distribution.branch.unsafe-path",
+      "distribution.branch.missing-update",
+      "distribution.branch.empty-name",
+      "distribution.branch.unsafe-filename",
+      "distribution.branch.missing-file-id",
+      "paradata.branch.missing-distribution",
+      "paradata.branch.empty-path",
+      "paradata.branch.unknown-path",
+      "paradata.branch.unsafe-filename"
+    ],
+    "expected": "reject",
+    "id": "V04-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar.branch.unicode-quotes-newline",
+      "heslar_datace.branch.negative-years",
+      "heslar_dokument_typ_material.branch.existing-type-material",
+      "heslar_hierarchie.branch.backward-reference",
+      "heslar_hierarchie.branch.both-endpoints-update",
+      "heslar_odkazy.branch.uri-null",
+      "heslar_odkazy.branch.reparent-old-new",
+      "organizace.branch.hierarchy",
+      "organizace.branch.booleans-access",
+      "osoby.branch.nullable-years",
+      "projekty.branch.geometry-4326",
+      "projekty.branch.geometry-5514",
+      "projekty.branch.omitted-versus-clear",
+      "projekty_oznamovatele.branch.fk-as-key",
+      "samostatne_nalezy.branch.geometry-4326",
+      "samostatne_nalezy.branch.geometry-5514",
+      "samostatne_nalezy.branch.geometry-clear",
+      "samostatne_nalezy.branch.reparent-old-new",
+      "az_akce.branch.project-fieldwork",
+      "az_akce.branch.independent-fieldwork",
+      "az_akce.branch.reparent-old-new",
+      "az_lokality.branch.site",
+      "az_akce_vedouci.branch.reparent-old-new",
+      "az_pian.branch.point",
+      "az_pian.branch.line",
+      "az_pian.branch.polygon",
+      "az_pian.branch.geometry-4326",
+      "az_pian.branch.geometry-5514",
+      "az_dokumentacni_jednotky.branch.fieldwork-owner",
+      "az_dokumentacni_jednotky.branch.site-owner",
+      "az_dokumentacni_jednotky.branch.cadastral-existing-pian",
+      "az_dokumentacni_jednotky.branch.reparent-old-new",
+      "az_adb.branch.fieldwork-and-adp-metadata",
+      "az_adb.branch.reparent-old-new",
+      "az_adb_vyskove_body.branch.point-z",
+      "az_adb_vyskove_body.branch.reparent-old-new",
+      "dokumenty_lety.branch.date-time-legacy",
+      "dokumenty_lety.branch.nullable-lookups",
+      "dokumenty_lety.branch.flight-metadata",
+      "dokumenty_lety.branch.localized-date",
+      "dokumenty_lety.branch.timezone-date-shift",
+      "dokumenty.branch.existing-extra-data",
+      "dokumenty.branch.geometry-4326",
+      "dokumenty.branch.geometry-5514",
+      "dokumenty.branch.csv-null-string",
+      "dokumenty_tvary.branch.reparent-old-new",
+      "dokumenty_casti.branch.fieldwork-link",
+      "dokumenty_casti.branch.project-link",
+      "dokumenty_casti.branch.unidentified-link",
+      "dokumenty_casti.branch.reparent-old-new",
+      "dokumenty_neident_akce.branch.fk-as-key",
+      "dokumenty_neident_akce.branch.optional-pian-text",
+      "dokumenty_neident_akce.branch.date-boundaries",
+      "komponenty.branch.documentation-unit-owner",
+      "komponenty.branch.document-part-fieldwork-owner",
+      "komponenty.branch.document-part-document-owner",
+      "komponenty.branch.reparent-old-new",
+      "komponenty_nalezy_objekty.branch.both-component-owners",
+      "komponenty_nalezy_predmety.branch.both-component-owners",
+      "externi_zdroje.branch.all-optional-fields",
+      "externi_zdroje.branch.legacy-date",
+      "externi_odkazy.branch.both-endpoints-update",
+      "externi_odkazy.branch.reparent-old-new",
+      "uzivatele.branch.booleans-access",
+      "uzivatele.branch.legacy-datetime",
+      "uzivatele.branch.reparent-old-new",
+      "uzivatele.branch.localized-datetime",
+      "uzivatele_spoluprace.branch.both-peers-metadata",
+      "uzivatele_spoluprace.branch.reparent-old-new",
+      "soubory.branch.replace-preserves-path",
+      "soubory.branch.gps-removal",
+      "soubory.branch.thumbnails",
+      "soubory.branch.reparent-old-new",
+      "distribution.branch.nested-name",
+      "distribution.branch.exact-mime-filename",
+      "distribution.branch.same-record-multiple-files",
+      "distribution.branch.download-permissions",
+      "paradata.branch.orig-paradata",
+      "paradata.branch.thumb-paradata",
+      "paradata.branch.paradata-only-db-xml-unchanged",
+      "paradata.branch.nested-name",
+      "paradata.branch.download-permissions",
+      "historie.branch.project-owner",
+      "historie.branch.fieldwork-owner",
+      "historie.branch.document-owner",
+      "historie.branch.individual-find-owner",
+      "historie.branch.spatial-unit-owner",
+      "historie.branch.external-source-owner"
+    ],
+    "expected": "apply",
+    "id": "V05-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar_datace.branch.partial-range-update",
+      "projekty.branch.partial-update",
+      "projekty_oznamovatele.branch.partial-update",
+      "az_akce.branch.partial-update",
+      "az_lokality.branch.partial-update",
+      "dokumenty.branch.partial-update",
+      "externi_zdroje.branch.partial-update",
+      "historie.branch.site-owner"
+    ],
+    "expected": "apply",
+    "id": "V06-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar_hierarchie.branch.forward-reference"
+    ],
+    "expected": "reject",
+    "id": "V07-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "organizace.branch.forward-reference"
+    ],
+    "expected": "reject",
+    "id": "V08-branches-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "osoby.branch.protected-reference-delete",
+      "projekty.branch.cascade",
+      "uzivatele_opravneni.branch.missing-relation",
+      "uzivatele_notifikace.branch.missing-relation",
+      "distribution.branch.missing-delete"
+    ],
+    "expected": "reject",
+    "id": "V09-branches-delete",
+    "operation": "delete",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "projekty_katastry.branch.composite-duplicate",
+      "az_katastry.branch.composite-duplicate",
+      "dokumenty_autori.branch.composite-duplicate",
+      "dokumenty_jazyky.branch.wrong-vocabulary",
+      "dokumenty_jazyky.branch.composite-duplicate",
+      "dokumenty_osoby.branch.composite-duplicate",
+      "dokumenty_posudky.branch.composite-duplicate",
+      "dokumenty_neident_akce_vedouci.branch.composite-duplicate",
+      "komponenty_aktivity.branch.wrong-vocabulary",
+      "komponenty_aktivity.branch.composite-duplicate",
+      "externi_zdroje_autori.branch.composite-duplicate",
+      "externi_zdroje_editori.branch.composite-duplicate",
+      "uzivatele_notifikace_projekty.branch.composite-duplicate",
+      "uzivatele_opravneni.branch.existing-relation",
+      "uzivatele_notifikace.branch.existing-relation",
+      "distribution.branch.duplicate-in-batch",
+      "distribution.branch.existing-distribution",
+      "distribution.branch.existing-ancestor-conflict",
+      "distribution.branch.existing-descendant-conflict",
+      "paradata.branch.duplicate-in-batch"
+    ],
+    "expected": "reject",
+    "id": "V10-branches-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "projekty_katastry.branch.secondary-cadastre",
+      "dokumenty_autori.branch.author-order",
+      "dokumenty_osoby.branch.second-person",
+      "dokumenty_posudky.branch.second-document",
+      "komponenty_aktivity.branch.both-component-owners",
+      "externi_zdroje_autori.branch.author-order",
+      "externi_zdroje_editori.branch.editor-order",
+      "uzivatele_notifikace_projekty.branch.cadastre",
+      "uzivatele_notifikace_projekty.branch.district",
+      "uzivatele_notifikace_projekty.branch.region",
+      "paradata.branch.same-batch-distribution"
+    ],
+    "expected": "apply",
+    "id": "V11-branches-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "projekty_katastry.branch.child-delete-history",
+      "projekty_oznamovatele.branch.child-delete-history",
+      "az_katastry.branch.child-delete-history",
+      "dokumenty.branch.cascade",
+      "dokumenty_autori.branch.child-delete-history",
+      "dokumenty_neident_akce_vedouci.branch.child-delete-history",
+      "soubory.branch.delete-parent-history",
+      "paradata.branch.delete-with-distribution"
+    ],
+    "expected": "apply",
+    "id": "V12-branches-delete",
+    "operation": "delete",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele_notifikace_projekty.branch.serialized-content-type",
+      "uzivatele_notifikace_projekty.branch.wrong-content-type"
+    ],
+    "expected": "apply",
+    "id": "V13-branches-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "soubory.branch.missing-binary"
+    ],
+    "expected": "runtime-failure",
+    "id": "V14-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.prefix-collision"
+    ],
+    "expected": "reject",
+    "id": "V15-branches-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.missing-binary"
+    ],
+    "expected": "runtime-failure",
+    "id": "V16-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "historie.branch.user-owner"
+    ],
+    "deferred": [
+      "vazba-lookup-fallback"
+    ],
+    "expected": "apply",
+    "id": "V17-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "historie.branch.cooperation-owner"
+    ],
+    "deferred": [
+      "vazba-lookup-fallback"
+    ],
+    "expected": "apply",
+    "id": "V18-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "historie.branch.file-owner"
+    ],
+    "deferred": [
+      "vazba-lookup-fallback"
+    ],
+    "expected": "apply",
+    "id": "V19-branches-update",
+    "operation": "update",
+    "prerequisites": [
+      "V00d-isolated-history"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "soubory.branch.document-owner",
+      "soubory.branch.project-owner",
+      "soubory.branch.individual-find-owner"
+    ],
+    "expected": "apply",
+    "id": "F01-replace-all-file-owners",
+    "operation": "update",
+    "prerequisites": [
+      "V01-isolated-files"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "soubory.branch.document-owner",
+      "soubory.branch.project-owner",
+      "soubory.branch.individual-find-owner"
+    ],
+    "expected": "apply",
+    "id": "F02-delete-all-file-owners",
+    "operation": "delete",
+    "prerequisites": [
+      "F01-replace-all-file-owners"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele_opravneni.branch.relation-add-remove"
+    ],
+    "expected": "apply",
+    "id": "J01-1-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "V00c-isolated-user-relations"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele_opravneni.branch.relation-add-remove"
+    ],
+    "expected": "apply",
+    "id": "J01-2-delete",
+    "operation": "delete",
+    "prerequisites": [
+      "J01-1-insert"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele_notifikace.branch.relation-add-remove"
+    ],
+    "expected": "apply",
+    "id": "J02-1-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "V00c-isolated-user-relations"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele_notifikace.branch.relation-add-remove"
+    ],
+    "expected": "apply",
+    "id": "J02-2-delete",
+    "operation": "delete",
+    "prerequisites": [
+      "J02-1-insert"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "T03-1-update",
+    "operation": "update",
+    "prerequisites": [
+      "V02-existing-distributions"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "T03-2-delete",
+    "operation": "delete",
+    "prerequisites": [
+      "T03-1-update"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "T03-3-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "T03-2-delete"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "paradata.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "T04-1-update",
+    "operation": "update",
+    "prerequisites": [
+      "V03-existing-paradata"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "paradata.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "T04-2-delete",
+    "operation": "delete",
+    "prerequisites": [
+      "T04-1-update"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "paradata.branch.tombstone-reinsert"
+    ],
+    "expected": "apply",
+    "id": "T04-3-insert",
+    "operation": "insert",
+    "prerequisites": [
+      "T04-2-delete"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar_hierarchie.branch.cycle"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R01-controlled-scenario",
+    "operation": "insert",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "heslar_hierarchie.branch.self-reference"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R02-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "organizace.branch.cycle"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R03-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_akce.branch.missing-companion"
+    ],
+    "expected": "reject",
+    "id": "R04-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_lokality.branch.missing-companion"
+    ],
+    "expected": "reject",
+    "id": "R05-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_akce_vedouci.branch.duplicate-relation"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R06-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_dokumentacni_jednotky.branch.cadastral-missing-pian"
+    ],
+    "expected": "apply",
+    "id": "R07-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "dokumenty.branch.missing-extra-data"
+    ],
+    "expected": "apply",
+    "id": "R08-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "dokumenty_posudky.branch.self-reference"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R09-controlled-scenario",
+    "operation": "insert",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "komponenty_nalezy_objekty.branch.count-boundary"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R10-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "komponenty_nalezy_predmety.branch.count-boundary"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R11-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele.branch.active-user-delete"
+    ],
+    "expected": "reject",
+    "id": "R12-controlled-scenario",
+    "operation": "delete",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "uzivatele_spoluprace.branch.self-reference"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R13-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "soubory.branch.mime-extension"
+    ],
+    "expected": "acceptance-unresolved",
+    "id": "R14-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [],
+    "expected": "apply",
+    "id": "Q15-prepare-thumbnail-versions",
+    "operation": "update",
+    "prerequisites": [
+      "V01-isolated-files"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.thumb-backfill",
+      "session.thumbnail-backfill"
+    ],
+    "expected": "apply",
+    "id": "R15-controlled-procedure",
+    "operation": "update",
+    "prerequisites": [
+      "Q15-prepare-thumbnail-versions"
+    ]
+  },
+  {
+    "coverage_ids": [],
+    "expected": "apply",
+    "id": "Q16-prepare-thumbnail-versions",
+    "operation": "update",
+    "prerequisites": [
+      "V01-isolated-files"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.backfill-idempotence"
+    ],
+    "expected": "apply",
+    "id": "R16-controlled-procedure",
+    "operation": "update",
+    "prerequisites": [
+      "Q16-prepare-thumbnail-versions"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.missing-file-uuid"
+    ],
+    "expected": "reject",
+    "id": "R17-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "distribution.branch.missing-file-owner"
+    ],
+    "expected": "reject",
+    "id": "R18-controlled-scenario",
+    "operation": "update",
+    "prerequisites": [
+      "V00-isolated-contexts"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_adb_vyskove_body.delete",
+      "az_akce_vedouci.delete",
+      "az_katastry.delete",
+      "az_lokality.delete",
+      "dokumenty_autori.delete",
+      "dokumenty_jazyky.delete",
+      "dokumenty_neident_akce_vedouci.delete",
+      "dokumenty_osoby.delete",
+      "dokumenty_posudky.delete",
+      "dokumenty_tvary.delete",
+      "externi_odkazy.delete",
+      "externi_zdroje_autori.delete",
+      "externi_zdroje_editori.delete",
+      "heslar_datace.delete",
+      "heslar_dokument_typ_material.delete",
+      "heslar_hierarchie.delete",
+      "heslar_odkazy.delete",
+      "historie.delete",
+      "komponenty_aktivity.delete",
+      "komponenty_nalezy_objekty.delete",
+      "komponenty_nalezy_predmety.delete",
+      "paradata.delete",
+      "projekty_katastry.delete",
+      "projekty_oznamovatele.delete",
+      "samostatne_nalezy.delete",
+      "uzivatele_notifikace.delete",
+      "uzivatele_notifikace_projekty.delete",
+      "uzivatele_opravneni.delete",
+      "uzivatele_spoluprace.delete"
+    ],
+    "expected": "apply",
+    "id": "D01-dependency-layer",
+    "operation": "delete",
+    "prerequisites": [
+      "B07-partial-update"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_adb.delete",
+      "distribution.delete",
+      "dokumenty_neident_akce.delete",
+      "externi_zdroje.delete",
+      "heslar.delete",
+      "komponenty.delete",
+      "uzivatele.delete"
+    ],
+    "expected": "apply",
+    "id": "D02-dependency-layer",
+    "operation": "delete",
+    "prerequisites": [
+      "D01-dependency-layer"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_dokumentacni_jednotky.delete",
+      "dokumenty_casti.delete",
+      "soubory.delete"
+    ],
+    "expected": "apply",
+    "id": "D03-dependency-layer",
+    "operation": "delete",
+    "prerequisites": [
+      "D02-dependency-layer"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "az_akce.delete",
+      "az_pian.delete",
+      "dokumenty.delete"
+    ],
+    "expected": "apply",
+    "id": "D04-dependency-layer",
+    "operation": "delete",
+    "prerequisites": [
+      "D03-dependency-layer"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "dokumenty_lety.delete",
+      "projekty.delete"
+    ],
+    "expected": "apply",
+    "id": "D05-dependency-layer",
+    "operation": "delete",
+    "prerequisites": [
+      "D04-dependency-layer"
+    ]
+  },
+  {
+    "coverage_ids": [
+      "organizace.delete",
+      "osoby.delete"
+    ],
+    "expected": "apply",
+    "id": "D06-dependency-layer",
+    "operation": "delete",
+    "prerequisites": [
+      "D05-dependency-layer"
+    ]
+  }
+]

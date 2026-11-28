@@ -1,0 +1,422 @@
+[
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "All scoped domain/history/Fedora bytes unchanged; validation report accounts for every input.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Upload the positive ZIP; do not click Zahájit import.",
+    "id": "session.validation-no-domain-mutation",
+    "phase": "validation",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "No domain/history/Fedora mutation; lock released; persisted report still retrievable.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "After successful validation click Zrušit import; reopen the page.",
+    "id": "session.approval-cancel",
+    "phase": "awaiting approval",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Required maintenance gate enforced before mutation; clear actionable explanation.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Service owner sets the approved maintenance state; try upload in each state.",
+    "id": "session.maintenance-required",
+    "phase": "before upload",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Restricted controls/data unavailable to non-superadmin; no import starts.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Human uses a separately identified non-superadmin and then the approved operator account.",
+    "id": "session.superadmin-only",
+    "phase": "before upload",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "One owner; second attempt explains conflict; cannot stop/reset another owner's active job.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Human opens a second separately identified admin session while the first owns the task.",
+    "id": "session.concurrent-admin",
+    "phase": "validation/approval",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Reconcile per-row DB/history/Fedora state at this phase boundary. Data rollback and later-phase partial commits are distinct; stopped must not be displayed as successful completion.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Wait until the agent confirms phase validation, then click Zastavit úlohu exactly once. Retain the terminal screen and final report.",
+    "id": "session.stop-validation",
+    "phase": "validation",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Reconcile per-row DB/history/Fedora state at this phase boundary. Data rollback and later-phase partial commits are distinct; stopped must not be displayed as successful completion.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Wait until the agent confirms phase data, then click Zastavit úlohu exactly once. Retain the terminal screen and final report.",
+    "id": "session.stop-data",
+    "phase": "data",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Reconcile per-row DB/history/Fedora state at this phase boundary. Data rollback and later-phase partial commits are distinct; stopped must not be displayed as successful completion.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Wait until the agent confirms phase history, then click Zastavit úlohu exactly once. Retain the terminal screen and final report.",
+    "id": "session.stop-history",
+    "phase": "history",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Reconcile per-row DB/history/Fedora state at this phase boundary. Data rollback and later-phase partial commits are distinct; stopped must not be displayed as successful completion.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Wait until the agent confirms phase metadata, then click Zastavit úlohu exactly once. Retain the terminal screen and final report.",
+    "id": "session.stop-metadata",
+    "phase": "metadata",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Reconcile per-row DB/history/Fedora state at this phase boundary. Data rollback and later-phase partial commits are distinct; stopped must not be displayed as successful completion.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Wait until the agent confirms phase binary, then click Zastavit úlohu exactly once. Retain the terminal screen and final report.",
+    "id": "session.stop-binary",
+    "phase": "binary",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "A failure before a transaction commits rolls that transaction back; earlier committed DB/history/metadata or parent groups remain distinguishable. Reconcile every row/resource; do not replay the original ZIP.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Perform upload/start only after the service owner and agent record the exact approved injection method, target, trigger and restoration command; preserve the failure screen/report.",
+    "id": "session.lock-loss",
+    "phase": "lock ownership",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Same task and ownership; progress resumes; no duplicate submission.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Reload/reopen the import page once and provide the resulting screenshot.",
+    "id": "session.reload-ui",
+    "phase": "running",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Visible connection/stale-state handling; task reconciles to actual server state without replay.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Human temporarily disconnects only their client connection, then restores it and reloads.",
+    "id": "session.polling-outage",
+    "phase": "running",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Binary-phase failure attributed to this filename; prior DB/history/metadata commits reconciled; source restored for a remaining-only recovery.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Authorized service owner moves only the named run-owned source file aside after validation; human starts import.",
+    "id": "session.missing-binary-after-validation",
+    "phase": "after validation",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "A failure before a transaction commits rolls that transaction back; earlier committed DB/history/metadata or parent groups remain distinguishable. Reconcile every row/resource; do not replay the original ZIP.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Perform upload/start only after the service owner and agent record the exact approved injection method, target, trigger and restoration command; preserve the failure screen/report.",
+    "id": "session.fedora-write-failure",
+    "phase": "fedora-write",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "A failure before a transaction commits rolls that transaction back; earlier committed DB/history/metadata or parent groups remain distinguishable. Reconcile every row/resource; do not replay the original ZIP.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Perform upload/start only after the service owner and agent record the exact approved injection method, target, trigger and restoration command; preserve the failure screen/report.",
+    "id": "session.fedora-commit-failure",
+    "phase": "fedora-commit",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "A failure before a transaction commits rolls that transaction back; earlier committed DB/history/metadata or parent groups remain distinguishable. Reconcile every row/resource; do not replay the original ZIP.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Perform upload/start only after the service owner and agent record the exact approved injection method, target, trigger and restoration command; preserve the failure screen/report.",
+    "id": "session.database-commit-failure",
+    "phase": "database-commit",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "A failure before a transaction commits rolls that transaction back; earlier committed DB/history/metadata or parent groups remain distinguishable. Reconcile every row/resource; do not replay the original ZIP.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Perform upload/start only after the service owner and agent record the exact approved injection method, target, trigger and restoration command; preserve the failure screen/report.",
+    "id": "session.report-write-failure",
+    "phase": "report-write",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "A failure before a transaction commits rolls that transaction back; earlier committed DB/history/metadata or parent groups remain distinguishable. Reconcile every row/resource; do not replay the original ZIP.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Perform upload/start only after the service owner and agent record the exact approved injection method, target, trigger and restoration command; preserve the failure screen/report.",
+    "id": "session.partial-record-groups",
+    "phase": "between parent groups",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Terminal phase/errors/counters agree with XLSX and actual DB/Fedora evidence.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "authorized behaviour session and captured phase baseline",
+    "human": "Human downloads the final report and captures the terminal screen and task ID.",
+    "id": "session.report-screen-agreement",
+    "phase": "terminal",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  },
+  {
+    "agent_after": [
+      "Retain original XLSX, human observation and supplied screenshot; label unseen controls unobserved",
+      "Compare every row and direct resource; classify committed/rolled-back/unprocessed/unknown",
+      "If unknown exists, block recovery; otherwise prepare only eligible operations in a new input with new checksum"
+    ],
+    "agent_before": [
+      "Allocate fresh namespace and generate exact-path card",
+      "Capture scoped DB/history, direct Fedora bytes/versions and source-file hashes",
+      "Record actor, task ID and phase trigger; confirm the fault can be observed in this bounded graph"
+    ],
+    "expected": "Missing thumbnails restored; second backfill idempotent; thumbnail history and permissions checked.",
+    "fixture": "fresh isolated namespace built from the positive graph; never interrupt the shared baseline or a successful load measurement",
+    "gate": "BLOCKED until target-specific method/restore authorization is recorded",
+    "human": "Human opens permitted file download/thumbnail routes; authorized owner invokes the approved backfill twice in its own scope.",
+    "id": "session.thumbnail-backfill",
+    "phase": "terminal",
+    "retention": "Keep all evidence after restoration and cleanup; never infer a pass from a simulation.",
+    "state": "prepared"
+  }
+]

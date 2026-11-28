@@ -1,0 +1,357 @@
+{
+  "az_adb": [
+    [
+      "self",
+      "dokumentacni_jednotka.archeologicky_zaznam"
+    ],
+    [
+      "dokumentacni_jednotka.archeologicky_zaznam"
+    ]
+  ],
+  "az_adb_vyskove_body": [
+    [
+      "adb",
+      "adb.dokumentacni_jednotka.archeologicky_zaznam"
+    ],
+    [
+      "adb.dokumentacni_jednotka.archeologicky_zaznam"
+    ]
+  ],
+  "az_akce": [
+    [
+      "self",
+      "projekt"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "az_akce_vedouci": [
+    [
+      "akce"
+    ],
+    [
+      "akce"
+    ]
+  ],
+  "az_dokumentacni_jednotky": [
+    [
+      "archeologicky_zaznam"
+    ],
+    [
+      "archeologicky_zaznam"
+    ]
+  ],
+  "az_katastry": [
+    [
+      "archeologicky_zaznam"
+    ],
+    [
+      "archeologicky_zaznam"
+    ]
+  ],
+  "az_lokality": [
+    [
+      "self"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "az_pian": [
+    [
+      "self"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "distribution": [
+    [
+      "file.owner_record"
+    ],
+    [
+      "file:DIST01/DIST11/DIST10"
+    ]
+  ],
+  "dokumenty": [
+    [
+      "self"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "dokumenty_autori": [
+    [
+      "dokument"
+    ],
+    [
+      "dokument"
+    ]
+  ],
+  "dokumenty_casti": [
+    [
+      "dokument",
+      "archeologicky_zaznam",
+      "projekt"
+    ],
+    [
+      "dokument"
+    ]
+  ],
+  "dokumenty_jazyky": [
+    [
+      "dokument"
+    ],
+    [
+      "dokument"
+    ]
+  ],
+  "dokumenty_lety": [
+    [
+      "self"
+    ],
+    []
+  ],
+  "dokumenty_neident_akce": [
+    [
+      "dokument_cast.dokument"
+    ],
+    [
+      "dokument_cast.dokument"
+    ]
+  ],
+  "dokumenty_neident_akce_vedouci": [
+    [
+      "neident_akce.dokument_cast.dokument"
+    ],
+    [
+      "neident_akce.dokument_cast.dokument"
+    ]
+  ],
+  "dokumenty_osoby": [
+    [
+      "dokument"
+    ],
+    [
+      "dokument"
+    ]
+  ],
+  "dokumenty_posudky": [
+    [
+      "dokument"
+    ],
+    [
+      "dokument"
+    ]
+  ],
+  "dokumenty_tvary": [
+    [
+      "dokument"
+    ],
+    [
+      "dokument"
+    ]
+  ],
+  "externi_odkazy": [
+    [
+      "externi_zdroj",
+      "archeologicky_zaznam"
+    ],
+    [
+      "externi_zdroj"
+    ]
+  ],
+  "externi_zdroje": [
+    [
+      "self"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "externi_zdroje_autori": [
+    [
+      "externi_zdroj"
+    ],
+    [
+      "externi_zdroj"
+    ]
+  ],
+  "externi_zdroje_editori": [
+    [
+      "externi_zdroj"
+    ],
+    [
+      "externi_zdroj"
+    ]
+  ],
+  "heslar": [
+    [
+      "self"
+    ],
+    []
+  ],
+  "heslar_datace": [
+    [
+      "obdobi"
+    ],
+    []
+  ],
+  "heslar_dokument_typ_material": [
+    [
+      "dokument_typ"
+    ],
+    []
+  ],
+  "heslar_hierarchie": [
+    [
+      "heslo_nadrazene",
+      "heslo_podrazene"
+    ],
+    []
+  ],
+  "heslar_odkazy": [
+    [
+      "heslo"
+    ],
+    []
+  ],
+  "historie": [
+    [
+      "vazba.owner_record"
+    ],
+    []
+  ],
+  "komponenty": [
+    [
+      "owner_record"
+    ],
+    [
+      "owner_record"
+    ]
+  ],
+  "komponenty_aktivity": [
+    [
+      "komponenta.owner_record"
+    ],
+    [
+      "komponenta.owner_record"
+    ]
+  ],
+  "komponenty_nalezy_objekty": [
+    [
+      "komponenta.owner_record"
+    ],
+    [
+      "komponenta.owner_record"
+    ]
+  ],
+  "komponenty_nalezy_predmety": [
+    [
+      "komponenta.owner_record"
+    ],
+    [
+      "komponenta.owner_record"
+    ]
+  ],
+  "organizace": [
+    [
+      "self"
+    ],
+    []
+  ],
+  "osoby": [
+    [
+      "self"
+    ],
+    []
+  ],
+  "paradata": [
+    [],
+    []
+  ],
+  "projekty": [
+    [
+      "self"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "projekty_katastry": [
+    [
+      "projekt"
+    ],
+    [
+      "projekt"
+    ]
+  ],
+  "projekty_oznamovatele": [
+    [
+      "projekt"
+    ],
+    [
+      "projekt"
+    ]
+  ],
+  "samostatne_nalezy": [
+    [
+      "self",
+      "projekt"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "soubory": [
+    [
+      "vazba.owner_record"
+    ],
+    [
+      "self; DELETE: surviving parent"
+    ]
+  ],
+  "uzivatele": [
+    [
+      "self"
+    ],
+    [
+      "self"
+    ]
+  ],
+  "uzivatele_notifikace": [
+    [
+      "uzivatel"
+    ],
+    [
+      "uzivatel"
+    ]
+  ],
+  "uzivatele_notifikace_projekty": [
+    [
+      "uzivatel"
+    ],
+    [
+      "uzivatel"
+    ]
+  ],
+  "uzivatele_opravneni": [
+    [
+      "uzivatel"
+    ],
+    [
+      "uzivatel"
+    ]
+  ],
+  "uzivatele_spoluprace": [
+    [
+      "vedouci",
+      "spolupracovnik"
+    ],
+    [
+      "vedouci"
+    ]
+  ]
+}
