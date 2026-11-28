@@ -3007,6 +3007,9 @@ msgstr "Error in determining the coordinate system."
 msgid "core_admin.GeomImportField.message.invalid_date_value"
 msgstr "Error in processing of a date value."
 
+msgid "core_admin.GeomImportField.message.invalid_geometry_value"
+msgstr "Invalid geometry"
+
 msgid "core_admin.RuianLookupImportField.message.invalid_ruian_value"
 msgstr "Invalid RÚIAN code"
 

@@ -3010,6 +3010,9 @@ msgstr "Chyba při stanovení souřadnicového systému."
 msgid "core_admin.GeomImportField.message.invalid_date_value"
 msgstr "Chyba při zpracování hodnoty typu datum."
 
+msgid "core_admin.GeomImportField.message.invalid_geometry_value"
+msgstr "Neplatná geometrie"
+
 msgid "core_admin.RuianLookupImportField.message.invalid_ruian_value"
 msgstr "Neplatný kód RÚIAN"
 

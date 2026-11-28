@@ -27,7 +27,8 @@ from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models as pgmodels
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.gdal import GDALException
+from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
@@ -1515,7 +1516,10 @@ class GeomImportField(BaseImportField):
         if not value:
             return None
         if isinstance(value, str):
-            value = GEOSGeometry(value, srid=self.srid)
+            try:
+                value = GEOSGeometry(value, srid=self.srid)
+            except (ValueError, GEOSException, GDALException):
+                raise ImportDataError(_("core_admin.GeomImportField.message.invalid_geometry_value") + ": " + value)
         if isinstance(value, GEOSGeometry):
             if value.srid != self.srid:
                 raise ImportDataError(
