@@ -1032,6 +1032,8 @@ Třídy
       Provede validaci na základě primárního klíče. Při insertu záznam nesmí existovat,
 
       při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
+      Při insertu se existence ověřuje jen u klíče, který insert zapisuje (složený klíč nebo pole
+      v ``get_mapping``); umělý klíč (např. ``id``) insert ignoruje a databáze přidělí nový.
 
       :param performed_action: Parametr ``performed_action`` předává se do volání ``ImportDataIntegrityError()``, ovlivňuje větvení podmínek.
       :param args: Dodatečné poziční argumenty zachované kvůli jednotné signatuře, metoda je nepoužívá.

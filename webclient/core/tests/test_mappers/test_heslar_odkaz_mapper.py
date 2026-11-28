@@ -197,6 +197,13 @@ class HeslarOdkazMapperImportValidationTest(TestCase):
         result = mapper.import_validation(INSERT)
         self.assertIsNone(result)
 
+    def test_insert_with_id_of_existing_record_passes(self):
+        """INSERT s id existujícího záznamu projde, protože insert id ignoruje a databáze přidělí nové."""
+        row = VALID_ROW.copy()
+        row["id"] = f"hodk-{self.odkaz.pk}"
+        mapper = HeslarOdkazMapper(row)
+        self.assertEqual(mapper.import_validation(INSERT), {"id": self.odkaz.pk})
+
     def test_update_existing_record_returns_primary_key_dict(self):
         """import_validation() UPDATE vrátí slovník s id pro existující záznam."""
         row = VALID_ROW.copy()
