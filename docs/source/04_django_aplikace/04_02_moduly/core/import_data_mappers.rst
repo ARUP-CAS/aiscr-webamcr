@@ -800,9 +800,10 @@ Třídy
 
    .. py:method:: value()
 
-      Provádí operaci value.
+      Převede textovou hodnotu ve tvaru ``ruian-<kód>`` na číselný kód RÚIAN.
 
-      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek.
+      :param value: Kód RÚIAN; textová hodnota musí mít přesně tvar ``ruian-<číslice>``.
+      :raises ImportDataError: Vyvolá se, pokud textová hodnota nemá tvar ``ruian-<číslice>``.
 
 
 .. py:class:: VazbaLookupImportField

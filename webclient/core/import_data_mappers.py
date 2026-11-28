@@ -1408,12 +1408,15 @@ class RuianLookupImportField(LookupImportField):
     @LookupImportField.value.setter
     def value(self, value):
         """
-        Provádí operaci value.
+        Převede textovou hodnotu ve tvaru ``ruian-<kód>`` na číselný kód RÚIAN.
 
-        :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek.
+        :param value: Kód RÚIAN; textová hodnota musí mít přesně tvar ``ruian-<číslice>``.
+        :raises ImportDataError: Vyvolá se, pokud textová hodnota nemá tvar ``ruian-<číslice>``.
         """
         if isinstance(value, str):
-            match = re.match(r"ruian-(\d+)", value)
+            match = re.fullmatch(r"ruian-(\d+)", value.strip())
+            if match is None:
+                raise ImportDataError(_("core_admin.RuianLookupImportField.message.invalid_ruian_value") + ": " + value)
             value = int(match.group(1))
         LookupImportField.value.fset(self, value)
 

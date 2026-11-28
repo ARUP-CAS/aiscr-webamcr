@@ -3007,6 +3007,9 @@ msgstr "Error in determining the coordinate system."
 msgid "core_admin.GeomImportField.message.invalid_date_value"
 msgstr "Error in processing of a date value."
 
+msgid "core_admin.RuianLookupImportField.message.invalid_ruian_value"
+msgstr "Invalid RÚIAN code"
+
 #: core/import_data_mappers.py:1783
 msgid "core.admin.ImportModelMapper.map_field.error"
 msgstr "Field {field} cannot be mapped."
