@@ -448,10 +448,12 @@ environment. Attempt 2 passed deployment, readiness, test 1 and publication.
   to its inventory when rebasing (workflow follow-up). On DEV they only
   failed against the reused database.
 - **The row check also stops runs for class-level errors.** A failed
-  `setUpClass` or `tearDownClass`, or a test that unittest counts twice,
-  makes the FAIL and ERROR rows differ from `FAILED`, and the run ends as an
-  error. → The cause states both counts, and the root workbook keeps the
-  previous run for selection. `_quit_driver` swallows its own errors, so the
+  `setUpClass` in a multi-class run, a failed `tearDownClass`, or a test that
+  unittest counts twice makes the FAIL and ERROR rows differ from `FAILED`,
+  and the run ends with the count-mismatch error. A single-class
+  `setUpClass` failure stops earlier with the missing-summary error. → The
+  cause names the failure, and the root workbook keeps the previous run for
+  selection. `_quit_driver` swallows its own errors, so the
   current base class has no path that counts one test twice.
 
 ## Migration Plan
