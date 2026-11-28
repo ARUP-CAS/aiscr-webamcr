@@ -8,7 +8,7 @@
 # every operator retains direct access to these commands.
 # Command-shape evidence: argument vectors as observed in the Codex probe and
 # the shell-wrapper splitting rules in the vendor rules documentation.
-# delivery-version: 190c5bcb61054e19937fa5deec1ac26575756bd6 2026-11-28T15:25:02+01:00
+# delivery-version: a9e7178f2056994b3ac481702b0ec38cdb13c576 2026-11-28T16:49:05+01:00
 
 prefix_rule(
     pattern = ["git", "push", ["--force", "--force-with-lease", "-f"]],
@@ -713,7 +713,7 @@ prefix_rule(
     justification = "Curated working-set command; the forbidden floor still wins over this allow.",
 )
 
-prefix_rule(pattern = [".venv/Scripts/python.exe", [".agents/scripts/codebase_review.py", ".agents/scripts/testing_scenario_corpus.py", ".agents/scripts/translation_revision_portable.py", ".agents/scripts/validate_release_yml.py"]], decision = "allow", justification = "The repository virtualenv running governed, reviewed scripts.")
+prefix_rule(pattern = [".venv/Scripts/python.exe", [".agents/scripts/check_tool_call_guard.py", ".agents/scripts/codebase_review.py", ".agents/scripts/testing_scenario_corpus.py", ".agents/scripts/translation_revision_portable.py", ".agents/scripts/validate_release_yml.py"]], decision = "allow", justification = "The repository virtualenv running governed, reviewed scripts.")
 prefix_rule(pattern = [".venv/Scripts/python.exe", [".agents/scripts/github/github_issues.py", ".agents/scripts/github/github_pr_review.py", ".agents/scripts/github/github_references.py", ".agents/scripts/github/github_utils.py"]], decision = "allow", justification = "The repository virtualenv running governed, reviewed scripts. The github family package: the curated script glob names one directory level, so a packaged tool needs its own entry to stay reachable.")
 
 
@@ -873,7 +873,7 @@ prefix_rule(
     justification = "Curated working-set command; the forbidden floor still wins over this allow.",
 )
 
-prefix_rule(pattern = [".venv/bin/python", [".agents/scripts/codebase_review.py", ".agents/scripts/testing_scenario_corpus.py", ".agents/scripts/translation_revision_portable.py", ".agents/scripts/validate_release_yml.py"]], decision = "allow", justification = "The repository virtualenv running governed, reviewed scripts where the interpreter lives at bin/python. The estate maintains sandbox containment for macOS and Linux, so those platforms carry curated interpreter entries rather than relying on a Windows-only form.")
+prefix_rule(pattern = [".venv/bin/python", [".agents/scripts/check_tool_call_guard.py", ".agents/scripts/codebase_review.py", ".agents/scripts/testing_scenario_corpus.py", ".agents/scripts/translation_revision_portable.py", ".agents/scripts/validate_release_yml.py"]], decision = "allow", justification = "The repository virtualenv running governed, reviewed scripts where the interpreter lives at bin/python. The estate maintains sandbox containment for macOS and Linux, so those platforms carry curated interpreter entries rather than relying on a Windows-only form.")
 prefix_rule(pattern = [".venv/bin/python", [".agents/scripts/github/github_issues.py", ".agents/scripts/github/github_pr_review.py", ".agents/scripts/github/github_references.py", ".agents/scripts/github/github_utils.py"]], decision = "allow", justification = "Governed repository scripts where the interpreter lives at bin/python. The github family package: the curated script glob names one directory level, so a packaged tool needs its own entry to stay reachable.")
 
 
@@ -922,11 +922,11 @@ prefix_rule(
     justification = "Curated working-set command; the forbidden floor still wins over this allow.",
 )
 
-prefix_rule(pattern = ["./.venv/Scripts/python.exe", [".agents/scripts/codebase_review.py", ".agents/scripts/testing_scenario_corpus.py", ".agents/scripts/translation_revision_portable.py", ".agents/scripts/validate_release_yml.py"]], decision = "allow", justification = "Governed repository scripts; dot-relative spelling, forward-slash script path.")
+prefix_rule(pattern = ["./.venv/Scripts/python.exe", [".agents/scripts/check_tool_call_guard.py", ".agents/scripts/codebase_review.py", ".agents/scripts/testing_scenario_corpus.py", ".agents/scripts/translation_revision_portable.py", ".agents/scripts/validate_release_yml.py"]], decision = "allow", justification = "Governed repository scripts; dot-relative spelling, forward-slash script path.")
 prefix_rule(pattern = ["./.venv/Scripts/python.exe", [".agents/scripts/github/github_issues.py", ".agents/scripts/github/github_pr_review.py", ".agents/scripts/github/github_references.py", ".agents/scripts/github/github_utils.py"]], decision = "allow", justification = "Governed repository scripts; dot-relative spelling, forward-slash script path. The github family package: the curated script glob names one directory level, so a packaged tool needs its own entry to stay reachable.")
 
 
-prefix_rule(pattern = ["./.venv/Scripts/python.exe", [".agents\\scripts\\codebase_review.py", ".agents\\scripts\\testing_scenario_corpus.py", ".agents\\scripts\\translation_revision_portable.py", ".agents\\scripts\\validate_release_yml.py"]], decision = "allow", justification = "Governed repository scripts; dot-relative PowerShell spelling.")
+prefix_rule(pattern = ["./.venv/Scripts/python.exe", [".agents\\scripts\\check_tool_call_guard.py", ".agents\\scripts\\codebase_review.py", ".agents\\scripts\\testing_scenario_corpus.py", ".agents\\scripts\\translation_revision_portable.py", ".agents\\scripts\\validate_release_yml.py"]], decision = "allow", justification = "Governed repository scripts; dot-relative PowerShell spelling.")
 prefix_rule(pattern = ["./.venv/Scripts/python.exe", [".agents\\scripts\\github\\github_issues.py", ".agents\\scripts\\github\\github_pr_review.py", ".agents\\scripts\\github\\github_references.py", ".agents\\scripts\\github\\github_utils.py"]], decision = "allow", justification = "Governed repository scripts; dot-relative PowerShell spelling. The github family package: the curated script glob names one directory level, so a packaged tool needs its own entry to stay reachable.")
 
 

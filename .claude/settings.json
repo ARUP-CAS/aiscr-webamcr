@@ -454,5 +454,20 @@
       "PowerShell(curl.exe -s -u *api-test.aiscr.cz/oai*)"
     ],
     "defaultMode": "dontAsk"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "exec sh \"$CLAUDE_PROJECT_DIR/.agents/hooks/aiscr-guard\"; $input | ./.agents/hooks/aiscr-guard",
+            "timeout": 30,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ]
   }
 }

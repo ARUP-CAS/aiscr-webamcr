@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "matcher": "bash|powershell",
+        "bash": "sh .agents/hooks/aiscr-guard --product copilot",
+        "powershell": "./.agents/hooks/aiscr-guard --product copilot",
+        "cwd": ".",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}

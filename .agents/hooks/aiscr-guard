@@ -1,0 +1,45 @@
+#!/bin/sh
+# AIS CR tool-call guard launcher, POSIX half (Windows twin: aiscr-guard.cmd).
+#
+# A hook surface names this launcher instead of an interpreter, because no single interpreter name is correct
+# everywhere: `python3` is absent on many Windows workstations and often shadowed by the Microsoft Store alias, which
+# resolves on PATH and does not run. Resolution mirrors `validation_suite.resolve_python()`: the repository virtualenv
+# first, then a PATH interpreter that is run before it is trusted.
+#
+# Blocking contract: the guard's exit status passes through unchanged - 0 lets the tool call proceed, 2 refuses it - and
+# its standard input and error stay attached. With no usable interpreter the launcher exits 2 with the corrective step,
+# so the guard fails closed instead of letting every call through unexamined. Only shell built-ins locate the
+# repository, so a stripped PATH cannot break that.
+
+set -u
+
+case "$0" in
+    */*) script_dir=${0%/*} ;;
+    *\\*) script_dir=${0%\\*} ;;
+    *) script_dir=. ;;
+esac
+repo_root=$(CDPATH= cd -- "$script_dir/../.." 2>/dev/null && pwd) || {
+    echo "AIS CR guard could not locate its repository; the call is refused because the guard fails closed." >&2
+    exit 2
+}
+guard="$repo_root/.agents/scripts/check_tool_call_guard.py"
+
+for candidate in \
+    "$repo_root/.venv/bin/python" \
+    "$repo_root/.venv/Scripts/python.exe" \
+    "$repo_root/venv/bin/python" \
+    "$repo_root/venv/Scripts/python.exe"
+do
+    if [ -x "$candidate" ]; then
+        exec "$candidate" -I -S "$guard" "$@"
+    fi
+done
+
+for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "" >/dev/null 2>&1; then
+        exec "$candidate" -I -S "$guard" "$@"
+    fi
+done
+
+echo "AIS CR guard could not start: no usable Python interpreter. Create the repository virtualenv (python -m venv .venv) and retry; the call is refused because the guard fails closed." >&2
+exit 2

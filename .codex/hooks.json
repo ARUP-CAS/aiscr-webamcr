@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel)/.agents/hooks/aiscr-guard\" --product codex",
+            "commandWindows": "& (Join-Path (git rev-parse --show-toplevel) '.agents/hooks/aiscr-guard.cmd') --product codex",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
