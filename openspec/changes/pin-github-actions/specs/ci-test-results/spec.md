@@ -186,8 +186,10 @@ tests outside Selenium SHALL NOT run in the DEV test workflow.
 A Selenium test whose setup fails SHALL record an ERROR workbook row without
 using the driver, because its teardown does not run. A run SHALL publish a
 completed outcome only when the FAIL and ERROR rows written to its workbook
-match its `FAILED` count. Otherwise it SHALL publish an error outcome that
-states the mismatch and SHALL leave the root selection workbook unchanged.
+match its `FAILED` count. Otherwise it SHALL publish an error outcome and
+SHALL leave the root selection workbook unchanged; the error SHALL state the
+mismatch when the run executed test bodies, and the missing complete summary
+when it did not.
 
 #### Scenario: Setup fails
 
