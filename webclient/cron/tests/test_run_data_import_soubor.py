@@ -277,6 +277,17 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             "Report musí obsahovat informaci o aktualizaci Fedora metadat navázaného záznamu.",
         )
 
+    def test_insert_soubor_history_note_contains_only_file_name(self):
+        """Poznámka historie importovaného souboru obsahuje jen název souboru, ne cestu na svazku."""
+        file_name = "note-check.txt"
+        fake_redis, _ = self._run_soubor_import([{"vazba": self.dokument.ident_cely, "nazev": file_name}])
+
+        self.assert_import_success(fake_redis)
+        soubor = Soubor.objects.get(vazba=self.dokument.soubory, nazev=file_name)
+        poznamka = Historie.objects.get(vazba=soubor.historie, typ_zmeny=IMPORT).poznamka
+        self.assertTrue(poznamka.endswith(f" {file_name}"), poznamka)
+        self.assertNotIn("/", poznamka)
+
     def test_insert_soubor_saves_related_record_metadata_for_all_supported_vazba_types(self):
         """INSERT Souboru musí uložit metadata objektu navázaného přes ``Soubor.vazba``."""
         for label, related_record in self._soubor_related_records("001"):

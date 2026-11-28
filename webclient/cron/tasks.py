@@ -3219,12 +3219,7 @@ def run_data_import(job_id, user_id, lock_token):
                             typ_zmeny=IMPORT,
                             uzivatel=transaction_user,
                             vazba=soubor.historie,
-                            poznamka="{} {}/{}/{}".format(
-                                _("cron.tasks.run_data_import.imported_file"),
-                                import_directory_path,
-                                ident_cely,
-                                filename,
-                            ),
+                            poznamka="{} {}".format(_("cron.tasks.run_data_import.imported_file"), filename),
                         )
                         history_record.save()
                         if record_id is not None:
